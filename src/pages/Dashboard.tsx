@@ -910,8 +910,7 @@ const ChannelsTab = React.memo(function ChannelsTab({ onOpenIntegration }: { onO
       </div>
     </div>
   );
-}
-
+});
 
 /* ──────────────────────────────────────────────
    MAIN DASHBOARD COMPONENT
