@@ -57,9 +57,6 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return false;
 
-      // Enforce single admin account email limit
-      if (session.user.email !== 'admin@starxflow.com') return false;
-
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')

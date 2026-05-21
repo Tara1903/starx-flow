@@ -4,6 +4,7 @@ import { Shield, Mail, Lock, ArrowRight, Loader2, AlertTriangle, Key, Eye, EyeOf
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { useAdminStore } from "../store/adminStore";
+import { useShield } from "../lib/shield";
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -17,6 +18,11 @@ export function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const shield = useShield();
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutEnd, setLockoutEnd] = useState(0);
+  const [honeypot, setHoneypot] = useState("");
 
   // If already logged in as admin, show a state to proceed to dashboard
   if (isLoggedIn && user?.email === 'admin@starxflow.com') {
@@ -55,9 +61,16 @@ export function AdminLogin() {
     e.preventDefault();
     if (!email || !password) return;
 
-    // Enforce email restriction locally first
-    if (email.trim().toLowerCase() !== "admin@starxflow.com") {
-      setError("Unauthorized credentials. Access is restricted to the primary admin account.");
+    const score = shield.getScore();
+    if (score < 20) {
+      setError("Access denied.");
+      return;
+    }
+
+    const now = Date.now();
+    if (now < lockoutEnd) {
+      const remaining = Math.ceil((lockoutEnd - now) / 1000);
+      setError(`Too many attempts. Try again in ${remaining}s.`);
       return;
     }
     
@@ -69,11 +82,21 @@ export function AdminLogin() {
     if (signInError) {
       setLoading(false);
       setError(signInError);
+      setFailedAttempts(prev => {
+        const next = prev + 1;
+        if (next >= 5) {
+          setLockoutEnd(Date.now() + 5 * 60 * 1000); // 5 min
+        } else {
+          setLockoutEnd(Date.now() + Math.pow(2, next) * 1000); // 2s, 4s, 8s, 16s
+        }
+        return next;
+      });
     } else {
       // Verify admin role and login via adminStore
       const isAuth = await loginAdmin();
       setLoading(false);
       if (isAuth) {
+        setFailedAttempts(0);
         navigate("/admin");
       } else {
         setError("Admin privileges verification failed.");
@@ -170,6 +193,20 @@ export function AdminLogin() {
                 This environment is restricted to authorized personnel. All login attempts are audited.
               </span>
             </div>
+            {/* Honeypot */}
+            <input
+              type="text"
+              name="website"
+              value={honeypot}
+              onChange={(e) => {
+                setHoneypot(e.target.value);
+                shield.setHoneypot(e.target.value.length > 0);
+              }}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, overflow: 'hidden', opacity: 0 }}
+            />
           </form>
         </div>
       </motion.div>

@@ -20,6 +20,14 @@ export interface Workflow {
   savedHours: number;
 }
 
+export interface ConnectedChannel {
+  id: string;
+  channelKey: string;
+  isConnected: boolean;
+  credentials: Record<string, string>;
+  lastSynced: string | null;
+}
+
 export interface SimulationLog {
   id: string;
   timestamp: string;
@@ -42,14 +50,17 @@ interface AuthState {
   isLoading: boolean;
   user: UserProfile | null;
   workflows: Workflow[];
+  connectedChannels: ConnectedChannel[];
   logs: SimulationLog[];
+  chartData: { day: string; value: number }[];
   selectedWorkflowId: string | null;
 
   // Auth (Magic Link & Password)
   sendMagicLink: (email: string, metadata?: {
-    business_name: string;
-    owner_name: string;
-    business_type: string;
+    business_name?: string;
+    owner_name?: string;
+    business_type?: string;
+    shield_score?: number;
   }, redirectTo?: string) => Promise<{ error: string | null }>;
   signInWithGoogle: (redirectTo?: string) => Promise<{ error: string | null }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
@@ -62,7 +73,13 @@ interface AuthState {
   updateWorkflowPrompt: (id: string, prompt: string, tone: Workflow['aiTone']) => Promise<void>;
   addWorkflow: (workflow: Omit<Workflow, 'id' | 'executionsCount' | 'successRate' | 'savedHours'>) => Promise<void>;
 
+  // Channels
+  fetchChannels: () => Promise<void>;
+  updateChannelConnection: (channelKey: string, isConnected: boolean, credentials?: Record<string, string>) => Promise<{ error: string | null }>;
+
   // Logs
+  fetchLogs: () => Promise<void>;
+  fetchChartData: () => Promise<void>;
   addLog: (type: SimulationLog['type'], channel: string, message: string) => void;
   clearLogs: () => void;
   triggerMockSimulation: (id: string) => Promise<void>;
@@ -86,6 +103,16 @@ function dbRowToWorkflow(row: Record<string, unknown>): Workflow {
     executionsCount: (row.executions_count as number) || 0,
     successRate: Number(row.success_rate) || 100,
     savedHours: Number(row.saved_hours) || 0,
+  };
+}
+
+function dbRowToChannel(row: Record<string, unknown>): ConnectedChannel {
+  return {
+    id: row.id as string,
+    channelKey: row.channel_key as string,
+    isConnected: row.is_connected as boolean,
+    credentials: (row.credentials as Record<string, string>) || {},
+    lastSynced: row.last_synced as string | null,
   };
 }
 
@@ -130,6 +157,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   user: null,
   workflows: [],
+  connectedChannels: [],
+  chartData: [
+    { day: "Mon", value: 0 },
+    { day: "Tue", value: 0 },
+    { day: "Wed", value: 0 },
+    { day: "Thu", value: 0 },
+    { day: "Fri", value: 0 },
+    { day: "Sat", value: 0 },
+    { day: "Sun", value: 0 },
+  ],
   logs: [
     {
       id: 'log-init',
@@ -178,8 +215,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             },
           });
 
-          // Fetch workflows asynchronously without awaiting to prevent UI blocking
+          // Fetch workflows, channels, and logs asynchronously without awaiting to prevent UI blocking
           get().fetchWorkflows().catch(console.error);
+          get().fetchChannels().catch(console.error);
+          get().fetchLogs().catch(console.error);
+          get().fetchChartData().catch(console.error);
           return;
         }
       }
@@ -280,6 +320,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             },
           });
           await get().fetchWorkflows().catch(console.error);
+          await get().fetchChannels().catch(console.error);
+          await get().fetchLogs().catch(console.error);
+          await get().fetchChartData().catch(console.error);
         }
       }
 
@@ -298,6 +341,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isLoggedIn: false,
       user: null,
       workflows: [],
+      connectedChannels: [],
       logs: [],
       selectedWorkflowId: null,
     });
@@ -338,6 +382,91 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (e) {
       console.error('[StarX] Fetch workflows exception:', e);
+    }
+  },
+
+  /* ─── FETCH CHANNELS ─── */
+  fetchChannels: async () => {
+    const user = get().user;
+    if (!user || !isSupabaseConfigured) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('connected_channels')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('[StarX] Fetch channels error:', error);
+        return;
+      }
+
+      if (data) {
+        set({ connectedChannels: data.map(dbRowToChannel) });
+      }
+    } catch (e) {
+      console.error('[StarX] Fetch channels exception:', e);
+    }
+  },
+
+  /* ─── UPDATE CHANNEL CONNECTION ─── */
+  updateChannelConnection: async (channelKey, isConnected, credentials) => {
+    const user = get().user;
+    if (!user || !isSupabaseConfigured) return { error: 'Not authenticated' };
+
+    try {
+      const updateData: any = { 
+        is_connected: isConnected,
+        last_synced: new Date().toISOString()
+      };
+      
+      if (credentials) {
+        updateData.credentials = credentials;
+      }
+
+      // Upsert the channel record (Supabase UNIQUE constraint on user_id + channel_key handles the conflict)
+      const { data, error } = await supabase
+        .from('connected_channels')
+        .upsert(
+          {
+            user_id: user.id,
+            channel_key: channelKey,
+            ...updateData
+          },
+          { onConflict: 'user_id, channel_key' }
+        )
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[StarX] Update channel error:', error);
+        return { error: error.message };
+      }
+
+      if (data) {
+        // Optimistically update local state
+        const updatedChannel = dbRowToChannel(data);
+        set((state) => {
+          const exists = state.connectedChannels.find(c => c.channelKey === channelKey);
+          if (exists) {
+            return {
+              connectedChannels: state.connectedChannels.map(c => 
+                c.channelKey === channelKey ? updatedChannel : c
+              )
+            };
+          } else {
+            return {
+              connectedChannels: [...state.connectedChannels, updatedChannel]
+            };
+          }
+        });
+        
+        get().addLog('system', channelKey, isConnected ? `Integration connected successfully.` : `Integration disconnected.`);
+      }
+
+      return { error: null };
+    } catch (e) {
+      return { error: 'Network error. Please try again.' };
     }
   },
 
@@ -449,31 +578,134 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /* ─── ADD LOG (local + optional DB) ─── */
-  addLog: (type, channel, message) => {
-    const newLog: SimulationLog = {
-      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-      timestamp: new Date().toLocaleTimeString(),
-      type,
-      channel,
-      message,
-    };
-
-    set((state) => ({
-      logs: [...state.logs.slice(-49), newLog],
-    }));
-
-    // Fire-and-forget DB write
+  /* ─── FETCH & SUBSCRIBE TO LOGS ─── */
+  fetchLogs: async () => {
     const user = get().user;
+    if (!user || !isSupabaseConfigured) return;
+
+    try {
+      // 1. Fetch recent logs
+      const { data, error } = await supabase
+        .from('execution_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error('[StarX] Fetch logs error:', error);
+      } else if (data) {
+        const dbLogs: SimulationLog[] = data.reverse().map(row => ({
+          id: row.id,
+          timestamp: new Date(row.created_at).toLocaleTimeString(),
+          type: row.type as SimulationLog['type'],
+          channel: row.channel,
+          message: row.message,
+        }));
+        set({ logs: dbLogs });
+      }
+
+      // 2. Subscribe to new logs via Realtime
+      supabase.channel('public:execution_logs')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'execution_logs', filter: `user_id=eq.${user.id}` },
+          (payload) => {
+            const row = payload.new;
+            const newLog: SimulationLog = {
+              id: row.id,
+              timestamp: new Date(row.created_at).toLocaleTimeString(),
+              type: row.type as SimulationLog['type'],
+              channel: row.channel,
+              message: row.message,
+            };
+            set((state) => ({
+              logs: [...state.logs.slice(-49), newLog], // Keep last 50
+            }));
+          }
+        )
+        .subscribe();
+
+    } catch (e) {
+      console.error('[StarX] Fetch logs exception:', e);
+    }
+  },
+
+  /* ─── FETCH CHART DATA ─── */
+  fetchChartData: async () => {
+    const user = get().user;
+    if (!user || !isSupabaseConfigured) return;
+
+    try {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { data, error } = await supabase
+        .from('execution_logs')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .eq('type', 'success')
+        .gte('created_at', sevenDaysAgo.toISOString());
+
+      if (error) {
+        console.error('[StarX] Fetch chart data error:', error);
+        return;
+      }
+
+      if (data) {
+        // Initialize an array for the last 7 days
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const aggregated: { day: string; value: number }[] = [];
+        
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          aggregated.push({ day: days[d.getDay()], value: 0 });
+        }
+
+        // Count occurrences per day
+        data.forEach(log => {
+          const logDate = new Date(log.created_at);
+          const dayName = days[logDate.getDay()];
+          const bin = aggregated.find(a => a.day === dayName);
+          if (bin) {
+            bin.value += 1;
+          }
+        });
+
+        set({ chartData: aggregated });
+      }
+    } catch (e) {
+      console.error('[StarX] Fetch chart data exception:', e);
+    }
+  },
+
+  /* ─── ADD LOG (local + optional DB) ─── */
+  addLog: async (type, channel, message) => {
+    const user = get().user;
+    
     if (isSupabaseConfigured && user) {
-      supabase.from('execution_logs').insert({
+      // Just write to DB. The Realtime subscription in fetchLogs will pick it up and update the UI.
+      const { error } = await supabase.from('execution_logs').insert({
         user_id: user.id,
         type,
         channel,
         message,
-      }).then(({ error }) => {
-        if (error) console.error('[StarX] Log insert error:', error);
       });
+      if (error) console.error('[StarX] Log insert error:', error);
+    } else {
+      // Fallback if no DB
+      const newLog: SimulationLog = {
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        timestamp: new Date().toLocaleTimeString(),
+        type,
+        channel,
+        message,
+      };
+
+      set((state) => ({
+        logs: [...state.logs.slice(-49), newLog],
+      }));
     }
   },
 

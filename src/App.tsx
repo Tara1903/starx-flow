@@ -1,13 +1,15 @@
 import React, { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AnimatePresence } from "motion/react";
 import { useUIStore } from "./store/uiStore";
 import { SignupModal } from "./components/SignupModal";
 import { CustomCursor } from "./components/CustomCursor";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { CookieConsent } from "./components/CookieConsent";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { useAuthStore, setupAuthListener } from "./store/authStore";
+import { useAdminStore } from "./store/adminStore";
 
 // Lazy Loaded Pages
 const Home = lazy(() => import("./pages/Home").then(m => ({ default: m.Home })));
@@ -31,6 +33,28 @@ const PageLoader = () => (
     <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
   </div>
 );
+
+// Route Guards
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  
+  if (isLoading) return <PageLoader />;
+  if (!isLoggedIn) return <Navigate to="/" replace />;
+  
+  return <>{children}</>;
+};
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAdmin = useAdminStore((state) => state.isAdmin);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  
+  if (isLoading) return <PageLoader />;
+  if (!isLoggedIn || !isAdmin) return <Navigate to="/admin/login" replace />;
+  
+  return <>{children}</>;
+};
 
 export default function App() {
   const isSignupOpen = useUIStore((state) => state.isSignupOpen);
@@ -72,9 +96,13 @@ export default function App() {
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/setup" element={<AdminSetup />} />
+              
+              {/* Protected Routes */}
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin/setup" element={<ProtectedRoute><AdminSetup /></ProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLogin />} />
             </Routes>
           </Suspense>
@@ -86,6 +114,7 @@ export default function App() {
           <SignupModal onClose={closeSignup} />
         )}
       </AnimatePresence>
+      <CookieConsent />
     </BrowserRouter>
   );
 }

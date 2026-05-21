@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuthStore, type Workflow, type SimulationLog } from "../store/authStore";
+import { IntegrationModal } from "../components/IntegrationModal";
 
 /* ──────────────────────────────────────────────
    CONSTANTS & HELPERS
@@ -756,10 +757,11 @@ function AIPlaygroundTab() {
 /* ─── Analytics Tab ─── */
 function AnalyticsTab() {
   const workflows = useAuthStore((s) => s.workflows);
+  const chartData = useAuthStore((s) => s.chartData);
   const totalExecs = workflows.reduce((a, w) => a + w.executionsCount, 0);
   const avgSuccess = workflows.length > 0 ? (workflows.reduce((a, w) => a + w.successRate, 0) / workflows.length).toFixed(1) : "0";
   const totalHours = workflows.reduce((a, w) => a + w.savedHours, 0).toFixed(1);
-  const maxValue = Math.max(...CHART_DATA.map((d) => d.value));
+  const maxValue = Math.max(...chartData.map((d) => d.value), 5); // Fallback to 5 to avoid 0 division if no data
 
   return (
     <div className="space-y-6">
@@ -782,18 +784,18 @@ function AnalyticsTab() {
           </div>
           {/* SVG Bar Chart */}
           <div className="flex items-end justify-between gap-3 h-44 px-2">
-            {CHART_DATA.map((d, i) => {
+            {chartData.map((d, i) => {
               const height = maxValue > 0 ? (d.value / maxValue) * 100 : 0;
               return (
-                <div key={d.day} className="flex-1 flex flex-col items-center gap-2">
+                <div key={i} className="flex-1 flex flex-col items-center gap-2">
                   <motion.div
                     initial={{ scaleY: 0 }}
                     animate={{ scaleY: 1 }}
                     transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ height: `${height}%`, originY: 1 }}
+                    style={{ height: `${Math.max(height, 2)}%`, originY: 1 }}
                     className="w-full rounded-t-md bg-gradient-to-t from-emerald-600 to-emerald-400 relative group cursor-crosshair"
                   >
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111] border border-white/10 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111] border border-white/10 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                       {d.value} runs
                     </div>
                   </motion.div>
@@ -848,14 +850,8 @@ const CHANNEL_SERVICES = [
   { name: "Website Widget", key: "Web", desc: "Embed a live AI chat widget on your website for instant visitor engagement.", status: "disconnected", icon: <Globe className="w-6 h-6" />, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
 ];
 
-function ChannelsTab() {
-  const [channels, setChannels] = useState(CHANNEL_SERVICES);
-
-  const toggleConnection = (key: string) => {
-    setChannels(prev => prev.map(ch =>
-      ch.key === key ? { ...ch, status: ch.status === "connected" ? "disconnected" : "connected" } : ch
-    ));
-  };
+function ChannelsTab({ onOpenIntegration }: { onOpenIntegration: (key: string) => void }) {
+  const connectedChannels = useAuthStore(s => s.connectedChannels);
 
   return (
     <div className="space-y-4">
@@ -866,17 +862,21 @@ function ChannelsTab() {
         </div>
         <div className="flex items-center gap-2 text-xs text-zinc-400">
           <span className="w-2 h-2 bg-emerald-500 rounded-full" />
-          {channels.filter(c => c.status === "connected").length} Active
+          {connectedChannels.filter(c => c.isConnected).length} Active
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {channels.map((ch) => (
+        {CHANNEL_SERVICES.map((ch) => {
+          const connectedState = connectedChannels.find(c => c.channelKey === ch.key);
+          const isConnected = connectedState?.isConnected || false;
+
+          return (
           <motion.div
             key={ch.key}
             layout
             className={cn(
               "glass-card rounded-xl p-5 transition-all",
-              ch.status === "disconnected" && "opacity-60"
+              !isConnected && "opacity-60"
             )}
           >
             <div className="flex items-start justify-between mb-4">
@@ -884,28 +884,29 @@ function ChannelsTab() {
                 {ch.icon}
               </div>
               <button
-                onClick={() => toggleConnection(ch.key)}
+                onClick={() => onOpenIntegration(ch.key)}
                 className={cn(
                   "flex items-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-full border transition-all",
-                  ch.status === "connected"
+                  isConnected
                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
                     : "bg-white/5 text-zinc-400 border-white/10 hover:bg-white/10"
                 )}
               >
-                {ch.status === "connected" ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-                {ch.status === "connected" ? "Connected" : "Connect"}
+                {isConnected ? <Wifi className="w-3 h-3" /> : <Settings className="w-3 h-3" />}
+                {isConnected ? "Configure" : "Connect"}
               </button>
             </div>
             <h4 className="text-sm font-semibold text-white mb-1">{ch.name}</h4>
             <p className="text-xs text-zinc-500 leading-relaxed">{ch.desc}</p>
-            {ch.status === "connected" && (
+            {isConnected && (
               <div className="flex items-center gap-1.5 mt-3 text-[11px] text-emerald-400/70">
                 <Shield className="w-3 h-3" />
-                API key configured · Last synced 2 min ago
+                API key configured
               </div>
             )}
           </motion.div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -931,6 +932,14 @@ export function Dashboard() {
   const [simulatingId, setSimulatingId] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [configModalId, setConfigModalId] = useState<string | null>(null);
+  
+  const [integrationModalOpen, setIntegrationModalOpen] = useState(false);
+  const [integrationChannelKey, setIntegrationChannelKey] = useState<string | null>(null);
+
+  const handleOpenIntegration = (key: string) => {
+    setIntegrationChannelKey(key);
+    setIntegrationModalOpen(true);
+  };
 
   // Auto-simulation every 25 seconds for immersive feel
   useEffect(() => {
@@ -1144,7 +1153,7 @@ export function Dashboard() {
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
             >
-              <ChannelsTab />
+              <ChannelsTab onOpenIntegration={handleOpenIntegration} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -1156,6 +1165,12 @@ export function Dashboard() {
           <CreateWorkflowWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
         )}
       </AnimatePresence>
+
+      <IntegrationModal 
+        channelKey={integrationChannelKey} 
+        isOpen={integrationModalOpen} 
+        onClose={() => setIntegrationModalOpen(false)} 
+      />
     </section>
   );
 }

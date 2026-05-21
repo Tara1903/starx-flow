@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { cn } from "../lib/utils";
 import { useAuthStore } from "../store/authStore";
+import { useShield } from "../lib/shield";
 
 const signupSchema = z.object({
   businessName: z.string().min(2, "Business name must be at least 2 characters"),
@@ -34,6 +35,12 @@ export function SignupModal({ onClose }: SignupModalProps) {
   const [sentEmail, setSentEmail] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const sendMagicLink = useAuthStore((state) => state.sendMagicLink);
+
+  const shield = useShield();
+  const [honeypot, setHoneypot] = useState("");
+  const [attempts, setAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState(0);
+  const [cooldown, setCooldown] = useState(false);
 
   const signupForm = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -73,6 +80,33 @@ export function SignupModal({ onClose }: SignupModalProps) {
     setIsSubmitting(true);
     setSubmitError(null);
 
+    const score = shield.getScore();
+    if (score < 20) {
+      setSentEmail(data.email);
+      setMagicLinkSent(true);
+      setIsSubmitting(false);
+      return;
+    }
+
+    const now = Date.now();
+    if (now < lockedUntil) {
+      setSubmitError("Too many attempts. Please wait 5 minutes.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (cooldown) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    setAttempts((prev) => {
+      const next = prev + 1;
+      if (next >= 3) setLockedUntil(Date.now() + 5 * 60 * 1000);
+      return next;
+    });
+    setCooldown(true);
+    setTimeout(() => setCooldown(false), 30000);
+
     const { error } = await sendMagicLink(data.email, {
       business_name: data.businessName,
       owner_name: data.ownerName,
@@ -93,6 +127,33 @@ export function SignupModal({ onClose }: SignupModalProps) {
   const onLoginSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
     setSubmitError(null);
+
+    const score = shield.getScore();
+    if (score < 20) {
+      setSentEmail(data.email);
+      setMagicLinkSent(true);
+      setIsSubmitting(false);
+      return;
+    }
+
+    const now = Date.now();
+    if (now < lockedUntil) {
+      setSubmitError("Too many attempts. Please wait 5 minutes.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (cooldown) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    setAttempts((prev) => {
+      const next = prev + 1;
+      if (next >= 3) setLockedUntil(Date.now() + 5 * 60 * 1000);
+      return next;
+    });
+    setCooldown(true);
+    setTimeout(() => setCooldown(false), 30000);
 
     const { error } = await sendMagicLink(data.email);
 
@@ -304,6 +365,20 @@ export function SignupModal({ onClose }: SignupModalProps) {
                     Don't have an account? Start a free trial
                   </button>
                 </div>
+                {/* Honeypot */}
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={(e) => {
+                    setHoneypot(e.target.value);
+                    shield.setHoneypot(e.target.value.length > 0);
+                  }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, overflow: 'hidden', opacity: 0 }}
+                />
               </motion.form>
             ) : (
               /* ── SIGNUP MODE ── */
@@ -496,6 +571,20 @@ export function SignupModal({ onClose }: SignupModalProps) {
                   </button>
                   <p className="text-center text-[10px] text-zinc-500">No credit card required · Passwordless login</p>
                 </div>
+                {/* Honeypot */}
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={(e) => {
+                    setHoneypot(e.target.value);
+                    shield.setHoneypot(e.target.value.length > 0);
+                  }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, overflow: 'hidden', opacity: 0 }}
+                />
               </form>
             )}
           </AnimatePresence>
