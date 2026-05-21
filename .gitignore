@@ -6,3 +6,16 @@ coverage/
 *.log
 .env*
 !.env.example
+
+.vercel
+
+# Agent-specific files
+.agents/
+scratch/
+auth_config.json
+auth_payload.json
+check-db.ts
+cleanup.cjs
+refactor.cjs
+update_auth.cjs
+skills-lock.json
