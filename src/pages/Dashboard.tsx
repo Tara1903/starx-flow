@@ -553,7 +553,7 @@ function CreateWorkflowWizard({ open, onClose }: { open: boolean; onClose: () =>
 }
 
 /* ─── AI Playground Tab ─── */
-function AIPlaygroundTab() {
+const AIPlaygroundTab = React.memo(function AIPlaygroundTab() {
   const workflows = useAuthStore((s) => s.workflows);
   const updatePrompt = useAuthStore((s) => s.updateWorkflowPrompt);
   const selectedId = useAuthStore((s) => s.selectedWorkflowId);
@@ -752,10 +752,10 @@ function AIPlaygroundTab() {
       </div>
     </div>
   );
-}
+});
 
 /* ─── Analytics Tab ─── */
-function AnalyticsTab() {
+const AnalyticsTab = React.memo(function AnalyticsTab() {
   const workflows = useAuthStore((s) => s.workflows);
   const chartData = useAuthStore((s) => s.chartData);
   const totalExecs = workflows.reduce((a, w) => a + w.executionsCount, 0);
@@ -839,7 +839,7 @@ function AnalyticsTab() {
       </div>
     </div>
   );
-}
+});
 
 /* ─── Channels Tab ─── */
 const CHANNEL_SERVICES = [
@@ -850,7 +850,7 @@ const CHANNEL_SERVICES = [
   { name: "Website Widget", key: "Web", desc: "Embed a live AI chat widget on your website for instant visitor engagement.", status: "disconnected", icon: <Globe className="w-6 h-6" />, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
 ];
 
-function ChannelsTab({ onOpenIntegration }: { onOpenIntegration: (key: string) => void }) {
+const ChannelsTab = React.memo(function ChannelsTab({ onOpenIntegration }: { onOpenIntegration: (key: string) => void }) {
   const connectedChannels = useAuthStore(s => s.connectedChannels);
 
   return (
