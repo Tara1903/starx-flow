@@ -30,7 +30,7 @@ export function WhatsAppStep() {
   const serverUrl = React.useMemo(() => {
     const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (isDev) return `http://${window.location.hostname}:10000`;
-    return 'https://starx-whatsapp-bot.onrender.com';
+    return 'https://starx-flow-backend-tara.loca.lt';
   }, []);
 
   const requestQrSession = async () => {
@@ -52,7 +52,8 @@ export function WhatsAppStep() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Bypass-Tunnel-Reminder': 'true'
         }
       });
 
@@ -92,7 +93,9 @@ export function WhatsAppStep() {
 
     const pingServer = async () => {
       try {
-        const res = await fetch(`${serverUrl}/ready`);
+        const res = await fetch(`${serverUrl}/ready`, {
+          headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
         return res.ok;
       } catch (e) {
         return false;
