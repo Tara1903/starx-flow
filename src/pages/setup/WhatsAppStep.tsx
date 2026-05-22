@@ -28,9 +28,9 @@ export function WhatsAppStep() {
   const whatsappCreds = whatsappChannel?.credentials || {};
 
   const serverUrl = React.useMemo(() => {
-    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (isDev) return `http://${window.location.hostname}:10000`;
-    return 'https://starx-flow-backend-tara.loca.lt';
+    // Browsers explicitly allow HTTPS websites to fetch from http://localhost
+    // This completely bypasses the need for Ngrok, Localtunnel, or any cloud proxies!
+    return 'http://localhost:10000';
   }, []);
 
   const requestQrSession = async () => {
