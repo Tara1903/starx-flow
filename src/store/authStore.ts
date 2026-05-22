@@ -43,6 +43,7 @@ export interface UserProfile {
   businessName: string;
   businessType: string;
   role: string;
+  onboardingComplete: boolean;
 }
 
 interface AuthState {
@@ -186,22 +187,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
-      // Add a 5 second timeout to getSession to prevent deadlocks
+      // Add a 15 second timeout to getSession to prevent deadlocks
       const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000));
       
       const result = await Promise.race([sessionPromise, timeoutPromise]) as any;
       const session = result?.data?.session;
 
       if (session?.user) {
-        // Fetch profile
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+        // Fetch profile with a short retry mechanism to handle race condition with DB trigger
+        let profile = null;
+        for (let i = 0; i < 3; i++) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (data) {
+            profile = data;
+            break;
+          }
+          // wait 500ms before retrying
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
 
         if (profile) {
+          let onboardingComplete = false;
+          try {
+            const { data: onboarding } = await supabase
+              .from('onboarding_progress')
+              .select('is_complete')
+              .eq('user_id', session.user.id)
+              .single();
+            if (onboarding) {
+              onboardingComplete = onboarding.is_complete;
+            }
+          } catch (err) {
+            console.warn('[StarX Auth] Could not fetch onboarding progress:', err);
+          }
+
           set({
             isLoggedIn: true,
             isLoading: false,
@@ -212,6 +237,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               businessName: profile.business_name,
               businessType: profile.business_type,
               role: profile.role,
+              onboardingComplete,
             },
           });
 
@@ -308,6 +334,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           .single();
 
         if (profile) {
+          let onboardingComplete = false;
+          try {
+            const { data: onboarding } = await supabase
+              .from('onboarding_progress')
+              .select('is_complete')
+              .eq('user_id', data.user.id)
+              .single();
+            if (onboarding) {
+              onboardingComplete = onboarding.is_complete;
+            }
+          } catch (err) {
+            console.warn('[StarX Auth] Could not fetch onboarding progress:', err);
+          }
+
           set({
             isLoggedIn: true,
             user: {
@@ -317,6 +357,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               businessName: profile.business_name,
               businessType: profile.business_type,
               role: profile.role,
+              onboardingComplete,
             },
           });
           await get().fetchWorkflows().catch(console.error);
@@ -336,6 +377,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
+    }
+    // Clear potentially cached onboarding state to avoid cross-account contamination
+    try {
+      localStorage.removeItem('starx_onboarding_state');
+    } catch (e) {
+      // ignore
     }
     set({
       isLoggedIn: false,
@@ -784,7 +831,9 @@ export function setupAuthListener() {
           isLoggedIn: false,
           user: null,
           workflows: [],
+          connectedChannels: [],
           logs: [],
+          selectedWorkflowId: null,
         });
       }
     }

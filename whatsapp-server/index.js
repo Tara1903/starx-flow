@@ -38,14 +38,18 @@ if (!SUPABASE_URL || !SUPABASE_KEY || !TARGET_USER_ID) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ─────────────────────────────────────────────
-//  EXPRESS KEEP-ALIVE SERVER
-//  Render free tier sleeps after 15 min of no traffic.
-//  UptimeRobot pings /ping every 5 min to prevent sleep.
+//  MULTI-SESSION WHATSAPP CONNECTION MANAGEMENT
+// ─────────────────────────────────────────────
+const activeSockets = new Map();
+const retryCounts = new Map();
+const MAX_RETRIES = 10;
+
+// ─────────────────────────────────────────────
+//  EXPRESS KEEP-ALIVE SERVER & API
 // ─────────────────────────────────────────────
 const app = express();
-const PORT = process.env.PORT || 10000; // Render assigns PORT automatically
+const PORT = process.env.PORT || 10000;
 
-// Parse JSON request body
 app.use(express.json());
 
 // Custom CORS middleware to allow the Vite dashboard to connect
@@ -67,7 +71,7 @@ app.get('/ping', (req, res) => {
     res.send('pong');
 });
 
-// Secure endpoint to reset the WhatsApp session
+// Secure endpoint to reset the WhatsApp session for a user
 app.post('/api/whatsapp/reset', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
@@ -82,12 +86,9 @@ app.post('/api/whatsapp/reset', async (req, res) => {
             return res.status(401).json({ error: 'Unauthorized: Invalid token' });
         }
 
-        if (user.id !== TARGET_USER_ID) {
-            return res.status(403).json({ error: 'Forbidden: Session owner mismatch' });
-        }
-
-        console.log("[WA] Manual session reset requested via API endpoint.");
-        await resetSession();
+        const userId = user.id;
+        console.log(`[WA] Manual session reset requested via API endpoint for user: ${userId}`);
+        await resetSession(userId);
         res.json({ success: true, message: 'WhatsApp session reset initiated successfully' });
     } catch (err) {
         console.error('[HTTP] Reset error:', err);
@@ -95,25 +96,72 @@ app.post('/api/whatsapp/reset', async (req, res) => {
     }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[HTTP] Keep-alive server listening on port ${PORT}`);
-    // Sync external URL registry on startup
-    syncStartupRegistry().catch(err => console.error('[HTTP] Startup registry sync error:', err.message));
+// Secure endpoint to connect/initialize the WhatsApp session for a user
+app.post('/api/whatsapp/connect', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Missing or invalid authorization header' });
+        }
+        const token = authHeader.split(' ')[1];
+
+        // Verify user JWT against Supabase auth
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (error || !user) {
+            return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+        }
+
+        const userId = user.id;
+        console.log(`[WA] Manual session connection requested via API endpoint for user: ${userId}`);
+        
+        // Ensure a row exists in connected_channels for this user
+        const { data: existingChannel } = await supabase
+            .from('connected_channels')
+            .select('is_connected, credentials')
+            .eq('user_id', userId)
+            .eq('channel_key', 'WhatsApp')
+            .maybeSingle();
+
+        const serverUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+        if (!existingChannel) {
+            await supabase
+                .from('connected_channels')
+                .insert({
+                    user_id: userId,
+                    channel_key: 'WhatsApp',
+                    is_connected: false,
+                    credentials: {
+                        server_url: serverUrl,
+                        updated_at: new Date().toISOString()
+                    },
+                    last_synced: new Date().toISOString()
+                });
+        }
+
+        if (!activeSockets.has(userId)) {
+            retryCounts.set(userId, 0);
+            connectToWhatsApp(userId).catch(err => console.error(`[WA] Connection error for ${userId}:`, err.message));
+            res.json({ success: true, message: 'WhatsApp connection initialization started' });
+        } else {
+            res.json({ success: true, message: 'WhatsApp session is already active or initializing' });
+        }
+    } catch (err) {
+        console.error('[HTTP] Connect error:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// ─────────────────────────────────────────────
-//  WHATSAPP CONNECTION
-// ─────────────────────────────────────────────
-let retryCount = 0;
-const MAX_RETRIES = 10;
-let sock = null;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[HTTP] Keep-alive server listening on port ${PORT}`);
+    startAllConnectedSessions().catch(err => console.error('[HTTP] Startup session restore error:', err.message));
+});
 
-async function syncStartupRegistry() {
-    const serverUrl = process.env.RENDER_EXTERNAL_URL || 'http://localhost:10000';
+async function syncUserRegistry(userId) {
+    const serverUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
     const { data: existingChannel } = await supabase
         .from('connected_channels')
         .select('is_connected, credentials')
-        .eq('user_id', TARGET_USER_ID)
+        .eq('user_id', userId)
         .eq('channel_key', 'WhatsApp')
         .maybeSingle();
 
@@ -121,7 +169,7 @@ async function syncStartupRegistry() {
     await supabase
         .from('connected_channels')
         .upsert({
-            user_id: TARGET_USER_ID,
+            user_id: userId,
             channel_key: 'WhatsApp',
             is_connected: existingChannel?.is_connected || false,
             credentials: {
@@ -131,11 +179,72 @@ async function syncStartupRegistry() {
             },
             last_synced: new Date().toISOString()
         }, { onConflict: 'user_id, channel_key' });
-    console.log(`[HTTP] Synced server URL: ${serverUrl}`);
+    console.log(`[HTTP] Synced user ${userId} server URL: ${serverUrl}`);
 }
 
-async function resetSession() {
-    console.log("[WA] Executing session reset...");
+async function startAllConnectedSessions() {
+    const serverUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+    console.log("[WA] Checking for previously connected WhatsApp channels to restore...");
+    
+    // Fetch channels
+    const { data: channels, error } = await supabase
+        .from('connected_channels')
+        .select('user_id, credentials, is_connected')
+        .eq('channel_key', 'WhatsApp');
+        
+    if (error) {
+        console.error("[WA] Error loading connected channels:", error.message);
+        // Fallback to TARGET_USER_ID
+        connectToWhatsApp(TARGET_USER_ID).catch(err => console.error(`[WA] Target user connection error:`, err.message));
+        return;
+    }
+
+    const channelList = channels || [];
+
+    // Ensure TARGET_USER_ID is synced
+    const hasTargetUser = channelList.some(c => c.user_id === TARGET_USER_ID);
+    if (!hasTargetUser) {
+        console.log(`[WA] TARGET_USER_ID not found in connected_channels. Syncing now...`);
+        await syncUserRegistry(TARGET_USER_ID);
+        channelList.push({
+            user_id: TARGET_USER_ID,
+            credentials: {},
+            is_connected: false
+        });
+    }
+
+    // Now process all known channels
+    for (const channel of channelList) {
+        const currentCreds = channel.credentials || {};
+        await supabase
+            .from('connected_channels')
+            .upsert({
+                user_id: channel.user_id,
+                channel_key: 'WhatsApp',
+                is_connected: channel.is_connected,
+                credentials: {
+                    ...currentCreds,
+                    server_url: serverUrl,
+                    updated_at: new Date().toISOString()
+                },
+                last_synced: new Date().toISOString()
+            }, { onConflict: 'user_id, channel_key' });
+
+        if (channel.is_connected) {
+            console.log(`[WA] Restoring connection for user: ${channel.user_id}`);
+            connectToWhatsApp(channel.user_id).catch(err => console.error(`[WA] Failed to connect user ${channel.user_id}:`, err.message));
+        } else if (channel.user_id === TARGET_USER_ID) {
+            // Also start connection for TARGET_USER_ID on startup even if not connected,
+            // to allow it to generate a QR code so it can be linked immediately.
+            console.log(`[WA] Starting default connection for TARGET_USER_ID: ${TARGET_USER_ID}`);
+            connectToWhatsApp(TARGET_USER_ID).catch(err => console.error(`[WA] Failed to connect target user:`, err.message));
+        }
+    }
+}
+
+async function resetSession(userId) {
+    console.log(`[WA] Executing session reset for user: ${userId}...`);
+    const sock = activeSockets.get(userId);
     if (sock) {
         try {
             sock.ev.removeAllListeners('connection.update');
@@ -143,65 +252,79 @@ async function resetSession() {
             sock.ev.removeAllListeners('messages.upsert');
             sock.logout();
         } catch (e) {
-            console.warn("[WA] Error during socket logout:", e.message);
+            console.warn(`[WA] Error during socket logout for ${userId}:`, e.message);
         }
         try {
             sock.end();
         } catch (e) {
             // ignore
         }
-        sock = null;
+        activeSockets.delete(userId);
     }
 
     // Delete all auth keys for this session
-    console.log(`[WA] Deleting auth keys for session: ${TARGET_USER_ID}`);
+    console.log(`[WA] Deleting auth keys for session: ${userId}`);
     const { error: deleteErr } = await supabase
         .from('baileys_auth')
         .delete()
-        .like('key_id', `${TARGET_USER_ID}-%`);
+        .like('key_id', `${userId}-%`);
     
     if (deleteErr) {
-        console.error("[WA] Error clearing auth keys from DB:", deleteErr.message);
+        console.error(`[WA] Error clearing auth keys from DB for ${userId}:`, deleteErr.message);
     }
 
     // Clear status in connected_channels table
-    const serverUrl = process.env.RENDER_EXTERNAL_URL || 'http://localhost:10000';
+    const serverUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
     await supabase
         .from('connected_channels')
         .upsert({
-            user_id: TARGET_USER_ID,
+            user_id: userId,
             channel_key: 'WhatsApp',
             is_connected: false,
             credentials: { server_url: serverUrl, updated_at: new Date().toISOString() },
             last_synced: new Date().toISOString()
         }, { onConflict: 'user_id, channel_key' });
 
-    retryCount = 0;
+    retryCounts.set(userId, 0);
     setTimeout(() => {
-        connectToWhatsApp();
+        connectToWhatsApp(userId);
     }, 2000);
 }
 
-async function connectToWhatsApp() {
+async function connectToWhatsApp(userId) {
     try {
-        console.log("\n[WA] Starting WhatsApp connection...");
+        console.log(`\n[WA] Starting WhatsApp connection for user: ${userId}...`);
+
+        // Close any existing socket for this user
+        const existingSock = activeSockets.get(userId);
+        if (existingSock) {
+            try {
+                existingSock.ev.removeAllListeners('connection.update');
+                existingSock.ev.removeAllListeners('creds.update');
+                existingSock.ev.removeAllListeners('messages.upsert');
+                existingSock.end();
+            } catch (e) {
+                // ignore
+            }
+            activeSockets.delete(userId);
+        }
 
         // 1. Load auth state from Supabase
-        const { state, saveCreds } = await useSupabaseAuthState(supabase, TARGET_USER_ID);
+        const { state, saveCreds } = await useSupabaseAuthState(supabase, userId);
 
         // 2. Fetch latest WhatsApp Web version (with fallback)
         let version;
         try {
             const info = await fetchLatestBaileysVersion();
             version = info.version;
-            console.log(`[WA] WhatsApp Web version: ${version.join('.')}`);
+            console.log(`[WA] [${userId}] WhatsApp Web version: ${version.join('.')}`);
         } catch (e) {
             version = [2, 3000, 1015901307];
-            console.warn("[WA] Could not fetch WA version, using fallback.");
+            console.warn(`[WA] [${userId}] Could not fetch WA version, using fallback.`);
         }
 
         // 3. Create the socket
-        sock = makeWASocket({
+        const sock = makeWASocket({
             version,
             auth: state,
             logger: pino({ level: 'silent' }),
@@ -213,32 +336,32 @@ async function connectToWhatsApp() {
             retryRequestDelayMs: 250
         });
 
+        activeSockets.set(userId, sock);
+
         // 4. Persist credentials on every update
         sock.ev.on('creds.update', saveCreds);
 
         // 5. Handle connection lifecycle
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
-            const serverUrl = process.env.RENDER_EXTERNAL_URL || 'http://localhost:10000';
+            const serverUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
 
             // ── QR CODE ──
             if (qr) {
                 const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qr)}`;
-                console.log('\n╔══════════════════════════════════════════════════════════╗');
-                console.log('║  📱 WHATSAPP QR CODE - SCAN TO LINK YOUR DEVICE         ║');
-                console.log('║                                                          ║');
-                console.log('║  Can\'t see the QR below? Open this link in your browser: ║');
-                console.log('╠══════════════════════════════════════════════════════════╣');
+                console.log(`\n╔══════════════════════════════════════════════════════════╗`);
+                console.log(`║  📱 USER ${userId} QR CODE - SCAN TO LINK DEVICE          ║`);
+                console.log(`║                                                          ║`);
+                console.log(`║  Can't see the QR below? Open this link in your browser: ║`);
+                console.log(`╠══════════════════════════════════════════════════════════╣`);
                 console.log(`║  ${qrImageUrl}`);
-                console.log('╚══════════════════════════════════════════════════════════╝\n');
-
-                qrcode.generate(qr, { small: true });
+                console.log(`╚══════════════════════════════════════════════════════════╝\n`);
 
                 // Write QR details to connected_channels so frontend can render it
                 await supabase
                     .from('connected_channels')
                     .upsert({
-                        user_id: TARGET_USER_ID,
+                        user_id: userId,
                         channel_key: 'WhatsApp',
                         is_connected: false,
                         credentials: {
@@ -253,18 +376,18 @@ async function connectToWhatsApp() {
 
             // ── CONNECTED ──
             if (connection === 'open') {
-                retryCount = 0; // Reset on successful connection
-                console.log('\n[WA] ====================================');
-                console.log('[WA]   CONNECTED TO WHATSAPP SUCCESSFULLY');
-                console.log('[WA]   Listening for incoming messages...');
-                console.log('[WA] ====================================\n');
+                retryCounts.set(userId, 0); // Reset on successful connection
+                console.log(`\n[WA] ====================================`);
+                console.log(`[WA]   CONNECTED USER ${userId} TO WHATSAPP`);
+                console.log(`[WA]   Listening for incoming messages...`);
+                console.log(`[WA] ====================================\n`);
 
                 const phone = sock.user.id.split(':')[0];
                 const name = sock.user.name || '';
                 await supabase
                     .from('connected_channels')
                     .upsert({
-                        user_id: TARGET_USER_ID,
+                        user_id: userId,
                         channel_key: 'WhatsApp',
                         is_connected: true,
                         credentials: {
@@ -282,15 +405,15 @@ async function connectToWhatsApp() {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const reason = lastDisconnect?.error?.message || 'Unknown';
 
-                console.log(`[WA] Disconnected. Code: ${statusCode}, Reason: ${reason}`);
+                console.log(`[WA] [${userId}] Disconnected. Code: ${statusCode}, Reason: ${reason}`);
 
                 if (statusCode === DisconnectReason.loggedOut) {
-                    console.log('[WA] LOGGED OUT. Clearing session and preparing for re-pair.');
+                    console.log(`[WA] [${userId}] LOGGED OUT. Clearing session and preparing for re-pair.`);
                     
                     await supabase
                         .from('connected_channels')
                         .upsert({
-                            user_id: TARGET_USER_ID,
+                            user_id: userId,
                             channel_key: 'WhatsApp',
                             is_connected: false,
                             credentials: { 
@@ -302,23 +425,26 @@ async function connectToWhatsApp() {
                         }, { onConflict: 'user_id, channel_key' });
 
                     // Clear keys
-                    await supabase.from('baileys_auth').delete().like('key_id', `${TARGET_USER_ID}-%`);
+                    await supabase.from('baileys_auth').delete().like('key_id', `${userId}-%`);
                     
-                    retryCount = 0;
+                    retryCounts.set(userId, 0);
                     setTimeout(() => {
-                        connectToWhatsApp();
+                        connectToWhatsApp(userId);
                     }, 2000);
                     return;
                 }
 
-                retryCount++;
-                if (retryCount > MAX_RETRIES) {
-                    console.error(`[WA] Max retries (${MAX_RETRIES}) exceeded. Stopping.`);
+                let uRetryCount = retryCounts.get(userId) || 0;
+                uRetryCount++;
+                retryCounts.set(userId, uRetryCount);
+
+                if (uRetryCount > MAX_RETRIES) {
+                    console.error(`[WA] [${userId}] Max retries (${MAX_RETRIES}) exceeded. Stopping.`);
                     
                     await supabase
                         .from('connected_channels')
                         .upsert({
-                            user_id: TARGET_USER_ID,
+                            user_id: userId,
                             channel_key: 'WhatsApp',
                             is_connected: false,
                             credentials: { 
@@ -336,7 +462,7 @@ async function connectToWhatsApp() {
                 await supabase
                     .from('connected_channels')
                     .upsert({
-                        user_id: TARGET_USER_ID,
+                        user_id: userId,
                         channel_key: 'WhatsApp',
                         is_connected: false,
                         credentials: {
@@ -348,10 +474,10 @@ async function connectToWhatsApp() {
                         last_synced: new Date().toISOString()
                     }, { onConflict: 'user_id, channel_key' });
 
-                const waitSec = Math.min(retryCount * 3, 30); // 3s, 6s, 9s ... max 30s
-                console.log(`[WA] Reconnecting in ${waitSec}s... (attempt ${retryCount}/${MAX_RETRIES})`);
+                const waitSec = Math.min(uRetryCount * 3, 30); // 3s, 6s, 9s ... max 30s
+                console.log(`[WA] [${userId}] Reconnecting in ${waitSec}s... (attempt ${uRetryCount}/${MAX_RETRIES})`);
                 await delay(waitSec * 1000);
-                connectToWhatsApp();
+                connectToWhatsApp(userId);
             }
         });
 
@@ -369,7 +495,7 @@ async function connectToWhatsApp() {
             if (!messageText) return;
 
             const senderPhone = msg.key.remoteJid;
-            console.log(`[WA] Message from ${senderPhone}: "${messageText}"`);
+            console.log(`[WA] [${userId}] Message from ${senderPhone}: "${messageText}"`);
 
             try {
                 const edgeUrl = `${SUPABASE_URL}/functions/v1/ai-processor`;
@@ -380,7 +506,7 @@ async function connectToWhatsApp() {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        userId: TARGET_USER_ID,
+                        userId: userId,
                         channel: 'WhatsApp',
                         messageText,
                         customerPhone: senderPhone,
@@ -389,7 +515,7 @@ async function connectToWhatsApp() {
                 });
 
                 if (!response.ok) {
-                    console.error(`[WA] Edge function returned HTTP ${response.status}`);
+                    console.error(`[WA] [${userId}] Edge function returned HTTP ${response.status}`);
                     return;
                 }
 
@@ -397,26 +523,25 @@ async function connectToWhatsApp() {
 
                 if (result.success && result.reply) {
                     await sock.sendMessage(senderPhone, { text: result.reply });
-                    console.log(`[WA] AI reply sent to ${senderPhone}`);
+                    console.log(`[WA] [${userId}] AI reply sent to ${senderPhone}`);
                 } else {
-                    console.log('[WA] No reply generated:', JSON.stringify(result));
+                    console.log(`[WA] [${userId}] No reply generated:`, JSON.stringify(result));
                 }
             } catch (err) {
-                console.error(`[WA] Error processing message:`, err.message);
+                console.error(`[WA] [${userId}] Error processing message:`, err.message);
             }
         });
 
     } catch (err) {
-        console.error("[WA] Fatal error in connectToWhatsApp:", err.message);
-        retryCount++;
-        if (retryCount <= MAX_RETRIES) {
-            const waitSec = Math.min(retryCount * 5, 30);
-            console.log(`[WA] Will retry in ${waitSec}s...`);
+        console.error(`[WA] [${userId}] Fatal error in connectToWhatsApp:`, err.message);
+        let uRetryCount = retryCounts.get(userId) || 0;
+        uRetryCount++;
+        retryCounts.set(userId, uRetryCount);
+        if (uRetryCount <= MAX_RETRIES) {
+            const waitSec = Math.min(uRetryCount * 5, 30);
+            console.log(`[WA] [${userId}] Will retry in ${waitSec}s...`);
             await delay(waitSec * 1000);
-            connectToWhatsApp();
+            connectToWhatsApp(userId);
         }
     }
 }
-
-// ── START ──
-connectToWhatsApp();

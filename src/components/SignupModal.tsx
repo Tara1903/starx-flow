@@ -81,7 +81,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
     setSubmitError(null);
 
     const score = shield.getScore();
-    if (score < 20) {
+    if (score < 5) {
       setSentEmail(data.email);
       setMagicLinkSent(true);
       setIsSubmitting(false);
@@ -129,7 +129,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
     setSubmitError(null);
 
     const score = shield.getScore();
-    if (score < 20) {
+    if (score < 5) {
       setSentEmail(data.email);
       setMagicLinkSent(true);
       setIsSubmitting(false);

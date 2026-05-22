@@ -327,3 +327,285 @@ h3 {
     radial-gradient(at 80% 70%, rgba(20,184,166,0.04) 0px, transparent 50%),
     radial-gradient(at 50% 50%, rgba(255,255,255,0.01) 0px, transparent 70%);
 }
+
+/* ============================================
+   ONBOARDING STEP STATES
+   ============================================ */
+:root {
+  --step-locked: #3f3f46;
+  --step-available: #a1a1aa;
+  --step-active: #3b82f6;
+  --step-complete: #10b981;
+  --step-error: #ef4444;
+
+  /* Sidebar */
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+  --sidebar-bg: #050505;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.04);
+  --sidebar-item-active: rgba(16, 185, 129, 0.08);
+
+  /* Activity feed */
+  --feed-dot-success: #10b981;
+  --feed-dot-warning: #f59e0b;
+  --feed-dot-error: #ef4444;
+  --feed-dot-info: #3b82f6;
+
+  /* Conversation inbox */
+  --inbox-unread: rgba(16, 185, 129, 0.08);
+  --inbox-selected: rgba(255, 255, 255, 0.04);
+  --bubble-user: rgba(16, 185, 129, 0.15);
+  --bubble-ai: rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================
+   ONBOARDING CHECKLIST
+   ============================================ */
+.checklist-item-complete {
+  border-color: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.04);
+}
+
+.checklist-item-active {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.checklist-item-locked {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ============================================
+   SETUP PROGRESS BAR
+   ============================================ */
+@keyframes progress-fill {
+  from { width: 0%; }
+  to { width: var(--progress-width); }
+}
+
+.setup-progress-track {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.setup-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: 99px;
+  transition: width 0.6s var(--ease-premium);
+}
+
+/* ============================================
+   MOBILE BOTTOM NAV
+   ============================================ */
+.mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: rgba(5, 5, 5, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: all 150ms var(--ease-snappy);
+  color: #71717a;
+}
+
+.mobile-nav-item.active {
+  color: #10b981;
+}
+
+.mobile-nav-item span {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  transition: all var(--duration-fast) var(--ease-snappy);
+  color: #71717a;
+  font-size: 13.5px;
+  font-weight: 500;
+  position: relative;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sidebar-item:hover {
+  background: var(--sidebar-item-hover);
+  color: #a1a1aa;
+}
+
+.sidebar-item.active {
+  background: var(--sidebar-item-active);
+  color: #10b981;
+}
+
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: #10b981;
+  border-radius: 0 3px 3px 0;
+}
+
+/* ============================================
+   ACTIVITY FEED
+   ============================================ */
+@keyframes feed-slide {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.feed-entry {
+  animation: feed-slide 0.3s var(--ease-premium) both;
+}
+
+.feed-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+/* ============================================
+   CONVERSATION INBOX
+   ============================================ */
+.conversation-thread {
+  animation: fade-in-up 0.3s var(--ease-premium) both;
+}
+
+.bubble-user {
+  background: var(--bubble-user);
+  border-radius: 18px 18px 4px 18px;
+}
+
+.bubble-ai {
+  background: var(--bubble-ai);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px 18px 18px 4px;
+}
+
+/* ============================================
+   READINESS SCORE GAUGE
+   ============================================ */
+.readiness-gauge {
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+/* ============================================
+   CONFETTI
+   ============================================ */
+@keyframes confetti-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.confetti-piece {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  animation: confetti-fall linear forwards;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============================================
+   SETUP BOTTOM DRAWER (Mobile)
+   ============================================ */
+.setup-drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(10, 10, 10, 0.98);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px 20px 0 0;
+  z-index: 60;
+  transition: transform 0.4s var(--ease-premium);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.setup-drawer-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 99px;
+  margin: 10px auto 0;
+}
+
+/* ============================================
+   SMART NUDGE
+   ============================================ */
+@keyframes nudge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+}
+
+.smart-nudge {
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgba(59, 130, 246, 0.06);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+/* ============================================
+   STEP SUCCESS PULSE
+   ============================================ */
+@keyframes success-scale {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.success-icon-enter {
+  animation: success-scale 0.5s var(--ease-premium) both;
+}
+
+/* ============================================
+   DASHBOARD SECTION TRANSITIONS
+   ============================================ */
+@keyframes section-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-enter {
+  animation: section-enter 0.3s var(--ease-premium) both;
+}

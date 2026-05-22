@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence } from "motion/react";
 import { useUIStore } from "./store/uiStore";
 import { SignupModal } from "./components/SignupModal";
@@ -27,6 +27,17 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard").then(m => ({ 
 const AdminSetup = lazy(() => import("./pages/AdminSetup").then(m => ({ default: m.AdminSetup })));
 const AdminLogin = lazy(() => import("./pages/AdminLogin").then(m => ({ default: m.AdminLogin })));
 
+// Onboarding Pages
+const SetupLayout = lazy(() => import("./pages/setup/SetupLayout").then(m => ({ default: m.SetupLayout })));
+const WelcomeStep = lazy(() => import("./pages/setup/WelcomeStep").then(m => ({ default: m.WelcomeStep })));
+const AccountStep = lazy(() => import("./pages/setup/AccountStep").then(m => ({ default: m.AccountStep })));
+const WhatsAppStep = lazy(() => import("./pages/setup/WhatsAppStep").then(m => ({ default: m.WhatsAppStep })));
+const InstagramStep = lazy(() => import("./pages/setup/InstagramStep").then(m => ({ default: m.InstagramStep })));
+const SMSStep = lazy(() => import("./pages/setup/SMSStep").then(m => ({ default: m.SMSStep })));
+const AIConfigStep = lazy(() => import("./pages/setup/AIConfigStep").then(m => ({ default: m.AIConfigStep })));
+const TestStep = lazy(() => import("./pages/setup/TestStep").then(m => ({ default: m.TestStep })));
+const LaunchStep = lazy(() => import("./pages/setup/LaunchStep").then(m => ({ default: m.LaunchStep })));
+
 // Loading Fallback
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-black">
@@ -38,9 +49,16 @@ const PageLoader = () => (
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isLoading = useAuthStore((state) => state.isLoading);
+  const user = useAuthStore((state) => state.user);
+  const location = useLocation();
   
   if (isLoading) return <PageLoader />;
   if (!isLoggedIn) return <Navigate to="/" replace />;
+  
+  // If not onboarded and not trying to access onboarding, redirect to setup
+  if (user && !user.onboardingComplete && !location.pathname.startsWith('/setup')) {
+    return <Navigate to="/setup" replace />;
+  }
   
   return <>{children}</>;
 };
@@ -55,6 +73,55 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   
   return <>{children}</>;
 };
+
+function AppContent() {
+  const location = useLocation();
+  const isAppRoute = location.pathname.startsWith('/setup') || location.pathname.startsWith('/dashboard');
+
+  return (
+    <div className="min-h-screen text-white font-sans overflow-hidden bg-black flex flex-col">
+      <CustomCursor />
+      {!isAppRoute && <Navbar />}
+      <main className="relative z-10 flex-1">
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/product" element={<Product />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/resources/:deckId" element={<PresentationViewer />} />
+            <Route path="/resources/articles/:articleSlug" element={<ArticleViewer />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            
+            {/* Onboarding Setup Nested Route */}
+            <Route path="/setup" element={<ProtectedRoute><SetupLayout /></ProtectedRoute>}>
+              <Route path="welcome" element={<WelcomeStep />} />
+              <Route path="account" element={<AccountStep />} />
+              <Route path="whatsapp" element={<WhatsAppStep />} />
+              <Route path="instagram" element={<InstagramStep />} />
+              <Route path="sms" element={<SMSStep />} />
+              <Route path="ai" element={<AIConfigStep />} />
+              <Route path="test" element={<TestStep />} />
+              <Route path="launch" element={<LaunchStep />} />
+            </Route>
+
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/setup" element={<ProtectedRoute><AdminSetup /></ProtectedRoute>} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+          </Routes>
+        </Suspense>
+      </main>
+      {!isAppRoute && <Footer />}
+    </div>
+  );
+}
 
 export default function App() {
   const isSignupOpen = useUIStore((state) => state.isSignupOpen);
@@ -80,35 +147,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <div className="min-h-screen text-white font-sans overflow-hidden bg-black">
-        <CustomCursor />
-        <Navbar />
-        <main className="relative z-10">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/product" element={<Product />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/resources" element={<Resources />} />
-              <Route path="/resources/:deckId" element={<PresentationViewer />} />
-              <Route path="/resources/articles/:articleSlug" element={<ArticleViewer />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-              
-              {/* Protected Routes */}
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="/admin/setup" element={<ProtectedRoute><AdminSetup /></ProtectedRoute>} />
-              <Route path="/admin/login" element={<AdminLogin />} />
-            </Routes>
-          </Suspense>
-        </main>
-        <Footer />
-      </div>
+      <AppContent />
       <AnimatePresence>
         {isSignupOpen && (
           <SignupModal onClose={closeSignup} />

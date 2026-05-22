@@ -5,6 +5,14 @@ import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 
+const isLocalHost = 
+  window.location.hostname === 'localhost' || 
+  window.location.hostname === '127.0.0.1' || 
+  window.location.hostname.startsWith('192.168.') || 
+  window.location.hostname.startsWith('10.') || 
+  window.location.hostname.startsWith('172.') ||
+  window.location.hostname === '0.0.0.0';
+
 interface IntegrationModalProps {
   channelKey: string | null;
   isOpen: boolean;
@@ -32,6 +40,77 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
   useEffect(() => {
     if (isOpen && channelKey === 'WhatsApp') {
       fetchChannels().catch(console.error);
+
+      // Trigger the backend connect endpoint to initialize connection
+      const triggerConnect = async () => {
+        try {
+          const currentChannel = useAuthStore.getState().connectedChannels.find(c => c.channelKey === 'WhatsApp');
+          const currentCreds = currentChannel?.credentials || {};
+          
+          let serverUrl = isLocalHost
+            ? `http://${window.location.hostname}:10000`
+            : (currentCreds.server_url || 'https://starx-whatsapp-bot.onrender.com');
+
+          console.log(`[WA] Triggering connect on server: ${serverUrl}`);
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.access_token;
+          if (!token) return;
+
+          let response: Response | null = null;
+          let fetchError: any = null;
+
+          const attemptFetch = async (url: string) => {
+            try {
+              return await fetch(`${url}/api/whatsapp/connect`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+            } catch (err) {
+              console.warn(`[WA] Connect fetch to ${url} failed:`, err);
+              throw err;
+            }
+          };
+
+          try {
+            response = await attemptFetch(serverUrl);
+          } catch (err) {
+            fetchError = err;
+          }
+
+          // Fallback strategies for local development to handle Windows dual-stack loopback issues
+          if ((!response || !response.ok) && isLocalHost) {
+            const fallbacks = [];
+            if (window.location.hostname !== '127.0.0.1') {
+              fallbacks.push('http://127.0.0.1:10000');
+            }
+            if (window.location.hostname !== 'localhost') {
+              fallbacks.push('http://localhost:10000');
+            }
+
+            for (const fallbackUrl of fallbacks) {
+              if (response && response.ok) break;
+              console.log(`[WA] Retrying connect on fallback: ${fallbackUrl}`);
+              try {
+                response = await attemptFetch(fallbackUrl);
+                fetchError = null;
+              } catch (err) {
+                fetchError = err;
+              }
+            }
+          }
+
+          if (!response || !response.ok) {
+            console.warn(`[WA] Connect trigger failed or server not reached`);
+          }
+        } catch (err) {
+          console.error('[WA] Connect trigger error:', err);
+        }
+      };
+
+      triggerConnect();
       
       const interval = setInterval(() => {
         fetchChannels().catch(console.error);
@@ -86,7 +165,9 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
     setError(null);
 
     try {
-      const serverUrl = whatsappCreds.server_url || 'https://starx-whatsapp-bot.onrender.com';
+      let serverUrl = isLocalHost
+        ? `http://${window.location.hostname}:10000`
+        : (whatsappCreds.server_url || 'https://starx-whatsapp-bot.onrender.com');
       
       // Get current user session token
       const { data: { session } } = await supabase.auth.getSession();
@@ -97,17 +178,59 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
       }
 
       console.log(`[WA] Requesting reset on server: ${serverUrl}`);
-      const response = await fetch(`${serverUrl}/api/whatsapp/reset`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      let response: Response | null = null;
+      let fetchError: any = null;
 
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => ({}));
-        throw new Error(errJson.error || `Server returned HTTP ${response.status}`);
+      const attemptReset = async (url: string) => {
+        try {
+          return await fetch(`${url}/api/whatsapp/reset`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        } catch (err) {
+          console.warn(`[WA] Reset fetch to ${url} failed:`, err);
+          throw err;
+        }
+      };
+
+      try {
+        response = await attemptReset(serverUrl);
+      } catch (err) {
+        fetchError = err;
+      }
+
+      // Fallback strategies for local development to handle Windows dual-stack loopback issues
+      if ((!response || !response.ok) && isLocalHost) {
+        const fallbacks = [];
+        if (window.location.hostname !== '127.0.0.1') {
+          fallbacks.push('http://127.0.0.1:10000');
+        }
+        if (window.location.hostname !== 'localhost') {
+          fallbacks.push('http://localhost:10000');
+        }
+
+        for (const fallbackUrl of fallbacks) {
+          if (response && response.ok) break;
+          console.log(`[WA] Retrying reset on fallback: ${fallbackUrl}`);
+          try {
+            response = await attemptReset(fallbackUrl);
+            fetchError = null;
+          } catch (err) {
+            fetchError = err;
+          }
+        }
+      }
+
+      if (fetchError) {
+        throw new Error("Unable to reach the WhatsApp server. Please verify the backend is running.");
+      }
+
+      if (!response || !response.ok) {
+        const errJson = response ? await response.json().catch(() => ({})) : {};
+        throw new Error(errJson.error || `Server returned HTTP ${response?.status || 500}`);
       }
 
       const resData = await response.json();
