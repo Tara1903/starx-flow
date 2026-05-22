@@ -6,6 +6,16 @@
  */
 
 require('dotenv').config();
+// Force crash on Render to prevent conflicts with local development
+if (process.env.RENDER || process.env.RENDER_EXTERNAL_URL) {
+    console.error("===============================================================");
+    console.error("FATAL: Running on Render detected! Shutting down immediately.");
+    console.error("This instance is fighting with the local laptop instance over");
+    console.error("the Supabase database and corrupting the WhatsApp encryption keys.");
+    console.error("===============================================================");
+    process.exit(1);
+}
+
 const express = require('express');
 const pino = require('pino');
 const qrcode = require('qrcode-terminal');
