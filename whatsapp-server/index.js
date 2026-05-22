@@ -71,11 +71,15 @@ async function connectToWhatsApp() {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
-            console.log('\n========================================');
-            console.log('  SCAN THIS QR CODE WITH YOUR PHONE');
-            console.log('  WhatsApp > Settings > Linked Devices');
-            console.log('========================================\n');
-            qrcode.generate(qr, { small: true });
+            // Terminal QR codes often get scrambled in PowerShell due to font/line-height issues.
+            // So we generate a secure, clickable link to view the QR code in your web browser instead!
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qr)}`;
+            console.log('========================================================================');
+            console.log('  POWER-SHELL IS MESSING UP THE QR CODE? NO PROBLEM!');
+            console.log('  Hold CTRL and CLICK the link below to open your QR Code in Chrome:');
+            console.log(`  ${qrUrl}`);
+            console.log('========================================================================\n');
+            qrcode.generate(qr, { small: true }); // We still print it just in case
         }
 
         if (connection === 'open') {
