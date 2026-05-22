@@ -49,6 +49,7 @@ async function connectToWhatsApp() {
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
         if (qr) {
+            qrcode.generate(qr, { small: true });
             console.log('\n[WA] Please scan the QR code above to link WhatsApp!');
         }
         if (connection === 'close') {
