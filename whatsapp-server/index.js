@@ -1,18 +1,24 @@
+const { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, delay } = require('@whiskeysockets/baileys');
+
+/**
+ * Uses the built-in local file auth state (proven stable) instead of a custom Supabase adapter.
+ * This eliminates the race condition that was causing 515 errors during the initial handshake.
+ * Once paired, the session folder can be backed up to Supabase if needed.
+ */
+
 require('dotenv').config();
 const express = require('express');
-const { makeWASocket, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
 const pino = require('pino');
-const qrcode = require('qrcode-terminal');
 const { createClient } = require('@supabase/supabase-js');
-const { useSupabaseAuthState } = require('./supabaseAdapter');
+const path = require('path');
 
 // Validate ENV
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const TARGET_USER_ID = process.env.TARGET_USER_ID; // The StarX user ID this bot belongs to
+const TARGET_USER_ID = process.env.TARGET_USER_ID;
 
 if (!SUPABASE_URL || !SUPABASE_KEY || !TARGET_USER_ID) {
-    console.error("FATAL: Missing environment variables.");
+    console.error("FATAL: Missing environment variables. Check your .env file.");
     process.exit(1);
 }
 
@@ -23,18 +29,31 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/ping', (req, res) => {
-    res.send('pong');
+    res.json({ status: 'alive', uptime: process.uptime() });
 });
 
 app.listen(PORT, () => {
     console.log(`[HTTP] Keep-alive server running on port ${PORT}`);
 });
 
-// Baileys WhatsApp Connection
+// Session folder path (local disk)
+const SESSION_DIR = path.join(__dirname, 'session');
+
 async function connectToWhatsApp() {
-    console.log("[WA] Connecting to Supabase Auth State...");
-    const { state, saveCreds } = await useSupabaseAuthState(supabase, TARGET_USER_ID);
-    const { version } = await fetchLatestBaileysVersion();
+    console.log("[WA] Initializing auth state from local disk...");
+
+    // Use the BUILT-IN local file auth (battle-tested, no race conditions)
+    const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
+
+    let version;
+    try {
+        const versionInfo = await fetchLatestBaileysVersion();
+        version = versionInfo.version;
+        console.log(`[WA] Using WA version: ${version.join('.')}`);
+    } catch (e) {
+        console.warn("[WA] Could not fetch latest version, using default.");
+        version = [2, 3000, 1015901307];
+    }
 
     const sock = makeWASocket({
         version,
@@ -42,49 +61,61 @@ async function connectToWhatsApp() {
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
         browser: ['Ubuntu', 'Chrome', '20.0.04'],
-        generateHighQualityLinkPreview: true,
-        syncFullHistory: false
+        syncFullHistory: false,
+        markOnlineOnConnect: false
     });
 
+    // Save credentials whenever they update (critical for session persistence)
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', (update) => {
+    sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
+
         if (qr) {
-            qrcode.generate(qr, { small: true });
-            console.log('\n[WA] Please scan the QR code above to link WhatsApp!');
+            console.log('\n========================================');
+            console.log('  SCAN THIS QR CODE WITH YOUR PHONE');
+            console.log('  WhatsApp > Settings > Linked Devices');
+            console.log('========================================\n');
         }
+
+        if (connection === 'open') {
+            console.log('\n[WA] ✅ Successfully connected to WhatsApp!');
+            console.log('[WA] Bot is now listening for incoming messages...\n');
+        }
+
         if (connection === 'close') {
-            const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('[WA] Connection closed due to', lastDisconnect.error, ', reconnecting:', shouldReconnect);
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+            console.log(`[WA] Connection closed. Status: ${statusCode}. Reconnecting: ${shouldReconnect}`);
+
             if (shouldReconnect) {
+                // Wait 3 seconds before reconnecting to avoid rapid-fire loops
+                await delay(3000);
                 connectToWhatsApp();
             } else {
-                console.log('[WA] You are logged out. Please clear auth data from Supabase and restart to scan QR.');
+                console.log('[WA] Logged out permanently. Delete the "session" folder and restart to re-pair.');
             }
-        } else if (connection === 'open') {
-            console.log('[WA] Successfully connected to WhatsApp!');
         }
     });
 
+    // Listen for incoming messages
     sock.ev.on('messages.upsert', async (m) => {
         const msg = m.messages[0];
-        if (!msg.message || msg.key.fromMe) return; // Ignore our own messages
+        if (!msg.message || msg.key.fromMe) return;
 
-        // Extract message text (handles standard text and extended text from quotes/replies)
         const messageText = msg.message.conversation || msg.message.extendedTextMessage?.text;
         if (!messageText) return;
 
         const senderPhone = msg.key.remoteJid;
-        console.log(`[WA] New message from ${senderPhone}: ${messageText}`);
+        console.log(`[WA] 📩 New message from ${senderPhone}: ${messageText}`);
 
         try {
-            // Forward message to the Supabase Edge Function
             const edgeUrl = `${SUPABASE_URL}/functions/v1/ai-processor`;
             const response = await fetch(edgeUrl, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${SUPABASE_KEY}`, // Using service role key for internal call
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -92,24 +123,23 @@ async function connectToWhatsApp() {
                     channel: 'WhatsApp',
                     messageText: messageText,
                     customerPhone: senderPhone,
-                    credentials: {} // Empty credentials because Baileys handles the sending
+                    credentials: {}
                 })
             });
 
             const result = await response.json();
-            
+
             if (result.success && result.reply) {
-                // Send the AI response back via WhatsApp
                 await sock.sendMessage(senderPhone, { text: result.reply });
-                console.log(`[WA] AI Reply sent to ${senderPhone}`);
+                console.log(`[WA] 🤖 AI Reply sent to ${senderPhone}`);
             } else {
-                console.log(`[WA] No AI reply generated. Edge function response:`, result);
+                console.log(`[WA] ⚠️ No AI reply. Response:`, result);
             }
         } catch (err) {
-            console.error(`[WA] Error processing message through AI Engine:`, err.message);
+            console.error(`[WA] ❌ Error:`, err.message);
         }
     });
 }
 
-// Start bot
+// Start
 connectToWhatsApp();
