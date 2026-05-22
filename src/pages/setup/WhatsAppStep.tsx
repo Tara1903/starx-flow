@@ -41,35 +41,9 @@ export function WhatsAppStep() {
     setErrorDetails('');
     setDirectQrUrl('');
     
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) throw new Error('Authentication error. Please refresh.');
-
-      const res = await fetch(`${serverUrl}/api/whatsapp/connect`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!res.ok) {
-         throw new Error(`Server HTTP ${res.status}. Is the local batch script running?`);
-      }
-
-      const resData = await res.json();
-      if (resData.connected) {
-        setConnectionState('connected');
-        fetchChannels();
-      } else if (resData.qr) {
-        setDirectQrUrl(resData.qr);
-        setConnectionState('qr_ready');
-      }
-    } catch (err: any) {
-      setConnectionState('failed');
-      setErrorDetails(err.message || 'Failed to initialize session.');
-    }
+    // The backend automatically generates the QR code on startup and writes it to Supabase.
+    // We just need to trigger a fresh DB fetch, and the derived state effect will catch the QR code!
+    await fetchChannels();
   };
 
   // Polling for DB updates (for background connection state)
