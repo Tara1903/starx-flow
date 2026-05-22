@@ -41,7 +41,9 @@ async function connectToWhatsApp() {
         auth: state,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
-        browser: ['StarX Microservice', 'Chrome', '1.0.0']
+        browser: ['Ubuntu', 'Chrome', '20.0.04'],
+        generateHighQualityLinkPreview: true,
+        syncFullHistory: false
     });
 
     sock.ev.on('creds.update', saveCreds);
