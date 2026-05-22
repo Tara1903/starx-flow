@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Key, Save, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Key, Save, Loader2, CheckCircle2, Wifi, Shield } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 
 interface IntegrationModalProps {
@@ -13,18 +14,38 @@ interface IntegrationModalProps {
 export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationModalProps) {
   const updateChannelConnection = useAuthStore(s => s.updateChannelConnection);
   const connectedChannels = useAuthStore(s => s.connectedChannels);
+  const fetchChannels = useAuthStore(s => s.fetchChannels);
   
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form State
+  // Form State for other channels
   const [formData, setFormData] = useState<Record<string, string>>({});
+
+  // WhatsApp connection state helpers
+  const whatsappChannel = connectedChannels.find(c => c.channelKey === 'WhatsApp');
+  const isWhatsAppConnected = whatsappChannel?.isConnected || false;
+  const whatsappCreds = whatsappChannel?.credentials || {};
+
+  // Setup WhatsApp status polling when the modal is open
+  useEffect(() => {
+    if (isOpen && channelKey === 'WhatsApp') {
+      fetchChannels().catch(console.error);
+      
+      const interval = setInterval(() => {
+        fetchChannels().catch(console.error);
+      }, 4000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isOpen, channelKey, fetchChannels]);
 
   useEffect(() => {
     if (isOpen && channelKey) {
       setSuccess(false);
       setError(null);
+      
       // Pre-fill existing credentials if they exist
       const existing = connectedChannels.find(c => c.channelKey === channelKey);
       if (existing && existing.credentials) {
@@ -42,8 +63,6 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
     setLoading(true);
     setError(null);
 
-    // In a real app, you might validate the token with Meta/Twilio API here before saving
-
     const { error: submitError } = await updateChannelConnection(channelKey, true, formData);
     
     setLoading(false);
@@ -58,6 +77,71 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
     }
   };
 
+  const handleReset = async () => {
+    if (!window.confirm("Are you sure you want to disconnect WhatsApp and reset the session? This will log out the active device and generate a new QR code.")) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const serverUrl = whatsappCreds.server_url || 'https://starx-whatsapp-bot.onrender.com';
+      
+      // Get current user session token
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        throw new Error("You must be logged in to reset the WhatsApp session.");
+      }
+
+      console.log(`[WA] Requesting reset on server: ${serverUrl}`);
+      const response = await fetch(`${serverUrl}/api/whatsapp/reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.error || `Server returned HTTP ${response.status}`);
+      }
+
+      const resData = await response.json();
+      if (resData.success) {
+        // Optimistically update connected_channels in DB to clear QR and set disconnected
+        const user = useAuthStore.getState().user;
+        if (user) {
+          await supabase
+            .from('connected_channels')
+            .upsert({
+              user_id: user.id,
+              channel_key: 'WhatsApp',
+              is_connected: false,
+              credentials: { server_url: serverUrl, updated_at: new Date().toISOString() },
+              last_synced: new Date().toISOString()
+            }, { onConflict: 'user_id, channel_key' });
+        }
+        
+        await fetchChannels();
+        setSuccess(true);
+        setTimeout(() => {
+          setSuccess(false);
+        }, 1500);
+      } else {
+        throw new Error(resData.message || "Failed to reset WhatsApp session.");
+      }
+    } catch (err: any) {
+      console.error("[WA RESET ERROR]", err);
+      setError(err.message || "Failed to communicate with WhatsApp server. Please verify the server is running.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -65,31 +149,77 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
   const renderFields = () => {
     switch (channelKey) {
       case 'WhatsApp':
+        if (isWhatsAppConnected) {
+          return (
+            <div className="flex flex-col items-center justify-center py-4 text-center space-y-4">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                  <Wifi className="w-8 h-8 text-emerald-400" />
+                </div>
+                <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-[#0a0a0a] rounded-full animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-white font-bold text-base">WhatsApp Connected</h4>
+                {whatsappCreds.phone && (
+                  <p className="text-emerald-400 font-mono text-sm">+{whatsappCreds.phone}</p>
+                )}
+                {whatsappCreds.name && (
+                  <p className="text-zinc-400 text-xs">Device: {whatsappCreds.name}</p>
+                )}
+              </div>
+              <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-lg flex gap-2 items-start text-left w-full">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  Your AI Bot is active and listening for incoming messages on this number. Any message from customers will be processed automatically.
+                </p>
+              </div>
+            </div>
+          );
+        }
+
         return (
-          <>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">Meta Access Token</label>
-              <input 
-                type="password" name="access_token" value={formData.access_token || ''} onChange={handleChange} required
-                placeholder="EAAO..." className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-green-500/50"
-              />
-              <p className="text-[10px] text-zinc-500">Permanent token generated in Meta App Dashboard.</p>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">Phone Number ID</label>
-              <input 
-                type="text" name="phone_number_id" value={formData.phone_number_id || ''} onChange={handleChange} required
-                placeholder="e.g. 104XXXXXXXX" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-green-500/50"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">Business Account ID</label>
-              <input 
-                type="text" name="business_account_id" value={formData.business_account_id || ''} onChange={handleChange} required
-                placeholder="e.g. 111XXXXXXXX" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-green-500/50"
-              />
-            </div>
-          </>
+          <div className="flex flex-col items-center justify-center py-2 text-center space-y-4">
+            {whatsappCreds.qr ? (
+              <>
+                <div className="bg-white p-3 rounded-xl shadow-lg border border-white/10">
+                  <img
+                    src={whatsappCreds.qr}
+                    alt="WhatsApp QR Code"
+                    className="w-52 h-52 select-none"
+                  />
+                </div>
+                <div className="space-y-1.5 px-4">
+                  <h4 className="text-white font-bold text-sm">Scan QR Code</h4>
+                  <p className="text-zinc-400 text-xs leading-relaxed">
+                    Open WhatsApp on your phone, go to Linked Devices, and scan this QR code to connect your account.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1 w-full items-center">
+                  <a
+                    href={whatsappCreds.qr}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors underline underline-offset-4"
+                  >
+                    Can't scan? Open QR Code in new tab
+                  </a>
+                  <p className="text-[10px] text-zinc-500 mt-1">
+                    QR code updates automatically every few seconds.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                <Loader2 className="w-10 h-10 text-emerald-400 animate-spin" />
+                <div className="space-y-1.5">
+                  <h4 className="text-white font-bold text-sm">Initializing WhatsApp Session</h4>
+                  <p className="text-zinc-400 text-xs px-6 leading-relaxed">
+                    Setting up connection and generating QR code. If the server is sleeping (Render free tier), this can take up to 30 seconds.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         );
       case 'Instagram':
         return (
@@ -167,8 +297,12 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
                 <Key className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Connect {channelKey}</h3>
-                <p className="text-xs text-zinc-400">Enter your API credentials</p>
+                <h3 className="text-base font-bold text-white">
+                  {channelKey === 'WhatsApp' ? 'WhatsApp Connection' : `Connect ${channelKey}`}
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  {channelKey === 'WhatsApp' ? 'Scan QR code to link device' : 'Enter your API credentials'}
+                </p>
               </div>
             </div>
             <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
@@ -187,31 +321,61 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
             {success ? (
               <div className="flex flex-col items-center justify-center py-6 text-center">
                 <CheckCircle2 className="w-12 h-12 text-emerald-400 mb-3" />
-                <h4 className="text-white font-bold text-lg mb-1">Successfully Connected</h4>
-                <p className="text-zinc-400 text-xs">Your credentials have been securely stored.</p>
+                <h4 className="text-white font-bold text-lg mb-1">
+                  {channelKey === 'WhatsApp' ? 'Reset Successful' : 'Successfully Connected'}
+                </h4>
+                <p className="text-zinc-400 text-xs">
+                  {channelKey === 'WhatsApp' ? 'WhatsApp session has been reset.' : 'Your credentials have been securely stored.'}
+                </p>
               </div>
             ) : (
               <>
                 {renderFields()}
-                <div className="bg-white/[0.02] border border-white/5 p-3 rounded-lg flex gap-2 items-start mt-2">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
-                  <p className="text-[10px] text-zinc-500 leading-relaxed">
-                    Your credentials are encrypted and stored securely. We will never share these keys with third parties.
-                  </p>
-                </div>
+                {channelKey !== 'WhatsApp' && (
+                  <div className="bg-white/[0.02] border border-white/5 p-3 rounded-lg flex gap-2 items-start mt-2">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                    <p className="text-[10px] text-zinc-500 leading-relaxed">
+                      Your credentials are encrypted and stored securely. We will never share these keys with third parties.
+                    </p>
+                  </div>
+                )}
               </>
             )}
 
             {!success && (
               <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] flex items-center justify-center gap-2"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  {loading ? 'Saving...' : 'Save & Connect'}
-                </button>
+                {channelKey === 'WhatsApp' ? (
+                  isWhatsAppConnected ? (
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      disabled={loading}
+                      className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-semibold text-sm py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                      {loading ? 'Disconnecting...' : 'Disconnect WhatsApp'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      disabled={loading}
+                      className="w-full bg-white/5 hover:bg-white/10 text-zinc-400 border border-white/10 font-semibold text-sm py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Loader2 className="w-4 h-4" />}
+                      {loading ? 'Resetting...' : 'Reset Session & New QR'}
+                    </button>
+                  )
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] flex items-center justify-center gap-2"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {loading ? 'Saving...' : 'Save & Connect'}
+                  </button>
+                )}
               </div>
             )}
           </form>

@@ -45,6 +45,20 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const app = express();
 const PORT = process.env.PORT || 10000; // Render assigns PORT automatically
 
+// Parse JSON request body
+app.use(express.json());
+
+// Custom CORS middleware to allow the Vite dashboard to connect
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 app.get('/', (req, res) => {
     res.json({ service: 'starx-whatsapp-bot', status: 'running', uptime: Math.floor(process.uptime()) + 's' });
 });
@@ -53,8 +67,38 @@ app.get('/ping', (req, res) => {
     res.send('pong');
 });
 
+// Secure endpoint to reset the WhatsApp session
+app.post('/api/whatsapp/reset', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Missing or invalid authorization header' });
+        }
+        const token = authHeader.split(' ')[1];
+
+        // Verify user JWT against Supabase auth
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (error || !user) {
+            return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+        }
+
+        if (user.id !== TARGET_USER_ID) {
+            return res.status(403).json({ error: 'Forbidden: Session owner mismatch' });
+        }
+
+        console.log("[WA] Manual session reset requested via API endpoint.");
+        await resetSession();
+        res.json({ success: true, message: 'WhatsApp session reset initiated successfully' });
+    } catch (err) {
+        console.error('[HTTP] Reset error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`[HTTP] Keep-alive server listening on port ${PORT}`);
+    // Sync external URL registry on startup
+    syncStartupRegistry().catch(err => console.error('[HTTP] Startup registry sync error:', err.message));
 });
 
 // ─────────────────────────────────────────────
@@ -62,6 +106,81 @@ app.listen(PORT, '0.0.0.0', () => {
 // ─────────────────────────────────────────────
 let retryCount = 0;
 const MAX_RETRIES = 10;
+let sock = null;
+
+async function syncStartupRegistry() {
+    const serverUrl = process.env.RENDER_EXTERNAL_URL || 'http://localhost:10000';
+    const { data: existingChannel } = await supabase
+        .from('connected_channels')
+        .select('is_connected, credentials')
+        .eq('user_id', TARGET_USER_ID)
+        .eq('channel_key', 'WhatsApp')
+        .maybeSingle();
+
+    const currentCreds = existingChannel?.credentials || {};
+    await supabase
+        .from('connected_channels')
+        .upsert({
+            user_id: TARGET_USER_ID,
+            channel_key: 'WhatsApp',
+            is_connected: existingChannel?.is_connected || false,
+            credentials: {
+                ...currentCreds,
+                server_url: serverUrl,
+                updated_at: new Date().toISOString()
+            },
+            last_synced: new Date().toISOString()
+        }, { onConflict: 'user_id, channel_key' });
+    console.log(`[HTTP] Synced server URL: ${serverUrl}`);
+}
+
+async function resetSession() {
+    console.log("[WA] Executing session reset...");
+    if (sock) {
+        try {
+            sock.ev.removeAllListeners('connection.update');
+            sock.ev.removeAllListeners('creds.update');
+            sock.ev.removeAllListeners('messages.upsert');
+            sock.logout();
+        } catch (e) {
+            console.warn("[WA] Error during socket logout:", e.message);
+        }
+        try {
+            sock.end();
+        } catch (e) {
+            // ignore
+        }
+        sock = null;
+    }
+
+    // Delete all auth keys for this session
+    console.log(`[WA] Deleting auth keys for session: ${TARGET_USER_ID}`);
+    const { error: deleteErr } = await supabase
+        .from('baileys_auth')
+        .delete()
+        .like('key_id', `${TARGET_USER_ID}-%`);
+    
+    if (deleteErr) {
+        console.error("[WA] Error clearing auth keys from DB:", deleteErr.message);
+    }
+
+    // Clear status in connected_channels table
+    const serverUrl = process.env.RENDER_EXTERNAL_URL || 'http://localhost:10000';
+    await supabase
+        .from('connected_channels')
+        .upsert({
+            user_id: TARGET_USER_ID,
+            channel_key: 'WhatsApp',
+            is_connected: false,
+            credentials: { server_url: serverUrl, updated_at: new Date().toISOString() },
+            last_synced: new Date().toISOString()
+        }, { onConflict: 'user_id, channel_key' });
+
+    retryCount = 0;
+    setTimeout(() => {
+        connectToWhatsApp();
+    }, 2000);
+}
 
 async function connectToWhatsApp() {
     try {
@@ -82,7 +201,7 @@ async function connectToWhatsApp() {
         }
 
         // 3. Create the socket
-        const sock = makeWASocket({
+        sock = makeWASocket({
             version,
             auth: state,
             logger: pino({ level: 'silent' }),
@@ -100,10 +219,10 @@ async function connectToWhatsApp() {
         // 5. Handle connection lifecycle
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
+            const serverUrl = process.env.RENDER_EXTERNAL_URL || 'http://localhost:10000';
 
             // ── QR CODE ──
             if (qr) {
-                // Method 1: Clickable URL (works everywhere — Render logs, PowerShell, etc.)
                 const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qr)}`;
                 console.log('\n╔══════════════════════════════════════════════════════════╗');
                 console.log('║  📱 WHATSAPP QR CODE - SCAN TO LINK YOUR DEVICE         ║');
@@ -113,8 +232,23 @@ async function connectToWhatsApp() {
                 console.log(`║  ${qrImageUrl}`);
                 console.log('╚══════════════════════════════════════════════════════════╝\n');
 
-                // Method 2: Terminal QR (works in proper terminals, may be garbled on Render/PowerShell)
                 qrcode.generate(qr, { small: true });
+
+                // Write QR details to connected_channels so frontend can render it
+                await supabase
+                    .from('connected_channels')
+                    .upsert({
+                        user_id: TARGET_USER_ID,
+                        channel_key: 'WhatsApp',
+                        is_connected: false,
+                        credentials: {
+                            qr: qrImageUrl,
+                            qr_raw: qr,
+                            server_url: serverUrl,
+                            updated_at: new Date().toISOString()
+                        },
+                        last_synced: new Date().toISOString()
+                    }, { onConflict: 'user_id, channel_key' });
             }
 
             // ── CONNECTED ──
@@ -124,6 +258,23 @@ async function connectToWhatsApp() {
                 console.log('[WA]   CONNECTED TO WHATSAPP SUCCESSFULLY');
                 console.log('[WA]   Listening for incoming messages...');
                 console.log('[WA] ====================================\n');
+
+                const phone = sock.user.id.split(':')[0];
+                const name = sock.user.name || '';
+                await supabase
+                    .from('connected_channels')
+                    .upsert({
+                        user_id: TARGET_USER_ID,
+                        channel_key: 'WhatsApp',
+                        is_connected: true,
+                        credentials: {
+                            phone,
+                            name,
+                            server_url: serverUrl,
+                            updated_at: new Date().toISOString()
+                        },
+                        last_synced: new Date().toISOString()
+                    }, { onConflict: 'user_id, channel_key' });
             }
 
             // ── DISCONNECTED ──
@@ -134,16 +285,68 @@ async function connectToWhatsApp() {
                 console.log(`[WA] Disconnected. Code: ${statusCode}, Reason: ${reason}`);
 
                 if (statusCode === DisconnectReason.loggedOut) {
-                    console.log('[WA] LOGGED OUT. Run "npm run clear" and restart to re-pair.');
-                    return; // Don't reconnect
+                    console.log('[WA] LOGGED OUT. Clearing session and preparing for re-pair.');
+                    
+                    await supabase
+                        .from('connected_channels')
+                        .upsert({
+                            user_id: TARGET_USER_ID,
+                            channel_key: 'WhatsApp',
+                            is_connected: false,
+                            credentials: { 
+                                error: 'Logged out from device', 
+                                server_url: serverUrl,
+                                updated_at: new Date().toISOString() 
+                            },
+                            last_synced: new Date().toISOString()
+                        }, { onConflict: 'user_id, channel_key' });
+
+                    // Clear keys
+                    await supabase.from('baileys_auth').delete().like('key_id', `${TARGET_USER_ID}-%`);
+                    
+                    retryCount = 0;
+                    setTimeout(() => {
+                        connectToWhatsApp();
+                    }, 2000);
+                    return;
                 }
 
                 retryCount++;
                 if (retryCount > MAX_RETRIES) {
                     console.error(`[WA] Max retries (${MAX_RETRIES}) exceeded. Stopping.`);
-                    console.error('[WA] Run "npm run clear" to reset session, then restart.');
+                    
+                    await supabase
+                        .from('connected_channels')
+                        .upsert({
+                            user_id: TARGET_USER_ID,
+                            channel_key: 'WhatsApp',
+                            is_connected: false,
+                            credentials: { 
+                                error: 'Max reconnection retries exceeded', 
+                                server_url: serverUrl,
+                                updated_at: new Date().toISOString() 
+                            },
+                            last_synced: new Date().toISOString()
+                        }, { onConflict: 'user_id, channel_key' });
+                    
                     return;
                 }
+
+                // Update channel status to reflect reconnecting state
+                await supabase
+                    .from('connected_channels')
+                    .upsert({
+                        user_id: TARGET_USER_ID,
+                        channel_key: 'WhatsApp',
+                        is_connected: false,
+                        credentials: {
+                            status: 'reconnecting',
+                            error: reason,
+                            server_url: serverUrl,
+                            updated_at: new Date().toISOString()
+                        },
+                        last_synced: new Date().toISOString()
+                    }, { onConflict: 'user_id, channel_key' });
 
                 const waitSec = Math.min(retryCount * 3, 30); // 3s, 6s, 9s ... max 30s
                 console.log(`[WA] Reconnecting in ${waitSec}s... (attempt ${retryCount}/${MAX_RETRIES})`);
@@ -157,7 +360,6 @@ async function connectToWhatsApp() {
             const msg = m.messages[0];
             if (!msg?.message || msg.key.fromMe) return;
 
-            // Extract text from various message types
             const messageText =
                 msg.message.conversation ||
                 msg.message.extendedTextMessage?.text ||

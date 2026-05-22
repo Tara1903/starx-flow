@@ -901,7 +901,11 @@ const ChannelsTab = React.memo(function ChannelsTab({ onOpenIntegration }: { onO
             {isConnected && (
               <div className="flex items-center gap-1.5 mt-3 text-[11px] text-emerald-400/70">
                 <Shield className="w-3 h-3" />
-                API key configured
+                {ch.key === 'WhatsApp' && connectedState?.credentials?.phone ? (
+                  <span>Active: +{connectedState.credentials.phone}</span>
+                ) : (
+                  <span>API configured & active</span>
+                )}
               </div>
             )}
           </motion.div>
