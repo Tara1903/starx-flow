@@ -33,7 +33,9 @@ export function WhatsAppStep() {
     return 'http://localhost:10000';
   }, []);
 
-  const requestQrSession = async () => {
+
+
+  const startConnection = async () => {
     if (!isSupabaseConfigured) return;
     setConnectionState('requesting_qr');
     setErrorDetails('');
@@ -42,95 +44,33 @@ export function WhatsAppStep() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      if (!token) {
-         setConnectionState('failed');
-         setErrorDetails('Authentication error. Please refresh your browser.');
-         return;
-      }
+      if (!token) throw new Error('Authentication error. Please refresh.');
 
       const res = await fetch(`${serverUrl}/api/whatsapp/connect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Bypass-Tunnel-Reminder': 'true'
+          'Authorization': `Bearer ${token}`
         }
       });
 
       if (!res.ok) {
-         const data = await res.json().catch(()=>({}));
-         throw new Error(data.error || `Server HTTP ${res.status}`);
+         throw new Error(`Server HTTP ${res.status}. Is the local batch script running?`);
       }
 
       const resData = await res.json();
-
       if (resData.connected) {
         setConnectionState('connected');
         fetchChannels();
       } else if (resData.qr) {
         setDirectQrUrl(resData.qr);
         setConnectionState('qr_ready');
-      } else {
-        throw new Error('Received unexpected response from server');
       }
-
     } catch (err: any) {
       setConnectionState('failed');
-      setErrorDetails(err.message || 'Failed to initialize session. Connection dropped.');
+      setErrorDetails(err.message || 'Failed to initialize session.');
     }
   };
-
-  const startWakeFlow = async () => {
-    setConnectionState('waking_server');
-    setEta(300); // 5 minutes ETA
-    setErrorDetails('');
-    wakeFlowStartedRef.current = true;
-
-    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-
-    let currentTry = 0;
-    const maxRetries = 60; // 300 seconds (5 minutes)
-
-    const pingServer = async () => {
-      try {
-        const res = await fetch(`${serverUrl}/ready`, {
-          headers: { 'Bypass-Tunnel-Reminder': 'true' }
-        });
-        return res.ok;
-      } catch (e) {
-        return false;
-      }
-    };
-
-    // Initial immediate ping
-    const isAwake = await pingServer();
-    if (isAwake) {
-      setConnectionState('ready');
-      return;
-    }
-
-    // Set up polling
-    pollIntervalRef.current = setInterval(async () => {
-      currentTry++;
-      setEta(prev => Math.max(0, prev - 5));
-
-      const isNowAwake = await pingServer();
-      if (isNowAwake) {
-        clearInterval(pollIntervalRef.current);
-        setConnectionState('ready');
-      } else if (currentTry >= maxRetries) {
-        clearInterval(pollIntervalRef.current);
-        setConnectionState('timeout');
-        setErrorDetails('Render backend took too long to wake up. Please retry.');
-      }
-    }, 5000);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-    };
-  }, []);
 
   // Polling for DB updates (for background connection state)
   useEffect(() => {
@@ -150,7 +90,8 @@ export function WhatsAppStep() {
       setConnectionState('qr_ready');
       wakeFlowStartedRef.current = false;
     } else if (connectionState === 'idle' && !wakeFlowStartedRef.current) {
-      startWakeFlow();
+      wakeFlowStartedRef.current = true;
+      startConnection();
     }
   }, [isWhatsAppConnected, whatsappCreds.qr, directQrUrl, connectionState]);
 
