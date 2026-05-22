@@ -1,4 +1,5 @@
 const { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, delay } = require('@whiskeysockets/baileys');
+const qrcode = require('qrcode-terminal');
 
 /**
  * Uses the built-in local file auth state (proven stable) instead of a custom Supabase adapter.
@@ -11,6 +12,8 @@ const express = require('express');
 const pino = require('pino');
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
+
+const { useSupabaseAuthState } = require('./supabaseAdapter');
 
 // Validate ENV
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -36,14 +39,10 @@ app.listen(PORT, () => {
     console.log(`[HTTP] Keep-alive server running on port ${PORT}`);
 });
 
-// Session folder path (local disk)
-const SESSION_DIR = path.join(__dirname, 'session');
-
 async function connectToWhatsApp() {
-    console.log("[WA] Initializing auth state from local disk...");
+    console.log("[WA] Initializing auth state from Supabase DB...");
 
-    // Use the BUILT-IN local file auth (battle-tested, no race conditions)
-    const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
+    const { state, saveCreds } = await useSupabaseAuthState(supabase, TARGET_USER_ID);
 
     let version;
     try {
@@ -59,7 +58,7 @@ async function connectToWhatsApp() {
         version,
         auth: state,
         logger: pino({ level: 'silent' }),
-        printQRInTerminal: true,
+        printQRInTerminal: false,  // Disabled: doesn't work on Windows PowerShell
         browser: ['Ubuntu', 'Chrome', '20.0.04'],
         syncFullHistory: false,
         markOnlineOnConnect: false
@@ -76,6 +75,7 @@ async function connectToWhatsApp() {
             console.log('  SCAN THIS QR CODE WITH YOUR PHONE');
             console.log('  WhatsApp > Settings > Linked Devices');
             console.log('========================================\n');
+            qrcode.generate(qr, { small: true });
         }
 
         if (connection === 'open') {
