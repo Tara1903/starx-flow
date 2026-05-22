@@ -1,132 +1,141 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useOnboardingStore } from '../../store/onboardingStore';
 import { StepCard } from '../../components/setup/StepCard';
 import { StepHeader } from '../../components/setup/StepHeader';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
-import { Wifi, Loader2, ArrowRight, RefreshCw } from 'lucide-react';
+import { Wifi, Loader2, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
 
-const isLocalHost = 
-  window.location.hostname === 'localhost' || 
-  window.location.hostname === '127.0.0.1' || 
-  window.location.hostname.startsWith('192.168.') || 
-  window.location.hostname.startsWith('10.') || 
-  window.location.hostname.startsWith('172.') ||
-  window.location.hostname === '0.0.0.0';
+type ConnectionState = 'idle' | 'waking_server' | 'requesting_qr' | 'waiting_qr' | 'qr_ready' | 'connected' | 'failed' | 'timeout';
 
 export function WhatsAppStep() {
   const navigate = useNavigate();
   const { connectedChannels, fetchChannels } = useAuthStore();
   const { completeStep, skipStep } = useOnboardingStore();
 
-  const [errorMsg, setErrorMsg] = useState('');
+  const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
+  const [errorDetails, setErrorDetails] = useState('');
+  const [eta, setEta] = useState(60);
   const [resetLoading, setResetLoading] = useState(false);
-  const [triggerLoading, setTriggerLoading] = useState(false);
+  
+  const wakeFlowStartedRef = useRef(false);
+  const pollIntervalRef = useRef<any>(null);
 
-  // Local polling state
   const whatsappChannel = connectedChannels.find(c => c.channelKey === 'WhatsApp');
   const isWhatsAppConnected = whatsappChannel?.isConnected || false;
   const whatsappCreds = whatsappChannel?.credentials || {};
 
-  const triggerConnect = async () => {
-    setTriggerLoading(true);
-    setErrorMsg('');
-    try {
-      if (!isSupabaseConfigured) return;
-      const currentChannel = useAuthStore.getState().connectedChannels.find(c => c.channelKey === 'WhatsApp');
-      const currentCreds = currentChannel?.credentials || {};
-      
-      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let serverUrl = isDev
-        ? `http://${window.location.hostname}:10000`
-        : 'https://starx-whatsapp-bot.onrender.com';
-        
-      if (!isDev && currentCreds.server_url && !currentCreds.server_url.includes('localhost') && !currentCreds.server_url.includes('127.0.0.1')) {
-        serverUrl = currentCreds.server_url;
-      }
+  const serverUrl = React.useMemo(() => {
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isDev) return `http://${window.location.hostname}:10000`;
+    return 'https://starx-whatsapp-bot.onrender.com';
+  }, []);
 
+  const requestQrSession = async () => {
+    if (!isSupabaseConfigured) return;
+    setConnectionState('requesting_qr');
+    
+    try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
-        setErrorMsg('Authentication error. Please refresh the page and try again.');
-        return;
+         setConnectionState('failed');
+         setErrorDetails('Authentication error. Please refresh your browser.');
+         return;
       }
 
-      console.log(`[WA] Initializing connection with server: ${serverUrl}`);
-      let response: Response | null = null;
-      let fetchError: any = null;
-
-      const attemptFetch = async (url: string) => {
-        try {
-          return await fetch(`${url}/api/whatsapp/connect`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          });
-        } catch (err) {
-          console.warn(`[WA] Fetch to ${url} failed:`, err);
-          throw err;
+      const res = await fetch(`${serverUrl}/api/whatsapp/connect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-      };
+      });
 
-      try {
-        response = await attemptFetch(serverUrl);
-      } catch (err) {
-        fetchError = err;
+      if (!res.ok) {
+         const data = await res.json().catch(()=>({}));
+         throw new Error(data.error || `Server HTTP ${res.status}`);
       }
 
-      // Fallback strategies for local development to handle Windows dual-stack loopback issues
-      if ((!response || !response.ok) && isLocalHost) {
-        const fallbacks = [];
-        if (window.location.hostname !== '127.0.0.1') {
-          fallbacks.push('http://127.0.0.1:10000');
-        }
-        if (window.location.hostname !== 'localhost') {
-          fallbacks.push('http://localhost:10000');
-        }
-
-        for (const fallbackUrl of fallbacks) {
-          if (response && response.ok) break;
-          console.log(`[WA] Retrying connection on fallback: ${fallbackUrl}`);
-          try {
-            response = await attemptFetch(fallbackUrl);
-            fetchError = null; // reset if successful
-          } catch (err) {
-            fetchError = err;
-          }
-        }
-      }
-
-      if (fetchError) {
-        throw new Error('Unable to reach the WhatsApp server. Please verify the backend is running.');
-      }
-
-      if (!response || !response.ok) {
-        const errData = response ? await response.json().catch(() => ({})) : {};
-        throw new Error(errData.error || `Server returned HTTP ${response?.status || 500}`);
-      }
+      setConnectionState('waiting_qr');
     } catch (err: any) {
-      console.warn('[WA] Connect trigger warning:', err);
-      setErrorMsg(err.message || 'Unable to connect to WhatsApp Server. Please make sure the backend is active.');
-    } finally {
-      setTriggerLoading(false);
+      setConnectionState('failed');
+      setErrorDetails(err.message || 'Failed to initialize session. Connection dropped.');
     }
   };
 
-  // Setup WhatsApp status polling when the component is mounted
+  const startWakeFlow = async () => {
+    setConnectionState('waking_server');
+    setEta(60);
+    setErrorDetails('');
+    wakeFlowStartedRef.current = true;
+
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+
+    let currentTry = 0;
+    const maxRetries = 12; // 60 seconds
+
+    const pingServer = async () => {
+      try {
+        const res = await fetch(`${serverUrl}/ping`);
+        return res.ok;
+      } catch (e) {
+        return false;
+      }
+    };
+
+    // Initial immediate ping
+    const isAwake = await pingServer();
+    if (isAwake) {
+      requestQrSession();
+      return;
+    }
+
+    // Set up polling
+    pollIntervalRef.current = setInterval(async () => {
+      currentTry++;
+      setEta(prev => Math.max(0, prev - 5));
+
+      const isNowAwake = await pingServer();
+      if (isNowAwake) {
+        clearInterval(pollIntervalRef.current);
+        requestQrSession();
+      } else if (currentTry >= maxRetries) {
+        clearInterval(pollIntervalRef.current);
+        setConnectionState('timeout');
+        setErrorDetails('Render backend took too long to wake up. Please retry.');
+      }
+    }, 5000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, []);
+
+  // Polling for DB updates
   useEffect(() => {
     fetchChannels().catch(console.error);
-    triggerConnect();
-    
     const interval = setInterval(() => {
       fetchChannels().catch(console.error);
     }, 4000);
-    
     return () => clearInterval(interval);
   }, [fetchChannels]);
+
+  // Derived state sync
+  useEffect(() => {
+    if (isWhatsAppConnected) {
+      setConnectionState('connected');
+      wakeFlowStartedRef.current = false;
+    } else if (whatsappCreds.qr && connectionState !== 'connected') {
+      setConnectionState('qr_ready');
+      wakeFlowStartedRef.current = false;
+    } else if (connectionState === 'idle' && !wakeFlowStartedRef.current) {
+      startWakeFlow();
+    }
+  }, [isWhatsAppConnected, whatsappCreds.qr, connectionState]);
 
   const handleReset = async () => {
     if (!window.confirm("Are you sure you want to disconnect WhatsApp and reset the session? This will log out the active device and generate a new QR code.")) {
@@ -134,18 +143,9 @@ export function WhatsAppStep() {
     }
 
     setResetLoading(true);
-    setErrorMsg('');
+    setErrorDetails('');
 
     try {
-      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let serverUrl = isDev
-        ? `http://${window.location.hostname}:10000`
-        : 'https://starx-whatsapp-bot.onrender.com';
-        
-      if (!isDev && whatsappCreds.server_url && !whatsappCreds.server_url.includes('localhost') && !whatsappCreds.server_url.includes('127.0.0.1')) {
-        serverUrl = whatsappCreds.server_url;
-      }
-      
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
@@ -153,63 +153,20 @@ export function WhatsAppStep() {
         throw new Error("You must be logged in to reset the WhatsApp session.");
       }
 
-      console.log(`[WA] Requesting reset on server: ${serverUrl}`);
-      let response: Response | null = null;
-      let fetchError: any = null;
-
-      const attemptReset = async (url: string) => {
-        try {
-          return await fetch(`${url}/api/whatsapp/reset`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          });
-        } catch (err) {
-          console.warn(`[WA] Reset fetch to ${url} failed:`, err);
-          throw err;
+      const res = await fetch(`${serverUrl}/api/whatsapp/reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-      };
+      });
 
-      try {
-        response = await attemptReset(serverUrl);
-      } catch (err) {
-        fetchError = err;
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || `Server HTTP ${res.status}`);
       }
 
-      // Fallback strategies for local development to handle Windows dual-stack loopback issues
-      if ((!response || !response.ok) && isLocalHost) {
-        const fallbacks = [];
-        if (window.location.hostname !== '127.0.0.1') {
-          fallbacks.push('http://127.0.0.1:10000');
-        }
-        if (window.location.hostname !== 'localhost') {
-          fallbacks.push('http://localhost:10000');
-        }
-
-        for (const fallbackUrl of fallbacks) {
-          if (response && response.ok) break;
-          console.log(`[WA] Retrying reset on fallback: ${fallbackUrl}`);
-          try {
-            response = await attemptReset(fallbackUrl);
-            fetchError = null; // reset if successful
-          } catch (err) {
-            fetchError = err;
-          }
-        }
-      }
-
-      if (fetchError) {
-        throw new Error("Unable to reach the WhatsApp server. Please verify the backend is running.");
-      }
-
-      if (!response || !response.ok) {
-        const errJson = response ? await response.json().catch(() => ({})) : {};
-        throw new Error(errJson.error || `Server returned HTTP ${response?.status || 500}`);
-      }
-
-      const resData = await response.json();
+      const resData = await res.json();
       if (resData.success) {
         const user = useAuthStore.getState().user;
         if (user) {
@@ -225,13 +182,15 @@ export function WhatsAppStep() {
         }
         
         await fetchChannels();
-        triggerConnect();
+        setConnectionState('idle'); // will re-trigger wake flow
+        wakeFlowStartedRef.current = false;
       } else {
         throw new Error(resData.message || "Failed to reset WhatsApp session.");
       }
     } catch (err: any) {
       console.error("[WA RESET ERROR]", err);
-      setErrorMsg(err.message || "Failed to communicate with WhatsApp server.");
+      setConnectionState('failed');
+      setErrorDetails(err.message || "Failed to communicate with WhatsApp server.");
     } finally {
       setResetLoading(false);
     }
@@ -259,8 +218,7 @@ export function WhatsAppStep() {
 
       <div className="mt-6 flex flex-col items-center">
         
-        {isWhatsAppConnected ? (
-          /* CONNECTED STATE */
+        {connectionState === 'connected' && (
           <div className="w-full max-w-md p-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.02] flex flex-col items-center text-center space-y-4 animate-scale">
             <div className="relative">
               <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
@@ -302,71 +260,96 @@ export function WhatsAppStep() {
               </button>
             </div>
           </div>
-        ) : (
-          /* DISCONNECTED STATE */
+        )}
+
+        {(connectionState === 'failed' || connectionState === 'timeout') && (
           <div className="w-full max-w-md flex flex-col items-center space-y-6">
-            
-            {errorMsg && (
-              <div className="w-full p-3.5 rounded-xl border border-red-500/20 bg-red-500/5 text-xs text-red-400 font-medium space-y-2 text-center animate-fade-in">
-                <p>{errorMsg}</p>
-                <button
-                  onClick={triggerConnect}
-                  disabled={triggerLoading}
-                  className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-[10px] text-white font-bold transition-all inline-flex items-center gap-1.5"
-                >
-                  {triggerLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-2.5 h-2.5" />}
-                  Retry Server Connection
-                </button>
+            <div className="w-full p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-center space-y-3 animate-fade-in">
+              <div className="flex justify-center mb-1">
+                <AlertCircle className="w-6 h-6 text-red-400" />
               </div>
-            )}
-
-            {/* REAL QR CODE FROM SERVER */}
-            {whatsappCreds.qr ? (
-              <div className="flex flex-col items-center space-y-4 animate-fade-in-up">
-                <div className="bg-white p-3 rounded-2xl shadow-[0_0_40px_rgba(255,255,255,0.05)] border border-white/10 relative group">
-                  <img
-                    src={whatsappCreds.qr}
-                    alt="WhatsApp QR Code"
-                    className="w-48 h-48 select-none"
-                  />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
-                    <RefreshCw className="w-6 h-6 text-white animate-spin-slow" />
-                  </div>
-                </div>
-
-                <div className="space-y-1 text-center px-4">
-                  <h4 className="text-white font-bold text-sm">Scan QR Code with WhatsApp</h4>
-                  <p className="text-zinc-400 text-[11px] leading-relaxed">
-                    Open WhatsApp on your phone → Linked Devices → Link a Device. Scan the QR code to pair instantly.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              /* DEFAULT SPINNER STATE (WAITING FOR BACKEND CONTAINER) */
-              <div className="flex flex-col items-center justify-center py-8 space-y-3 w-full animate-pulse">
-                <div className="relative">
-                  <Loader2 className="w-10 h-10 text-emerald-400 animate-spin" />
-                </div>
-                
-                <div className="space-y-1 text-center max-w-xs">
-                  <h4 className="text-white font-bold text-sm">Initializing Connection Server</h4>
-                  <p className="text-zinc-500 text-[11px] px-2 leading-relaxed">
-                    Setting up WhatsApp session. Free hosting servers may take up to 25 seconds to spin up.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Skip Actions */}
-            <div className="flex gap-4 w-full items-center justify-between pt-2">
+              <p className="text-sm font-bold text-white">
+                {connectionState === 'timeout' ? "Server Wake Timeout" : "Connection Error"}
+              </p>
+              <p className="text-xs text-red-400 font-medium">
+                {errorDetails}
+              </p>
               <button
-                onClick={handleSkip}
-                className="text-zinc-500 hover:text-zinc-400 font-semibold text-xs transition-colors"
+                onClick={() => startWakeFlow()}
+                className="mt-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-xs text-white font-bold transition-all inline-flex items-center gap-2"
               >
-                Skip WhatsApp connection for now
+                <RefreshCw className="w-3 h-3" />
+                Retry Connection
               </button>
             </div>
+          </div>
+        )}
 
+        {connectionState === 'qr_ready' && whatsappCreds.qr && (
+          <div className="w-full max-w-md flex flex-col items-center space-y-6">
+            <div className="flex flex-col items-center space-y-4 animate-fade-in-up">
+              <div className="bg-white p-3 rounded-2xl shadow-[0_0_40px_rgba(255,255,255,0.05)] border border-white/10 relative group">
+                <img
+                  src={whatsappCreds.qr}
+                  alt="WhatsApp QR Code"
+                  className="w-48 h-48 select-none"
+                />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                  <RefreshCw className="w-6 h-6 text-white animate-spin-slow" />
+                </div>
+              </div>
+
+              <div className="space-y-1 text-center px-4">
+                <h4 className="text-white font-bold text-sm">Scan QR Code with WhatsApp</h4>
+                <p className="text-zinc-400 text-[11px] leading-relaxed">
+                  Open WhatsApp on your phone → Linked Devices → Link a Device. Scan the QR code to pair instantly.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(connectionState === 'waking_server' || connectionState === 'requesting_qr' || connectionState === 'waiting_qr' || connectionState === 'idle') && (
+          <div className="w-full max-w-md flex flex-col items-center space-y-6">
+            <div className="flex flex-col items-center justify-center py-8 space-y-4 w-full animate-pulse">
+              <div className="relative">
+                <Loader2 className="w-10 h-10 text-emerald-400 animate-spin" />
+              </div>
+              
+              <div className="space-y-2 text-center max-w-xs">
+                <h4 className="text-white font-bold text-sm">
+                  {connectionState === 'waking_server' && "Waking Connection Server..."}
+                  {connectionState === 'requesting_qr' && "Preparing WhatsApp Session..."}
+                  {connectionState === 'waiting_qr' && "Generating QR Code..."}
+                  {connectionState === 'idle' && "Initializing..."}
+                </h4>
+                <p className="text-zinc-500 text-[11px] px-2 leading-relaxed">
+                  {connectionState === 'waking_server' && `Free hosting servers may take a moment to boot. Please wait (ETA: ~${eta}s).`}
+                  {connectionState !== 'waking_server' && "Setting up secure bridge. This should only take a few seconds."}
+                </p>
+              </div>
+              
+              {connectionState === 'waking_server' && (
+                <div className="w-48 h-1.5 bg-white/5 rounded-full overflow-hidden mt-2">
+                  <div 
+                    className="h-full bg-emerald-500 transition-all duration-1000 ease-linear"
+                    style={{ width: `${Math.max(0, 100 - (eta / 60) * 100)}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Skip Actions (Only show if not connected) */}
+        {connectionState !== 'connected' && (
+          <div className="flex gap-4 w-full max-w-md items-center justify-center pt-6 mt-4 border-t border-white/5">
+            <button
+              onClick={handleSkip}
+              className="text-zinc-500 hover:text-zinc-300 font-medium text-xs transition-colors"
+            >
+              Skip WhatsApp connection for now
+            </button>
           </div>
         )}
 
@@ -374,4 +357,3 @@ export function WhatsAppStep() {
     </StepCard>
   );
 }
-
