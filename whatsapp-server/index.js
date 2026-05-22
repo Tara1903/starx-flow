@@ -252,16 +252,21 @@ async function startAllConnectedSessions() {
 
     const channelList = channels || [];
 
-    // Ensure TARGET_USER_ID is synced
-    const hasTargetUser = channelList.some(c => c.user_id === TARGET_USER_ID);
-    if (!hasTargetUser) {
-        console.log(`[WA] TARGET_USER_ID not found in connected_channels. Syncing now...`);
-        await syncUserRegistry(TARGET_USER_ID);
-        channelList.push({
-            user_id: TARGET_USER_ID,
-            credentials: {},
-            is_connected: false
-        });
+    const { data: usersData } = await supabase.auth.admin.listUsers();
+    const allUsers = usersData?.users || [];
+
+    // Ensure all users are synced
+    for (const u of allUsers) {
+        const hasUser = channelList.some(c => c.user_id === u.id);
+        if (!hasUser) {
+            console.log(`[WA] User ${u.email} not found in connected_channels. Syncing now...`);
+            await syncUserRegistry(u.id);
+            channelList.push({
+                user_id: u.id,
+                credentials: {},
+                is_connected: false
+            });
+        }
     }
 
     // Now process all known channels
@@ -284,11 +289,10 @@ async function startAllConnectedSessions() {
         if (channel.is_connected) {
             console.log(`[WA] Restoring connection for user: ${channel.user_id}`);
             connectToWhatsApp(channel.user_id).catch(err => console.error(`[WA] Failed to connect user ${channel.user_id}:`, err.message));
-        } else if (channel.user_id === TARGET_USER_ID) {
-            // Also start connection for TARGET_USER_ID on startup even if not connected,
-            // to allow it to generate a QR code so it can be linked immediately.
-            console.log(`[WA] Starting default connection for TARGET_USER_ID: ${TARGET_USER_ID}`);
-            connectToWhatsApp(TARGET_USER_ID).catch(err => console.error(`[WA] Failed to connect target user:`, err.message));
+        } else {
+            // Start connection for ALL users on startup
+            console.log(`[WA] Starting default connection for user: ${channel.user_id}`);
+            connectToWhatsApp(channel.user_id).catch(err => console.error(`[WA] Failed to connect user:`, err.message));
         }
     }
 }
