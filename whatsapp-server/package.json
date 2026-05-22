@@ -1,10 +1,14 @@
 {
-  "name": "starx-microservice",
+  "name": "starx-whatsapp-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "StarX WhatsApp AI Bot powered by Baileys",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "clear": "node clear.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "keywords": [],
   "author": "",

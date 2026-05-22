@@ -1,76 +1,100 @@
-const { initAuthCreds, BufferJSON } = require('@whiskeysockets/baileys');
+const { initAuthCreds, BufferJSON, proto } = require('@whiskeysockets/baileys');
 
 /**
- * Creates an auth state adapter that stores Baileys session keys in Supabase.
- * Uses an in-memory cache to prevent race conditions during encryption/decryption.
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
- * @param {string} sessionId A unique identifier for the session (e.g., user ID)
+ * Supabase-backed auth state for Baileys.
+ * 
+ * KEY DESIGN: All reads come from an in-memory cache (Map), so they are
+ * synchronous and instant. Writes update the cache first, then flush to
+ * Supabase in the background. This eliminates the race condition that
+ * caused 515 "Stream Errored" during the WhatsApp handshake.
  */
 async function useSupabaseAuthState(supabase, sessionId = 'default') {
-    console.log("[WA-Auth] Loading existing session from Supabase...");
-    
-    // 1. Load everything into memory upfront
-    const { data: allData, error } = await supabase
+    console.log("[AUTH] Loading session from Supabase DB...");
+
+    // ── Step 1: Bulk-load all existing keys into RAM ──
+    const { data: rows, error } = await supabase
         .from('baileys_auth')
-        .select('*')
+        .select('key_id, data')
         .like('key_id', `${sessionId}-%`);
-        
-    const cache = new Map();
-    if (allData) {
-        for (const row of allData) {
-            // BufferJSON.reviver is required to properly parse Baileys buffers
-            cache.set(row.key_id, JSON.parse(JSON.stringify(row.data), BufferJSON.reviver));
-        }
+
+    if (error) {
+        console.error("[AUTH] WARNING: Could not load session from DB:", error.message);
     }
 
-    const writeData = async (data, key) => {
+    const cache = new Map();
+    if (rows && rows.length > 0) {
+        console.log(`[AUTH] Loaded ${rows.length} keys from Supabase.`);
+        for (const row of rows) {
+            try {
+                cache.set(
+                    row.key_id,
+                    JSON.parse(JSON.stringify(row.data), BufferJSON.reviver)
+                );
+            } catch (e) {
+                console.warn(`[AUTH] Skipped corrupt key: ${row.key_id}`);
+            }
+        }
+    } else {
+        console.log("[AUTH] No existing session found. Will generate fresh credentials.");
+    }
+
+    // ── Helpers ──
+    const writeData = (data, key) => {
         const keyId = `${sessionId}-${key}`;
-        cache.set(keyId, data); // update cache instantly
+        cache.set(keyId, data);
+
+        // Background flush to Supabase (fire-and-forget)
         const jsonStr = JSON.stringify(data, BufferJSON.replacer);
-        
-        // Fire and forget to database
         supabase
             .from('baileys_auth')
-            .upsert({ 
-                key_id: keyId, 
+            .upsert({
+                key_id: keyId,
                 data: JSON.parse(jsonStr),
                 updated_at: new Date().toISOString()
-            }).then(({error}) => {
-                if(error) console.error("[WA-Auth] Failed to save key:", keyId, error);
+            })
+            .then(({ error: err }) => {
+                if (err) console.error("[AUTH] DB write failed for", keyId, err.message);
             });
     };
 
-    const removeData = async (key) => {
+    const removeData = (key) => {
         const keyId = `${sessionId}-${key}`;
         cache.delete(keyId);
-        
+
         supabase
             .from('baileys_auth')
             .delete()
-            .eq('key_id', keyId).then();
+            .eq('key_id', keyId)
+            .then(({ error: err }) => {
+                if (err) console.error("[AUTH] DB delete failed for", keyId, err.message);
+            });
     };
 
+    // ── Step 2: Load or create credentials ──
     let creds = cache.get(`${sessionId}-creds`);
     if (!creds) {
         creds = initAuthCreds();
-        await writeData(creds, 'creds');
+        writeData(creds, 'creds');
+        console.log("[AUTH] Generated fresh credentials.");
+    } else {
+        console.log("[AUTH] Restored existing credentials.");
     }
 
+    // ── Step 3: Return Baileys-compatible auth state ──
     return {
         state: {
             creds,
             keys: {
                 get: (type, ids) => {
-                    const data = {};
+                    const result = {};
                     for (const id of ids) {
-                        let value = cache.get(`${sessionId}-${type}-${id}`);
+                        let value = cache.get(`${sessionId}-${type}-${id}`) || null;
                         if (type === 'app-state-sync-key' && value) {
-                            const b = require('@whiskeysockets/baileys');
-                            value = b.proto.Message.AppStateSyncKeyData.fromObject(value);
+                            value = proto.Message.AppStateSyncKeyData.fromObject(value);
                         }
-                        data[id] = value;
+                        result[id] = value;
                     }
-                    return data; // synchronous return prevents race condition!
+                    return result;
                 },
                 set: (data) => {
                     for (const category of Object.keys(data)) {
@@ -87,7 +111,9 @@ async function useSupabaseAuthState(supabase, sessionId = 'default') {
                 }
             }
         },
-        saveCreds: () => writeData(creds, 'creds')
+        saveCreds: () => {
+            writeData(creds, 'creds');
+        }
     };
 }
 
