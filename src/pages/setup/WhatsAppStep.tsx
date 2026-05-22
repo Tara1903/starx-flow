@@ -30,7 +30,7 @@ export function WhatsAppStep() {
   const serverUrl = React.useMemo(() => {
     const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (isDev) return `http://${window.location.hostname}:10000`;
-    return 'https://starx-whatsapp-bot.onrender.com';
+    return 'https://starx-flow.ddns.net';
   }, []);
 
   const requestQrSession = async () => {
