@@ -30,7 +30,7 @@ export function WhatsAppStep() {
   const serverUrl = React.useMemo(() => {
     const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (isDev) return `http://${window.location.hostname}:10000`;
-    return 'https://starx-flow.ddns.net';
+    return 'https://starx-whatsapp-bot.onrender.com';
   }, []);
 
   const requestQrSession = async () => {
@@ -81,14 +81,14 @@ export function WhatsAppStep() {
 
   const startWakeFlow = async () => {
     setConnectionState('waking_server');
-    setEta(60);
+    setEta(300); // 5 minutes ETA
     setErrorDetails('');
     wakeFlowStartedRef.current = true;
 
     if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
 
     let currentTry = 0;
-    const maxRetries = 12; // 60 seconds
+    const maxRetries = 60; // 300 seconds (5 minutes)
 
     const pingServer = async () => {
       try {
