@@ -68,7 +68,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/ping', (req, res) => {
-    res.send('pong');
+    res.status(200).send('pong');
+});
+
+app.get('/ready', (req, res) => {
+    res.status(200).json({ status: 'ready', message: 'WhatsApp engine initialized' });
 });
 
 // Secure endpoint to reset the WhatsApp session for a user
@@ -141,10 +145,57 @@ app.post('/api/whatsapp/connect', async (req, res) => {
         if (!activeSockets.has(userId)) {
             retryCounts.set(userId, 0);
             connectToWhatsApp(userId).catch(err => console.error(`[WA] Connection error for ${userId}:`, err.message));
-            res.json({ success: true, message: 'WhatsApp connection initialization started' });
-        } else {
-            res.json({ success: true, message: 'WhatsApp session is already active or initializing' });
         }
+        
+        let attempts = 0;
+        while (!activeSockets.has(userId) && attempts < 20) {
+            await new Promise(r => setTimeout(r, 100));
+            attempts++;
+        }
+        
+        const sock = activeSockets.get(userId);
+        if (!sock) {
+            return res.status(500).json({ error: 'Failed to initialize WhatsApp socket' });
+        }
+
+        if (sock.authState?.creds?.me) {
+            return res.json({ success: true, connected: true });
+        }
+
+        let responded = false;
+        
+        const onConnectionUpdate = async (update) => {
+            const { connection, qr } = update;
+            
+            if (qr && !responded) {
+                responded = true;
+                sock.ev.off('connection.update', onConnectionUpdate);
+                const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qr)}`;
+                return res.json({ success: true, qr: qrImageUrl });
+            }
+            
+            if (connection === 'open' && !responded) {
+                responded = true;
+                sock.ev.off('connection.update', onConnectionUpdate);
+                return res.json({ success: true, connected: true });
+            }
+            
+            if (connection === 'close' && !responded) {
+                responded = true;
+                sock.ev.off('connection.update', onConnectionUpdate);
+                return res.status(500).json({ error: 'Connection closed before QR' });
+            }
+        };
+
+        sock.ev.on('connection.update', onConnectionUpdate);
+
+        setTimeout(() => {
+            if (!responded) {
+                responded = true;
+                sock.ev.off('connection.update', onConnectionUpdate);
+                res.status(408).json({ error: 'Timeout waiting for QR code' });
+            }
+        }, 15000);
     } catch (err) {
         console.error('[HTTP] Connect error:', err);
         res.status(500).json({ error: err.message });

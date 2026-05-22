@@ -5,9 +5,9 @@ import { useOnboardingStore } from '../../store/onboardingStore';
 import { StepCard } from '../../components/setup/StepCard';
 import { StepHeader } from '../../components/setup/StepHeader';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
-import { Wifi, Loader2, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
+import { Wifi, Loader2, ArrowRight, RefreshCw, AlertCircle, Play } from 'lucide-react';
 
-type ConnectionState = 'idle' | 'waking_server' | 'requesting_qr' | 'waiting_qr' | 'qr_ready' | 'connected' | 'failed' | 'timeout';
+type ConnectionState = 'idle' | 'waking_server' | 'ready' | 'requesting_qr' | 'qr_ready' | 'connected' | 'failed' | 'timeout';
 
 export function WhatsAppStep() {
   const navigate = useNavigate();
@@ -18,6 +18,7 @@ export function WhatsAppStep() {
   const [errorDetails, setErrorDetails] = useState('');
   const [eta, setEta] = useState(60);
   const [resetLoading, setResetLoading] = useState(false);
+  const [directQrUrl, setDirectQrUrl] = useState('');
   
   const wakeFlowStartedRef = useRef(false);
   const pollIntervalRef = useRef<any>(null);
@@ -35,6 +36,8 @@ export function WhatsAppStep() {
   const requestQrSession = async () => {
     if (!isSupabaseConfigured) return;
     setConnectionState('requesting_qr');
+    setErrorDetails('');
+    setDirectQrUrl('');
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -58,7 +61,18 @@ export function WhatsAppStep() {
          throw new Error(data.error || `Server HTTP ${res.status}`);
       }
 
-      setConnectionState('waiting_qr');
+      const resData = await res.json();
+
+      if (resData.connected) {
+        setConnectionState('connected');
+        fetchChannels();
+      } else if (resData.qr) {
+        setDirectQrUrl(resData.qr);
+        setConnectionState('qr_ready');
+      } else {
+        throw new Error('Received unexpected response from server');
+      }
+
     } catch (err: any) {
       setConnectionState('failed');
       setErrorDetails(err.message || 'Failed to initialize session. Connection dropped.');
@@ -78,7 +92,7 @@ export function WhatsAppStep() {
 
     const pingServer = async () => {
       try {
-        const res = await fetch(`${serverUrl}/ping`);
+        const res = await fetch(`${serverUrl}/ready`);
         return res.ok;
       } catch (e) {
         return false;
@@ -88,7 +102,7 @@ export function WhatsAppStep() {
     // Initial immediate ping
     const isAwake = await pingServer();
     if (isAwake) {
-      requestQrSession();
+      setConnectionState('ready');
       return;
     }
 
@@ -100,7 +114,7 @@ export function WhatsAppStep() {
       const isNowAwake = await pingServer();
       if (isNowAwake) {
         clearInterval(pollIntervalRef.current);
-        requestQrSession();
+        setConnectionState('ready');
       } else if (currentTry >= maxRetries) {
         clearInterval(pollIntervalRef.current);
         setConnectionState('timeout');
@@ -115,7 +129,7 @@ export function WhatsAppStep() {
     };
   }, []);
 
-  // Polling for DB updates
+  // Polling for DB updates (for background connection state)
   useEffect(() => {
     fetchChannels().catch(console.error);
     const interval = setInterval(() => {
@@ -129,13 +143,13 @@ export function WhatsAppStep() {
     if (isWhatsAppConnected) {
       setConnectionState('connected');
       wakeFlowStartedRef.current = false;
-    } else if (whatsappCreds.qr && connectionState !== 'connected') {
+    } else if ((whatsappCreds.qr || directQrUrl) && connectionState !== 'connected') {
       setConnectionState('qr_ready');
       wakeFlowStartedRef.current = false;
     } else if (connectionState === 'idle' && !wakeFlowStartedRef.current) {
       startWakeFlow();
     }
-  }, [isWhatsAppConnected, whatsappCreds.qr, connectionState]);
+  }, [isWhatsAppConnected, whatsappCreds.qr, directQrUrl, connectionState]);
 
   const handleReset = async () => {
     if (!window.confirm("Are you sure you want to disconnect WhatsApp and reset the session? This will log out the active device and generate a new QR code.")) {
@@ -182,6 +196,7 @@ export function WhatsAppStep() {
         }
         
         await fetchChannels();
+        setDirectQrUrl('');
         setConnectionState('idle'); // will re-trigger wake flow
         wakeFlowStartedRef.current = false;
       } else {
@@ -285,12 +300,35 @@ export function WhatsAppStep() {
           </div>
         )}
 
-        {connectionState === 'qr_ready' && whatsappCreds.qr && (
+        {connectionState === 'ready' && (
+          <div className="w-full max-w-md flex flex-col items-center space-y-6 animate-fade-in">
+            <div className="w-full p-6 rounded-2xl border border-white/10 bg-white/[0.02] text-center space-y-4">
+              <div className="flex justify-center">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                  <Wifi className="w-6 h-6 text-emerald-400" />
+                </div>
+              </div>
+              <div>
+                <h4 className="text-white font-bold text-sm">Server Online</h4>
+                <p className="text-zinc-400 text-xs mt-1">WhatsApp engine is initialized and ready to pair.</p>
+              </div>
+              <button
+                onClick={requestQrSession}
+                className="w-full py-3 bg-white text-black rounded-xl font-bold text-xs hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 group"
+              >
+                <Play className="w-4 h-4 group-hover:scale-110 transition-transform fill-current" />
+                <span>Start Connection</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {connectionState === 'qr_ready' && (directQrUrl || whatsappCreds.qr) && (
           <div className="w-full max-w-md flex flex-col items-center space-y-6">
             <div className="flex flex-col items-center space-y-4 animate-fade-in-up">
               <div className="bg-white p-3 rounded-2xl shadow-[0_0_40px_rgba(255,255,255,0.05)] border border-white/10 relative group">
                 <img
-                  src={whatsappCreds.qr}
+                  src={directQrUrl || whatsappCreds.qr}
                   alt="WhatsApp QR Code"
                   className="w-48 h-48 select-none"
                 />
@@ -309,7 +347,7 @@ export function WhatsAppStep() {
           </div>
         )}
 
-        {(connectionState === 'waking_server' || connectionState === 'requesting_qr' || connectionState === 'waiting_qr' || connectionState === 'idle') && (
+        {(connectionState === 'waking_server' || connectionState === 'requesting_qr' || connectionState === 'idle') && (
           <div className="w-full max-w-md flex flex-col items-center space-y-6">
             <div className="flex flex-col items-center justify-center py-8 space-y-4 w-full animate-pulse">
               <div className="relative">
@@ -319,8 +357,7 @@ export function WhatsAppStep() {
               <div className="space-y-2 text-center max-w-xs">
                 <h4 className="text-white font-bold text-sm">
                   {connectionState === 'waking_server' && "Waking Connection Server..."}
-                  {connectionState === 'requesting_qr' && "Preparing WhatsApp Session..."}
-                  {connectionState === 'waiting_qr' && "Generating QR Code..."}
+                  {connectionState === 'requesting_qr' && "Generating QR Code..."}
                   {connectionState === 'idle' && "Initializing..."}
                 </h4>
                 <p className="text-zinc-500 text-[11px] px-2 leading-relaxed">
