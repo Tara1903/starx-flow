@@ -37,9 +37,14 @@ export function WhatsAppStep() {
       const currentChannel = useAuthStore.getState().connectedChannels.find(c => c.channelKey === 'WhatsApp');
       const currentCreds = currentChannel?.credentials || {};
       
-      let serverUrl = isLocalHost
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      let serverUrl = isDev
         ? `http://${window.location.hostname}:10000`
-        : (currentCreds.server_url || 'https://starx-whatsapp-bot.onrender.com');
+        : 'https://starx-whatsapp-bot.onrender.com';
+        
+      if (!isDev && currentCreds.server_url && !currentCreds.server_url.includes('localhost') && !currentCreds.server_url.includes('127.0.0.1')) {
+        serverUrl = currentCreds.server_url;
+      }
 
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -132,9 +137,14 @@ export function WhatsAppStep() {
     setErrorMsg('');
 
     try {
-      let serverUrl = isLocalHost
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      let serverUrl = isDev
         ? `http://${window.location.hostname}:10000`
-        : (whatsappCreds.server_url || 'https://starx-whatsapp-bot.onrender.com');
+        : 'https://starx-whatsapp-bot.onrender.com';
+        
+      if (!isDev && whatsappCreds.server_url && !whatsappCreds.server_url.includes('localhost') && !whatsappCreds.server_url.includes('127.0.0.1')) {
+        serverUrl = whatsappCreds.server_url;
+      }
       
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
