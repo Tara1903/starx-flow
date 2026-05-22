@@ -60,6 +60,13 @@ CREATE TABLE IF NOT EXISTS connected_channels (
   UNIQUE(user_id, channel_key)
 );
 
+-- 5. BAILEYS AUTH (For storing WhatsApp Web login sessions)
+CREATE TABLE IF NOT EXISTS baileys_auth (
+  key_id TEXT PRIMARY KEY,
+  data JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- =========================================================================
 -- ROW LEVEL SECURITY
 -- =========================================================================

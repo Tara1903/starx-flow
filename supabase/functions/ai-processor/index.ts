@@ -124,10 +124,13 @@ Always keep your answers concise, helpful, and in character.`;
       workflow_id: workflow.id,
       type: 'success',
       channel,
-      message: `√ Message sent successfully to ${customerPhone}`
+      message: `√ AI processed message for ${customerPhone}`
     });
 
-    return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+    return new Response(JSON.stringify({ 
+      success: true, 
+      reply: aiResponseText 
+    }), { status: 200, headers: corsHeaders });
   } catch (e: any) {
     console.error('AI Processor Error:', e);
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
