@@ -47,68 +47,105 @@ serve(async (req) => {
       message: `Analyzing message against workflow rules... Tone: ${workflow.ai_tone}`
     });
 
-    // 2. Formulate Prompt and Call Gemini API (Simulated here for edge function constraints without SDK, standard fetch to Gemini REST API)
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    let aiResponseText = '';
-
-    if (!geminiApiKey) {
-      console.warn("GEMINI_API_KEY not set. Using fallback response.");
-      aiResponseText = `(Fallback) Thank you for your message! Our AI is currently offline. You said: ${messageText}`;
-    } else {
-      const systemPrompt = `You are an AI assistant for a business. 
+    // 2. Formulate Prompt and Call APIs
+    const systemPrompt = `You are an AI assistant for a business. 
 Context/Instructions: ${workflow.custom_prompt}
 Tone: ${workflow.ai_tone}
 Always keep your answers concise, helpful, and in character.
 CRITICAL RULE: You MUST always reply in the exact same language and script that the customer used in their message. 
 If the user speaks in an Indian language (Hindi, Tamil, Telugu, etc.) or uses "Hinglish" (Hindi written in English/Latin script), you must fluently understand it and reply in the same style, language, and script.`;
 
-      // Helper function to fetch from Nvidia with retries
-      const fetchWithRetry = async (url: string, options: any, maxRetries = 3) => {
-        for (let i = 0; i < maxRetries; i++) {
-          const res = await fetch(url, options);
-          const data = await res.json();
-          // Nvidia API utilizes an OpenAI-compatible schema: returns { choices: [...] }
-          if (!data.error) {
+    const nvidiaApiKey = Deno.env.get('NVIDIA_API_KEY');
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    
+    let aiResponseText = '';
+    let usedNvidia = false;
+
+    // --- PRIMARY PROVIDER: NVIDIA ---
+    if (nvidiaApiKey) {
+      try {
+        const fetchWithRetry = async (url: string, options: any, maxRetries = 3) => {
+          for (let i = 0; i < maxRetries; i++) {
+            const res = await fetch(url, options);
+            const data = await res.json();
+            // Nvidia API utilizes an OpenAI-compatible schema: returns { choices: [...] }
+            if (!data.error) return data;
+            
+            if (res.status === 429 || res.status >= 500) {
+              console.warn(`Nvidia API Error (Attempt ${i + 1}/${maxRetries}):`, data.error?.message || data.error);
+              await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1))); // Exponential backoff
+              continue;
+            }
+            console.error(`Nvidia API Fatal Error:`, data.error);
             return data;
           }
-          // If rate limited (429) or internal error (500), wait and retry
-          if (res.status === 429 || res.status >= 500) {
-            console.warn(`Nvidia API Error (Attempt ${i + 1}/${maxRetries}):`, data.error?.message || data.error);
-            await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1))); // Exponential backoff
-            continue;
-          }
-          // Other errors (e.g. 400 Bad Request), don't retry
-          console.error(`Nvidia API Fatal Error:`, data.error);
-          return data;
+          return { error: { message: "Max retries reached" } };
+        };
+
+        const aiData = await fetchWithRetry(`https://integrate.api.nvidia.com/v1/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${nvidiaApiKey}`
+          },
+          body: JSON.stringify({
+            model: "google/gemma-4-31b-it",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: messageText }
+            ],
+            max_tokens: 1024,
+            temperature: 0.7,
+            stream: false
+          })
+        });
+
+        if (!aiData.error && aiData.choices?.[0]?.message?.content) {
+          aiResponseText = aiData.choices[0].message.content;
+          usedNvidia = true;
+          console.log("Successfully generated response using NVIDIA (Primary)");
+        } else {
+          console.error("Nvidia API failed to generate a response:", aiData.error);
         }
-        return { error: { message: "Max retries reached" } };
-      };
+      } catch (err) {
+        console.error("Nvidia fetch exception:", err);
+      }
+    }
 
-      // Using the API key provided by the user
-      const nvidiaApiKey = Deno.env.get('NVIDIA_API_KEY') || "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";
-
-      const aiData = await fetchWithRetry(`https://integrate.api.nvidia.com/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${nvidiaApiKey}`
-        },
-        body: JSON.stringify({
-          model: "google/gemma-4-31b-it",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: messageText }
-          ],
-          max_tokens: 1024,
-          temperature: 0.7,
-          stream: false
-        })
-      });
-
-      if (aiData.error) {
-        aiResponseText = `I'm receiving too many messages right now. Please try again in a few seconds. (Error: ${aiData.error.message || JSON.stringify(aiData.error)})`;
+    // --- SECONDARY PROVIDER: GEMINI (Fallback) ---
+    if (!usedNvidia) {
+      if (geminiApiKey) {
+        console.log("Falling back to GEMINI (Secondary)...");
+        try {
+          const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                { role: "user", parts: [{ text: `${systemPrompt}\n\nCustomer Message: ${messageText}` }] }
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1024,
+              }
+            })
+          });
+          
+          const geminiData = await geminiRes.json();
+          if (geminiData.error) {
+            console.error("Gemini API Error:", geminiData.error);
+            aiResponseText = `I'm receiving too many messages right now. Please try again in a few seconds.`;
+          } else {
+            aiResponseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process that right now.";
+            console.log("Successfully generated response using GEMINI (Secondary)");
+          }
+        } catch (err) {
+          console.error("Gemini fetch exception:", err);
+          aiResponseText = `I'm receiving too many messages right now. Please try again in a few seconds.`;
+        }
       } else {
-        aiResponseText = aiData?.choices?.[0]?.message?.content || "Sorry, I couldn't process that right now.";
+        console.warn("Neither NVIDIA_API_KEY nor GEMINI_API_KEY is configured.");
+        aiResponseText = `(Fallback) Thank you for your message! Our AI is currently offline. You said: ${messageText}`;
       }
     }
 
