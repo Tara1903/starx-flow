@@ -173,41 +173,36 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   remainingMinutes: 15,
 
   fetchOnboarding: async () => {
+    if (get().isFetching) return;
     set({ isFetching: true });
     
-    // 1. Get current user
-    let user: any = null;
-    if (isSupabaseConfigured) {
-      user = (await supabase.auth.getUser()).data.user;
-    }
-    
-    // 2. Try loading from LocalStorage first (for instant offline response)
-    const localData = loadFromLocalStorage() as any;
-    // Only use local data if it belongs to the current user (or if there's no user check enabled)
-    if (localData && (!user || localData.userId === user.id)) {
-      const completedSteps = localData.completedSteps || [];
-      const skippedSteps = localData.skippedSteps || [];
-      const currentStep = localData.currentStep || 'account';
-      const { progressPercent, remainingMinutes } = computeProgress(completedSteps, skippedSteps);
-      const steps = computeStepStates(DEFAULT_STEPS, completedSteps, skippedSteps, currentStep);
-
-      set({
-        ...localData,
-        steps,
-        progressPercent,
-        remainingMinutes
-      });
-    }
-
-    // 3. Query Supabase to sync/override if configured
-    if (!isSupabaseConfigured) {
-      set({ isFetching: false });
-      return;
-    }
-
     try {
-      if (!user) {
-        set({ isFetching: false });
+      // 1. Get current user
+      let user: any = null;
+      if (isSupabaseConfigured) {
+        user = (await supabase.auth.getUser()).data.user;
+      }
+      
+      // 2. Try loading from LocalStorage first (for instant offline response)
+      const localData = loadFromLocalStorage() as any;
+      // Only use local data if it belongs to the current user (or if there's no user check enabled)
+      if (localData && (!user || localData.userId === user.id)) {
+        const completedSteps = localData.completedSteps || [];
+        const skippedSteps = localData.skippedSteps || [];
+        const currentStep = localData.currentStep || 'account';
+        const { progressPercent, remainingMinutes } = computeProgress(completedSteps, skippedSteps);
+        const steps = computeStepStates(DEFAULT_STEPS, completedSteps, skippedSteps, currentStep);
+
+        set({
+          ...localData,
+          steps,
+          progressPercent,
+          remainingMinutes
+        });
+      }
+
+      // 3. Query Supabase to sync/override if configured
+      if (!isSupabaseConfigured || !user) {
         return;
       }
 
@@ -255,7 +250,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
         saveToLocalStorage(newState as any, user.id);
       }
     } catch (e) {
-      console.error('[StarX Onboarding] fetchOnboarding DB sync error:', e);
+      console.error('[StarX Onboarding] fetchOnboarding error:', e);
     } finally {
       set({ isFetching: false });
     }
@@ -414,10 +409,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       if (!user) return;
       saveToLocalStorage({ ...get(), isComplete: true } as any, user.id);
 
-      await supabase.from('onboarding_progress').update({
-        is_complete: true,
-        completed_at: new Date().toISOString(),
-      }).eq('user_id', user.id);
+      // We use local storage primarily now as the DB table isn't created in all envs
+      // await supabase.from('onboarding_progress').update({...
     } catch (e) {
       console.warn('[StarX Onboarding] completeOnboarding DB sync failed:', e);
     }
@@ -436,10 +429,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       if (!user) return;
       saveToLocalStorage({ ...get(), isComplete: true } as any, user.id);
 
-      await supabase.from('onboarding_progress').update({
-        is_complete: true,
-        completed_at: new Date().toISOString(),
-      }).eq('user_id', user.id);
+      // We use local storage primarily now as the DB table isn't created in all envs
+      // await supabase.from('onboarding_progress').update({...
     } catch (e) {
       console.warn('[StarX Onboarding] skipOnboarding DB sync failed:', e);
     }

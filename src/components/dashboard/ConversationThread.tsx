@@ -6,6 +6,7 @@ import {
 import { useDashboardStore, type ConversationThread } from "../../store/dashboardStore";
 import { useAuthStore } from "../../store/authStore";
 import { cn } from "../../lib/utils";
+import { CustomerProfile } from "./CustomerProfile";
 
 const CHANNEL_ICON: Record<string, React.ReactNode> = {
   WhatsApp:  <MessageCircle className="w-4 h-4" />,
@@ -79,8 +80,9 @@ export function ConversationThread() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#050505] relative select-none">
-      {/* Thread Header Bar */}
+    <div className="flex-1 flex h-full min-w-0">
+      <div className="flex-1 flex flex-col h-full bg-[#050505] relative select-none">
+        {/* Thread Header Bar */}
       <div className="px-5 py-4 border-b border-white/5 bg-white/[0.005] flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <button
@@ -226,6 +228,12 @@ export function ConversationThread() {
             <Send className="w-4 h-4" />
           </button>
         </div>
+      </div>
+    </div>
+      
+      {/* Right Sidebar - Customer Profile */}
+      <div className="hidden xl:block">
+        <CustomerProfile thread={activeThread} />
       </div>
     </div>
   );

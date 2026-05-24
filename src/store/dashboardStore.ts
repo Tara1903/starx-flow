@@ -1,30 +1,47 @@
 import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
+import { useAuthStore } from './authStore';
 
 export type DashboardSection =
   | 'overview'
   | 'conversations'
+  | 'crm'
+  | 'calendar'
+  | 'tasks'
+  | 'team'
   | 'workflows'
   | 'playground'
   | 'analytics'
   | 'channels'
-  | 'settings';
+  | 'settings'
+  | 'workflow_editor'
+  | 'agents'
+  | 'voice'
+  | 'os';
 
 export interface Message {
   id: string;
   sender: 'user' | 'ai' | 'human';
   text: string;
   timestamp: string;
+  db_id?: string;
+  conversation_id?: string;
+  direction?: 'inbound' | 'outbound';
+  status?: 'sent' | 'delivered' | 'read' | 'failed';
 }
 
 export interface ConversationThread {
   id: string;
   customerName: string;
   channel: 'WhatsApp' | 'Instagram' | 'SMS';
-  status: 'active' | 'resolved' | 'needs_attention';
+  status: 'active' | 'resolved' | 'needs_attention' | string;
   lastMessage: string;
   lastMessageAt: string;
   unread: boolean;
   messages: Message[];
+  db_id?: string;
+  lead_id?: string;
+  lead?: any; // To store full lead info for CustomerProfile
 }
 
 export interface ActivityFeedEntry {
@@ -51,102 +68,31 @@ interface DashboardState {
   activityFeed: ActivityFeedEntry[];
   smartNudges: SmartNudge[];
   isSidebarCollapsed: boolean;
+  isLoading: boolean;
+  subscriptionActive: boolean;
 
   // Actions
   setActiveSection: (section: DashboardSection) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   selectConversation: (id: string | null) => void;
   sendMessageToThread: (threadId: string, text: string, sender: 'user' | 'ai' | 'human') => void;
-  toggleThreadStatus: (threadId: string, status: ConversationThread['status']) => void;
+  toggleThreadStatus: (threadId: string, status: string) => void;
   markThreadRead: (threadId: string) => void;
   addActivityEntry: (entry: Omit<ActivityFeedEntry, 'id' | 'timestamp' | 'timeAgo'>) => void;
   dismissNudge: (id: string) => void;
   resetDashboardStore: () => void;
+  
+  // Realtime & DB
+  fetchInboxData: () => Promise<void>;
+  subscribeToInbox: () => void;
+  unsubscribeFromInbox: () => void;
 }
 
-const MOCK_CONVERSATIONS: ConversationThread[] = [
-  {
-    id: 'conv-1',
-    customerName: 'Sarah Jenkins',
-    channel: 'WhatsApp',
-    status: 'active',
-    lastMessage: 'Can I change my slot to 3 PM tomorrow instead?',
-    lastMessageAt: '2 min ago',
-    unread: true,
-    messages: [
-      { id: 'm-1', sender: 'user', text: 'Hey, I wanted to book a haircut appointment for tomorrow afternoon.', timestamp: '2:15 PM' },
-      { id: 'm-2', sender: 'ai', text: 'Hi Sarah! I would be happy to help. We have openings tomorrow at 1:30 PM, 3:00 PM, and 4:30 PM. Which works best?', timestamp: '2:16 PM' },
-      { id: 'm-3', sender: 'user', text: 'Let’s do 1:30 PM please.', timestamp: '2:18 PM' },
-      { id: 'm-4', sender: 'ai', text: 'Great choice! I have booked you for tomorrow at 1:30 PM. See you then! ✨', timestamp: '2:18 PM' },
-      { id: 'm-5', sender: 'user', text: 'Can I change my slot to 3 PM tomorrow instead?', timestamp: '3:40 PM' }
-    ]
-  },
-  {
-    id: 'conv-2',
-    customerName: 'Alex Rodriguez',
-    channel: 'Instagram',
-    status: 'needs_attention',
-    lastMessage: 'Wait, so do you have any promo discounts for new customers?',
-    lastMessageAt: '12 min ago',
-    unread: true,
-    messages: [
-      { id: 'm-6', sender: 'user', text: 'Hey guys, looking to check out your pricing catalog.', timestamp: '3:10 PM' },
-      { id: 'm-7', sender: 'ai', text: 'Hello! Our haircut starts at $45, styling at $60, and color treatments at $90. You can see the full list on our website.', timestamp: '3:11 PM' },
-      { id: 'm-8', sender: 'user', text: 'Wait, so do you have any promo discounts for new customers?', timestamp: '3:30 PM' }
-    ]
-  },
-  {
-    id: 'conv-3',
-    customerName: '+1 (555) 389-2910',
-    channel: 'SMS',
-    status: 'resolved',
-    lastMessage: 'Thanks, all set!',
-    lastMessageAt: '1h ago',
-    unread: false,
-    messages: [
-      { id: 'm-9', sender: 'user', text: 'Missed call recovery: Hey, tried calling you guys, wanted to check if you do walk-ins.', timestamp: '11:00 AM' },
-      { id: 'm-10', sender: 'ai', text: 'Hi! Apologies for missing your call. We do accept walk-ins, but we highly recommend booking in advance to avoid waiting. Would you like me to find an open slot for today?', timestamp: '11:01 AM' },
-      { id: 'm-11', sender: 'user', text: 'No worries, I booked a slot online already.', timestamp: '11:05 AM' },
-      { id: 'm-12', sender: 'ai', text: 'Fantastic! We look forward to seeing you. Let me know if you need anything else.', timestamp: '11:06 AM' },
-      { id: 'm-13', sender: 'user', text: 'Thanks, all set!', timestamp: '11:10 AM' }
-    ]
-  }
-];
-
-const MOCK_ACTIVITY: ActivityFeedEntry[] = [
-  {
-    id: 'act-1',
-    channel: 'WhatsApp',
-    type: 'success',
-    message: 'Booking confirmed for Sarah Jenkins — Haircut tomorrow at 1:30 PM.',
-    timeAgo: '2m ago',
-    timestamp: new Date(Date.now() - 2 * 60000).toISOString()
-  },
-  {
-    id: 'act-2',
-    channel: 'SMS',
-    type: 'info',
-    message: 'Missed call recovery SMS sent to +1 (555) 389-2910.',
-    timeAgo: '1h ago',
-    timestamp: new Date(Date.now() - 60 * 60000).toISOString()
-  },
-  {
-    id: 'act-3',
-    channel: 'Reviews',
-    type: 'success',
-    message: 'New 5-star Google review auto-response sent to James L.',
-    timeAgo: '2h ago',
-    timestamp: new Date(Date.now() - 120 * 60000).toISOString()
-  },
-  {
-    id: 'act-4',
-    channel: 'Instagram',
-    type: 'warning',
-    message: 'Instagram DM from @alex_rod requires human review (promo enquiry).',
-    timeAgo: '12m ago',
-    timestamp: new Date(Date.now() - 12 * 60000).toISOString()
-  }
-];
+const formatTime = (isoString: string) => {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 
 const INITIAL_NUDGES: SmartNudge[] = [
   {
@@ -165,26 +111,29 @@ const INITIAL_NUDGES: SmartNudge[] = [
   }
 ];
 
-export const useDashboardStore = create<DashboardState>((set) => ({
+let realtimeSubscription: any = null;
+
+export const useDashboardStore = create<DashboardState>((set, get) => ({
   activeSection: 'overview',
-  conversations: MOCK_CONVERSATIONS,
+  conversations: [],
   selectedConversationId: null,
-  activityFeed: MOCK_ACTIVITY,
+  activityFeed: [],
   smartNudges: INITIAL_NUDGES,
   isSidebarCollapsed: false,
+  isLoading: false,
+  subscriptionActive: false,
 
-  setActiveSection: (section) => {
-    set({ activeSection: section });
-  },
-
-  setSidebarCollapsed: (collapsed) => {
-    set({ isSidebarCollapsed: collapsed });
-  },
-
-  selectConversation: (id) => {
+  setActiveSection: (section) => set({ activeSection: section }),
+  setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
+  
+  selectConversation: async (id) => {
     set({ selectedConversationId: id });
     if (id) {
-      // Mark read automatically
+      // Mark read in DB
+      const user = useAuthStore.getState().user;
+      if (user) {
+        await supabase.from('conversations').update({ unread_count: 0 }).eq('id', id);
+      }
       set((state) => ({
         conversations: state.conversations.map((c) =>
           c.id === id ? { ...c, unread: false } : c
@@ -193,50 +142,75 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     }
   },
 
-  sendMessageToThread: (threadId, text, sender) => {
-    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const newMessage: Message = {
-      id: `m-${Date.now()}`,
-      sender,
-      text,
-      timestamp
-    };
+  sendMessageToThread: async (threadId, text, sender) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return;
 
-    set((state) => {
-      const updatedConversations = state.conversations.map((c) => {
-        if (c.id === threadId) {
-          const updatedMessages = [...c.messages, newMessage];
-          return {
-            ...c,
-            messages: updatedMessages,
-            lastMessage: text,
-            lastMessageAt: 'Just now',
-            unread: sender === 'user' ? true : c.unread
-          };
-        }
-        return c;
-      });
+    const timestamp = new Date().toISOString();
+    
+    // Insert into DB
+    const { data: insertedMsg } = await supabase.from('messages').insert({
+      conversation_id: threadId,
+      direction: sender === 'user' ? 'inbound' : 'outbound',
+      role: sender,
+      content: text,
+      status: 'sent',
+      created_at: timestamp
+    }).select().single();
 
-      return {
-        conversations: updatedConversations
+    // The realtime subscription will pick this up and update the store, 
+    // but we can optimistically update for snappiness
+    if (insertedMsg) {
+      const newMessage: Message = {
+        id: insertedMsg.id,
+        db_id: insertedMsg.id,
+        sender: insertedMsg.role as any,
+        text: insertedMsg.content,
+        timestamp: formatTime(insertedMsg.created_at)
       };
-    });
+
+      set((state) => {
+        const updatedConversations = state.conversations.map((c) => {
+          if (c.id === threadId) {
+            // Avoid duplicates if realtime fired first
+            if (c.messages.some(m => m.id === newMessage.id)) return c;
+            return {
+              ...c,
+              messages: [...c.messages, newMessage],
+              lastMessage: text,
+              lastMessageAt: 'Just now',
+              unread: sender === 'user' ? true : c.unread
+            };
+          }
+          return c;
+        });
+        return { conversations: updatedConversations };
+      });
+    }
   },
 
-  toggleThreadStatus: (threadId, status) => {
+  toggleThreadStatus: async (threadId, status) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return;
+
+    // Optimistic update
     set((state) => ({
       conversations: state.conversations.map((c) =>
         c.id === threadId ? { ...c, status } : c
       )
     }));
+
+    // DB update
+    await supabase.from('conversations').update({ status }).eq('id', threadId);
   },
 
-  markThreadRead: (threadId) => {
+  markThreadRead: async (threadId) => {
     set((state) => ({
       conversations: state.conversations.map((c) =>
         c.id === threadId ? { ...c, unread: false } : c
       )
     }));
+    await supabase.from('conversations').update({ unread_count: 0 }).eq('id', threadId);
   },
 
   addActivityEntry: (entry) => {
@@ -247,7 +221,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       timestamp: new Date().toISOString()
     };
     set((state) => ({
-      activityFeed: [newEntry, ...state.activityFeed].slice(0, 50) // keep last 50
+      activityFeed: [newEntry, ...state.activityFeed].slice(0, 50)
     }));
   },
 
@@ -257,14 +231,109 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     }));
   },
 
+  fetchInboxData: async () => {
+    const user = useAuthStore.getState().user;
+    if (!user) return;
+    
+    set({ isLoading: true });
+    
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select(`
+          *,
+          leads (*),
+          messages (*)
+        `)
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      
+      if (data) {
+        const mappedConvos: ConversationThread[] = data.map((dbConv: any) => {
+          // Sort messages chronologically
+          const sortedMsgs = (dbConv.messages || []).sort(
+            (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+          
+          const lastMsg = sortedMsgs[sortedMsgs.length - 1];
+
+          return {
+            id: dbConv.id,
+            db_id: dbConv.id,
+            lead_id: dbConv.lead_id,
+            lead: dbConv.leads,
+            customerName: dbConv.leads?.name || 'Unknown',
+            channel: dbConv.channel as any,
+            status: dbConv.status,
+            unread: dbConv.unread_count > 0,
+            lastMessage: lastMsg?.content || 'No messages yet',
+            lastMessageAt: lastMsg ? formatTime(lastMsg.created_at) : '',
+            messages: sortedMsgs.map((m: any) => ({
+              id: m.id,
+              db_id: m.id,
+              sender: m.role,
+              text: m.content,
+              timestamp: formatTime(m.created_at)
+            }))
+          };
+        });
+
+        set({ conversations: mappedConvos });
+      }
+    } catch (err) {
+      console.error("Error fetching inbox data:", err);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  subscribeToInbox: () => {
+    if (get().subscriptionActive) return;
+    const user = useAuthStore.getState().user;
+    if (!user) return;
+
+    realtimeSubscription = supabase.channel('inbox_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'messages' },
+        (payload) => {
+          // Trigger a re-fetch to get the full joined data to be safe and simple
+          // In a heavily loaded app, we'd manually merge the payload into the state.
+          get().fetchInboxData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'conversations' },
+        (payload) => {
+          get().fetchInboxData();
+        }
+      )
+      .subscribe();
+
+    set({ subscriptionActive: true });
+  },
+
+  unsubscribeFromInbox: () => {
+    if (realtimeSubscription) {
+      supabase.removeChannel(realtimeSubscription);
+      realtimeSubscription = null;
+    }
+    set({ subscriptionActive: false });
+  },
+
   resetDashboardStore: () => {
+    get().unsubscribeFromInbox();
     set({
       activeSection: 'overview',
-      conversations: MOCK_CONVERSATIONS,
+      conversations: [],
       selectedConversationId: null,
-      activityFeed: MOCK_ACTIVITY,
+      activityFeed: [],
       smartNudges: INITIAL_NUDGES,
-      isSidebarCollapsed: false
+      isSidebarCollapsed: false,
+      subscriptionActive: false
     });
   }
 }));

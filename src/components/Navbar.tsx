@@ -63,9 +63,12 @@ export function Navbar() {
           {isLoggedIn && (
             <Link
               to="/dashboard"
-              className="text-emerald-400 font-semibold hover:text-emerald-300 transition-colors flex items-center gap-1.5 ml-2"
+              className="text-emerald-400 font-semibold hover:text-emerald-300 transition-colors flex items-center gap-2 ml-2"
             >
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]" />
+              <div className="relative flex items-center justify-center w-4 h-4">
+                <span className="absolute w-4 h-4 bg-emerald-500/20 rounded-full animate-pulse" />
+                <span className="absolute w-2 h-2 bg-emerald-400 rounded-sm rotate-45 shadow-[0_0_10px_#10b981]" />
+              </div>
               Dashboard
             </Link>
           )}

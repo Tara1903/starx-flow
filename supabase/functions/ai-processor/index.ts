@@ -58,24 +58,58 @@ serve(async (req) => {
       const systemPrompt = `You are an AI assistant for a business. 
 Context/Instructions: ${workflow.custom_prompt}
 Tone: ${workflow.ai_tone}
-Always keep your answers concise, helpful, and in character.`;
+Always keep your answers concise, helpful, and in character.
+CRITICAL RULE: You MUST always reply in the exact same language and script that the customer used in their message. 
+If the user speaks in an Indian language (Hindi, Tamil, Telugu, etc.) or uses "Hinglish" (Hindi written in English/Latin script), you must fluently understand it and reply in the same style, language, and script.`;
 
-      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
+      // Helper function to fetch from Nvidia with retries
+      const fetchWithRetry = async (url: string, options: any, maxRetries = 3) => {
+        for (let i = 0; i < maxRetries; i++) {
+          const res = await fetch(url, options);
+          const data = await res.json();
+          // OpenAI format returns { choices: [...] }, error is usually { error: { message: ... } }
+          if (!data.error) {
+            return data;
+          }
+          // If rate limited (429) or internal error (500), wait and retry
+          if (res.status === 429 || res.status >= 500) {
+            console.warn(`Nvidia API Error (Attempt ${i + 1}/${maxRetries}):`, data.error?.message || data.error);
+            await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1))); // Exponential backoff
+            continue;
+          }
+          // Other errors (e.g. 400 Bad Request), don't retry
+          console.error(`Nvidia API Fatal Error:`, data.error);
+          return data;
+        }
+        return { error: { message: "Max retries reached" } };
+      };
+
+      // Using the API key provided by the user
+      const nvidiaApiKey = Deno.env.get('NVIDIA_API_KEY') || "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";
+
+      const aiData = await fetchWithRetry(`https://integrate.api.nvidia.com/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${nvidiaApiKey}`
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `${systemPrompt}\n\nCustomer says: "${messageText}"\nYour response:`
-            }]
-          }]
+          model: "google/gemma-4-31b-it",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: messageText }
+          ],
+          max_tokens: 1024,
+          temperature: 0.7,
+          stream: false
         })
       });
 
-      const geminiData = await geminiResponse.json();
-      aiResponseText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process that right now.";
+      if (aiData.error) {
+        aiResponseText = `I'm receiving too many messages right now. Please try again in a few seconds. (Error: ${aiData.error.message || JSON.stringify(aiData.error)})`;
+      } else {
+        aiResponseText = aiData?.choices?.[0]?.message?.content || "Sorry, I couldn't process that right now.";
+      }
     }
 
     // Log: AI Reply ready

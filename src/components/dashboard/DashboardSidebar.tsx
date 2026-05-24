@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import {
   Layers, Brain, BarChart3, Radio, Settings, MessageSquare,
   LogOut, Shield, ChevronLeft, ChevronRight, Menu, HelpCircle,
-  Home, Activity, RefreshCw, Smartphone
+  Home, Activity, RefreshCw, Smartphone, Users, Calendar as CalendarIcon, CheckSquare, Contact, Bot, Phone, Cpu
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
@@ -54,7 +54,14 @@ export function DashboardSidebar() {
       icon: <Layers className="w-4 h-4" />,
       badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : undefined
     },
+    { id: "crm", label: "Customers", icon: <Users className="w-4 h-4" /> },
+    { id: "calendar", label: "Calendar", icon: <CalendarIcon className="w-4 h-4" /> },
+    { id: "tasks", label: "Tasks", icon: <CheckSquare className="w-4 h-4" /> },
+    { id: "team", label: "Team", icon: <Contact className="w-4 h-4" /> },
     { id: "playground", label: "AI Playground", icon: <Brain className="w-4 h-4" /> },
+    { id: "agents", label: "AI Agents", icon: <Bot className="w-4 h-4" /> },
+    { id: "voice", label: "Voice Assistant", icon: <Phone className="w-4 h-4" /> },
+    { id: "os", label: "Business OS", icon: <Cpu className="w-4 h-4" /> },
     { id: "analytics", label: "Analytics", icon: <BarChart3 className="w-4 h-4" /> },
     {
       id: "channels",
@@ -202,11 +209,19 @@ export function DashboardSidebar() {
         {/* Toggle Panel for remaining sections */}
         <button
           onClick={() => {
-            const nextTabMap: Record<DashboardSection, DashboardSection> = {
+            const nextTabMap: Record<string, DashboardSection> = {
               overview: "settings",
               conversations: "settings",
               workflows: "settings",
+              crm: "settings",
+              calendar: "settings",
+              tasks: "settings",
+              team: "settings",
               playground: "settings",
+              agents: "settings",
+              voice: "settings",
+              os: "settings",
+              workflow_editor: "settings",
               analytics: "settings",
               channels: "settings",
               settings: "overview"

@@ -1,7 +1,8 @@
 import React from "react";
 import { 
   Home, MessageSquare, Layers, Brain, BarChart3, Radio, Settings,
-  Sparkles, Plus, TestTube, HelpCircle, Activity, Calendar
+  Sparkles, Plus, TestTube, HelpCircle, Activity, Calendar,
+  Users, Calendar as CalendarIcon, CheckSquare, Contact, Bot, Phone, Cpu
 } from "lucide-react";
 import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
 import { useAuthStore } from "../../store/authStore";
@@ -37,6 +38,26 @@ export function DashboardTopBar({ onNewWorkflowClick }: DashboardTopBarProps) {
       subtitle: "Configure instant triggers & intelligent AI actions",
       icon: <Layers className="w-4 h-4 text-blue-400" />
     },
+    crm: {
+      title: "Customer Directory",
+      subtitle: "Manage all leads and client relationships",
+      icon: <Users className="w-4 h-4 text-emerald-400" />
+    },
+    calendar: {
+      title: "Bookings",
+      subtitle: "Manage your upcoming appointments and schedule",
+      icon: <CalendarIcon className="w-4 h-4 text-indigo-400" />
+    },
+    tasks: {
+      title: "Tasks",
+      subtitle: "Track internal to-dos and team assignments",
+      icon: <CheckSquare className="w-4 h-4 text-amber-500" />
+    },
+    team: {
+      title: "Team Management",
+      subtitle: "Manage staff access and permissions",
+      icon: <Contact className="w-4 h-4 text-rose-400" />
+    },
     playground: {
       title: "AI Training Lab",
       subtitle: "Test custom prompts and responses in a real-time sandbox",
@@ -56,6 +77,26 @@ export function DashboardTopBar({ onNewWorkflowClick }: DashboardTopBarProps) {
       title: "System Settings",
       subtitle: "Configure business hours, profile settings, and handoff rules",
       icon: <Settings className="w-4 h-4 text-zinc-400" />
+    },
+    workflow_editor: {
+      title: "Workflow Engine",
+      subtitle: "Design linear automated paths with triggers, conditions, and actions",
+      icon: <Layers className="w-4 h-4 text-purple-400" />
+    },
+    agents: {
+      title: "AI Specialist Workers",
+      subtitle: "Manage role prompt tuning, permissions, and shared memories for autonomous agents",
+      icon: <Bot className="w-4 h-4 text-emerald-400" />
+    },
+    voice: {
+      title: "Voice Assistant",
+      subtitle: "Monitor AI-answered phone calls, review transcriptions, and analyze voice interactions",
+      icon: <Phone className="w-4 h-4 text-emerald-400" />
+    },
+    os: {
+      title: "Business OS CommandCenter",
+      subtitle: "Executive dashboard monitoring goals, business logic settings, and autonomous run loop activity",
+      icon: <Cpu className="w-4 h-4 text-emerald-400" />
     }
   };
 

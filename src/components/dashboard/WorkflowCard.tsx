@@ -66,7 +66,17 @@ export function WorkflowCard({ workflow, onToggle, onSimulate, onConfigure, isSi
             {CHANNEL_ICON[workflow.channel]}
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white leading-tight">{workflow.name}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-white leading-tight">{workflow.name}</h3>
+              <span className={cn(
+                "text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider flex-shrink-0",
+                workflow.config && Array.isArray(workflow.config.steps) && workflow.config.steps.length > 0
+                  ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                  : "bg-zinc-800/50 text-zinc-500 border border-zinc-700/30"
+              )}>
+                {workflow.config && Array.isArray(workflow.config.steps) && workflow.config.steps.length > 0 ? "Advanced" : "Basic"}
+              </span>
+            </div>
             <p className="text-[10px] text-zinc-500 mt-0.5">{workflow.channel} · Tone: {workflow.aiTone}</p>
           </div>
         </div>

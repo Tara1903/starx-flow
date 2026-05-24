@@ -89,7 +89,8 @@ export function WhatsAppStep() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Bypass-Tunnel-Reminder': 'true'
         }
       });
 
@@ -208,7 +209,7 @@ export function WhatsAppStep() {
                 {errorDetails}
               </p>
               <button
-                onClick={() => startWakeFlow()}
+                onClick={() => startConnection()}
                 className="mt-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-xs text-white font-bold transition-all inline-flex items-center gap-2"
               >
                 <RefreshCw className="w-3 h-3" />
@@ -231,7 +232,7 @@ export function WhatsAppStep() {
                 <p className="text-zinc-400 text-xs mt-1">WhatsApp engine is initialized and ready to pair.</p>
               </div>
               <button
-                onClick={requestQrSession}
+                onClick={startConnection}
                 className="w-full py-3 bg-white text-black rounded-xl font-bold text-xs hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 group"
               >
                 <Play className="w-4 h-4 group-hover:scale-110 transition-transform fill-current" />

@@ -212,9 +212,20 @@ app.post('/api/whatsapp/connect', async (req, res) => {
     }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[HTTP] Keep-alive server listening on port ${PORT}`);
     startAllConnectedSessions().catch(err => console.error('[HTTP] Startup session restore error:', err.message));
+});
+
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`\n[FATAL ERROR] Port ${PORT} is already in use!`);
+        console.error(`This means another instance of the server is ALREADY RUNNING in the background.`);
+        console.error(`Please close all terminal windows, or run 'taskkill /F /IM node.exe' as Administrator, then try again.\n`);
+        process.exit(1);
+    } else {
+        console.error(`[HTTP] Server error:`, err);
+    }
 });
 
 async function syncUserRegistry(userId) {
@@ -396,7 +407,8 @@ async function connectToWhatsApp(userId) {
             printQRInTerminal: false,
             browser: ['Ubuntu', 'Chrome', '20.0.04'],
             syncFullHistory: false,
-            markOnlineOnConnect: false,
+            markOnlineOnConnect: true,
+            keepAliveIntervalMs: 30000,
             connectTimeoutMs: 60000,
             retryRequestDelayMs: 250
         });

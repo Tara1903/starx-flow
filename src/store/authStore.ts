@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { useAgentStore } from './agentStore';
+import { useVoiceStore } from './voiceStore';
+import { useBusinessStore } from './businessStore';
 
 /* ──────────────────────────────────────────────
    TYPES
@@ -18,6 +21,59 @@ export interface Workflow {
   executionsCount: number;
   successRate: number;
   savedHours: number;
+  config?: any;
+}
+
+export interface Agent {
+  id: string;
+  name: string;
+  role: 'receptionist' | 'booking' | 'review' | 'sales' | string;
+  description: string;
+  isActive: boolean;
+  systemPrompt: string;
+  permissions: string[];
+}
+
+export interface AgentMemory {
+  id: string;
+  leadId: string | null;
+  key: string;
+  value: string;
+  createdAt: string;
+}
+
+export interface Call {
+  id: string;
+  leadId: string | null;
+  customerName: string;
+  customerPhone: string;
+  direction: 'inbound' | 'outbound';
+  status: 'completed' | 'missed' | 'ongoing' | 'failed';
+  durationSeconds: number;
+  recordingUrl: string;
+  transcription: { role: 'agent' | 'customer' | string; text: string; timestamp: string }[];
+  summary: string;
+  sentiment: 'positive' | 'neutral' | 'negative' | string;
+  callMemory: { key: string; value: string }[];
+  createdAt: string;
+}
+
+export interface BusinessMemory {
+  id: string;
+  key: string;
+  value: string;
+  category: 'general' | 'faq' | 'policy' | 'hours' | string;
+}
+
+export interface BusinessGoal {
+  id: string;
+  title: string;
+  description: string;
+  targetValue: number;
+  currentValue: number;
+  unit: 'bookings' | 'hours' | 'percent' | 'usd' | 'count' | string;
+  targetDate: string | null;
+  status: 'active' | 'achieved' | 'failed' | string;
 }
 
 export interface ConnectedChannel {
@@ -56,6 +112,7 @@ interface AuthState {
   chartData: { day: string; value: number }[];
   selectedWorkflowId: string | null;
 
+
   // Auth (Magic Link & Password)
   sendMagicLink: (email: string, metadata?: {
     business_name?: string;
@@ -73,6 +130,7 @@ interface AuthState {
   toggleWorkflow: (id: string) => Promise<void>;
   updateWorkflowPrompt: (id: string, prompt: string, tone: Workflow['aiTone']) => Promise<void>;
   addWorkflow: (workflow: Omit<Workflow, 'id' | 'executionsCount' | 'successRate' | 'savedHours'>) => Promise<void>;
+  updateWorkflow: (id: string, updates: Partial<Workflow>) => Promise<void>;
 
   // Channels
   fetchChannels: () => Promise<void>;
@@ -84,6 +142,8 @@ interface AuthState {
   addLog: (type: SimulationLog['type'], channel: string, message: string) => void;
   clearLogs: () => void;
   triggerMockSimulation: (id: string) => Promise<void>;
+
+
 }
 
 /* ──────────────────────────────────────────────
@@ -104,6 +164,7 @@ function dbRowToWorkflow(row: Record<string, unknown>): Workflow {
     executionsCount: (row.executions_count as number) || 0,
     successRate: Number(row.success_rate) || 100,
     savedHours: Number(row.saved_hours) || 0,
+    config: row.config || {},
   };
 }
 
@@ -114,6 +175,68 @@ function dbRowToChannel(row: Record<string, unknown>): ConnectedChannel {
     isConnected: row.is_connected as boolean,
     credentials: (row.credentials as Record<string, string>) || {},
     lastSynced: row.last_synced as string | null,
+  };
+}
+
+function dbRowToAgent(row: Record<string, unknown>): Agent {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    role: row.role as Agent['role'],
+    description: (row.description as string) || '',
+    isActive: row.is_active as boolean,
+    systemPrompt: row.system_prompt as string,
+    permissions: (row.permissions as string[]) || [],
+  };
+}
+
+function dbRowToMemory(row: Record<string, unknown>): AgentMemory {
+  return {
+    id: row.id as string,
+    leadId: (row.lead_id as string) || null,
+    key: row.key as string,
+    value: row.value as string,
+    createdAt: row.created_at as string,
+  };
+}
+
+function dbRowToCall(row: Record<string, unknown>): Call {
+  return {
+    id: row.id as string,
+    leadId: (row.lead_id as string) || null,
+    customerName: (row.customer_name as string) || '',
+    customerPhone: (row.customer_phone as string) || '',
+    direction: (row.direction as Call['direction']) || 'inbound',
+    status: (row.status as Call['status']) || 'completed',
+    durationSeconds: (row.duration_seconds as number) || 0,
+    recordingUrl: (row.recording_url as string) || '',
+    transcription: (row.transcription as Call['transcription']) || [],
+    summary: (row.summary as string) || '',
+    sentiment: (row.sentiment as Call['sentiment']) || 'neutral',
+    callMemory: (row.call_memory as Call['callMemory']) || [],
+    createdAt: row.created_at as string,
+  };
+}
+
+function dbRowToBusinessMemory(row: Record<string, unknown>): BusinessMemory {
+  return {
+    id: row.id as string,
+    key: row.key as string,
+    value: row.value as string,
+    category: (row.category as string) || 'general',
+  };
+}
+
+function dbRowToBusinessGoal(row: Record<string, unknown>): BusinessGoal {
+  return {
+    id: row.id as string,
+    title: row.title as string,
+    description: (row.description as string) || '',
+    targetValue: Number(row.target_value) || 0,
+    currentValue: Number(row.current_value) || 0,
+    unit: (row.unit as string) || 'count',
+    targetDate: row.target_date as string | null,
+    status: (row.status as string) || 'active',
   };
 }
 
@@ -149,9 +272,13 @@ const channelSimMessages: Record<string, { trigger: string; thinking: string; re
   },
 };
 
+
+
 /* ──────────────────────────────────────────────
    STORE
    ────────────────────────────────────────────── */
+
+let isInitSessionRunning = false;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   isLoggedIn: false,
@@ -179,12 +306,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   ],
   selectedWorkflowId: null,
 
+
   /* ─── INIT SESSION (call on app mount) ─── */
   initSession: async () => {
     if (!isSupabaseConfigured) {
       set({ isLoading: false });
       return;
     }
+
+    if (isInitSessionRunning) return;
+    isInitSessionRunning = true;
 
     try {
       // Add a 15 second timeout to getSession to prevent deadlocks
@@ -215,16 +346,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (profile) {
           let onboardingComplete = false;
           try {
-            const { data: onboarding } = await supabase
-              .from('onboarding_progress')
-              .select('is_complete')
-              .eq('user_id', session.user.id)
-              .single();
-            if (onboarding) {
-              onboardingComplete = onboarding.is_complete;
+            const stored = localStorage.getItem('starx_onboarding_state');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              onboardingComplete = !!parsed.isComplete;
             }
           } catch (err) {
-            console.warn('[StarX Auth] Could not fetch onboarding progress:', err);
+            console.warn('[StarX Auth] Could not fetch onboarding progress from local storage:', err);
           }
 
           set({
@@ -246,6 +374,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           get().fetchChannels().catch(console.error);
           get().fetchLogs().catch(console.error);
           get().fetchChartData().catch(console.error);
+          useAgentStore.getState().fetchAgents().catch(console.error);
+          useAgentStore.getState().fetchMemories().catch(console.error);
+          useVoiceStore.getState().fetchCalls().catch(console.error);
+          useBusinessStore.getState().fetchBusinessMemories().catch(console.error);
+          useBusinessStore.getState().fetchBusinessGoals().catch(console.error);
+          return;
+        } else {
+          // If profile fetch completely failed but we have a valid auth session,
+          // don't log the user out! Provide a fallback so they stay logged in.
+          console.warn('[StarX Auth] Profile fetch failed after 3 retries, but auth session is valid. Using fallback profile.');
+          set({
+            isLoggedIn: true,
+            isLoading: false,
+            user: {
+              id: session.user.id,
+              name: 'User',
+              email: session.user.email || '',
+              businessName: 'My Business',
+              businessType: 'Other',
+              role: 'user',
+              onboardingComplete: false,
+            },
+          });
           return;
         }
       }
@@ -253,7 +404,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('[StarX Auth] Session init error:', e);
     }
 
-    set({ isLoggedIn: false, isLoading: false });
+    // Only set logged out if we don't already have a session active
+    if (!get().user) {
+      set({ isLoggedIn: false, isLoading: false });
+    } else {
+      set({ isLoading: false });
+    }
+
+    isInitSessionRunning = false;
   },
 
   /* ─── MAGIC LINK ─── */
@@ -336,16 +494,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (profile) {
           let onboardingComplete = false;
           try {
-            const { data: onboarding } = await supabase
-              .from('onboarding_progress')
-              .select('is_complete')
-              .eq('user_id', data.user.id)
-              .single();
-            if (onboarding) {
-              onboardingComplete = onboarding.is_complete;
+            const stored = localStorage.getItem('starx_onboarding_state');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              onboardingComplete = !!parsed.isComplete;
             }
           } catch (err) {
-            console.warn('[StarX Auth] Could not fetch onboarding progress:', err);
+            console.warn('[StarX Auth] Could not fetch onboarding progress from local storage:', err);
           }
 
           set({
@@ -384,6 +539,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (e) {
       // ignore
     }
+    // Clear modular store states
+    useAgentStore.getState().resetAgentStore();
+    useVoiceStore.getState().resetVoiceStore();
+    useBusinessStore.getState().resetBusinessStore();
+
     set({
       isLoggedIn: false,
       user: null,
@@ -609,6 +769,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           channel: fresh.channel,
           ai_tone: fresh.aiTone,
           custom_prompt: fresh.customPrompt,
+          config: fresh.config || {},
         })
         .select()
         .single();
@@ -622,6 +783,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }));
       }
       if (error) console.error('[StarX] Add workflow error:', error);
+    }
+  },
+
+  /* ─── UPDATE WORKFLOW ─── */
+  updateWorkflow: async (id, updates) => {
+    const workflow = get().workflows.find((w) => w.id === id);
+    if (!workflow) return;
+
+    // Map TS camelCase properties to DB snake_case columns
+    const dbUpdates: Record<string, any> = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.trigger !== undefined) dbUpdates.trigger = updates.trigger;
+    if (updates.action !== undefined) dbUpdates.action = updates.action;
+    if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
+    if (updates.channel !== undefined) dbUpdates.channel = updates.channel;
+    if (updates.aiTone !== undefined) dbUpdates.ai_tone = updates.aiTone;
+    if (updates.customPrompt !== undefined) dbUpdates.custom_prompt = updates.customPrompt;
+    if (updates.config !== undefined) dbUpdates.config = updates.config;
+
+    // Optimistic update
+    set((state) => ({
+      workflows: state.workflows.map((w) =>
+        w.id === id ? { ...w, ...updates } : w
+      ),
+    }));
+
+    get().addLog('system', updates.channel || workflow.channel,
+      `Updated workflow configuration: "${updates.name || workflow.name}"`
+    );
+
+    // Persist
+    if (isSupabaseConfigured) {
+      const { error } = await supabase
+        .from('workflows')
+        .update(dbUpdates)
+        .eq('id', id);
+
+      if (error) console.error('[StarX] Update workflow error:', error);
     }
   },
 
@@ -763,53 +963,168 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const workflow = get().workflows.find((w) => w.id === id);
     if (!workflow || !workflow.isActive) return;
 
-    const sim = channelSimMessages[workflow.channel] || {
-      trigger: `Simulated trigger for "${workflow.name}"`,
-      thinking: 'Computing response...',
-      reply: `AI Auto-Response for ${workflow.name}`,
-    };
+    const config = workflow.config;
+    const hasConfigSteps = config && Array.isArray(config.steps) && config.steps.length > 0;
 
-    // 1. Trigger log
-    get().addLog('trigger', workflow.channel, sim.trigger);
+    if (hasConfigSteps) {
+      const steps = config.steps;
+      const triggerStep = steps.find((s: any) => s.type === 'trigger');
+      const conditionSteps = steps.filter((s: any) => s.type === 'condition');
+      const actionSteps = steps.filter((s: any) => s.type === 'action');
 
-    // Increment stats (optimistic + DB)
-    set((state) => ({
-      workflows: state.workflows.map((w) => {
-        if (w.id === id) {
-          return {
-            ...w,
-            executionsCount: w.executionsCount + 1,
-            savedHours: w.savedHours + 0.25,
-          };
+      // 1. Simulate Trigger
+      let triggerText = `Simulated trigger for "${workflow.name}"`;
+      if (triggerStep) {
+        if (triggerStep.nodeType === 'whatsapp_message') {
+          triggerText = `Customer (WhatsApp): '${triggerStep.properties?.messageSample || "Hey! Can I book a slot for tomorrow?"}'`;
+        } else if (triggerStep.nodeType === 'sms_missed_call') {
+          triggerText = `System Event: Missed call from ${triggerStep.properties?.phoneSample || "+1 (555) 234-5678"}`;
+        } else if (triggerStep.nodeType === 'new_review') {
+          triggerText = `Reviews Gate: New ${triggerStep.properties?.stars || "5"}-star review received on Google`;
+        } else if (triggerStep.nodeType === 'insta_comment') {
+          triggerText = `Instagram DM: User commented '${triggerStep.properties?.commentKeyword || "INFO"}' on post`;
+        } else if (triggerStep.nodeType === 'web_chat') {
+          triggerText = `Website Chat: Visitor initiated conversation on ${triggerStep.properties?.pageName || "pricing"} page`;
+        } else {
+          triggerText = `Trigger activated: ${triggerStep.properties?.label || triggerStep.nodeType}`;
         }
-        return w;
-      }),
-    }));
+      }
+      get().addLog('trigger', workflow.channel, triggerText);
 
-    if (isSupabaseConfigured) {
-      supabase
-        .from('workflows')
-        .update({
-          executions_count: workflow.executionsCount + 1,
-          saved_hours: workflow.savedHours + 0.25,
-        })
-        .eq('id', id)
-        .then(({ error }) => {
-          if (error) console.error('[StarX] Stats update error:', error);
-        });
+      // Increment stats (optimistic + DB)
+      set((state) => ({
+        workflows: state.workflows.map((w) => {
+          if (w.id === id) {
+            return {
+              ...w,
+              executionsCount: w.executionsCount + 1,
+              savedHours: w.savedHours + 0.25,
+            };
+          }
+          return w;
+        }),
+      }));
+
+      if (isSupabaseConfigured) {
+        supabase
+          .from('workflows')
+          .update({
+            executions_count: workflow.executionsCount + 1,
+            saved_hours: workflow.savedHours + 0.25,
+          })
+          .eq('id', id)
+          .then(({ error }) => {
+            if (error) console.error('[StarX] Stats update error:', error);
+          });
+      }
+
+      await new Promise((r) => setTimeout(r, 1000));
+
+      // 2. Simulate Conditions
+      if (conditionSteps.length > 0) {
+        for (const cond of conditionSteps) {
+          let condText = `Evaluating: ${cond.properties?.label || cond.nodeType}`;
+          if (cond.nodeType === 'keyword_match') {
+            const kw = cond.properties?.keywords || 'booking';
+            condText = `Condition Check: Matching keywords [${kw}] in message... Found match.`;
+          } else if (cond.nodeType === 'outside_hours') {
+            condText = `Condition Check: Outside business hours? Current time is outside 9 AM - 5 PM... True.`;
+          } else if (cond.nodeType === 'new_customer') {
+            condText = `Condition Check: Contact is new lead? No prior history... True.`;
+          } else if (cond.nodeType === 'sentiment_check') {
+            condText = `Condition Check: Sentiment analyzer: Negative sentiment? Detected frustration... True.`;
+          }
+          get().addLog('ai_process', workflow.channel, condText);
+          await new Promise((r) => setTimeout(r, 800));
+        }
+      } else {
+        get().addLog('ai_process', workflow.channel, `Running automation flow (No conditions specified)...`);
+        await new Promise((r) => setTimeout(r, 800));
+      }
+
+      // 3. Simulate Actions
+      if (actionSteps.length > 0) {
+        for (const act of actionSteps) {
+          let actText = `Firing action: ${act.properties?.label || act.nodeType}`;
+          let logType: SimulationLog['type'] = 'ai_reply';
+          
+          if (act.nodeType === 'send_message') {
+            actText = `AI Response: "${act.properties?.message || "Thanks for reaching out! We'll get back to you shortly."}"`;
+            logType = 'ai_reply';
+          } else if (act.nodeType === 'create_task') {
+            actText = `Action Executed: Created internal task "${act.properties?.title || "Follow up on customer request"}" (Assigned: Team)`;
+            logType = 'system';
+          } else if (act.nodeType === 'create_appointment') {
+            actText = `Action Executed: Scheduled appointment "${act.properties?.title || "Automated Booking Slot"}" in Calendar`;
+            logType = 'system';
+          } else if (act.nodeType === 'notify_team') {
+            actText = `Action Executed: Team notification sent to "${act.properties?.channel || "General Staff"}" channel`;
+            logType = 'system';
+          } else if (act.nodeType === 'update_lead') {
+            actText = `Action Executed: Updated CRM Lead status to "${act.properties?.status || "qualified"}"`;
+            logType = 'system';
+          }
+          
+          get().addLog(logType, workflow.channel, actText);
+          await new Promise((r) => setTimeout(r, 1200));
+        }
+      } else {
+        get().addLog('ai_reply', workflow.channel, `AI Receptionist: Active but no actions configured.`);
+        await new Promise((r) => setTimeout(r, 800));
+      }
+
+      // 4. Success Log
+      get().addLog('success', workflow.channel, `√ Advanced execution successful. Saved 15 minutes of manual operations.`);
+    } else {
+      // Legacy basic flow simulation
+      const sim = channelSimMessages[workflow.channel] || {
+        trigger: `Simulated trigger for "${workflow.name}"`,
+        thinking: 'Computing response...',
+        reply: `AI Auto-Response for ${workflow.name}`,
+      };
+
+      // 1. Trigger log
+      get().addLog('trigger', workflow.channel, sim.trigger);
+
+      // Increment stats (optimistic + DB)
+      set((state) => ({
+        workflows: state.workflows.map((w) => {
+          if (w.id === id) {
+            return {
+              ...w,
+              executionsCount: w.executionsCount + 1,
+              savedHours: w.savedHours + 0.25,
+            };
+          }
+          return w;
+        }),
+      }));
+
+      if (isSupabaseConfigured) {
+        supabase
+          .from('workflows')
+          .update({
+            executions_count: workflow.executionsCount + 1,
+            saved_hours: workflow.savedHours + 0.25,
+          })
+          .eq('id', id)
+          .then(({ error }) => {
+            if (error) console.error('[StarX] Stats update error:', error);
+          });
+      }
+
+      // 2. Processing log
+      await new Promise((r) => setTimeout(r, 1200));
+      get().addLog('ai_process', workflow.channel, sim.thinking);
+
+      // 3. AI reply log
+      await new Promise((r) => setTimeout(r, 1500));
+      get().addLog('ai_reply', workflow.channel, sim.reply);
+
+      // 4. Success log
+      await new Promise((r) => setTimeout(r, 500));
+      get().addLog('success', workflow.channel, '√ Execution successful. AI booking confirmed. Saved 15 minutes of manual triage.');
     }
-
-    // 2. Processing log
-    await new Promise((r) => setTimeout(r, 1200));
-    get().addLog('ai_process', workflow.channel, sim.thinking);
-
-    // 3. AI reply log
-    await new Promise((r) => setTimeout(r, 1500));
-    get().addLog('ai_reply', workflow.channel, sim.reply);
-
-    // 4. Success log
-    await new Promise((r) => setTimeout(r, 500));
-    get().addLog('success', workflow.channel, '√ Execution successful. AI booking confirmed. Saved 15 minutes of manual triage.');
   },
 }));
 
@@ -827,14 +1142,9 @@ export function setupAuthListener() {
         await new Promise((r) => setTimeout(r, 500));
         await useAuthStore.getState().initSession();
       } else if (event === 'SIGNED_OUT') {
-        useAuthStore.setState({
-          isLoggedIn: false,
-          user: null,
-          workflows: [],
-          connectedChannels: [],
-          logs: [],
-          selectedWorkflowId: null,
-        });
+        // Ignore automatic SIGNED_OUT events to prevent unexpected session drops.
+        // Explicit logouts are handled by the logout() function clearing the state.
+        console.warn('[StarX Auth] Received SIGNED_OUT event from Supabase. Ignoring to prevent automatic logout.');
       }
     }
   );

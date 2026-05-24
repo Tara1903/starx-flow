@@ -59,7 +59,10 @@ export function WorkflowsSection() {
           </div>
 
           <button
-            onClick={() => setWizardOpen(true)}
+            onClick={() => {
+              useAuthStore.setState({ selectedWorkflowId: null });
+              setActiveSection("workflow_editor");
+            }}
             className="flex items-center gap-1 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black py-2.5 px-4 rounded-full transition-all shadow-[0_0_15px_rgba(16,185,129,0.25)] flex-shrink-0"
           >
             <Plus className="w-4 h-4" />
@@ -89,7 +92,7 @@ export function WorkflowsSection() {
               onSimulate={() => handleSimulate(wf.id)}
               onConfigure={() => {
                 useAuthStore.setState({ selectedWorkflowId: wf.id });
-                setActiveSection("playground");
+                setActiveSection("workflow_editor");
               }}
               isSimulating={simulatingId === wf.id}
             />

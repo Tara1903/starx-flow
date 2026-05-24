@@ -5,9 +5,11 @@ import { useUIStore } from "./store/uiStore";
 import { SignupModal } from "./components/SignupModal";
 import { CustomCursor } from "./components/CustomCursor";
 import { ScrollToTop } from "./components/ScrollToTop";
-import { CookieConsent } from "./components/CookieConsent";
+import { ConsentBanner } from "./components/ConsentBanner";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
+import { AmbientEnvironment } from "./components/AmbientEnvironment";
+import { CommandCenter } from "./components/CommandCenter";
 import { useAuthStore, setupAuthListener } from "./store/authStore";
 import { useAdminStore } from "./store/adminStore";
 
@@ -24,7 +26,6 @@ const Privacy = lazy(() => import("./pages/Privacy").then(m => ({ default: m.Pri
 const Terms = lazy(() => import("./pages/Terms").then(m => ({ default: m.Terms })));
 const Dashboard = lazy(() => import("./pages/Dashboard").then(m => ({ default: m.Dashboard })));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard").then(m => ({ default: m.AdminDashboard })));
-const AdminSetup = lazy(() => import("./pages/AdminSetup").then(m => ({ default: m.AdminSetup })));
 const AdminLogin = lazy(() => import("./pages/AdminLogin").then(m => ({ default: m.AdminLogin })));
 
 // Onboarding Pages
@@ -79,8 +80,10 @@ function AppContent() {
   const isAppRoute = location.pathname.startsWith('/setup') || location.pathname.startsWith('/dashboard');
 
   return (
-    <div className="min-h-screen text-white font-sans overflow-hidden bg-black flex flex-col">
+    <div className="min-h-screen text-white font-sans overflow-hidden bg-black flex flex-col relative z-0">
+      <AmbientEnvironment />
       <CustomCursor />
+      <CommandCenter />
       {!isAppRoute && <Navbar />}
       <main className="relative z-10 flex-1">
         <Suspense fallback={<PageLoader />}>
@@ -113,7 +116,6 @@ function AppContent() {
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/admin/setup" element={<ProtectedRoute><AdminSetup /></ProtectedRoute>} />
             <Route path="/admin/login" element={<AdminLogin />} />
           </Routes>
         </Suspense>
@@ -153,7 +155,7 @@ export default function App() {
           <SignupModal onClose={closeSignup} />
         )}
       </AnimatePresence>
-      <CookieConsent />
+      <ConsentBanner />
     </BrowserRouter>
   );
 }
