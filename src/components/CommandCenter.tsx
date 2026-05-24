@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
-import { Search, Command, ArrowRight, Sparkles, MessageSquare, Calendar, Settings } from "lucide-react";
+import { Search, Command, ArrowRight, Sparkles, MessageSquare, Calendar, Settings, ShieldCheck, Wifi } from "lucide-react";
 
 export function CommandCenter() {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,6 +38,8 @@ export function CommandCenter() {
 
   const actions = [
     { id: "dashboard", icon: Command, label: "Go to Dashboard", path: "/dashboard" },
+    { id: "whatsapp-meta", icon: ShieldCheck, label: "Configure Meta API", path: "/setup/whatsapp" },
+    { id: "channels", icon: Wifi, label: "Manage Integrations", path: "/dashboard?section=channels" },
     { id: "inbox", icon: MessageSquare, label: "View Inbox", path: "/dashboard?section=conversations" },
     { id: "calendar", icon: Calendar, label: "View Calendar", path: "/dashboard?section=calendar" },
     { id: "settings", icon: Settings, label: "OS Settings", path: "/dashboard?section=settings" },
