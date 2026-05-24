@@ -7,6 +7,11 @@
 
 require('dotenv').config();
 // Force crash on Render to prevent conflicts with local development
+if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    console.log('WhatsApp Worker is disabled in production (Meta API Active). Exiting.');
+    process.exit(0);
+}
+
 if (process.env.RENDER || process.env.RENDER_EXTERNAL_URL) {
     console.error("===============================================================");
     console.error("FATAL: Running on Render detected! Shutting down immediately.");

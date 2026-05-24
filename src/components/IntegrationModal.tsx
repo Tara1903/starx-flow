@@ -47,11 +47,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
           const currentChannel = useAuthStore.getState().connectedChannels.find(c => c.channelKey === 'WhatsApp');
           const currentCreds = currentChannel?.credentials || {};
           
-          let serverUrl = isLocalHost
-            ? `http://${window.location.hostname}:10000`
-            : (currentCreds.server_url || 'https://starx-whatsapp-bot.onrender.com');
-
-          console.log(`[WA] Triggering connect on server: ${serverUrl}`);
+          console.log(`[WA] Triggering connect via Vercel Serverless API`);
           const { data: { session } } = await supabase.auth.getSession();
           const token = session?.access_token;
           if (!token) return;
@@ -59,52 +55,17 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
           let response: Response | null = null;
           let fetchError: any = null;
 
-          const attemptFetch = async (url: string) => {
-            try {
-              return await fetch(`${url}/api/whatsapp/connect`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`,
-                  'Bypass-Tunnel-Reminder': 'true'
-                }
-              });
-            } catch (err) {
-              console.warn(`[WA] Connect fetch to ${url} failed:`, err);
-              throw err;
-            }
-          };
-
           try {
-            response = await attemptFetch(serverUrl);
+            response = await fetch(`/api/whatsapp/connect`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            });
           } catch (err) {
             fetchError = err;
-          }
-
-          // Fallback strategies for local development to handle Windows dual-stack loopback issues
-          if ((!response || !response.ok) && isLocalHost) {
-            const fallbacks = [];
-            if (window.location.hostname !== '127.0.0.1') {
-              fallbacks.push('http://127.0.0.1:10000');
-            }
-            if (window.location.hostname !== 'localhost') {
-              fallbacks.push('http://localhost:10000');
-            }
-
-            for (const fallbackUrl of fallbacks) {
-              if (response && response.ok) break;
-              console.log(`[WA] Retrying connect on fallback: ${fallbackUrl}`);
-              try {
-                response = await attemptFetch(fallbackUrl);
-                fetchError = null;
-              } catch (err) {
-                fetchError = err;
-              }
-            }
-          }
-
-          if (!response || !response.ok) {
-            console.warn(`[WA] Connect trigger failed or server not reached`);
+            console.warn(`[WA] Connect fetch failed:`, err);
           }
         } catch (err) {
           console.error('[WA] Connect trigger error:', err);
@@ -166,10 +127,6 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
     setError(null);
 
     try {
-      let serverUrl = isLocalHost
-        ? `http://${window.location.hostname}:10000`
-        : (whatsappCreds.server_url || 'https://starx-whatsapp-bot.onrender.com');
-      
       // Get current user session token
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -178,52 +135,21 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
         throw new Error("You must be logged in to reset the WhatsApp session.");
       }
 
-      console.log(`[WA] Requesting reset on server: ${serverUrl}`);
+      console.log(`[WA] Requesting reset via Vercel Serverless API`);
       let response: Response | null = null;
       let fetchError: any = null;
 
-      const attemptReset = async (url: string) => {
-        try {
-          return await fetch(`${url}/api/whatsapp/reset`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-              'Bypass-Tunnel-Reminder': 'true'
-            }
-          });
-        } catch (err) {
-          console.warn(`[WA] Reset fetch to ${url} failed:`, err);
-          throw err;
-        }
-      };
-
       try {
-        response = await attemptReset(serverUrl);
+        response = await fetch(`/api/whatsapp/reset`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
       } catch (err) {
         fetchError = err;
-      }
-
-      // Fallback strategies for local development to handle Windows dual-stack loopback issues
-      if ((!response || !response.ok) && isLocalHost) {
-        const fallbacks = [];
-        if (window.location.hostname !== '127.0.0.1') {
-          fallbacks.push('http://127.0.0.1:10000');
-        }
-        if (window.location.hostname !== 'localhost') {
-          fallbacks.push('http://localhost:10000');
-        }
-
-        for (const fallbackUrl of fallbacks) {
-          if (response && response.ok) break;
-          console.log(`[WA] Retrying reset on fallback: ${fallbackUrl}`);
-          try {
-            response = await attemptReset(fallbackUrl);
-            fetchError = null;
-          } catch (err) {
-            fetchError = err;
-          }
-        }
+        console.warn(`[WA] Reset fetch failed:`, err);
       }
 
       if (fetchError) {
@@ -246,7 +172,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
               user_id: user.id,
               channel_key: 'WhatsApp',
               is_connected: false,
-              credentials: { server_url: serverUrl, updated_at: new Date().toISOString() },
+              credentials: { updated_at: new Date().toISOString() },
               last_synced: new Date().toISOString()
             }, { onConflict: 'user_id, channel_key' });
         }

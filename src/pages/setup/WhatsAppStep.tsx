@@ -27,13 +27,7 @@ export function WhatsAppStep() {
   const isWhatsAppConnected = whatsappChannel?.isConnected || false;
   const whatsappCreds = whatsappChannel?.credentials || {};
 
-  const serverUrl = React.useMemo(() => {
-    // Browsers explicitly allow HTTPS websites to fetch from http://localhost
-    // This completely bypasses the need for Ngrok, Localtunnel, or any cloud proxies!
-    return 'http://localhost:10000';
-  }, []);
-
-
+  const serverUrl = '';
 
   const startConnection = async () => {
     if (!isSupabaseConfigured) return;
@@ -85,12 +79,11 @@ export function WhatsAppStep() {
         throw new Error("You must be logged in to reset the WhatsApp session.");
       }
 
-      const res = await fetch(`${serverUrl}/api/whatsapp/reset`, {
+      const res = await fetch(`/api/whatsapp/reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Bypass-Tunnel-Reminder': 'true'
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -109,7 +102,7 @@ export function WhatsAppStep() {
               user_id: user.id,
               channel_key: 'WhatsApp',
               is_connected: false,
-              credentials: { server_url: serverUrl, updated_at: new Date().toISOString() },
+              credentials: { updated_at: new Date().toISOString() },
               last_synced: new Date().toISOString()
             }, { onConflict: 'user_id, channel_key' });
         }

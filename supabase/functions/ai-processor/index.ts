@@ -67,7 +67,7 @@ If the user speaks in an Indian language (Hindi, Tamil, Telugu, etc.) or uses "H
         for (let i = 0; i < maxRetries; i++) {
           const res = await fetch(url, options);
           const data = await res.json();
-          // OpenAI format returns { choices: [...] }, error is usually { error: { message: ... } }
+          // Nvidia API utilizes an OpenAI-compatible schema: returns { choices: [...] }
           if (!data.error) {
             return data;
           }
