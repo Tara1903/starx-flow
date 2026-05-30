@@ -83,7 +83,7 @@ export function ActivityFeed() {
     });
 
   return (
-    <div className="glass-card rounded-xl overflow-hidden flex flex-col h-[400px]">
+    <div className="glass-panel rounded-xl overflow-hidden flex flex-col h-[400px]">
       {/* Header */}
       <div className="px-5 py-4 border-b border-white/5 bg-white/[0.01] flex flex-col xs:flex-row xs:items-center justify-between gap-3 select-none">
         <div className="flex items-center gap-2">

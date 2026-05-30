@@ -92,7 +92,7 @@ export function LaunchStep() {
                   <h5 className="text-xs font-bold text-white">Communications Linked</h5>
                   <p className="text-[10px] text-zinc-400 mt-0.5">
                     {connectedCount === 0 
-                      ? 'Demo Web Sandbox connection is active.' 
+                      ? 'Web Sandbox connection is active.' 
                       : `${connectedCount} channel(s) connected: ${activeChannels.map(c => c.channelKey).join(', ')}.`}
                   </p>
                 </div>

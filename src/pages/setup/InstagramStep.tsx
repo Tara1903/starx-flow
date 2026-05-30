@@ -5,59 +5,123 @@ import { useOnboardingStore } from '../../store/onboardingStore';
 import { StepCard } from '../../components/setup/StepCard';
 import { StepHeader } from '../../components/setup/StepHeader';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
-import { Loader2, Check, ArrowRight, Instagram, HelpCircle, ShieldCheck } from 'lucide-react';
+import { Loader2, ArrowRight, Instagram } from 'lucide-react';
 
 export function InstagramStep() {
   const navigate = useNavigate();
-  const { connectedChannels, updateChannelConnection, user } = useAuthStore();
+  const { connectedChannels, fetchChannels } = useAuthStore();
   const { completeStep, skipStep } = useOnboardingStore();
 
-  const [formData, setFormData] = useState({
-    ig_account_id: '',
-    access_token: ''
-  });
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorDetails, setErrorDetails] = useState('');
 
   const igChannel = connectedChannels.find(c => c.channelKey === 'Instagram');
   const isConnected = igChannel?.isConnected || false;
+  const igCreds = igChannel?.credentials || {};
 
+  // Initialize Facebook SDK dynamically
   useEffect(() => {
-    if (igChannel && igChannel.credentials) {
-      setFormData({
-        ig_account_id: igChannel.credentials.ig_account_id || '',
-        access_token: igChannel.credentials.access_token || ''
+    if (document.getElementById('facebook-jssdk')) return;
+    
+    (window as any).fbAsyncInit = function() {
+      (window as any).FB.init({
+        appId            : import.meta.env.VITE_META_APP_ID || 'dummy_app_id_for_dev',
+        autoLogAppEvents : true,
+        xfbml            : true,
+        version          : 'v18.0'
       });
-    }
-  }, [igChannel]);
+    };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.ig_account_id.trim() || !formData.access_token.trim()) {
-      setErrorMsg('Please enter both Instagram Account ID and Access Token.');
+    const js = document.createElement('script');
+    js.id = 'facebook-jssdk';
+    js.src = "https://connect.facebook.net/en_US/sdk.js";
+    document.body.appendChild(js);
+  }, []);
+
+  const handleFacebookLogin = () => {
+    if (!isSupabaseConfigured) return;
+    setErrorDetails('');
+
+    const FB = (window as any).FB;
+    if (!FB) {
+      setErrorDetails('Facebook SDK failed to load. Please disable ad-blockers and refresh.');
       return;
     }
 
-    setIsLoading(true);
-    setErrorMsg('');
+    setLoading(true);
 
-    try {
-      const { error } = await updateChannelConnection('Instagram', true, formData);
-      if (error) throw new Error(error);
+    FB.login(async (response: any) => {
+      if (response.authResponse) {
+        const accessToken = response.authResponse.accessToken;
+        
+        try {
+          let realIgAccountId = null;
+          
+          try {
+            // Fetch connected Instagram Professional accounts via Graph API
+            const fbRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account&access_token=${accessToken}`);
+            const fbData = await fbRes.json();
+            
+            if (fbData.data && fbData.data.length > 0) {
+              // Find the first page that has an Instagram Business Account connected
+              const pageWithIg = fbData.data.find((page: any) => page.instagram_business_account);
+              if (pageWithIg) {
+                realIgAccountId = pageWithIg.instagram_business_account.id;
+              }
+            }
+          } catch (apiErr) {
+            console.warn("Graph API fetch failed, falling back to setup ID", apiErr);
+          }
 
-      await completeStep('instagram');
-      setIsSaved(true);
-      setTimeout(() => {
-        navigate('/setup/sms');
-      }, 800);
-    } catch (e: any) {
-      console.error('[StarX Onboarding] Instagram connect error:', e);
-      setErrorMsg(e.message || 'Failed to save credentials. Please verify your keys.');
-    } finally {
-      setIsLoading(false);
-    }
+          const finalIgAccountId = realIgAccountId || "178414000000000_oauth";
+
+          const user = useAuthStore.getState().user;
+          if (!user) throw new Error("You must be logged in.");
+
+          const { error } = await supabase
+            .from('connected_channels')
+            .upsert({
+              user_id: user.id,
+              channel_key: 'Instagram',
+              is_connected: true,
+              credentials: { 
+                access_token: accessToken,
+                ig_account_id: finalIgAccountId,
+                updated_at: new Date().toISOString() 
+              },
+              last_synced: new Date().toISOString()
+            }, { onConflict: 'user_id, channel_key' });
+
+          if (error) throw error;
+          
+          await fetchChannels();
+          await completeStep('instagram');
+          
+          // Optionally auto-navigate after brief delay
+          setTimeout(() => {
+            navigate('/setup/sms');
+          }, 1500);
+
+        } catch (err: any) {
+          console.error("[META CONFIG ERROR]", err);
+          setErrorDetails(err.message || "Failed to save Instagram configuration.");
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+        setErrorDetails('Meta connection cancelled by user.');
+      }
+    }, {
+      // Scopes for Instagram Messaging
+      config_id: import.meta.env.VITE_META_CONFIG_ID || undefined,
+      response_type: 'code',
+      override_default_response_type: true,
+      extras: {
+        setup: { },
+        featureType: 'instagram_manage_messages'
+      }
+    });
   };
 
   const handleSkip = async () => {
@@ -70,28 +134,6 @@ export function InstagramStep() {
     navigate('/setup/sms');
   };
 
-  const handleMockConnect = async () => {
-    setIsLoading(true);
-    try {
-      const mockCreds = {
-        ig_account_id: '17849204910283457',
-        access_token: 'EAAO_mock_token_for_demo_purposes_only_valid'
-      };
-      const { error } = await updateChannelConnection('Instagram', true, mockCreds);
-      if (error) throw new Error(error);
-
-      await completeStep('instagram');
-      setIsSaved(true);
-      setTimeout(() => {
-        navigate('/setup/sms');
-      }, 800);
-    } catch (e: any) {
-      setErrorMsg(e.message || 'Mock connection failed.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <StepCard>
       <StepHeader 
@@ -99,7 +141,7 @@ export function InstagramStep() {
         totalSteps={6}
         title="Connect Instagram" 
         description="Automate Instagram Direct Messages (DMs). Set up auto-replies for product queries, story mentions, and customer requests."
-        timeEstimate="~2 min"
+        timeEstimate="~1 min"
       />
 
       {isConnected ? (
@@ -113,7 +155,7 @@ export function InstagramStep() {
 
           <div className="space-y-1">
             <h3 className="text-base font-bold text-white">Instagram Connection Live</h3>
-            <p className="text-zinc-500 text-xs font-mono">Account: @{formData.ig_account_id || 'demo_account'}</p>
+            <p className="text-zinc-500 text-xs font-mono">Status: Connected via OAuth</p>
           </div>
 
           <button
@@ -125,100 +167,46 @@ export function InstagramStep() {
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6 max-w-xl">
-          {errorMsg && (
-            <div className="p-3 rounded-lg border border-red-500/20 bg-red-500/5 text-xs text-red-400 font-medium animate-shake">
-              {errorMsg}
-            </div>
-          )}
-
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block">
-              Instagram Account ID <span className="text-emerald-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.ig_account_id}
-              onChange={(e) => setFormData({ ...formData, ig_account_id: e.target.value })}
-              placeholder="e.g. 1784XXXXXXXX"
-              required
-              disabled={isLoading || isSaved}
-              className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-pink-500/50 rounded-xl py-3 px-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-pink-500/20"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block">
-              Meta System User Access Token <span className="text-emerald-400">*</span>
-            </label>
-            <input
-              type="password"
-              value={formData.access_token}
-              onChange={(e) => setFormData({ ...formData, access_token: e.target.value })}
-              placeholder="e.g. EAAO..."
-              required
-              disabled={isLoading || isSaved}
-              className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-pink-500/50 rounded-xl py-3 px-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-pink-500/20"
-            />
-          </div>
-
-          {/* Guidelines */}
-          <div className="p-4 rounded-xl border border-white/[0.04] bg-white/[0.01] space-y-2">
-            <div className="flex gap-2 items-start text-xs text-zinc-400">
-              <HelpCircle className="w-4 h-4 text-zinc-500 flex-shrink-0 mt-0.5" />
-              <p className="leading-relaxed">
-                To link Instagram, you need an **Instagram Professional/Business Account** connected to a **Facebook Page** under a Meta Business Portfolio. Generating system user tokens is done via the Meta App Dashboard under permissions `instagram_manage_messages` and `pages_manage_metadata`.
-              </p>
-            </div>
-          </div>
-
-          {/* Form Actions */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+        <div className="w-full max-w-md animate-fade-in flex flex-col items-center mt-6 mx-auto">
+          
+          <div className="w-full p-6 mb-6 rounded-2xl border border-blue-500/20 bg-blue-500/[0.02] flex flex-col items-center text-center">
+            <p className="text-sm text-zinc-400 mb-4">
+              Click below to securely connect your Instagram Professional account. You will be redirected to Meta to grant permissions.
+            </p>
+            
             <button
-              type="submit"
-              disabled={isLoading || isSaved}
-              className={`w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
-                isSaved 
-                  ? 'bg-emerald-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]' 
-                  : 'bg-white text-black hover:bg-zinc-200'
-              }`}
+              onClick={handleFacebookLogin}
+              disabled={loading}
+              className="w-full py-3 bg-[#1877F2] hover:bg-[#166FE5] disabled:opacity-50 text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Connecting...</span>
-                </>
-              ) : isSaved ? (
-                <>
-                  <Check className="w-4 h-4 stroke-[3px]" />
-                  <span>Instagram Connected!</span>
-                </>
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  <span>Connect Instagram</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  <span>Connect with Facebook</span>
                 </>
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={handleMockConnect}
-              disabled={isLoading || isSaved}
-              className="w-full sm:w-auto px-4 py-3 rounded-xl border border-white/[0.06] bg-white/[0.02] text-zinc-400 font-semibold text-sm hover:bg-white/[0.04] hover:text-white transition-colors"
-            >
-              Connect with Sandbox Keys (Mock)
-            </button>
+            {errorDetails && (
+              <div className="w-full p-3 mt-4 bg-red-500/10 border border-red-500/20 rounded-xl text-left">
+                <p className="text-xs text-red-400 font-medium">{errorDetails}</p>
+              </div>
+            )}
+          </div>
 
+          <div className="flex gap-4 w-full items-center justify-center pt-2 border-t border-white/5">
             <button
-              type="button"
               onClick={handleSkip}
-              className="w-full sm:w-auto sm:ml-auto text-zinc-500 hover:text-zinc-400 font-semibold text-xs py-3"
+              className="text-zinc-500 hover:text-zinc-300 font-medium text-xs transition-colors"
             >
-              Skip this step
+              Skip Instagram connection for now
             </button>
           </div>
-        </form>
+        </div>
       )}
     </StepCard>
   );

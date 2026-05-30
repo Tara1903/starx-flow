@@ -25,7 +25,7 @@ export function SuccessState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.02] backdrop-blur-md relative overflow-hidden",
+        "glass-panel flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.02] relative overflow-hidden animate-[fade-in-up_0.4s_ease-out]",
         className
       )}
     >

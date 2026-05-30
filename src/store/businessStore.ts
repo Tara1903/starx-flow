@@ -2,20 +2,6 @@ import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { type BusinessMemory, type BusinessGoal } from './authStore';
 
-const MOCK_BUSINESS_MEMORIES: BusinessMemory[] = [
-  { id: 'bm-1', key: 'business_hours', value: 'Monday - Friday: 9:00 AM - 7:00 PM, Saturday: 9:00 AM - 5:00 PM, Sunday: Closed', category: 'hours' },
-  { id: 'bm-2', key: 'cancellation_policy', value: 'Clients can cancel or reschedule up to 24 hours in advance without fee. Cancellations under 24 hours incur a 50% charge.', category: 'policy' },
-  { id: 'bm-3', key: 'first_visit_discount', value: 'New clients receive a 15% discount code (WELCOME15) automatically applied to their first scheduled slot.', category: 'general' },
-  { id: 'bm-4', key: 'address_faq', value: 'We are located at 120 Brand Ave, Suite 300, near the downtown city park. Free customer parking is available in the back.', category: 'faq' }
-];
-
-const MOCK_BUSINESS_GOALS: BusinessGoal[] = [
-  { id: 'bg-1', title: 'Triage Inbound Leads', description: 'Triage WhatsApp/SMS leads automatically with AI and schedule booking slots.', targetValue: 50, currentValue: 32, unit: 'bookings', targetDate: new Date(Date.now() + 3600000 * 24 * 7).toISOString(), status: 'active' },
-  { id: 'bg-2', title: 'Save Staff Support Hours', description: 'Reduce manual phone/text customer support time via automated agents.', targetValue: 30, currentValue: 18, unit: 'hours', targetDate: new Date(Date.now() + 3600000 * 24 * 14).toISOString(), status: 'active' },
-  { id: 'bg-3', title: 'AI Assistant Match Rate', description: 'Maintain high AI auto-resolution rate without human support agent takeover.', targetValue: 95, currentValue: 92, unit: 'percent', targetDate: new Date(Date.now() + 3600000 * 24 * 30).toISOString(), status: 'active' },
-  { id: 'bg-4', title: 'Collect Reviews Boost', description: 'Automate checkout text reminders to collect public Google reviews.', targetValue: 20, currentValue: 15, unit: 'count', targetDate: new Date(Date.now() + 3600000 * 24 * 10).toISOString(), status: 'active' }
-];
-
 interface BusinessState {
   businessMemories: BusinessMemory[];
   businessGoals: BusinessGoal[];
@@ -60,7 +46,7 @@ export const useBusinessStore = create<BusinessState>((set, get) => ({
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
     if (!userId || !isSupabaseConfigured) {
-      set({ businessMemories: MOCK_BUSINESS_MEMORIES });
+      set({ businessMemories: [] });
       return;
     }
 
@@ -78,11 +64,11 @@ export const useBusinessStore = create<BusinessState>((set, get) => ({
       if (data && data.length > 0) {
         set({ businessMemories: data.map(dbRowToBusinessMemory) });
       } else {
-        set({ businessMemories: MOCK_BUSINESS_MEMORIES });
+        set({ businessMemories: [] });
       }
     } catch (e) {
       console.error('[StarX] Fetch business memories exception:', e);
-      set({ businessMemories: MOCK_BUSINESS_MEMORIES });
+      set({ businessMemories: [] });
     }
   },
 
@@ -162,7 +148,7 @@ export const useBusinessStore = create<BusinessState>((set, get) => ({
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
     if (!userId || !isSupabaseConfigured) {
-      set({ businessGoals: MOCK_BUSINESS_GOALS });
+      set({ businessGoals: [] });
       return;
     }
 
@@ -180,11 +166,11 @@ export const useBusinessStore = create<BusinessState>((set, get) => ({
       if (data && data.length > 0) {
         set({ businessGoals: data.map(dbRowToBusinessGoal) });
       } else {
-        set({ businessGoals: MOCK_BUSINESS_GOALS });
+        set({ businessGoals: [] });
       }
     } catch (e) {
       console.error('[StarX] Fetch business goals exception:', e);
-      set({ businessGoals: MOCK_BUSINESS_GOALS });
+      set({ businessGoals: [] });
     }
   },
 

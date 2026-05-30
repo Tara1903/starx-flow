@@ -32,7 +32,7 @@ export function Product() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-[3.2rem] md:text-[5.5rem] font-bold tracking-tight text-white mb-8 leading-[1.05]"
+            className="text-4xl sm:text-5xl md:text-[5.5rem] font-bold tracking-tight text-white mb-8 leading-[1.05]"
           >
             Your complete AI front desk <br className="hidden md:block" />
             <span className="text-gradient-silver">
@@ -76,7 +76,7 @@ export function Product() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="w-full max-w-5xl mx-auto glass-panel rounded-[2rem] overflow-hidden mb-32 relative shadow-2xl border border-white/10"
+          className="w-full max-w-5xl mx-auto glass-hero glass-inner-sheen glass-edge-light rounded-[2rem] overflow-hidden mb-32 relative shadow-2xl"
         >
           {/* Mac window header */}
           <div className="bg-black/40 px-4 py-3 border-b border-white/5 flex items-center gap-2">
@@ -145,7 +145,7 @@ export function Product() {
         {/* Features Grid */}
         <div className="mb-32">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
               Core <span className="text-gradient-silver">Modules</span>
             </h2>
             <p className="text-zinc-400 max-w-2xl mx-auto font-medium text-lg">
@@ -277,7 +277,7 @@ export function Product() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 relative">
               <div className="absolute inset-0 atmo-glow atmo-glow-emerald opacity-30" />
-              <div className="glass-panel rounded-3xl p-8 relative z-10 shadow-2xl skew-y-3 transform-gpu hover:skew-y-0 transition-transform duration-500">
+              <div className="glass-panel glass-edge-light rounded-3xl p-6 sm:p-8 relative z-10 shadow-2xl sm:skew-y-3 transform-gpu hover:skew-y-0 transition-transform duration-500">
                 <div className="flex flex-col gap-4">
                   {[
                     {
@@ -369,7 +369,7 @@ export function Product() {
         {/* CTA Section */}
         <div className="max-w-5xl mx-auto glass-panel border border-emerald-500/20 rounded-[3rem] p-16 text-center relative overflow-hidden shadow-[0_20px_80px_-20px_rgba(16,185,129,0.3)] bg-zinc-950/80">
           <div className="absolute inset-0 atmo-glow atmo-glow-emerald opacity-40 mix-blend-screen" />
-          <h2 className="text-[3rem] md:text-[4.5rem] font-bold text-white mb-8 tracking-tighter relative z-10 leading-tight">
+          <h2 className="text-4xl sm:text-[3rem] md:text-[4.5rem] font-bold text-white mb-8 tracking-tighter relative z-10 leading-tight">
             Ready to scale bookings?
           </h2>
           <p className="text-xl text-zinc-400 mb-12 max-w-2xl mx-auto relative z-10 leading-relaxed font-medium">

@@ -409,8 +409,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       if (!user) return;
       saveToLocalStorage({ ...get(), isComplete: true } as any, user.id);
 
-      // We use local storage primarily now as the DB table isn't created in all envs
-      // await supabase.from('onboarding_progress').update({...
+      await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', user.id);
     } catch (e) {
       console.warn('[StarX Onboarding] completeOnboarding DB sync failed:', e);
     }
@@ -429,8 +428,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       if (!user) return;
       saveToLocalStorage({ ...get(), isComplete: true } as any, user.id);
 
-      // We use local storage primarily now as the DB table isn't created in all envs
-      // await supabase.from('onboarding_progress').update({...
+      await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', user.id);
     } catch (e) {
       console.warn('[StarX Onboarding] skipOnboarding DB sync failed:', e);
     }

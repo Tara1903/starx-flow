@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { User, Building, Mail, ShieldAlert, Check, RefreshCw, Key } from "lucide-react";
+import { User, Building, Mail, ShieldAlert, Check, RefreshCw, Key, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import { cn } from "../../lib/utils";
 
@@ -10,6 +11,13 @@ export function SettingsSection() {
   const [businessType, setBusinessType] = useState(user?.businessType || "Salon");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,6 +174,23 @@ export function SettingsSection() {
             </p>
             <button className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/25 text-[10px] font-bold py-2.5 rounded-lg uppercase tracking-wider transition-colors">
               Delete Organization
+            </button>
+          </div>
+
+          {/* Logout Card */}
+          <div className="glass-card rounded-xl p-5 border border-zinc-800 bg-black/40">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
+              <LogOut className="w-4 h-4 text-zinc-500" />
+              <span>Session</span>
+            </h3>
+            <p className="text-[11px] text-zinc-500 leading-normal mb-4">
+              Log out of your administrative session securely.
+            </p>
+            <button 
+              onClick={handleLogout}
+              className="w-full bg-zinc-900 hover:bg-zinc-800 text-white border border-white/5 text-[10px] font-bold py-2.5 rounded-lg uppercase tracking-wider transition-colors"
+            >
+              Log Out
             </button>
           </div>
         </div>

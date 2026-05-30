@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   Presentation
 } from "lucide-react";
+import { GlassPanel } from "../components/ui/GlassPanel";
 
 export function PresentationViewer() {
   const { deckId } = useParams<{ deckId: string }>();
@@ -199,7 +200,7 @@ export function PresentationViewer() {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="glass-card hover:border-emerald-500/30 transition-all p-5 rounded-2xl text-left bg-zinc-950/40 relative overflow-hidden"
+                    className="p-5 rounded-2xl text-left bg-zinc-950/40 relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 blur-[20px]" />
                     <span className="text-3xl font-black text-emerald-500/80 mb-3 block">{step.num}</span>
@@ -241,7 +242,7 @@ export function PresentationViewer() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="glass-card bg-zinc-950/40 p-5 rounded-2xl border border-white/5 text-left flex flex-col justify-between"
+                    className="p-5 rounded-2xl border border-white/5 text-left flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center gap-3 mb-4">
@@ -274,7 +275,7 @@ export function PresentationViewer() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                 <div className="md:col-span-7 text-left">
-                  <div className="glass-card bg-zinc-950/50 p-6 rounded-2xl border border-white/5 relative">
+                  <GlassPanel tier="panel" className="bg-zinc-950/50 p-6 rounded-2xl border border-white/5 relative">
                     {isAllChecked && (
                       <motion.div 
                         initial={{ opacity: 0, scale: 0.8 }}
@@ -329,10 +330,10 @@ export function PresentationViewer() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </GlassPanel>
                 </div>
                 <div className="md:col-span-5">
-                  <div className="glass-card bg-emerald-500/5 border border-emerald-500/10 p-6 rounded-2xl text-left">
+                  <GlassPanel tier="panel" className="bg-emerald-500/5 border border-emerald-500/10 p-6 rounded-2xl text-left">
                     <Sparkles size={24} className="text-emerald-400 mb-3" />
                     <h5 className="text-white font-bold text-base mb-2">Did You Know?</h5>
                     <p className="text-zinc-400 text-xs font-medium leading-relaxed mb-4">
@@ -344,7 +345,7 @@ export function PresentationViewer() {
                         Toggle slides automatically by clicking the Play icon in the presentation utility bar below.
                       </p>
                     </div>
-                  </div>
+                  </GlassPanel>
                 </div>
               </div>
             </div>
@@ -482,7 +483,7 @@ export function PresentationViewer() {
 
                 {/* Right side controls */}
                 <div className="lg:col-span-5 text-left">
-                  <div className="glass-card bg-zinc-950/40 p-5 rounded-2xl border border-white/5">
+                  <GlassPanel tier="panel" className="bg-zinc-950/40 p-5 rounded-2xl border border-white/5">
                     <h4 className="text-white font-bold text-base mb-2 flex items-center gap-2">
                       <MessageSquare size={16} className="text-emerald-400" /> Interactive Playbook
                     </h4>
@@ -496,7 +497,7 @@ export function PresentationViewer() {
                       {copiedIndex === 0 ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
                       {copiedIndex === 0 ? "Template Copied!" : "Copy Active Script"}
                     </button>
-                  </div>
+                  </GlassPanel>
                 </div>
               </div>
             </div>
@@ -587,7 +588,7 @@ export function PresentationViewer() {
 
                 {/* Secure Checkout Form Panel */}
                 <div className="lg:col-span-6 text-left">
-                  <div className="glass-card bg-zinc-950/40 p-5 rounded-2xl border border-white/5 relative overflow-hidden">
+                  <GlassPanel tier="panel" className="bg-zinc-950/40 p-5 rounded-2xl border border-white/5 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-[30px]" />
                     <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
                       <CreditCard size={16} className="text-emerald-400" /> Integrated Security & Deposit Form
@@ -618,7 +619,7 @@ export function PresentationViewer() {
                       {copiedIndex === 1 ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
                       {copiedIndex === 1 ? "Template Copied!" : "Copy Active Script"}
                     </button>
-                  </div>
+                  </GlassPanel>
                 </div>
               </div>
             </div>
@@ -635,7 +636,7 @@ export function PresentationViewer() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                 {/* Sandbox Inputs */}
                 <div className="lg:col-span-5 text-left">
-                  <div className="glass-card bg-zinc-950/40 p-5 rounded-2xl border border-white/5 flex flex-col gap-3">
+                  <GlassPanel tier="panel" className="bg-zinc-950/40 p-5 rounded-2xl border border-white/5 flex flex-col gap-3">
                     <h4 className="text-white font-extrabold text-sm mb-1 flex items-center gap-2">
                       <Sparkles size={16} className="text-emerald-400" /> Customize Review Campaign
                     </h4>
@@ -677,12 +678,12 @@ export function PresentationViewer() {
                         />
                       </div>
                     </div>
-                  </div>
+                  </GlassPanel>
                 </div>
 
                 {/* Sandbox Output Preview */}
                 <div className="lg:col-span-7 text-left">
-                  <div className="glass-card bg-zinc-950/40 p-5 rounded-2xl border border-white/5 relative">
+                  <GlassPanel tier="panel" className="bg-zinc-950/40 p-5 rounded-2xl border border-white/5 relative">
                     <span className="text-[10px] font-bold tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 mb-3 inline-block">
                       AUTOMATED SMS OUTBOX PREVIEW
                     </span>
@@ -703,7 +704,7 @@ export function PresentationViewer() {
                         {copiedIndex === 2 ? "Custom Script Copied!" : "Copy Customized Script"}
                       </button>
                     </div>
-                  </div>
+                  </GlassPanel>
                 </div>
               </div>
             </div>

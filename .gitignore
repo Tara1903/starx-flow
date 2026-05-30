@@ -4,18 +4,39 @@ dist/
 coverage/
 .DS_Store
 *.log
+
+# Environment files
 .env*
 !.env.example
+!.env.backend.example
+!.env.frontend.example
+!.env.supabase.example
 
 .vercel
 
 # Agent-specific files
 .agents/
 scratch/
+skills-lock.json
+
+# Debug / one-off scripts
 auth_config.json
 auth_payload.json
-check-db.ts
+metadata.json
+check-*.ts
+seed-*.cjs
+inspect-*.cjs
+test-*.cjs
 cleanup.cjs
 refactor.cjs
 update_auth.cjs
-skills-lock.json
+generate-*.js
+
+# Local WhatsApp server
+whatsapp-server/
+
+# Loose SQL migrations (use supabase/migrations/)
+supabase-*.sql
+
+# Generated presentations
+*.pptx

@@ -18,7 +18,7 @@ function KPICard({ icon, label, value, suffix, trend, delayIndex }: KPICardProps
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: delayIndex * 0.08, ease: "easeOut" }}
-      className="glass-card rounded-xl p-5 flex flex-col justify-between h-[115px] hover:border-emerald-500/10 transition-colors select-none"
+      className="glass-panel glass-lift rounded-xl p-5 flex flex-col justify-between h-[115px] hover:border-emerald-500/10 transition-colors select-none"
     >
       <div className="flex items-center justify-between w-full">
         <div className="w-8 h-8 rounded-lg bg-white/[0.02] border border-white/5 flex items-center justify-center text-zinc-500">

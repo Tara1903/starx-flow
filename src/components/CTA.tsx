@@ -22,7 +22,7 @@ export function CTA() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           viewport={{ once: true, margin: "-100px" }}
-          className="flex flex-col items-center"
+          className="flex flex-col items-center glass-hero p-12 md:p-24 rounded-[3rem] w-full"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-xs font-bold tracking-widest text-emerald-400 uppercase mb-8 backdrop-blur-md">
             <Sparkles size={14} className="text-emerald-400" />

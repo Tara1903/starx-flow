@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { useAdminStore } from "../store/adminStore";
 import { useShield } from "../lib/shield";
+import { GlassPanel } from "../components/ui/GlassPanel";
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export function AdminLogin() {
     return (
       <section className="min-h-screen flex items-center justify-center bg-black p-4 dash-mesh">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm">
-          <div className="glass-panel rounded-2xl p-8 text-center border-amber-500/20 shadow-[0_0_50px_rgba(245,158,11,0.05)]">
+          <GlassPanel tier="panel" tilt className="rounded-2xl p-8 text-center border-amber-500/20 shadow-[0_0_50px_rgba(245,158,11,0.05)]">
             <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-6">
               <Shield className="w-8 h-8 text-amber-400" />
             </div>
@@ -51,7 +52,7 @@ export function AdminLogin() {
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
               Go to Admin Dashboard
             </button>
-          </div>
+          </GlassPanel>
         </motion.div>
       </section>
     );
@@ -114,7 +115,7 @@ export function AdminLogin() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm relative z-10"
       >
-        <div className="glass-panel rounded-2xl p-8 border-amber-500/10 shadow-[0_0_50px_rgba(245,158,11,0.05)]">
+        <GlassPanel tier="panel" tilt className="rounded-2xl p-8 border-amber-500/10 shadow-[0_0_50px_rgba(245,158,11,0.05)]">
           <div className="flex flex-col items-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
               <Key className="w-8 h-8 text-amber-400" />
@@ -208,7 +209,7 @@ export function AdminLogin() {
               style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, overflow: 'hidden', opacity: 0 }}
             />
           </form>
-        </div>
+        </GlassPanel>
       </motion.div>
     </section>
   );

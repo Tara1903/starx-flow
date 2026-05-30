@@ -101,7 +101,7 @@ export function Pricing() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-[3.2rem] md:text-[5.5rem] font-bold tracking-tight text-white mb-6 leading-[1.05]"
+            className="text-4xl sm:text-5xl md:text-[5.5rem] font-bold tracking-tight text-white mb-6 leading-[1.05]"
           >
             Flat subscriptions. <br className="hidden md:block" />
             <span className="text-gradient-silver">
@@ -123,7 +123,7 @@ export function Pricing() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="max-w-4xl mx-auto glass-panel rounded-3xl p-8 md:p-12 border border-white/10 backdrop-blur-md mb-20 relative overflow-hidden shadow-2xl"
+          className="max-w-4xl mx-auto glass-panel rounded-3xl p-6 sm:p-8 md:p-12 border border-white/10 backdrop-blur-md mb-20 relative overflow-hidden shadow-2xl"
         >
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[60px] rounded-full pointer-events-none" />
           
@@ -186,8 +186,8 @@ export function Pricing() {
             </div>
 
             {/* Right Outputs */}
-            <div className="grid grid-cols-2 gap-4 h-full">
-              <div className="glass-card border border-emerald-500/20 p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden bg-emerald-500/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
+              <div className="glass-focus border-emerald-500/30 p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden">
                 <div className="absolute top-3 right-3 text-emerald-400 bg-emerald-500/10 p-2 rounded-xl">
                   <DollarSign size={18} />
                 </div>
@@ -196,7 +196,7 @@ export function Pricing() {
                 <span className="text-xs text-emerald-500/80 font-medium leading-relaxed">Conservative 75% capture rate via WhatsApp AI assistant.</span>
               </div>
 
-              <div className="glass-card border border-white/10 p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden">
+              <div className="glass-focus p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden">
                 <div className="absolute top-3 right-3 text-zinc-400 bg-white/5 p-2 rounded-xl">
                   <Hourglass size={18} />
                 </div>
@@ -216,7 +216,7 @@ export function Pricing() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 + 0.2 }}
-              className={`relative p-8 md:p-10 rounded-[2rem] border ${plan.popular ? "glass-panel border-emerald-500/50 shadow-[0_0_50px_rgba(16,185,129,0.1)] scale-100 md:scale-105 z-20 bg-zinc-950/90" : "glass-card border-white/10 z-10 opacity-80 hover:opacity-100 transition-opacity"} flex flex-col backdrop-blur-xl`}
+              className={`relative p-8 md:p-10 rounded-[2rem] border ${plan.popular ? "glass-hero border-emerald-500/50 shadow-[0_0_80px_rgba(16,185,129,0.25)] scale-100 lg:scale-105 z-20 bg-zinc-950/90" : "glass-card border-white/10 z-10 opacity-80 hover:opacity-100 transition-opacity"} flex flex-col backdrop-blur-xl`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-black px-4 py-1.5 rounded-full text-xs font-bold shadow-[0_0_20px_rgba(16,185,129,0.4)] whitespace-nowrap">
@@ -325,7 +325,7 @@ export function Pricing() {
         {/* Bottom CTA */}
         <div className="max-w-5xl mx-auto glass-panel border border-emerald-500/20 rounded-[3rem] p-16 text-center relative overflow-hidden shadow-[0_20px_80px_-20px_rgba(16,185,129,0.2)] bg-zinc-950/80 mb-12">
           <div className="absolute inset-0 atmo-glow atmo-glow-emerald opacity-30 mix-blend-screen" />
-          <h2 className="text-[3rem] md:text-[4.5rem] font-bold text-white mb-8 tracking-tighter relative z-10 leading-tight">
+          <h2 className="text-4xl sm:text-[3rem] md:text-[4.5rem] font-bold text-white mb-8 tracking-tighter relative z-10 leading-tight">
             Still have questions?
           </h2>
           <p className="text-xl text-zinc-400 mb-12 max-w-2xl mx-auto relative z-10 leading-relaxed font-medium">

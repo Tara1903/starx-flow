@@ -14,13 +14,13 @@ export function About() {
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Intro Section */}
-        <div className="max-w-4xl mx-auto text-center mb-28 pt-10">
+        <div className="max-w-4xl mx-auto text-center mb-16 md:mb-28 pt-8 md:pt-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-[2.8rem] sm:text-[3.5rem] md:text-[4.5rem] lg:text-[5.5rem] font-bold tracking-tight text-white mb-10 leading-[1.05]">
+            <h1 className="text-[2.5rem] sm:text-[3.5rem] md:text-[4.5rem] lg:text-[5.5rem] font-bold tracking-tight text-white mb-8 md:mb-10 leading-[1.05]">
               Built for modern <br />
               <span className="text-gradient-silver">
                 service businesses.
@@ -89,43 +89,45 @@ export function About() {
         </div>
 
         {/* Founding Story Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-28">
-          <div className="order-2 lg:order-1 flex gap-4 h-[450px]">
-            <div className="w-1/2 h-full pt-12">
-              <img
-                src="https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&q=80&w=600"
-                alt="Wellness and Yoga Studio"
-                className="w-full h-full object-cover rounded-[2rem] opacity-70 border border-white/10 filter grayscale hover:grayscale-0 transition-all duration-500"
-              />
+        <div className="glass-panel rounded-[3rem] p-6 md:p-12 mb-16 md:mb-28">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16 items-center">
+            <div className="order-2 lg:order-1 flex gap-4 h-[350px] sm:h-[450px]">
+              <div className="w-1/2 h-full pt-8 md:pt-12">
+                <img
+                  src="https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&q=80&w=600"
+                  alt="Wellness and Yoga Studio"
+                  className="w-full h-full object-cover rounded-[2rem] opacity-70 border border-white/10 filter grayscale hover:grayscale-0 transition-all duration-500"
+                />
+              </div>
+              <div className="w-1/2 h-full pb-8 md:pb-12">
+                <img
+                  src="https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=600"
+                  alt="Clinic Treatment Session"
+                  className="w-full h-full object-cover rounded-[2rem] opacity-70 border border-white/10 filter grayscale hover:grayscale-0 transition-all duration-500"
+                />
+              </div>
             </div>
-            <div className="w-1/2 h-full pb-12">
-              <img
-                src="https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=600"
-                alt="Clinic Treatment Session"
-                className="w-full h-full object-cover rounded-[2rem] opacity-70 border border-white/10 filter grayscale hover:grayscale-0 transition-all duration-500"
-              />
-            </div>
-          </div>
-          <div className="order-1 lg:order-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6">
-              Our Journey
-            </div>
-            <h2 className="text-3xl lg:text-5xl font-bold text-white mb-8 tracking-tight leading-tight">
-              The silent leak in <span className="text-gradient-silver">hands-on businesses.</span>
-            </h2>
-            <div className="space-y-6 text-lg text-zinc-400 font-medium leading-relaxed">
-              <p>
-                Five years ago, we opened a small boutique reformer pilates and wellness studio. We loved teaching, working with clients, and helping people feel their best. But behind the scenes, we were drowning in admin tasks.
-              </p>
-              <p>
-                While we were teaching hands-on classes or treating clients in therapy rooms, the phone was ringing off the hook. Unanswered WhatsApp inquiries piled up. By the time we replied 2 hours later, leads had already booked with a competitor.
-              </p>
-              <p>
-                Existing booking systems required clients to click clunky external links, create logins, and navigate dense calendars. Many drop-offs occurred. We realized that in a world of instant messaging, a business's response speed is its greatest competitive edge.
-              </p>
-              <p>
-                So, we built StarX Flow. An AI-powered operating system that turns WhatsApp into a 24/7 smart reservation channel and automatically syncs bookings with Google Calendar, Clover, or Square. No logins, no app downloads, no friction.
-              </p>
+            <div className="order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6">
+                Our Journey
+              </div>
+              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6 md:mb-8 tracking-tight leading-tight">
+                The silent leak in <span className="text-gradient-silver">hands-on businesses.</span>
+              </h2>
+              <div className="space-y-4 md:space-y-6 text-base md:text-lg text-zinc-400 font-medium leading-relaxed">
+                <p>
+                  Five years ago, we opened a small boutique reformer pilates and wellness studio. We loved teaching, working with clients, and helping people feel their best. But behind the scenes, we were drowning in admin tasks.
+                </p>
+                <p>
+                  While we were teaching hands-on classes or treating clients in therapy rooms, the phone was ringing off the hook. Unanswered WhatsApp inquiries piled up. By the time we replied 2 hours later, leads had already booked with a competitor.
+                </p>
+                <p>
+                  Existing booking systems required clients to click clunky external links, create logins, and navigate dense calendars. Many drop-offs occurred. We realized that in a world of instant messaging, a business's response speed is its greatest competitive edge.
+                </p>
+                <p>
+                  So, we built StarX Flow. An AI-powered operating system that turns WhatsApp into a 24/7 smart reservation channel and automatically syncs bookings with Google Calendar, Clover, or Square. No logins, no app downloads, no friction.
+                </p>
+              </div>
             </div>
           </div>
         </div>

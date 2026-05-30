@@ -189,7 +189,7 @@ export function AIConfigStep() {
             onChange={(e) => setHandoffRules(e.target.value)}
             placeholder="e.g. Transfer to human when customer is upset, requests a manager, or asks about pricing refunds."
             rows={2}
-            className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 px-4 text-xs text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
+            className="w-full glass-panel border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 px-4 text-xs text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
           />
         </div>
 

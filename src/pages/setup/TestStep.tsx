@@ -8,10 +8,10 @@ import { Loader2, Check, ArrowRight, MessageSquare, Send, Bot, Phone, RefreshCw 
 
 export function TestStep() {
   const navigate = useNavigate();
-  const { connectedChannels, addLog } = useAuthStore();
+  const { connectedChannels } = useAuthStore();
   const { testResults, markTestSent, completeStep, aiConfig } = useOnboardingStore();
 
-  const [testingChannel, setTestingChannel] = useState<'whatsapp' | 'instagram' | 'sms' | 'sandbox'>('sandbox');
+  const [testingChannel, setTestingChannel] = useState<'whatsapp' | 'instagram' | 'sms'>('sms');
   const [testState, setTestState] = useState<'idle' | 'sending' | 'delivered' | 'typing' | 'replied'>('idle');
   const [messages, setMessages] = useState<{ sender: 'user' | 'bot'; text: string; time: string }[]>([]);
 
@@ -25,7 +25,7 @@ export function TestStep() {
     if (whatsappConnected) setTestingChannel('whatsapp');
     else if (instagramConnected) setTestingChannel('instagram');
     else if (smsConnected) setTestingChannel('sms');
-    else setTestingChannel('sandbox');
+    else setTestingChannel('sms'); // default to sms if none connected
   }, [whatsappConnected, instagramConnected, smsConnected]);
 
   const handleSendTest = async () => {
@@ -40,9 +40,7 @@ export function TestStep() {
       setMessages([{ sender: 'user', text: "Hey! What are your business hours?", time: 'Just now' }]);
       setTestState('delivered');
       
-      // Add mock execution log to the authStore for the activity feed later
-      const channelLabel = testingChannel === 'whatsapp' ? 'WhatsApp' : testingChannel === 'instagram' ? 'Instagram' : testingChannel === 'sms' ? 'SMS' : 'Web Sandbox';
-      addLog('trigger', channelLabel, "Incoming message: 'What are your business hours?'");
+      const channelLabel = testingChannel === 'whatsapp' ? 'WhatsApp' : testingChannel === 'instagram' ? 'Instagram' : 'SMS';
 
       // 2. AI Bot starts typing
       setTimeout(() => {
@@ -59,13 +57,9 @@ export function TestStep() {
             }
           ]);
           setTestState('replied');
-          
-          addLog('success', channelLabel, `AI Replied: "${responseText.substring(0, 40)}..."`);
 
           // Mark this channel test as complete in Zustand store
-          if (testingChannel !== 'sandbox') {
-            await markTestSent(testingChannel);
-          }
+          await markTestSent(testingChannel);
         }, 1500);
 
       }, 1000);
@@ -81,8 +75,7 @@ export function TestStep() {
   const channelOptions = [
     { id: 'whatsapp', label: 'WhatsApp', connected: whatsappConnected, color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' },
     { id: 'instagram', label: 'Instagram', connected: instagramConnected, color: 'bg-pink-500/10 border-pink-500/20 text-pink-400' },
-    { id: 'sms', label: 'SMS / Twilio', connected: smsConnected, color: 'bg-blue-500/10 border-blue-500/20 text-blue-400' },
-    { id: 'sandbox', label: 'Web Sandbox', connected: true, color: 'bg-zinc-500/10 border-zinc-500/20 text-zinc-400' }
+    { id: 'sms', label: 'SMS / Twilio', connected: smsConnected, color: 'bg-blue-500/10 border-blue-500/20 text-blue-400' }
   ];
 
   return (

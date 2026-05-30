@@ -36,32 +36,44 @@ export function Privacy() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="glass-panel p-8 md:p-12 rounded-[2rem] prose prose-invert prose-zinc max-w-none"
+            className="glass-mist p-8 md:p-16 rounded-[2.5rem] max-w-none"
           >
-            <h2 className="text-xl font-bold text-white mb-4">1. Information We Collect</h2>
-            <p className="text-zinc-400 leading-relaxed mb-8">
-              We collect information that you provide directly to us when you create an account, use our services, or communicate with us. This may include your name, email address, phone number, business details, and any other information you choose to provide.
-            </p>
+            <div className="space-y-12">
+              <section>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">1. Information We Collect</h2>
+                <p className="text-lg text-zinc-400 leading-relaxed font-medium">
+                  We collect information that you provide directly to us when you create an account, use our services, or communicate with us. This may include your name, email address, phone number, business details, and any other information you choose to provide.
+                </p>
+              </section>
 
-            <h2 className="text-xl font-bold text-white mb-4">2. How We Use Information</h2>
-            <p className="text-zinc-400 leading-relaxed mb-8">
-              We use the information we collect to provide, maintain, and improve our services, communicate with you, process transactions, and protect our users and platform. We also use information to train and optimize the AI models powering our WhatsApp receptionists to better serve your clients.
-            </p>
+              <section>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">2. How We Use Information</h2>
+                <p className="text-lg text-zinc-400 leading-relaxed font-medium">
+                  We use the information we collect to provide, maintain, and improve our services, communicate with you, process transactions, and protect our users and platform. We also use information to train and optimize the AI models powering our WhatsApp receptionists to better serve your clients.
+                </p>
+              </section>
 
-            <h2 className="text-xl font-bold text-white mb-4">3. Data Security & Encryption</h2>
-            <p className="text-zinc-400 leading-relaxed mb-8">
-              We implement industry-standard 256-bit encryption and security measures designed to protect your data from unauthorized access, disclosure, alteration, and destruction. We do not sell your personal data or your clients' personal data to third parties.
-            </p>
+              <section>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">3. Data Security & Encryption</h2>
+                <p className="text-lg text-zinc-400 leading-relaxed font-medium">
+                  We implement industry-standard 256-bit encryption and security measures designed to protect your data from unauthorized access, disclosure, alteration, and destruction. We do not sell your personal data or your clients' personal data to third parties.
+                </p>
+              </section>
 
-            <h2 className="text-xl font-bold text-white mb-4">4. WhatsApp Integration</h2>
-            <p className="text-zinc-400 leading-relaxed mb-8">
-              Our services integrate with the WhatsApp Business API. By using our platform, you also agree to WhatsApp's terms and privacy policies. We are not responsible for how WhatsApp handles data transmitted over their network.
-            </p>
+              <section>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">4. WhatsApp Integration</h2>
+                <p className="text-lg text-zinc-400 leading-relaxed font-medium">
+                  Our services integrate with the WhatsApp Business API. By using our platform, you also agree to WhatsApp's terms and privacy policies. We are not responsible for how WhatsApp handles data transmitted over their network.
+                </p>
+              </section>
 
-            <h2 className="text-xl font-bold text-white mb-4">5. Contact Us</h2>
-            <p className="text-zinc-400 leading-relaxed">
-              If you have any questions about this Privacy Policy, please contact us at privacy@starxflow.com.
-            </p>
+              <section>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">5. Contact Us</h2>
+                <p className="text-lg text-zinc-400 leading-relaxed font-medium">
+                  If you have any questions about this Privacy Policy, please contact us at privacy@starxflow.com.
+                </p>
+              </section>
+            </div>
           </motion.div>
         </div>
       </section>

@@ -72,28 +72,7 @@ export function SMSStep() {
     navigate('/setup/ai');
   };
 
-  const handleMockConnect = async () => {
-    setIsLoading(true);
-    try {
-      const mockCreds = {
-        twilio_sid: 'AC_dummy_account_sid',
-        twilio_token: 'dummy_auth_token_for_mock_connection',
-        twilio_phone: '+15550192834'
-      };
-      const { error } = await updateChannelConnection('SMS', true, mockCreds);
-      if (error) throw new Error(error);
 
-      await completeStep('sms');
-      setIsSaved(true);
-      setTimeout(() => {
-        navigate('/setup/ai');
-      }, 800);
-    } catch (e: any) {
-      setErrorMsg(e.message || 'Mock connection failed.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <StepCard>
@@ -149,7 +128,7 @@ export function SMSStep() {
                 placeholder="e.g. ACXXXXXXXXXXXXXXXXX"
                 required
                 disabled={isLoading || isSaved}
-                className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-blue-500/50 rounded-xl py-3 px-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-blue-500/20"
+                className="w-full glass-panel border border-white/[0.08] focus:border-blue-500/50 rounded-xl py-3 px-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-blue-500/20"
               />
             </div>
 
@@ -165,7 +144,7 @@ export function SMSStep() {
                 placeholder="****************"
                 required
                 disabled={isLoading || isSaved}
-                className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-blue-500/50 rounded-xl py-3 px-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-blue-500/20"
+                className="w-full glass-panel border border-white/[0.08] focus:border-blue-500/50 rounded-xl py-3 px-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-blue-500/20"
               />
             </div>
 
@@ -182,7 +161,7 @@ export function SMSStep() {
               placeholder="e.g. +1234567890"
               required
               disabled={isLoading || isSaved}
-              className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-blue-500/50 rounded-xl py-3 px-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-blue-500/20"
+              className="w-full glass-panel border border-white/[0.08] focus:border-blue-500/50 rounded-xl py-3 px-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-blue-500/20"
             />
           </div>
 
@@ -225,14 +204,7 @@ export function SMSStep() {
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={handleMockConnect}
-              disabled={isLoading || isSaved}
-              className="w-full sm:w-auto px-4 py-3 rounded-xl border border-white/[0.06] bg-white/[0.02] text-zinc-400 font-semibold text-sm hover:bg-white/[0.04] hover:text-white transition-colors"
-            >
-              Connect with Sandbox Keys (Mock)
-            </button>
+
 
             <button
               type="button"

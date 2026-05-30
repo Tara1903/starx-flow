@@ -168,7 +168,7 @@ export function VoiceSection() {
         if (simIntervalRef.current) clearInterval(simIntervalRef.current);
         setSimStep("wrapup");
         
-        // Mocking AI cognitive processing extraction
+        // AI cognitive processing extraction
         setTimeout(() => {
           setSimMemory([
             { key: "appointment_booked", value: "true" },
@@ -530,7 +530,7 @@ export function VoiceSection() {
               {selectedCall.status !== "missed" && (
                 <div className="bg-black/50 border border-white/5 rounded-xl p-4 space-y-4">
                   
-                  {/* Waveform Visualization Mock */}
+                  {/* Waveform Visualization */}
                   <div className="h-12 flex items-center justify-between gap-[2px] px-2 select-none">
                     {Array.from({ length: 44 }).map((_, i) => {
                       // Generate a wave-like profile

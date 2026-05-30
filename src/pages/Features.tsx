@@ -106,7 +106,7 @@ export function Features() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-[3.2rem] md:text-[5.5rem] font-bold tracking-tight text-white mb-6 leading-[1.05]"
+            className="text-4xl sm:text-5xl md:text-[5.5rem] font-bold tracking-tight text-white mb-6 leading-[1.05]"
           >
             Everything you need to <br className="hidden md:block" />
             <span className="text-gradient-silver">
@@ -157,7 +157,7 @@ export function Features() {
               
               <div className="w-full lg:w-1/2">
                 <div
-                  className="aspect-square md:aspect-[4/3] w-full rounded-[2rem] border border-white/10 relative overflow-hidden glass-panel"
+                  className="aspect-square md:aspect-[4/3] w-full rounded-[2rem] glass-hero glass-inner-sheen glass-edge-light relative overflow-hidden"
                   style={{
                     background: feature.image,
                   }}
@@ -218,7 +218,7 @@ export function Features() {
         {/* Bottom CTA */}
         <div className="max-w-5xl mx-auto glass-panel border border-emerald-500/20 rounded-[3rem] p-16 text-center relative overflow-hidden shadow-[0_20px_80px_-20px_rgba(16,185,129,0.3)] bg-zinc-950/80 mb-12">
           <div className="absolute inset-0 atmo-glow atmo-glow-emerald opacity-40 mix-blend-screen" />
-          <h2 className="text-[3rem] md:text-[4.5rem] font-bold text-white mb-8 tracking-tighter relative z-10 leading-tight">
+          <h2 className="text-4xl sm:text-[3rem] md:text-[4.5rem] font-bold text-white mb-8 tracking-tighter relative z-10 leading-tight">
             Put operations on autopilot
           </h2>
           <p className="text-xl text-zinc-400 mb-12 max-w-2xl mx-auto relative z-10 leading-relaxed font-medium">

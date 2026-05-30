@@ -12,6 +12,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { useAdminStore, type Client } from "../store/adminStore";
 import { useAuthStore } from "../store/authStore";
+import { GlassPanel } from "../components/ui/GlassPanel";
 
 /* ──────────────────────────────────────────────
    CONSTANTS
@@ -45,7 +46,8 @@ function AdminKPI({ icon, label, value, sub, trend, color }: {
   icon: React.ReactNode; label: string; value: string; sub?: string; trend?: string; color?: string;
 }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-5">
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="h-full">
+      <GlassPanel tier="panel" tilt className="rounded-xl p-5 h-full">
       <div className="flex items-center justify-between mb-3">
         <span className={cn("opacity-60", color || "text-zinc-400")}>{icon}</span>
         {trend && (
@@ -57,6 +59,7 @@ function AdminKPI({ icon, label, value, sub, trend, color }: {
       <p className="text-2xl font-bold text-white tracking-tight">{value}</p>
       <p className="text-xs text-zinc-500 mt-0.5">{label}</p>
       {sub && <p className="text-[10px] text-zinc-600 mt-1">{sub}</p>}
+      </GlassPanel>
     </motion.div>
   );
 }
@@ -86,8 +89,12 @@ function ClientDetailModal({ client, onClose, onStatusChange, onPlanChange, onDe
         initial={{ scale: 0.95, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, y: 20 }}
-        className="w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.5)]"
+        className="w-full max-w-lg"
       >
+        <GlassPanel
+          tier="panel"
+          className="w-full rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.5)]"
+        >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/5">
           <div className="flex items-center gap-4">
@@ -184,6 +191,7 @@ function ClientDetailModal({ client, onClose, onStatusChange, onPlanChange, onDe
             </button>
           </div>
         </div>
+        </GlassPanel>
       </motion.div>
     </motion.div>
   );
@@ -352,7 +360,7 @@ export function AdminDashboard() {
             </div>
 
             {/* Search & Filters */}
-            <div className="glass-card rounded-xl p-4 mb-6">
+            <GlassPanel tier="panel" className="rounded-xl p-4 mb-6">
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
@@ -400,7 +408,7 @@ export function AdminDashboard() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </GlassPanel>
 
             {/* Results Count */}
             <div className="flex items-center justify-between mb-4 px-1">
@@ -410,7 +418,7 @@ export function AdminDashboard() {
             </div>
 
             {/* Client Table */}
-            <div className="glass-card rounded-xl overflow-hidden">
+            <GlassPanel tier="panel" className="rounded-xl overflow-hidden">
               <div className="hidden lg:grid grid-cols-10 gap-4 px-5 py-3.5 border-b border-white/5 bg-white/[0.01] text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
                 <button onClick={() => handleSort('businessName')} className="col-span-3 flex items-center gap-1 hover:text-zinc-200 transition-colors text-left">Business <SortIcon col="businessName" /></button>
                 <div className="col-span-2">Contact</div>
@@ -476,11 +484,11 @@ export function AdminDashboard() {
                   })
                 )}
               </div>
-            </div>
+            </GlassPanel>
 
             {/* Plan & Status Distribution */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-              <div className="glass-card rounded-xl p-5">
+              <GlassPanel tier="panel" tilt className="rounded-xl p-5">
                 <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-zinc-400" /> Plan Distribution
                 </h3>
@@ -501,9 +509,9 @@ export function AdminDashboard() {
                     );
                   })}
                 </div>
-              </div>
+              </GlassPanel>
 
-              <div className="glass-card rounded-xl p-5">
+              <GlassPanel tier="panel" tilt className="rounded-xl p-5">
                 <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                   <UserCheck className="w-4 h-4 text-zinc-400" /> Status Overview
                 </h3>
@@ -523,7 +531,7 @@ export function AdminDashboard() {
                     );
                   })}
                 </div>
-              </div>
+              </GlassPanel>
             </div>
           </>
         )}

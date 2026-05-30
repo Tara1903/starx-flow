@@ -31,6 +31,8 @@ const TypingIndicator = () => (
   </div>
 );
 
+import { GlassButton } from "./ui/GlassButton";
+
 export function Hero() {
   const openSignup = useUIStore((state) => state.openSignup);
   
@@ -186,14 +188,6 @@ export function Hero() {
                 Start Free Trial
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
-              
-              <a 
-                href="#solutions"
-                data-magnetic
-                className="w-full sm:w-auto px-8 py-4 surface-primary hover:bg-white/5 text-white font-bold rounded-full transition-colors flex items-center justify-center gap-2"
-              >
-                See It Live <span className="text-zinc-500">↓</span>
-              </a>
             </div>
             
             <div className="mt-12 flex items-center gap-4">
@@ -217,7 +211,7 @@ export function Hero() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[85%] bg-emerald-500/15 blur-[100px] rounded-full pointer-events-none" />
             
             <motion.div 
-              className="glass-panel w-full max-w-[420px] rounded-[32px] overflow-hidden shadow-2xl relative z-10 border-t border-white/20"
+              className="glass-hero w-full max-w-[420px] rounded-[32px] overflow-hidden shadow-2xl relative z-10 border-t border-white/20"
               initial={{ opacity: 0, scale: 0.95, rotateY: 5 }}
               animate={{ opacity: 1, scale: 1, rotateY: 0 }}
               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}

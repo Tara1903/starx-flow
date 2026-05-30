@@ -33,7 +33,7 @@ export function ErrorState({
   return (
     <div
       className={cn(
-        "w-full rounded-2xl border border-red-500/20 bg-red-500/[0.02] backdrop-blur-md p-6 relative overflow-hidden",
+        "glass-panel w-full rounded-2xl border border-red-500/20 bg-red-500/[0.02] p-6 relative overflow-hidden animate-[fade-in-up_0.4s_ease-out]",
         className
       )}
     >

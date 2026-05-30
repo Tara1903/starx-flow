@@ -9,6 +9,7 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
 import { cn } from "../../lib/utils";
+import { GlassSheet } from "../ui/GlassSheet";
 
 interface SidebarItem {
   id: DashboardSection;
@@ -34,6 +35,8 @@ export function DashboardSidebar() {
   const activeWorkflowsCount = workflows.filter((w) => w.isActive).length;
   const connectedChannelsCount = connectedChannels.filter((c) => c.isConnected).length;
   const unreadConversationsCount = conversations.filter((c) => c.unread).length;
+
+  const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -208,32 +211,67 @@ export function DashboardSidebar() {
         })}
         {/* Toggle Panel for remaining sections */}
         <button
-          onClick={() => {
-            const nextTabMap: Record<string, DashboardSection> = {
-              overview: "settings",
-              conversations: "settings",
-              workflows: "settings",
-              crm: "settings",
-              calendar: "settings",
-              tasks: "settings",
-              team: "settings",
-              playground: "settings",
-              agents: "settings",
-              voice: "settings",
-              os: "settings",
-              workflow_editor: "settings",
-              analytics: "settings",
-              channels: "settings",
-              settings: "overview"
-            };
-            setActiveSection(nextTabMap[activeSection] || "overview");
-          }}
-          className={cn("mobile-nav-item", (activeSection === "channels" || activeSection === "settings") && "active")}
+          onClick={() => setIsMobileMoreOpen(true)}
+          className={cn("mobile-nav-item", activeSection !== "overview" && activeSection !== "conversations" && activeSection !== "workflows" && activeSection !== "crm" && activeSection !== "calendar" && "active")}
         >
           <Menu className="w-4 h-4" />
           <span className="text-[9px] font-medium mt-1">More</span>
         </button>
       </nav>
+
+      {/* Mobile More Sheet */}
+      <GlassSheet
+        open={isMobileMoreOpen}
+        onClose={() => setIsMobileMoreOpen(false)}
+        side="bottom"
+        title="More"
+      >
+        <div className="flex flex-col gap-2">
+          {menuItems.slice(5).map((item) => {
+            const isActive = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveSection(item.id);
+                  setIsMobileMoreOpen(false);
+                }}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all",
+                  isActive
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                    : "text-zinc-300 hover:text-white hover:bg-white/5 border border-transparent"
+                )}
+              >
+                <div className={cn(isActive ? "text-emerald-400" : "text-zinc-400")}>
+                  {item.icon}
+                </div>
+                {item.label}
+                {item.badge !== undefined && (
+                  <span className="ml-auto px-2 py-0.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30">
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          
+          <div className="h-px bg-white/10 my-2" />
+          
+          <button
+            onClick={() => {
+              setIsMobileMoreOpen(false);
+              handleLogout();
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all border border-transparent"
+          >
+            <div className="text-red-400">
+              <LogOut className="w-4 h-4" />
+            </div>
+            Logout
+          </button>
+        </div>
+      </GlassSheet>
     </>
   );
 }

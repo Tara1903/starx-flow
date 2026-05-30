@@ -141,7 +141,7 @@ interface AuthState {
   fetchChartData: () => Promise<void>;
   addLog: (type: SimulationLog['type'], channel: string, message: string) => void;
   clearLogs: () => void;
-  triggerMockSimulation: (id: string) => Promise<void>;
+
 
 
 }
@@ -240,39 +240,6 @@ function dbRowToBusinessGoal(row: Record<string, unknown>): BusinessGoal {
   };
 }
 
-/* ──────────────────────────────────────────────
-   MOCK SIMULATION DATA
-   ────────────────────────────────────────────── */
-
-const channelSimMessages: Record<string, { trigger: string; thinking: string; reply: string }> = {
-  WhatsApp: {
-    trigger: "Customer (WhatsApp): 'Hey! Can I book a hair coloring slot for tomorrow afternoon?'",
-    thinking: "Analyzing custom rules... Checking calendar schedule for tomorrow afternoon... Openings found at 2:00 PM and 4:30 PM.",
-    reply: "AI Receptionist: 'Hi there! We'd love to get you scheduled. We have 2:00 PM and 4:30 PM open. Which one works best for you?'",
-  },
-  SMS: {
-    trigger: "System Event: Missed call from +1 (555) 234-5678",
-    thinking: "Instantiating SMS Missed-Call Recovery engine... Formatting customized response payload...",
-    reply: "SMS Dispatch: 'Hey! Sorry we missed your call. I can help you book an appointment right here. What can we get scheduled for you?'",
-  },
-  Reviews: {
-    trigger: "Payment Gate: Invoice #1204 marked PAID ($145.00)",
-    thinking: "Review cycle activated. Reading client profile... Triggering review booster payload...",
-    reply: "SMS Dispatch: 'Thank you for choosing us today! Would you mind taking 30 seconds to share your review on Google? It means the world to us!'",
-  },
-  Instagram: {
-    trigger: "Instagram DM: User commented 'GLOW' on post #9283",
-    thinking: "Keyword detected ('GLOW'). Instantiating campaign voucher engine... Validating coupon rules...",
-    reply: "Instagram Auto-Reply: 'Hey! Here is your exclusive 15% OFF voucher code: GLOWUP15. Use it to book any service this week!'",
-  },
-  Web: {
-    trigger: "Website Chat: Visitor initiated conversation on pricing page",
-    thinking: "Web chat agent activated. Loading business FAQ knowledge base...",
-    reply: "Chat Widget: 'Welcome! I can help you with pricing and bookings. What service are you interested in?'",
-  },
-};
-
-
 
 /* ──────────────────────────────────────────────
    STORE
@@ -295,15 +262,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     { day: "Sat", value: 0 },
     { day: "Sun", value: 0 },
   ],
-  logs: [
-    {
-      id: 'log-init',
-      timestamp: new Date().toLocaleTimeString(),
-      type: 'system',
-      channel: 'System',
-      message: 'Workflow Command Center initializing...',
-    },
-  ],
+  logs: [],
   selectedWorkflowId: null,
 
 
@@ -344,16 +303,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         if (profile) {
-          let onboardingComplete = false;
-          try {
-            const stored = localStorage.getItem('starx_onboarding_state');
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              onboardingComplete = !!parsed.isComplete;
-            }
-          } catch (err) {
-            console.warn('[StarX Auth] Could not fetch onboarding progress from local storage:', err);
-          }
+          const onboardingComplete = !!profile.onboarding_complete;
 
           set({
             isLoggedIn: true,
@@ -492,16 +442,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           .single();
 
         if (profile) {
-          let onboardingComplete = false;
-          try {
-            const stored = localStorage.getItem('starx_onboarding_state');
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              onboardingComplete = !!parsed.isComplete;
-            }
-          } catch (err) {
-            console.warn('[StarX Auth] Could not fetch onboarding progress from local storage:', err);
-          }
+          const onboardingComplete = !!profile.onboarding_complete;
 
           set({
             isLoggedIn: true,
@@ -958,174 +899,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearLogs: () => set({ logs: [] }),
 
-  /* ─── TRIGGER SIMULATION ─── */
-  triggerMockSimulation: async (id) => {
-    const workflow = get().workflows.find((w) => w.id === id);
-    if (!workflow || !workflow.isActive) return;
-
-    const config = workflow.config;
-    const hasConfigSteps = config && Array.isArray(config.steps) && config.steps.length > 0;
-
-    if (hasConfigSteps) {
-      const steps = config.steps;
-      const triggerStep = steps.find((s: any) => s.type === 'trigger');
-      const conditionSteps = steps.filter((s: any) => s.type === 'condition');
-      const actionSteps = steps.filter((s: any) => s.type === 'action');
-
-      // 1. Simulate Trigger
-      let triggerText = `Simulated trigger for "${workflow.name}"`;
-      if (triggerStep) {
-        if (triggerStep.nodeType === 'whatsapp_message') {
-          triggerText = `Customer (WhatsApp): '${triggerStep.properties?.messageSample || "Hey! Can I book a slot for tomorrow?"}'`;
-        } else if (triggerStep.nodeType === 'sms_missed_call') {
-          triggerText = `System Event: Missed call from ${triggerStep.properties?.phoneSample || "+1 (555) 234-5678"}`;
-        } else if (triggerStep.nodeType === 'new_review') {
-          triggerText = `Reviews Gate: New ${triggerStep.properties?.stars || "5"}-star review received on Google`;
-        } else if (triggerStep.nodeType === 'insta_comment') {
-          triggerText = `Instagram DM: User commented '${triggerStep.properties?.commentKeyword || "INFO"}' on post`;
-        } else if (triggerStep.nodeType === 'web_chat') {
-          triggerText = `Website Chat: Visitor initiated conversation on ${triggerStep.properties?.pageName || "pricing"} page`;
-        } else {
-          triggerText = `Trigger activated: ${triggerStep.properties?.label || triggerStep.nodeType}`;
-        }
-      }
-      get().addLog('trigger', workflow.channel, triggerText);
-
-      // Increment stats (optimistic + DB)
-      set((state) => ({
-        workflows: state.workflows.map((w) => {
-          if (w.id === id) {
-            return {
-              ...w,
-              executionsCount: w.executionsCount + 1,
-              savedHours: w.savedHours + 0.25,
-            };
-          }
-          return w;
-        }),
-      }));
-
-      if (isSupabaseConfigured) {
-        supabase
-          .from('workflows')
-          .update({
-            executions_count: workflow.executionsCount + 1,
-            saved_hours: workflow.savedHours + 0.25,
-          })
-          .eq('id', id)
-          .then(({ error }) => {
-            if (error) console.error('[StarX] Stats update error:', error);
-          });
-      }
-
-      await new Promise((r) => setTimeout(r, 1000));
-
-      // 2. Simulate Conditions
-      if (conditionSteps.length > 0) {
-        for (const cond of conditionSteps) {
-          let condText = `Evaluating: ${cond.properties?.label || cond.nodeType}`;
-          if (cond.nodeType === 'keyword_match') {
-            const kw = cond.properties?.keywords || 'booking';
-            condText = `Condition Check: Matching keywords [${kw}] in message... Found match.`;
-          } else if (cond.nodeType === 'outside_hours') {
-            condText = `Condition Check: Outside business hours? Current time is outside 9 AM - 5 PM... True.`;
-          } else if (cond.nodeType === 'new_customer') {
-            condText = `Condition Check: Contact is new lead? No prior history... True.`;
-          } else if (cond.nodeType === 'sentiment_check') {
-            condText = `Condition Check: Sentiment analyzer: Negative sentiment? Detected frustration... True.`;
-          }
-          get().addLog('ai_process', workflow.channel, condText);
-          await new Promise((r) => setTimeout(r, 800));
-        }
-      } else {
-        get().addLog('ai_process', workflow.channel, `Running automation flow (No conditions specified)...`);
-        await new Promise((r) => setTimeout(r, 800));
-      }
-
-      // 3. Simulate Actions
-      if (actionSteps.length > 0) {
-        for (const act of actionSteps) {
-          let actText = `Firing action: ${act.properties?.label || act.nodeType}`;
-          let logType: SimulationLog['type'] = 'ai_reply';
-          
-          if (act.nodeType === 'send_message') {
-            actText = `AI Response: "${act.properties?.message || "Thanks for reaching out! We'll get back to you shortly."}"`;
-            logType = 'ai_reply';
-          } else if (act.nodeType === 'create_task') {
-            actText = `Action Executed: Created internal task "${act.properties?.title || "Follow up on customer request"}" (Assigned: Team)`;
-            logType = 'system';
-          } else if (act.nodeType === 'create_appointment') {
-            actText = `Action Executed: Scheduled appointment "${act.properties?.title || "Automated Booking Slot"}" in Calendar`;
-            logType = 'system';
-          } else if (act.nodeType === 'notify_team') {
-            actText = `Action Executed: Team notification sent to "${act.properties?.channel || "General Staff"}" channel`;
-            logType = 'system';
-          } else if (act.nodeType === 'update_lead') {
-            actText = `Action Executed: Updated CRM Lead status to "${act.properties?.status || "qualified"}"`;
-            logType = 'system';
-          }
-          
-          get().addLog(logType, workflow.channel, actText);
-          await new Promise((r) => setTimeout(r, 1200));
-        }
-      } else {
-        get().addLog('ai_reply', workflow.channel, `AI Receptionist: Active but no actions configured.`);
-        await new Promise((r) => setTimeout(r, 800));
-      }
-
-      // 4. Success Log
-      get().addLog('success', workflow.channel, `√ Advanced execution successful. Saved 15 minutes of manual operations.`);
-    } else {
-      // Legacy basic flow simulation
-      const sim = channelSimMessages[workflow.channel] || {
-        trigger: `Simulated trigger for "${workflow.name}"`,
-        thinking: 'Computing response...',
-        reply: `AI Auto-Response for ${workflow.name}`,
-      };
-
-      // 1. Trigger log
-      get().addLog('trigger', workflow.channel, sim.trigger);
-
-      // Increment stats (optimistic + DB)
-      set((state) => ({
-        workflows: state.workflows.map((w) => {
-          if (w.id === id) {
-            return {
-              ...w,
-              executionsCount: w.executionsCount + 1,
-              savedHours: w.savedHours + 0.25,
-            };
-          }
-          return w;
-        }),
-      }));
-
-      if (isSupabaseConfigured) {
-        supabase
-          .from('workflows')
-          .update({
-            executions_count: workflow.executionsCount + 1,
-            saved_hours: workflow.savedHours + 0.25,
-          })
-          .eq('id', id)
-          .then(({ error }) => {
-            if (error) console.error('[StarX] Stats update error:', error);
-          });
-      }
-
-      // 2. Processing log
-      await new Promise((r) => setTimeout(r, 1200));
-      get().addLog('ai_process', workflow.channel, sim.thinking);
-
-      // 3. AI reply log
-      await new Promise((r) => setTimeout(r, 1500));
-      get().addLog('ai_reply', workflow.channel, sim.reply);
-
-      // 4. Success log
-      await new Promise((r) => setTimeout(r, 500));
-      get().addLog('success', workflow.channel, '√ Execution successful. AI booking confirmed. Saved 15 minutes of manual triage.');
-    }
-  },
 }));
 
 /* ──────────────────────────────────────────────

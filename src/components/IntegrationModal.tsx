@@ -42,6 +42,15 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
     }
   }, [isOpen, channelKey, connectedChannels]);
 
+  // Handle Escape Key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !channelKey) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,11 +209,11 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
       >
         <motion.div
           initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-          className="w-full max-w-md bg-[#0a0a0a] rounded-2xl border border-white/10 overflow-hidden shadow-[0_0_60px_rgba(16,185,129,0.1)]"
+          className="w-full max-w-md glass-panel rounded-2xl overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-white/5 bg-white/[0.02]">

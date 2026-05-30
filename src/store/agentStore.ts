@@ -2,62 +2,6 @@ import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { type Agent, type AgentMemory } from './authStore';
 
-const MOCK_AGENTS: Agent[] = [
-  {
-    id: 'agent-receptionist',
-    name: 'Receptionist Agent',
-    role: 'receptionist',
-    description: 'Greets customers, handles general FAQs, and delegates tasks.',
-    isActive: true,
-    systemPrompt: 'You are the primary receptionist. Greet customers warmly. Answer general queries about the business, services, and location.',
-    permissions: ['read_crm', 'send_messages']
-  },
-  {
-    id: 'agent-booking',
-    name: 'Booking Agent',
-    role: 'booking',
-    description: 'Checks appointment slots, handles bookings, and calendars.',
-    isActive: true,
-    systemPrompt: 'You are the booking coordinator. Assist with scheduling appointments. Check availability and confirm slots.',
-    permissions: ['read_crm', 'write_calendar', 'send_messages']
-  },
-  {
-    id: 'agent-review',
-    name: 'Review Agent',
-    role: 'review',
-    description: 'Monitors public feedback, responds to reviews, and manages ratings.',
-    isActive: true,
-    systemPrompt: 'You are the reputation manager. Answer reviews left by clients. Respond politely and offer help for issues.',
-    permissions: ['read_crm', 'send_messages']
-  },
-  {
-    id: 'agent-sales',
-    name: 'Sales Agent',
-    role: 'sales',
-    description: 'Answers product pricing questions, follows up on leads, and drives conversions.',
-    isActive: true,
-    systemPrompt: 'You are the sales development representative. Handle pricing queries and pitches. Offer discounts to close deals.',
-    permissions: ['read_crm', 'write_tasks', 'send_messages']
-  }
-];
-
-const MOCK_MEMORIES: AgentMemory[] = [
-  {
-    id: 'mem-1',
-    leadId: 'lead-1',
-    key: 'preferred_hairdresser',
-    value: 'Sarah',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'mem-2',
-    leadId: 'lead-1',
-    key: 'customer_sentiment',
-    value: 'Positive (Praise)',
-    createdAt: new Date().toISOString()
-  }
-];
-
 interface AgentState {
   agents: Agent[];
   agentMemories: AgentMemory[];
@@ -99,7 +43,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
     if (!userId || !isSupabaseConfigured) {
-      set({ agents: MOCK_AGENTS });
+      set({ agents: [] });
       return;
     }
 
@@ -117,11 +61,11 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       if (data && data.length > 0) {
         set({ agents: data.map(dbRowToAgent) });
       } else {
-        set({ agents: MOCK_AGENTS });
+        set({ agents: [] });
       }
     } catch (e) {
       console.error('[StarX] Fetch agents exception:', e);
-      set({ agents: MOCK_AGENTS });
+      set({ agents: [] });
     }
   },
 
@@ -151,7 +95,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
     if (!userId || !isSupabaseConfigured) {
-      set({ agentMemories: MOCK_MEMORIES });
+      set({ agentMemories: [] });
       return;
     }
 
@@ -172,7 +116,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       }
     } catch (e) {
       console.error('[StarX] Fetch memories exception:', e);
-      set({ agentMemories: MOCK_MEMORIES });
+      set({ agentMemories: [] });
     }
   },
 

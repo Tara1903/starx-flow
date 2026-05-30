@@ -76,7 +76,7 @@ export function QuickActions({ onNewWorkflowClick }: QuickActionsProps) {
           <div
             key={i}
             onClick={() => handleAction(item)}
-            className="group cursor-pointer bg-white/[0.005] border border-white/[0.04] rounded-xl p-4 flex flex-col justify-between h-[130px] transition-all hover:bg-white/[0.015] hover:border-white/10"
+            className="group cursor-pointer glass-panel glass-interactive rounded-xl p-4 flex flex-col justify-between h-[130px]"
           >
             {/* Header Icon */}
             <div className="flex items-center justify-between w-full">

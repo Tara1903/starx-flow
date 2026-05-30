@@ -135,7 +135,7 @@ export function AccountStep() {
                 placeholder="e.g. Alex Johnson"
                 required
                 disabled={isLoading || isSaved}
-                className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
+                className="w-full glass-panel border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
               />
             </div>
           </div>
@@ -154,7 +154,7 @@ export function AccountStep() {
                 placeholder="e.g. Glow Aesthetics"
                 required
                 disabled={isLoading || isSaved}
-                className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
+                className="w-full glass-panel border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ export function AccountStep() {
                 value={formData.businessType}
                 onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}
                 disabled={isLoading || isSaved}
-                className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white outline-none transition-all focus:ring-1 focus:ring-emerald-500/20 appearance-none"
+                className="w-full glass-panel border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white outline-none transition-all focus:ring-1 focus:ring-emerald-500/20 appearance-none"
               >
                 {industries.map((ind) => (
                   <option key={ind} value={ind} className="bg-black text-white">
@@ -198,7 +198,7 @@ export function AccountStep() {
                 onChange={(e) => setFormData({ ...formData, businessPhone: e.target.value })}
                 placeholder="e.g. +1 (555) 019-2834"
                 disabled={isLoading || isSaved}
-                className="w-full bg-[#0a0a0a] border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
+                className="w-full glass-panel border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
               />
             </div>
           </div>

@@ -486,7 +486,7 @@ export function WorkflowEditor() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Left column: Configuration Panel */}
-        <div className="glass-card rounded-2xl p-5 space-y-5 lg:col-span-1 border border-white/5 bg-[#080808]/80">
+        <div className="glass-panel rounded-2xl p-5 space-y-5 lg:col-span-1 border border-white/5 bg-[#080808]/80">
           <div className="border-b border-white/5 pb-3">
             <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-emerald-400" />
@@ -599,7 +599,7 @@ export function WorkflowEditor() {
 
         {/* Right Column: Visual Builder Canvas */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="glass-card rounded-2xl p-6 border border-white/5 bg-[#080808]/80 min-h-[550px] flex flex-col items-center">
+          <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-[#080808]/80 min-h-[550px] flex flex-col items-center">
             
             <div className="w-full flex items-center justify-between border-b border-white/5 pb-4 mb-6 select-none">
               <div>
@@ -642,7 +642,7 @@ export function WorkflowEditor() {
                     )}
 
                     {/* Step Card */}
-                    <div className={`w-full glass-card rounded-xl border relative transition-all bg-[#0d0d0d]/90 p-4 ${
+                    <div className={`w-full glass-panel focus-within:glass-focus rounded-xl border relative transition-all bg-[#0d0d0d]/90 p-4 ${
                       isTrigger ? 'border-emerald-500/20 focus-within:border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.02)]' :
                       isCondition ? 'border-purple-500/20 focus-within:border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.02)]' :
                       'border-sky-500/20 focus-within:border-sky-500/40 shadow-[0_0_15px_rgba(14,165,233,0.02)]'

@@ -58,7 +58,7 @@ export function CommandCenter() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setIsOpen(false)}
           />
           <motion.div
@@ -66,7 +66,7 @@ export function CommandCenter() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-2xl bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-2xl glass-panel rounded-2xl overflow-hidden"
           >
             <div className="flex items-center px-4 border-b border-white/10">
               <Search className="w-5 h-5 text-zinc-400" />

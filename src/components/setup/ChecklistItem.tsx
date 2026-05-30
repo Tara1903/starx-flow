@@ -17,8 +17,9 @@ export function ChecklistItem({ step, isActive, onClick }: ChecklistItemProps) {
   // Determine indicator
   let Indicator = <div className="w-5 h-5 rounded-full border-2 border-zinc-600 flex-shrink-0" />;
   if (isComplete) {
+    const isChannel = ['whatsapp', 'instagram', 'sms'].includes(step.id);
     Indicator = (
-      <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 success-icon-enter shadow-lg shadow-emerald-500/20">
+      <div className={cn("w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 success-icon-enter shadow-lg", isChannel ? "bg-emerald-500 shadow-emerald-500/20" : "bg-cyan-500 shadow-cyan-500/20")}>
         <Check className="w-3 h-3 text-[#050505] stroke-[3]" />
       </div>
     );
@@ -51,10 +52,11 @@ export function ChecklistItem({ step, isActive, onClick }: ChecklistItemProps) {
         isActive
           ? "checklist-item-active border-blue-500/20 text-white font-medium"
           : isComplete
-          ? "checklist-item-complete border-emerald-500/10 text-zinc-300"
+          ? cn("glass-focus", 
+               ['whatsapp', 'instagram', 'sms'].includes(step.id) ? "border-emerald-500/30 text-emerald-300" : "border-cyan-500/30 text-cyan-300")
           : isLocked
           ? "checklist-item-locked border-transparent text-zinc-600 cursor-not-allowed"
-          : "border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.03] text-zinc-400 hover:text-white"
+          : "glass-panel text-zinc-400 hover:text-white"
       )}
     >
       <div className="flex items-center gap-3">

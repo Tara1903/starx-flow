@@ -40,19 +40,17 @@ function ToggleSwitch({ active, onToggle }: ToggleSwitchProps) {
 interface WorkflowCardProps {
   workflow: Workflow;
   onToggle: () => void;
-  onSimulate: () => void;
   onConfigure: () => void;
-  isSimulating: boolean;
 }
 
-export function WorkflowCard({ workflow, onToggle, onSimulate, onConfigure, isSimulating }: WorkflowCardProps) {
+export function WorkflowCard({ workflow, onToggle, onConfigure }: WorkflowCardProps) {
   return (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
-        "glass-card rounded-xl p-5 transition-all duration-300 select-none",
+        "glass-panel rounded-xl p-5 transition-all duration-300 select-none",
         !workflow.isActive && "opacity-60"
       )}
     >
@@ -108,20 +106,6 @@ export function WorkflowCard({ workflow, onToggle, onSimulate, onConfigure, isSi
 
       {/* Action Footer */}
       <div className="flex gap-2">
-        <button
-          onClick={onSimulate}
-          disabled={!workflow.isActive || isSimulating}
-          className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-2.5 rounded-lg transition-all border",
-            workflow.isActive
-              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
-              : "bg-white/5 text-zinc-500 border-white/5 cursor-not-allowed"
-          )}
-        >
-          {isSimulating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-          <span>{isSimulating ? "Triage Run..." : "Test Run"}</span>
-        </button>
-
         <button
           onClick={onConfigure}
           className="flex items-center justify-center gap-1.5 text-xs font-semibold py-2.5 px-4 rounded-lg bg-white/5 text-zinc-400 hover:text-white border border-white/5 transition-all"

@@ -2,10 +2,11 @@ import React from "react";
 import { 
   Home, MessageSquare, Layers, Brain, BarChart3, Radio, Settings,
   Sparkles, Plus, TestTube, HelpCircle, Activity, Calendar,
-  Users, Calendar as CalendarIcon, CheckSquare, Contact, Bot, Phone, Cpu
+  Users, Calendar as CalendarIcon, CheckSquare, Contact, Bot, Phone, Cpu, LogOut
 } from "lucide-react";
 import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
 import { useAuthStore } from "../../store/authStore";
+import { useNavigate } from "react-router-dom";
 import { cn } from "../../lib/utils";
 
 interface DashboardTopBarProps {
@@ -17,6 +18,14 @@ export function DashboardTopBar({ onNewWorkflowClick }: DashboardTopBarProps) {
   const setActiveSection = useDashboardStore((s) => s.setActiveSection);
   const workflows = useAuthStore((s) => s.workflows);
   const activeWorkflowsCount = workflows.filter((w) => w.isActive).length;
+  
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   const sectionDetails: Record<DashboardSection, {
     title: string;
@@ -150,18 +159,18 @@ export function DashboardTopBar({ onNewWorkflowClick }: DashboardTopBarProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveSection("playground")}
-              className="hidden xs:flex items-center gap-1.5 text-xs font-semibold py-2 px-3.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
+              className="hidden xs:flex items-center gap-1.5 text-xs font-semibold py-2 px-3 sm:px-3.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
             >
               <TestTube className="w-3.5 h-3.5" />
-              <span>Test AI</span>
+              <span className="hidden sm:inline">Test AI</span>
             </button>
             {onNewWorkflowClick && (
               <button
                 onClick={onNewWorkflowClick}
-                className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-black py-2 px-4 rounded-full transition-colors shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-black py-2 px-3 sm:px-4 rounded-full transition-colors shadow-[0_0_15px_rgba(16,185,129,0.2)]"
               >
                 <Plus className="w-4 h-4" />
-                <span>Build Flow</span>
+                <span className="hidden sm:inline">Build Flow</span>
               </button>
             )}
           </div>
@@ -170,22 +179,31 @@ export function DashboardTopBar({ onNewWorkflowClick }: DashboardTopBarProps) {
         {activeSection === "workflows" && onNewWorkflowClick && (
           <button
             onClick={onNewWorkflowClick}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-black py-2 px-4 rounded-full transition-colors shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-black py-2 px-3 sm:px-4 rounded-full transition-colors shadow-[0_0_15px_rgba(16,185,129,0.2)]"
           >
             <Plus className="w-4 h-4" />
-            <span>Create Workflow</span>
+            <span className="hidden sm:inline">Create Workflow</span>
           </button>
         )}
 
         {activeSection === "conversations" && (
           <button
             onClick={() => setActiveSection("playground")}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 py-2 px-4 rounded-full hover:bg-emerald-500/20 transition-all"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 py-2 px-3 sm:px-4 rounded-full hover:bg-emerald-500/20 transition-all"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Train AI Receptionist</span>
+            <span className="hidden sm:inline">Train AI Receptionist</span>
           </button>
         )}
+
+        {/* Logout Icon */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center justify-center w-8 h-8 rounded-full bg-white/[0.02] border border-white/5 text-zinc-400 hover:text-white hover:bg-red-500/10 hover:border-red-500/20 transition-colors ml-2"
+          title="Log out"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
     </header>
   );

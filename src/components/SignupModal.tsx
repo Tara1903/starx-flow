@@ -183,7 +183,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="relative w-full max-w-md bg-[#050505] rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(16,185,129,0.15)]"
+          className="relative w-full max-w-md glass-panel rounded-2xl overflow-hidden"
         >
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
 
@@ -233,7 +233,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="relative w-full max-w-md bg-[#050505] rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/10 flex flex-col"
+        className="relative w-full max-w-md glass-panel rounded-2xl overflow-hidden ring-1 ring-emerald-500/10 flex flex-col"
       >
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
 

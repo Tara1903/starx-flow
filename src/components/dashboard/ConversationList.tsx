@@ -94,8 +94,8 @@ export function ConversationList() {
                 className={cn(
                   "p-4 flex flex-col gap-2 cursor-pointer transition-all relative border-l-[3px]",
                   isSelected
-                    ? "bg-white/[0.03] border-emerald-500"
-                    : "border-transparent hover:bg-white/[0.01]"
+                    ? "glass-focus !border-l-emerald-500 border-l-[3px]"
+                    : "border-transparent hover:bg-white/[0.01] hover:border-white/5"
                 )}
               >
                 {/* Header info */}

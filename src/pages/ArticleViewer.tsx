@@ -15,6 +15,7 @@ import {
   Check
 } from "lucide-react";
 import { useUIStore } from "../store/uiStore";
+import { GlassPanel } from "../components/ui/GlassPanel";
 
 interface ArticleData {
   title: string;
@@ -498,7 +499,7 @@ export function ArticleViewer() {
             <div className="sticky top-32 flex flex-col gap-6 text-left">
               
               {/* Strategic Metrics Widget */}
-              <div className="glass-card bg-zinc-950/40 p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
+              <GlassPanel tier="panel" className="bg-zinc-950/40 p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 blur-[25px]" />
                 <h4 className="text-white font-extrabold text-base mb-5 flex items-center gap-2">
                   <TrendingUp size={18} className="text-emerald-400" /> Key Target Metrics
@@ -518,10 +519,10 @@ export function ArticleViewer() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </GlassPanel>
 
               {/* Sidebar Signup Action CTA */}
-              <div className="glass-card bg-gradient-to-br from-emerald-500/10 to-transparent p-6 rounded-[2rem] border border-emerald-500/20 text-center flex flex-col gap-4">
+              <GlassPanel tier="panel" className="bg-gradient-to-br from-emerald-500/10 to-transparent p-6 rounded-[2rem] border border-emerald-500/20 text-center flex flex-col gap-4">
                 <MessageSquare size={32} className="text-emerald-400 mx-auto" />
                 <div>
                   <h4 className="text-white font-extrabold text-base mb-1.5">Put Bookings On Autopilot</h4>
@@ -535,7 +536,7 @@ export function ArticleViewer() {
                 >
                   Start Free 14-Day Trial
                 </button>
-              </div>
+              </GlassPanel>
 
             </div>
           </div>

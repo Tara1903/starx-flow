@@ -10,20 +10,12 @@ import { CreateWorkflowWizard } from "../../components/dashboard/CreateWorkflowW
 export function WorkflowsSection() {
   const workflows = useAuthStore((s) => s.workflows) || [];
   const toggleWorkflow = useAuthStore((s) => s.toggleWorkflow);
-  const triggerMockSimulation = useAuthStore((s) => s.triggerMockSimulation);
   const logs = useAuthStore((s) => s.logs) || [];
   const clearLogs = useAuthStore((s) => s.clearLogs);
   const setActiveSection = useDashboardStore((s) => s.setActiveSection);
 
   const [wizardOpen, setWizardOpen] = useState(false);
-  const [simulatingId, setSimulatingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const handleSimulate = useCallback(async (id: string) => {
-    setSimulatingId(id);
-    await triggerMockSimulation(id);
-    setSimulatingId(null);
-  }, [triggerMockSimulation]);
 
   const filteredWorkflows = workflows.filter((w) =>
     w.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -89,12 +81,10 @@ export function WorkflowsSection() {
               key={wf.id}
               workflow={wf}
               onToggle={() => toggleWorkflow(wf.id)}
-              onSimulate={() => handleSimulate(wf.id)}
               onConfigure={() => {
                 useAuthStore.setState({ selectedWorkflowId: wf.id });
                 setActiveSection("workflow_editor");
               }}
-              isSimulating={simulatingId === wf.id}
             />
           ))}
         </div>

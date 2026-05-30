@@ -19,7 +19,7 @@ export function ChannelHealth({ onOpenIntegration }: ChannelHealthProps) {
   const connectedChannels = useAuthStore((s) => s.connectedChannels);
 
   return (
-    <div className="glass-card rounded-xl p-5 select-none">
+    <div className="glass-panel rounded-xl p-5 select-none">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-bold text-white tracking-tight">Channel Health & Integrations</h3>

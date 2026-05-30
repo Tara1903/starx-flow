@@ -47,7 +47,7 @@ export function WelcomeStep() {
         {/* Glow behind icon */}
         <div className="relative mb-6">
           <div className="absolute inset-0 bg-emerald-500/20 rounded-2xl blur-xl animate-pulse" />
-          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0a0a0a] border border-white/[0.08] text-emerald-400">
+          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl glass-panel border border-white/[0.08] text-emerald-400">
             <Sparkles className="w-8 h-8" />
           </div>
         </div>

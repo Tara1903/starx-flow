@@ -35,7 +35,43 @@ export default async function handler(req: Request) {
   // 2. Handle Incoming Messages (POST request)
   if (req.method === 'POST') {
     try {
-      const body = await req.json();
+      const rawBody = await req.text();
+      const signature = req.headers.get('x-hub-signature-256');
+      const appSecret = process.env.META_APP_SECRET;
+
+      // Verify signature if APP_SECRET is provided
+      if (appSecret && signature) {
+        const encoder = new TextEncoder();
+        const key = await crypto.subtle.importKey(
+          'raw',
+          encoder.encode(appSecret),
+          { name: 'HMAC', hash: 'SHA-256' },
+          false,
+          ['verify']
+        );
+        
+        const sigHex = signature.replace('sha256=', '');
+        const sigBytes = new Uint8Array(sigHex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []);
+        
+        try {
+          const isValid = await crypto.subtle.verify(
+            'HMAC',
+            key,
+            sigBytes,
+            encoder.encode(rawBody)
+          );
+          
+          if (!isValid) {
+            console.error('Invalid signature');
+            return new Response('Forbidden', { status: 403, headers: corsHeaders });
+          }
+        } catch (e) {
+          console.error('Signature verification failed', e);
+          return new Response('Forbidden', { status: 403, headers: corsHeaders });
+        }
+      }
+
+      const body = JSON.parse(rawBody);
       console.log('Incoming Meta Webhook:', JSON.stringify(body));
 
       if (body.object === 'whatsapp_business_account') {

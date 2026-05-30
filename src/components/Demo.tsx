@@ -4,6 +4,7 @@ import {
   Sparkles, Dumbbell, Activity, Scissors, Heart, GraduationCap,
   MessageSquare as ChatIcon
 } from "lucide-react";
+import { crossfadeSwap } from "../lib/motionVariants";
 
 type IndustryKey = "gym" | "clinic" | "salon" | "spa" | "coaching";
 
@@ -256,7 +257,7 @@ export function Demo() {
                   onClick={() => setActiveTab(key)}
                   className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold transition-all duration-300 tracking-wider uppercase shrink-0 ${
                     isActive 
-                      ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]" 
+                      ? "glass-panel text-white shadow-[0_0_20px_rgba(255,255,255,0.15)]" 
                       : "text-zinc-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
@@ -294,7 +295,7 @@ export function Demo() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="glass-card p-6 rounded-3xl relative overflow-hidden group">
+                  <div className="glass-card glass-lift glass-tilt p-6 rounded-3xl relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors duration-500" />
                     <p className="text-xs text-zinc-500 font-semibold mb-2 uppercase tracking-widest">
                       {current.primaryMetric.label}
@@ -307,7 +308,7 @@ export function Demo() {
                     </span>
                   </div>
 
-                  <div className="glass-card p-6 rounded-3xl flex flex-col justify-center gap-4">
+                  <div className="glass-card glass-lift glass-tilt p-6 rounded-3xl flex flex-col justify-center gap-4">
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
                       <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{current.stats.label1}</span>
                       <span className="text-sm text-white font-bold">{current.stats.val1}</span>
@@ -323,7 +324,7 @@ export function Demo() {
                   </div>
                 </div>
 
-                <div className="glass-card p-6 rounded-3xl relative overflow-hidden">
+                <div className="glass-card glass-lift glass-tilt p-6 rounded-3xl relative overflow-hidden">
                   <div className="flex items-center gap-2 mb-5">
                     <span className="relative flex h-2 w-2">
                       <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-current ${current.accentText} transition-colors duration-500`}></span>
@@ -355,7 +356,7 @@ export function Demo() {
 
               {/* Right Panel: Interactive WhatsApp Phone */}
               <div className="flex-1 flex justify-center items-center order-1 lg:order-2">
-                <div className="w-[320px] h-[620px] bg-black border-[12px] border-zinc-900 rounded-[3rem] shadow-2xl relative flex flex-col overflow-hidden ring-1 ring-white/10">
+                <div className="glass-tilt glass-lift w-[320px] h-[620px] bg-black border-[12px] border-zinc-900 rounded-[3rem] shadow-2xl relative flex flex-col overflow-hidden ring-1 ring-white/10">
                   
                   {/* Dynamic Island */}
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-50 flex items-center justify-between px-3">
@@ -364,8 +365,16 @@ export function Demo() {
                   </div>
 
                   {/* WhatsApp UI */}
-                  <div className="flex-1 flex flex-col bg-[#0b141a] pt-14 text-white relative">
-                    <div className="bg-[#075e54] px-5 py-3.5 flex items-center gap-3 shadow-md z-10 relative">
+                  <AnimatePresence mode="wait">
+                    <motion.div 
+                      key={activeTab}
+                      variants={crossfadeSwap}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="flex-1 flex flex-col bg-[#0b141a] pt-14 text-white relative"
+                    >
+                      <div className="bg-[#075e54] px-5 py-3.5 flex items-center gap-3 shadow-md z-10 relative">
                       <div className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center font-bold text-white text-sm">
                         AI
                       </div>
@@ -427,7 +436,8 @@ export function Demo() {
                         <ChatIcon size={14} className="rotate-90 fill-current" />
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
+                  </AnimatePresence>
                 </div>
               </div>
 

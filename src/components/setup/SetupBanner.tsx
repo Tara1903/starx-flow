@@ -42,12 +42,9 @@ export function SetupBanner() {
         <div>
           <h4 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
             <span>Onboarding Incomplete ({percent}% Configured)</span>
-            <span className="text-[10px] text-amber-500 font-bold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 uppercase tracking-widest">
-              Demo Active
-            </span>
           </h4>
           <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed max-w-xl">
-            You've only completed {completedCount} of {totalCount} tasks. Some AI integrations, custom business training rules, and channels are currently running in simulated mode. Complete setup to go live.
+            You've only completed {completedCount} of {totalCount} tasks. Complete setup to go live.
           </p>
         </div>
       </div>

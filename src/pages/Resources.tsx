@@ -158,7 +158,7 @@ export function Resources() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="w-full md:w-auto glass-panel p-6 rounded-2xl shadow-2xl flex flex-col gap-4 min-w-[320px] text-left"
+            className="w-full sm:w-auto glass-panel p-6 rounded-2xl shadow-2xl flex flex-col gap-4 text-left"
           >
             <div className="flex flex-col gap-1">
               <h3 className="text-white font-bold text-lg">Weekly Operations Digest</h3>
@@ -171,7 +171,7 @@ export function Resources() {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl gap-2 text-center"
+                className="flex flex-col items-center justify-center p-6 glass-panel border-emerald-500/30 rounded-xl gap-2 text-center"
               >
                 <Check size={20} className="text-emerald-400" />
                 <span className="text-xs font-bold text-emerald-300">Subscribed Successfully! 📬</span>
@@ -336,13 +336,13 @@ export function Resources() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-6"
+            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/90 backdrop-blur-md p-2 md:p-4 sm:p-6"
           >
             <motion.div 
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="w-full max-w-4xl aspect-[16/9] bg-zinc-950 rounded-3xl border border-emerald-500/30 overflow-hidden flex flex-col justify-between p-4 md:p-6 shadow-[0_0_50px_rgba(16,185,129,0.2)] relative"
+              className="w-full max-w-4xl h-[95vh] md:h-auto md:aspect-[16/9] bg-zinc-950 rounded-[2rem] md:rounded-3xl border border-emerald-500/30 overflow-hidden flex flex-col justify-between p-4 md:p-6 shadow-[0_0_50px_rgba(16,185,129,0.2)] relative overflow-y-auto glass-scrollbar"
             >
               {/* Top Modal Info Bar */}
               <div className="flex justify-between items-center pb-3 border-b border-white/5">
@@ -362,7 +362,7 @@ export function Resources() {
               <div className="flex-grow flex flex-col md:flex-row items-center gap-6 py-4">
                 
                 {/* Simulated Screen Graphic Animation */}
-                <div className="w-full md:w-1/2 aspect-video bg-black/50 border border-white/5 rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden">
+                <div className="w-full md:w-1/2 aspect-video min-h-[200px] md:min-h-0 bg-black/50 border border-white/5 rounded-2xl flex flex-col items-center justify-center p-4 relative overflow-hidden shrink-0">
                   <div className="absolute inset-0 bg-emerald-500/[0.02] pointer-events-none" />
                   <div className="absolute top-3 left-3 bg-zinc-900 border border-white/10 rounded px-2 py-0.5 text-[8px] text-zinc-400 flex items-center gap-1.5 font-bold uppercase tracking-wider">
                     <Smartphone size={9} />
@@ -418,12 +418,19 @@ export function Resources() {
                     const percent = clickX / rect.width;
                     setVideoTime(Math.floor(percent * 120));
                   }}
-                  className="h-1.5 w-full bg-zinc-900 rounded-full cursor-pointer relative overflow-hidden group"
+                  className="h-2 w-full bg-zinc-900 rounded-full cursor-pointer relative overflow-hidden group hover:h-2.5 transition-all duration-200"
                 >
                   <div 
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-300 relative"
                     style={{ width: `${(videoTime / 120) * 100}%` }}
-                  />
+                  >
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_10px_rgba(16,185,129,0.8)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  
+                  {/* Chapter Markers */}
+                  <div className="absolute top-0 bottom-0 left-[25%] w-0.5 bg-black/60 hover:bg-white/50 transition-colors" title="Intro" />
+                  <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-black/60 hover:bg-white/50 transition-colors" title="The Strategy" />
+                  <div className="absolute top-0 bottom-0 left-[75%] w-0.5 bg-black/60 hover:bg-white/50 transition-colors" title="Dashboard Demo" />
                 </div>
 
                 {/* Player Toolbar controls */}
@@ -431,22 +438,27 @@ export function Resources() {
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => setVideoPlaying(!videoPlaying)}
-                      className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center"
+                      className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-black hover:border-emerald-500 transition-all flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                     >
-                      {videoPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} className="ml-0.5" fill="currentColor" />}
+                      {videoPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} className="ml-1" fill="currentColor" />}
                     </button>
                     <button 
                       onClick={() => setIsMuted(!isMuted)}
-                      className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center"
+                      className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center transition-colors"
                     >
-                      {isMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                      {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
                     </button>
-                    <span className="text-[11px] font-mono text-zinc-500">
-                      {formatTime(videoTime)} / 2:00
-                    </span>
+                    <div className="flex items-center gap-2 ml-2">
+                      <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+                      </span>
+                      <span className="text-xs font-mono text-zinc-400">
+                        {formatTime(videoTime)} <span className="text-zinc-600">/ 2:00</span>
+                      </span>
+                    </div>
                   </div>
 
-                  <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest hidden sm:block">
                     Simulated operations player
                   </span>
                 </div>

@@ -70,21 +70,26 @@ export function SetupLayout() {
       <SetupHeader />
 
       {/* Main Layout Area */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 z-10">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pb-32 lg:pb-12 z-10">
         <div className="flex flex-col lg:flex-row gap-8 items-start h-full">
           
           {/* Step Contents */}
-          <div className="flex-1 w-full order-2 lg:order-1 min-h-[500px] flex flex-col">
+          <div className="flex-1 w-full order-1 min-h-[500px] flex flex-col">
             <Outlet />
           </div>
 
           {/* Checklist Sidebar */}
-          <div className="w-full lg:w-auto order-1 lg:order-2">
+          <div className="w-full lg:w-auto order-2 hidden lg:block">
             <SetupChecklist />
           </div>
 
         </div>
       </main>
+
+      {/* Mobile Progress & Checklist Overlay */}
+      <div className="lg:hidden">
+        <SetupChecklist mobile />
+      </div>
 
     </div>
   );
