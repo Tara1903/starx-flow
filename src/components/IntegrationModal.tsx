@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Key, Save, Loader2, CheckCircle2, ShieldCheck, Shield } from 'lucide-react';
+import { X, Key, Save, Loader2, CheckCircle2, ShieldCheck, Shield, Copy } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
@@ -21,6 +21,24 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
 
   // Form State
   const [formData, setFormData] = useState<Record<string, string>>({});
+  
+  // Snippet Copy State
+  const [copied, setCopied] = useState(false);
+  const user = useAuthStore(s => s.user);
+  
+  const chatSnippet = `<script>
+  window.STARX_CONFIG = {
+    clientId: "${user?.id || 'demo_id'}",
+    theme: "dark"
+  };
+</script>
+<script src="https://cdn.starx-flow.com/widget.js" async></script>`;
+
+  const handleCopySnippet = () => {
+    navigator.clipboard.writeText(chatSnippet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // WhatsApp connection state helpers
   const whatsappChannel = connectedChannels.find(c => c.channelKey === 'WhatsApp');
@@ -189,6 +207,34 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
             </div>
           </>
         );
+      case 'Web':
+        return (
+          <div className="space-y-4">
+            <div className="bg-cyan-500/10 border border-cyan-500/20 p-4 rounded-xl space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1.5" />
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-cyan-50">Embed the Chat Widget</h4>
+                  <p className="text-xs text-cyan-200/70 leading-relaxed">
+                    Copy the snippet below and paste it just before the closing <code>&lt;/body&gt;</code> tag of your website.
+                  </p>
+                </div>
+              </div>
+              <div className="relative group">
+                <pre className="bg-[#050505] p-4 rounded-lg overflow-x-auto text-[11px] text-zinc-300 font-mono border border-white/10 leading-relaxed">
+                  <code>{chatSnippet}</code>
+                </pre>
+                <button 
+                  type="button"
+                  onClick={handleCopySnippet}
+                  className="absolute top-2 right-2 p-2 bg-white/10 hover:bg-white/20 rounded-md transition-colors flex items-center justify-center backdrop-blur-sm border border-white/10"
+                >
+                  {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return (
           <div className="space-y-1.5">
@@ -286,7 +332,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
                     className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] flex items-center justify-center gap-2"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    {loading ? 'Saving...' : 'Save & Connect'}
+                    {loading ? 'Saving...' : (channelKey === 'Web' ? 'Mark as Embedded' : 'Save & Connect')}
                   </button>
                 )}
               </div>

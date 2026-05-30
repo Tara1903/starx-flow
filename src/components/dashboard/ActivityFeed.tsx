@@ -28,9 +28,37 @@ const CHANNEL_COLOR: Record<string, string> = {
 
 export function ActivityFeed() {
   const logs = useAuthStore((s) => s.logs);
+  const addLog = useAuthStore((s) => s.addLog);
+  const connectedChannels = useAuthStore((s) => s.connectedChannels);
   const clearLogs = useAuthStore((s) => s.clearLogs);
   const [filter, setFilter] = useState<"all" | "WhatsApp" | "Instagram" | "SMS" | "System">("all");
   const [search, setSearch] = useState("");
+
+  React.useEffect(() => {
+    const activeChannels = connectedChannels.filter(c => c.isConnected);
+    if (activeChannels.length === 0) return;
+
+    const interval = setInterval(() => {
+      // 50% chance to generate a log every 6 seconds to make dashboard feel alive
+      if (Math.random() > 0.5) return;
+      
+      const channel = activeChannels[Math.floor(Math.random() * activeChannels.length)].channelKey;
+      
+      const eventTypes = [
+        { type: "trigger", msgs: ["Incoming customer inquiry received", "New lead captured from campaign", "User initiated help sequence"] },
+        { type: "ai_process", msgs: ["AI Agent analyzing intent & sentiment", "Drafting personalized response", "Checking availability calendar"] },
+        { type: "ai_reply", msgs: ["AI Assistant dispatched response", "Follow-up question sent", "Sending rich media template"] },
+        { type: "success", msgs: ["Meeting successfully booked for tomorrow", "Support ticket resolved automatically", "Discount voucher sent to user"] }
+      ] as const;
+
+      const randomEvent = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+      const randomMsg = randomEvent.msgs[Math.floor(Math.random() * randomEvent.msgs.length)];
+
+      addLog(randomEvent.type, channel, randomMsg);
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [connectedChannels, addLog]);
 
   const handleClear = () => {
     clearLogs();
