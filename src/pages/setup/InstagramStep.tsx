@@ -38,82 +38,104 @@ export function InstagramStep() {
     document.body.appendChild(js);
   }, []);
 
+  // Handle OAuth redirect fallback if SDK was blocked
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token=')) {
+      setLoading(true);
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      
+      if (accessToken) {
+        // Clean URL to prevent token leakage
+        window.history.replaceState(null, '', window.location.pathname);
+        processMetaToken(accessToken);
+      } else {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  const processMetaToken = async (accessToken: string) => {
+    try {
+      let realIgAccountId = null;
+      
+      try {
+        const fbRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account&access_token=${accessToken}`);
+        const fbData = await fbRes.json();
+        
+        if (fbData.data && fbData.data.length > 0) {
+          const pageWithIg = fbData.data.find((page: any) => page.instagram_business_account);
+          if (pageWithIg) {
+            realIgAccountId = pageWithIg.instagram_business_account.id;
+          }
+        }
+      } catch (apiErr) {
+        console.warn("Graph API fetch failed", apiErr);
+      }
+
+      const finalIgAccountId = realIgAccountId || "178414000000000_oauth";
+      const user = useAuthStore.getState().user;
+      if (!user) throw new Error("You must be logged in.");
+
+      const { error } = await supabase
+        .from('connected_channels')
+        .upsert({
+          user_id: user.id,
+          channel_key: 'Instagram',
+          is_connected: true,
+          credentials: { 
+            access_token: accessToken,
+            ig_account_id: finalIgAccountId,
+            updated_at: new Date().toISOString() 
+          },
+          last_synced: new Date().toISOString()
+        }, { onConflict: 'user_id, channel_key' });
+
+      if (error) throw error;
+      
+      await fetchChannels();
+      await completeStep('instagram');
+      
+      setTimeout(() => {
+        navigate('/setup/sms');
+      }, 1500);
+
+    } catch (err: any) {
+      console.error("[META CONFIG ERROR]", err);
+      setErrorDetails(err.message || "Failed to save Instagram configuration.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFacebookLogin = () => {
     if (!isSupabaseConfigured) return;
     setErrorDetails('');
+    setLoading(true);
 
     const FB = (window as any).FB;
+    
+    // ADBLOCKER FALLBACK: If SDK is blocked, redirect directly to Meta OAuth
     if (!FB) {
-      setErrorDetails('Facebook SDK failed to load. Please disable ad-blockers and refresh.');
+      const clientId = import.meta.env.VITE_META_APP_ID || 'dummy';
+      const redirectUri = window.location.origin + '/setup/instagram';
+      const scopes = 'instagram_basic,instagram_manage_messages,pages_show_list,pages_manage_metadata';
+      
+      const oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${scopes}`;
+      
+      window.location.href = oauthUrl;
       return;
     }
 
-    setLoading(true);
-
     FB.login(async (response: any) => {
       if (response.authResponse) {
-        const accessToken = response.authResponse.accessToken;
-        
-        try {
-          let realIgAccountId = null;
-          
-          try {
-            // Fetch connected Instagram Professional accounts via Graph API
-            const fbRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account&access_token=${accessToken}`);
-            const fbData = await fbRes.json();
-            
-            if (fbData.data && fbData.data.length > 0) {
-              // Find the first page that has an Instagram Business Account connected
-              const pageWithIg = fbData.data.find((page: any) => page.instagram_business_account);
-              if (pageWithIg) {
-                realIgAccountId = pageWithIg.instagram_business_account.id;
-              }
-            }
-          } catch (apiErr) {
-            console.warn("Graph API fetch failed, falling back to setup ID", apiErr);
-          }
-
-          const finalIgAccountId = realIgAccountId || "178414000000000_oauth";
-
-          const user = useAuthStore.getState().user;
-          if (!user) throw new Error("You must be logged in.");
-
-          const { error } = await supabase
-            .from('connected_channels')
-            .upsert({
-              user_id: user.id,
-              channel_key: 'Instagram',
-              is_connected: true,
-              credentials: { 
-                access_token: accessToken,
-                ig_account_id: finalIgAccountId,
-                updated_at: new Date().toISOString() 
-              },
-              last_synced: new Date().toISOString()
-            }, { onConflict: 'user_id, channel_key' });
-
-          if (error) throw error;
-          
-          await fetchChannels();
-          await completeStep('instagram');
-          
-          // Optionally auto-navigate after brief delay
-          setTimeout(() => {
-            navigate('/setup/sms');
-          }, 1500);
-
-        } catch (err: any) {
-          console.error("[META CONFIG ERROR]", err);
-          setErrorDetails(err.message || "Failed to save Instagram configuration.");
-        } finally {
-          setLoading(false);
-        }
+        await processMetaToken(response.authResponse.accessToken);
       } else {
         setLoading(false);
         setErrorDetails('Meta connection cancelled by user.');
       }
     }, {
-      // Scopes for Instagram Messaging
       config_id: import.meta.env.VITE_META_CONFIG_ID || undefined,
       response_type: 'code',
       override_default_response_type: true,

@@ -39,79 +39,107 @@ export function WhatsAppStep() {
     document.body.appendChild(js);
   }, []);
 
+  // Handle OAuth redirect fallback if SDK was blocked
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token=')) {
+      setLoading(true);
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      
+      if (accessToken) {
+        // Clean URL to prevent token leakage
+        window.history.replaceState(null, '', window.location.pathname);
+        processMetaToken(accessToken);
+      } else {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  const processMetaToken = async (accessToken: string) => {
+    try {
+      let realPhoneId = null;
+      
+      try {
+        const fbRes = await fetch(`https://graph.facebook.com/v18.0/me/client_whatsapp_business_accounts?access_token=${accessToken}`);
+        const fbData = await fbRes.json();
+        
+        if (fbData.data && fbData.data.length > 0) {
+          const wabaId = fbData.data[0].id;
+          const phoneRes = await fetch(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers?access_token=${accessToken}`);
+          const phoneData = await phoneRes.json();
+          if (phoneData.data && phoneData.data.length > 0) {
+            realPhoneId = phoneData.data[0].id;
+          }
+        }
+      } catch (apiErr) {
+        console.warn("Graph API fetch failed", apiErr);
+      }
+
+      const finalPhoneId = realPhoneId || "1234567890_embedded_flow";
+      const user = useAuthStore.getState().user;
+      if (!user) throw new Error("You must be logged in.");
+
+      const { error } = await supabase
+        .from('connected_channels')
+        .upsert({
+          user_id: user.id,
+          channel_key: 'WhatsApp',
+          is_connected: true,
+          credentials: { 
+            access_token: accessToken,
+            phone_number_id: finalPhoneId,
+            updated_at: new Date().toISOString() 
+          },
+          last_synced: new Date().toISOString()
+        }, { onConflict: 'user_id, channel_key' });
+
+      if (error) throw error;
+      
+      await fetchChannels();
+    } catch (err: any) {
+      console.error("[META CONFIG ERROR]", err);
+      setErrorDetails(err.message || "Failed to save Meta configuration.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleFacebookLogin = () => {
     if (!isSupabaseConfigured) return;
     setErrorDetails('');
+    setLoading(true);
 
     const FB = (window as any).FB;
+    
+    // ADBLOCKER FALLBACK: If SDK is blocked, redirect directly to Meta OAuth
     if (!FB) {
-      setErrorDetails('Facebook SDK failed to load. Please disable ad-blockers and refresh.');
+      const clientId = import.meta.env.VITE_META_APP_ID || 'dummy';
+      const configId = import.meta.env.VITE_META_CONFIG_ID || '';
+      const redirectUri = window.location.origin + '/setup/whatsapp';
+      
+      // If we have a configId, use it for Embedded Signup. Otherwise fallback to standard scopes.
+      let oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token`;
+      
+      if (configId) {
+        oauthUrl += `&config_id=${configId}`;
+      } else {
+        oauthUrl += `&scope=whatsapp_business_management,whatsapp_business_messaging`;
+      }
+      
+      window.location.href = oauthUrl;
       return;
     }
 
-    setLoading(true);
-
     FB.login(async (response: any) => {
       if (response.authResponse) {
-        const accessToken = response.authResponse.accessToken;
-        
-        try {
-          let realPhoneId = null;
-          
-          try {
-            // Attempt to fetch the actual WhatsApp Phone Number ID via Graph API
-            // For Embedded Signup, we first get the WABA, then the phone numbers
-            const fbRes = await fetch(`https://graph.facebook.com/v18.0/me/client_whatsapp_business_accounts?access_token=${accessToken}`);
-            const fbData = await fbRes.json();
-            
-            if (fbData.data && fbData.data.length > 0) {
-              const wabaId = fbData.data[0].id;
-              const phoneRes = await fetch(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers?access_token=${accessToken}`);
-              const phoneData = await phoneRes.json();
-              if (phoneData.data && phoneData.data.length > 0) {
-                realPhoneId = phoneData.data[0].id;
-              }
-            }
-          } catch (apiErr) {
-            console.warn("Graph API fetch failed, falling back to setup ID", apiErr);
-          }
-
-          // Fallback to placeholder if the user hasn't fully registered a number yet in the popup
-          const finalPhoneId = realPhoneId || "1234567890_embedded_flow";
-
-          const user = useAuthStore.getState().user;
-          if (!user) throw new Error("You must be logged in.");
-
-          const { error } = await supabase
-            .from('connected_channels')
-            .upsert({
-              user_id: user.id,
-              channel_key: 'WhatsApp',
-              is_connected: true,
-              credentials: { 
-                access_token: accessToken,
-                phone_number_id: finalPhoneId,
-                updated_at: new Date().toISOString() 
-              },
-              last_synced: new Date().toISOString()
-            }, { onConflict: 'user_id, channel_key' });
-
-          if (error) throw error;
-          
-          await fetchChannels();
-        } catch (err: any) {
-          console.error("[META CONFIG ERROR]", err);
-          setErrorDetails(err.message || "Failed to save Meta configuration.");
-        } finally {
-          setLoading(false);
-        }
+        await processMetaToken(response.authResponse.accessToken);
       } else {
-        // User cancelled login or did not fully authorize
         setLoading(false);
         setErrorDetails('Meta connection cancelled by user.');
       }
     }, {
-      // Scopes required for WhatsApp Embedded Signup
       config_id: import.meta.env.VITE_META_CONFIG_ID || undefined,
       response_type: 'code',
       override_default_response_type: true,
