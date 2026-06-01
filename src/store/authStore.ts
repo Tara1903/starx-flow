@@ -286,7 +286,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (session?.user) {
         // Fetch profile with a short retry mechanism to handle race condition with DB trigger
-        let profile = null;
+        let profile: any = null;
         for (let i = 0; i < 3; i++) {
           const { data } = await supabase
             .from('profiles')
@@ -484,6 +484,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useAgentStore.getState().resetAgentStore();
     useVoiceStore.getState().resetVoiceStore();
     useBusinessStore.getState().resetBusinessStore();
+    import('./onboardingStore').then(({ useOnboardingStore }) => {
+      useOnboardingStore.setState({ isComplete: false, isFetching: false, currentStep: 'account' });
+    }).catch(() => {});
 
     set({
       isLoggedIn: false,

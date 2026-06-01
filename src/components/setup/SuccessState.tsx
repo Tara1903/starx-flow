@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { motion } from 'motion/react';
 import { Check, Sparkles } from 'lucide-react';
@@ -75,3 +76,4 @@ export function SuccessState({
     </div>
   );
 }
+

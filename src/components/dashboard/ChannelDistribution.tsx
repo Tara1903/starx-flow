@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { MessageCircle, Phone, Star, Instagram, Globe, Hash } from "lucide-react";
 import { motion } from "motion/react";
@@ -86,3 +87,4 @@ export function ChannelDistribution() {
     </div>
   );
 }
+

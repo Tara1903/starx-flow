@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect } from "react";
 import { motion } from "motion/react";
 import { X } from "lucide-react";
@@ -55,3 +56,4 @@ export function VideoModal({ onClose }: { onClose: () => void }) {
     </motion.div>
   );
 }
+

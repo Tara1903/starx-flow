@@ -1,10 +1,13 @@
+"use client";
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
+
 import { useOnboardingStore } from '../../store/onboardingStore';
 import { AlertTriangle, ArrowRight, X } from 'lucide-react';
 
 export function SetupBanner() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { isComplete, steps, currentStep, completedSteps } = useOnboardingStore();
   const [dismissed, setDismissed] = useState(false);
 
@@ -22,9 +25,9 @@ export function SetupBanner() {
     // Find the route of the current step to resume from
     const activeStep = steps.find(s => s.id === currentStep) || steps[0];
     if (activeStep) {
-      navigate(activeStep.route);
+      router.push(activeStep.route);
     } else {
-      navigate('/setup');
+      router.push('/setup');
     }
   };
 

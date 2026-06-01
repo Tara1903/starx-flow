@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { motion } from "motion/react";
 import { Sparkles, Calendar, Settings, Zap } from "lucide-react";
@@ -85,3 +86,4 @@ export function HowItWorks() {
     </section>
   );
 }
+

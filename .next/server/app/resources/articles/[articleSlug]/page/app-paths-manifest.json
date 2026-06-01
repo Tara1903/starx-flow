@@ -1,0 +1,3 @@
+{
+  "/resources/articles/[articleSlug]/page": "app/resources/articles/[articleSlug]/page.js"
+}

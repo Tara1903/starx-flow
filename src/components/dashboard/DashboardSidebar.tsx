@@ -1,5 +1,8 @@
+"use client";
+
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from 'next/navigation';
+
 import { motion } from "motion/react";
 import {
   Layers, Brain, BarChart3, Radio, Settings, MessageSquare,
@@ -19,7 +22,7 @@ interface SidebarItem {
 }
 
 export function DashboardSidebar() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const workflows = useAuthStore((s) => s.workflows);
@@ -40,7 +43,7 @@ export function DashboardSidebar() {
 
   const handleLogout = async () => {
     await logout();
-    navigate("/");
+    router.push("/");
   };
 
   const menuItems: SidebarItem[] = [
@@ -57,7 +60,9 @@ export function DashboardSidebar() {
       icon: <Layers className="w-4 h-4" />,
       badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : undefined
     },
+    { id: "campaigns", label: "Campaigns", icon: <BarChart3 className="w-4 h-4" /> },
     { id: "crm", label: "Customers", icon: <Users className="w-4 h-4" /> },
+    { id: "discovery", label: "Lead Discovery", icon: <Radio className="w-4 h-4" /> },
     { id: "calendar", label: "Calendar", icon: <CalendarIcon className="w-4 h-4" /> },
     { id: "tasks", label: "Tasks", icon: <CheckSquare className="w-4 h-4" /> },
     { id: "team", label: "Team", icon: <Contact className="w-4 h-4" /> },

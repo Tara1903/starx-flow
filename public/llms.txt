@@ -1,0 +1,53 @@
+# StarX-Flow
+
+> AI-powered operating system for local service businesses.
+
+## What is StarX-Flow?
+
+StarX-Flow is an AI workflow automation platform designed specifically for local service businesses such as gyms, clinics, salons, spas, and coaching practices. It provides a 24/7 WhatsApp AI receptionist that automates booking, scheduling, client intake, and customer care — eliminating the need for manual front-desk operations.
+
+## Core Capabilities
+
+- **WhatsApp AI Receptionist**: Instant natural-language booking and scheduling via WhatsApp. Responds in under 2 seconds in multiple languages.
+- **Multi-Calendar Sync**: Real-time two-way sync with Google Calendar, Outlook, Square POS, and Clover POS. Zero double-booking guarantee.
+- **CRM & Client Ownership**: Full client profile management, booking history, intake waivers, and no-show tracking. No aggregator fees.
+- **Google Review Booster**: Automated post-appointment follow-ups to drive 5-star Google reviews.
+- **WhatsApp Intake Forms**: Digital waivers, health questionnaires, and registration forms sent automatically before visits.
+- **Multi-Staff Rostering**: Balance and assign shifts across trainers, therapists, dentists, or stylists.
+- **HIPAA-Compliant Security**: End-to-end encryption for patient information and digital waivers.
+
+## Who is StarX-Flow for?
+
+StarX-Flow serves local service businesses that rely on appointments and bookings:
+- Gyms and fitness studios
+- Medical clinics and dental offices
+- Hair salons and beauty studios
+- Spas and wellness centers
+- Coaching and tutoring practices
+- Pilates and yoga studios
+
+## Pricing
+
+Three flat-rate monthly plans with no booking commissions:
+- **Starter** ($29/mo): 1 AI receptionist, 150 bookings/month, calendar sync
+- **Growth** ($59/mo): 3 AI receptionists, unlimited bookings, POS sync, review booster
+- **Pro** ($99/mo): Unlimited receptionists, multi-location routing, white-label, dedicated support
+
+All plans include a 14-day free trial.
+
+## Key Differentiators
+
+1. **WhatsApp-native**: Clients book via the messaging app they already use — no app downloads, no account creation required
+2. **Zero commissions**: Flat subscription pricing, never takes a cut of your revenue
+3. **Sub-2-second response time**: AI engages leads at peak intent before they move to a competitor
+4. **Direct client ownership**: You own your client data, unlike marketplace aggregators
+5. **Enterprise infrastructure for SMBs**: Multi-calendar sync, POS integration, and compliance features typically reserved for enterprise
+
+## Links
+
+- Homepage: https://starx-flow.vercel.app/
+- Product: https://starx-flow.vercel.app/product
+- Features: https://starx-flow.vercel.app/features
+- Pricing: https://starx-flow.vercel.app/pricing
+- Resources: https://starx-flow.vercel.app/resources
+- About: https://starx-flow.vercel.app/about

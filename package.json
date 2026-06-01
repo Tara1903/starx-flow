@@ -4,26 +4,25 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
-    "preview": "vite preview",
-    "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@supabase/supabase-js": "^2.106.1",
-    "@tailwindcss/vite": "^4.1.14",
-    "@vitejs/plugin-react": "^5.0.4",
+    "@tailwindcss/postcss": "^4.3.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "next": "^16.2.7",
+    "postcss": "^8.5.15",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
-    "react-helmet-async": "^3.0.0",
     "react-hook-form": "^7.75.0",
     "react-joyride": "^3.1.0",
-    "react-router-dom": "^7.15.0",
     "tailwind-merge": "^3.5.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.13"
@@ -35,7 +34,6 @@
     "autoprefixer": "^10.4.21",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "typescript": "~5.8.2"
   }
 }

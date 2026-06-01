@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { motion } from "motion/react";
 import { Star, MessageSquare, Quote } from "lucide-react";
@@ -97,3 +98,4 @@ export function Testimonials() {
     </section>
   );
 }
+

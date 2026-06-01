@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, CheckCircle2, PhoneMissed, Star } from "lucide-react";
@@ -167,12 +169,11 @@ export function Hero() {
           >
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full surface-primary text-[11px] font-bold tracking-widest text-zinc-300 uppercase mb-8 shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              AI Operating System for Local Businesses
+              Autonomous Front Desk
             </div>
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-white leading-[1.05] mb-6">
-              Your business, <br />
-              <span className="text-zinc-500">running itself.</span>
+              Your front desk, <br />`n              <span className="text-zinc-500">now on autopilot.</span>
             </h1>
             
             <p className="text-lg sm:text-xl text-zinc-400 font-medium leading-relaxed max-w-lg mb-10">
@@ -194,7 +195,7 @@ export function Hero() {
               <div className="flex -space-x-2">
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="w-8 h-8 rounded-full bg-zinc-800 border-2 border-black flex items-center justify-center overflow-hidden">
-                    <img src={`https://i.pravatar.cc/100?img=${10 + i}`} alt="Avatar" className="w-full h-full object-cover opacity-80" />
+                    <img src={`https://i.pravatar.cc/100?img=${10 + i}`} alt="Customer avatar" className="w-full h-full object-cover opacity-80" />
                   </div>
                 ))}
               </div>
@@ -311,3 +312,4 @@ export function Hero() {
     </section>
   );
 }
+

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { motion } from "motion/react";
 import { Zap, Activity, Clock, DollarSign, ArrowUpRight } from "lucide-react";
@@ -83,3 +84,4 @@ export function KPIGrid() {
     </div>
   );
 }
+

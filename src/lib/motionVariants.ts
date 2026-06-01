@@ -1,3 +1,4 @@
+"use client";
 import type { Variants, Transition } from "motion/react";
 
 // ── Reusable transitions ──

@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/use-cases/layout,_N_T_/use-cases/whatsapp-automation/layout,_N_T_/use-cases/whatsapp-automation/page,_N_T_/use-cases/whatsapp-automation"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/use-cases/whatsapp-automation/__PAGE__",
+    "/use-cases/whatsapp-automation",
+    "/use-cases",
+    "/_index",
+    "/_head"
+  ]
+}

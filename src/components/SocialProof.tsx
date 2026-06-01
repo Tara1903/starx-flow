@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { motion } from "motion/react";
 
@@ -22,8 +23,10 @@ export function SocialProof() {
         <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-[#0a0a0a] to-transparent z-10 pointer-events-none" />
         <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-[#0a0a0a] to-transparent z-10 pointer-events-none" />
         
+        <div className="sr-only">Our partners include: Ironwood Fitness, Apex Chiropractic, Aura Salon & Spa, Summit Coaching, and Zenith Spas.</div>
         <motion.div
           animate={{ x: ["0%", "-50%"] }}
+          aria-hidden="true"
           transition={{ duration: 40, ease: "linear", repeat: Infinity }}
           className="flex whitespace-nowrap gap-20 items-center px-8 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700"
         >
@@ -56,3 +59,4 @@ export function SocialProof() {
     </section>
   );
 }
+

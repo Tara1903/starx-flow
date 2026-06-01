@@ -1,0 +1,19 @@
+{
+  "name": "StarX-Flow",
+  "short_name": "StarX-Flow",
+  "description": "AI Workflow Automation Platform for Local Service Businesses",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#10b981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"]
+}

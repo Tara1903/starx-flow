@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { motion } from 'motion/react';
 import { ShieldCheck, Flame, Check, AlertCircle } from 'lucide-react';
@@ -159,3 +160,4 @@ export function ReadinessScore({
     </div>
   );
 }
+

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { MessageCircle, Phone, Star, Instagram, Globe, Wifi, Settings, Shield } from "lucide-react";
 import { motion } from "motion/react";
@@ -148,3 +149,4 @@ export function ChannelGrid({ onOpenIntegration }: ChannelGridProps) {
     </div>
   );
 }
+

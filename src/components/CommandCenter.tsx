@@ -1,13 +1,16 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from 'next/navigation';
+
 import { Search, Command, ArrowRight, Sparkles, MessageSquare, Calendar, Settings, ShieldCheck, Wifi } from "lucide-react";
 
 export function CommandCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -33,7 +36,7 @@ export function CommandCenter() {
 
   const handleAction = (path: string) => {
     setIsOpen(false);
-    navigate(path);
+    router.push(path);
   };
 
   const actions = [

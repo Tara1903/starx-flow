@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { 
   Home, MessageSquare, Layers, Brain, BarChart3, Radio, Settings,
@@ -6,7 +8,8 @@ import {
 } from "lucide-react";
 import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
 import { useAuthStore } from "../../store/authStore";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from 'next/navigation';
+
 import { cn } from "../../lib/utils";
 
 interface DashboardTopBarProps {
@@ -20,11 +23,11 @@ export function DashboardTopBar({ onNewWorkflowClick }: DashboardTopBarProps) {
   const activeWorkflowsCount = workflows.filter((w) => w.isActive).length;
   
   const logout = useAuthStore((s) => s.logout);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    router.push("/");
   };
 
   const sectionDetails: Record<DashboardSection, {
@@ -46,6 +49,16 @@ export function DashboardTopBar({ onNewWorkflowClick }: DashboardTopBarProps) {
       title: "Automation Flows",
       subtitle: "Configure instant triggers & intelligent AI actions",
       icon: <Layers className="w-4 h-4 text-blue-400" />
+    },
+    campaigns: {
+      title: "Campaign Scheduling",
+      subtitle: "Execute targeted outreach campaigns across channels",
+      icon: <Sparkles className="w-4 h-4 text-fuchsia-400" />
+    },
+    discovery: {
+      title: "Lead Discovery",
+      subtitle: "Find and qualify new growth opportunities automatically",
+      icon: <HelpCircle className="w-4 h-4 text-sky-400" />
     },
     crm: {
       title: "Customer Directory",

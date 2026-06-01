@@ -1,10 +1,11 @@
+"use client";
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import { Brain, MessageSquare, Send, Sparkles } from "lucide-react";
 import { useAuthStore, type Workflow } from "../../store/authStore";
 import { cn } from "../../lib/utils";
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY as string | undefined;
 
 const FALLBACK_RESPONSES: Record<Workflow["aiTone"], string[]> = {
   Friendly: [
@@ -177,3 +178,4 @@ export function AIChatTester() {
     </div>
   );
 }
+

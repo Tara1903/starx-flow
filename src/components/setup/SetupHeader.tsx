@@ -1,18 +1,21 @@
+"use client";
+
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
+
 import { useOnboardingStore } from '../../store/onboardingStore';
 import { useAuthStore } from '../../store/authStore';
 import { ProgressBar } from './ProgressBar';
 import { Clock, LogOut, Sparkles } from 'lucide-react';
 
 export function SetupHeader() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { progressPercent, remainingMinutes } = useOnboardingStore();
   const { logout } = useAuthStore();
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    router.push('/');
   };
 
   return (

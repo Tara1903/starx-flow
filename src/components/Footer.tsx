@@ -1,5 +1,6 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import Link from 'next/link';
+
 import { Sparkles, ArrowRight } from "lucide-react";
 import { GlassPanel } from "./ui/GlassPanel";
 
@@ -15,7 +16,7 @@ export function Footer() {
             
             {/* Brand block (Spans 2 columns on lg) */}
             <div className="lg:col-span-2 space-y-6">
-              <Link to="/" className="flex items-center gap-3 w-fit">
+              <Link href="/" className="flex items-center gap-3 w-fit">
                 <img
                   src="/logo.svg"
                   alt="StarX Flow Logo"
@@ -34,11 +35,11 @@ export function Footer() {
                 Industries
               </h4>
               <ul className="space-y-4 text-sm text-zinc-400 font-semibold">
-                <li><Link to="/" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Gyms & Fitness</Link></li>
-                <li><Link to="/" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Medical & Clinics</Link></li>
-                <li><Link to="/" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Salons & Beauty</Link></li>
-                <li><Link to="/" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Spas & Wellness</Link></li>
-                <li><Link to="/" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Coaching & Tutors</Link></li>
+                <li><Link href="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Gyms & Fitness</Link></li>
+                <li><Link href="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Medical & Clinics</Link></li>
+                <li><Link href="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Salons & Beauty</Link></li>
+                <li><Link href="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Spas & Wellness</Link></li>
+                <li><Link href="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Coaching & Tutors</Link></li>
               </ul>
             </div>
 
@@ -49,11 +50,11 @@ export function Footer() {
                 Capabilities
               </h4>
               <ul className="space-y-4 text-sm text-zinc-400 font-semibold">
-                <li><Link to="/product" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>WhatsApp AI</Link></li>
-                <li><Link to="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Booking Automation</Link></li>
-                <li><Link to="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Calendar Sync</Link></li>
-                <li><Link to="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Review Booster</Link></li>
-                <li><Link to="/product" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Intake Automation</Link></li>
+                <li><Link href="/product" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>WhatsApp AI</Link></li>
+                <li><Link href="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Booking Automation</Link></li>
+                <li><Link href="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Calendar Sync</Link></li>
+                <li><Link href="/features" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Review Booster</Link></li>
+                <li><Link href="/product" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Intake Automation</Link></li>
               </ul>
             </div>
 
@@ -64,11 +65,11 @@ export function Footer() {
                 Company
               </h4>
               <ul className="space-y-4 text-sm text-zinc-400 font-semibold">
-                <li><Link to="/about" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>About Us</Link></li>
-                <li><Link to="/pricing" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Pricing & Plans</Link></li>
-                <li><Link to="/resources" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Resources</Link></li>
-                <li><Link to="/privacy" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Privacy Policy</Link></li>
-                <li><Link to="/terms" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Terms of Service</Link></li>
+                <li><Link href="/about" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>About Us</Link></li>
+                <li><Link href="/pricing" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Pricing & Plans</Link></li>
+                <li><Link href="/resources" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Resources</Link></li>
+                <li><Link href="/privacy" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Privacy Policy</Link></li>
+                <li><Link href="/terms" className="group flex items-center gap-2 hover:text-emerald-400 transition-colors"><span className="w-0 group-hover:w-3 transition-all duration-300 overflow-hidden"><ArrowRight className="w-3 h-3"/></span>Terms of Service</Link></li>
               </ul>
             </div>
 
@@ -78,7 +79,7 @@ export function Footer() {
           <div className="pt-8 border-t border-white/5 flex flex-col lg:flex-row items-center justify-between gap-6 text-xs font-semibold text-zinc-500">
             <span>&copy; {new Date().getFullYear()} StarX Flow. All rights reserved.</span>
             <div className="flex flex-wrap justify-center gap-4 lg:gap-6 items-center">
-              <Link to="/admin" className="hover:text-white transition-colors">Admin Login</Link>
+              <Link href="/admin" className="hover:text-white transition-colors">Admin Login</Link>
               <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-white/10" />
               <span>Powered by StarX AI Architecture</span>
               <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-white/10" />

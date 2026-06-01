@@ -1,0 +1,7 @@
+User-Agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /setup/
+
+Sitemap: https://starx-flow.vercel.app/sitemap.xml

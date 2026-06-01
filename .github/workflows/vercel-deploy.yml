@@ -1,0 +1,46 @@
+name: Vercel Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install outreach frontend dependencies
+        run: npm --prefix ai-outreach/ai-outreach-automation-system install
+
+      - name: Run workspace checks
+        run: npm run lint:all
+
+      - name: Deploy root frontend to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_ROOT }}
+          working-directory: .
+          vercel-args: '--prod --confirm'
+
+      - name: Deploy outreach frontend to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_OUTREACH }}
+          working-directory: ai-outreach/ai-outreach-automation-system
+          vercel-args: '--prod --confirm'

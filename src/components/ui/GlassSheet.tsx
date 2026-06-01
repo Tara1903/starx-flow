@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
@@ -86,7 +87,7 @@ export function GlassSheet({
               </div>
             )}
 
-            {(title || onClose) && (
+            {(title || !!onClose) && (
               <div className={cn(
                 "flex items-center justify-between px-6 py-5 border-b border-white/5",
                 side === 'bottom' && "mt-6"

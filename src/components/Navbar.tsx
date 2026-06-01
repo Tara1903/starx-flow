@@ -1,7 +1,11 @@
+"use client";
+
 import React from "react";
 import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
 import { useUIStore } from "../store/uiStore";
 import { useAuthStore } from "../store/authStore";
 import { GlassButton } from "./ui/GlassButton";
@@ -12,20 +16,20 @@ export function Navbar() {
   const openSignup = useUIStore((state) => state.openSignup);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const logout = useAuthStore((state) => state.logout);
-  const navigate = useNavigate();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   return (
     <>
       <motion.nav
+        aria-label="Main navigation"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="fixed top-0 left-0 right-0 z-50 bg-black/70 backdrop-blur-xl border-b border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] will-change-transform"
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link
-            to="/"
+          <Link href="/"
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
             <img
@@ -35,39 +39,33 @@ export function Navbar() {
             />
           </Link>
           <div className="hidden md:flex gap-8 text-sm font-medium text-zinc-400 tracking-wide items-center">
-            <Link
-              to="/product"
+            <Link href="/product"
               className="hover:text-emerald-400 transition-colors"
             >
               Product
             </Link>
-            <Link
-              to="/features"
+            <Link href="/features"
               className="hover:text-emerald-400 transition-colors"
             >
               Features
             </Link>
-            <Link
-              to="/pricing"
+            <Link href="/pricing"
               className="hover:text-emerald-400 transition-colors"
             >
               Pricing
             </Link>
-            <Link
-              to="/resources"
+            <Link href="/resources"
               className="hover:text-emerald-400 transition-colors"
             >
               Resources
             </Link>
-            <Link
-              to="/about"
+            <Link href="/about"
               className="hover:text-emerald-400 transition-colors"
             >
               About
             </Link>
             {isLoggedIn && (
-              <Link
-                to="/dashboard"
+              <Link href="/dashboard"
                 className="text-emerald-400 font-semibold hover:text-emerald-300 transition-colors flex items-center gap-2 ml-2"
               >
                 <div className="relative flex items-center justify-center w-4 h-4">
@@ -84,14 +82,13 @@ export function Navbar() {
                 <button
                   onClick={() => {
                     logout();
-                    navigate("/");
+                    router.push("/");
                   }}
                   className="text-zinc-400 hover:text-white transition-colors hidden sm:block"
                 >
                   Logout
                 </button>
-                <Link
-                  to="/dashboard"
+                <Link href="/dashboard"
                   data-magnetic
                   className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-5 py-2.5 rounded-full hover:bg-emerald-500 hover:border-emerald-500 hover:text-black transition-all shadow-[0_0_15px_rgba(16,185,129,0.15)] flex items-center gap-2 group premium-glow-hover"
                 >
@@ -122,6 +119,8 @@ export function Navbar() {
             <button
               className="md:hidden p-2 text-zinc-400 hover:text-white"
               onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMobileMenuOpen}
             >
               <Menu size={24} />
             </button>
@@ -137,36 +136,31 @@ export function Navbar() {
         title="Menu"
       >
         <div className="flex flex-col gap-6 pt-4">
-          <Link
-            to="/product"
+          <Link href="/product"
             onClick={() => setIsMobileMenuOpen(false)}
             className="text-lg font-medium text-zinc-300 hover:text-emerald-400 transition-colors"
           >
             Product
           </Link>
-          <Link
-            to="/features"
+          <Link href="/features"
             onClick={() => setIsMobileMenuOpen(false)}
             className="text-lg font-medium text-zinc-300 hover:text-emerald-400 transition-colors"
           >
             Features
           </Link>
-          <Link
-            to="/pricing"
+          <Link href="/pricing"
             onClick={() => setIsMobileMenuOpen(false)}
             className="text-lg font-medium text-zinc-300 hover:text-emerald-400 transition-colors"
           >
             Pricing
           </Link>
-          <Link
-            to="/resources"
+          <Link href="/resources"
             onClick={() => setIsMobileMenuOpen(false)}
             className="text-lg font-medium text-zinc-300 hover:text-emerald-400 transition-colors"
           >
             Resources
           </Link>
-          <Link
-            to="/about"
+          <Link href="/about"
             onClick={() => setIsMobileMenuOpen(false)}
             className="text-lg font-medium text-zinc-300 hover:text-emerald-400 transition-colors"
           >
@@ -175,8 +169,7 @@ export function Navbar() {
           <div className="h-px bg-white/10 my-2" />
           {isLoggedIn ? (
             <>
-              <Link
-                to="/dashboard"
+              <Link href="/dashboard"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="text-lg font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
               >
@@ -186,7 +179,7 @@ export function Navbar() {
                 onClick={() => {
                   logout();
                   setIsMobileMenuOpen(false);
-                  navigate("/");
+                  router.push("/");
                 }}
                 className="text-left text-lg font-medium text-zinc-300 hover:text-white transition-colors"
               >

@@ -1,14 +1,17 @@
+"use client";
+
 import React, { useState } from 'react';
 import { useOnboardingStore } from '../../store/onboardingStore';
 import { ChecklistItem } from './ChecklistItem';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
+
 import { ShieldCheck, Flame, ChevronUp } from 'lucide-react';
 import { GlassPanel } from '../ui/GlassPanel';
 import { GlassSheet } from '../ui/GlassSheet';
 
 export function SetupChecklist({ mobile = false }: { mobile?: boolean }) {
   const { steps, currentStep, completedSteps, skippedSteps } = useOnboardingStore();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
   // Dynamic readiness score calculation
@@ -19,7 +22,7 @@ export function SetupChecklist({ mobile = false }: { mobile?: boolean }) {
   const handleStepClick = (stepId: string, route: string) => {
     const targetStep = steps.find(s => s.id === stepId);
     if (targetStep && targetStep.state !== 'locked') {
-      navigate(route);
+      router.push(route);
     }
   };
 

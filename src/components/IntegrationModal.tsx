@@ -1,6 +1,7 @@
+"use client";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Key, Save, Loader2, CheckCircle2, ShieldCheck, Shield, Copy } from 'lucide-react';
+import { X, Key, Save, Loader2, CheckCircle2, ShieldCheck, Shield, Copy, QrCode } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
@@ -25,6 +26,59 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
   // Snippet Copy State
   const [copied, setCopied] = useState(false);
   const user = useAuthStore(s => s.user);
+
+  // Outreach WhatsApp Engine State
+  const [outreachConnection, setOutreachConnection] = useState<any>(null);
+  const [pairingLoading, setPairingLoading] = useState(false);
+
+  const startWhatsAppPairing = async () => {
+    setPairingLoading(true);
+    try {
+      // Create a pending connection record so the Node backend starts the Baileys session
+      const { error } = await supabase
+        .from('outreach_channel_connections')
+        .upsert({ 
+          channel: 'whatsapp', 
+          status: 'connecting',
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'channel' });
+      
+      if (error) throw error;
+    } catch (err: any) {
+      console.error('Failed to start WhatsApp pairing', err);
+    } finally {
+      setPairingLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen || channelKey !== 'WhatsApp') return;
+
+    // Fetch initial state
+    supabase
+      .from('outreach_channel_connections')
+      .select('*')
+      .eq('channel', 'whatsapp')
+      .single()
+      .then(({ data }) => setOutreachConnection(data));
+
+    // Subscribe to realtime updates
+    const sub = supabase
+      .channel('whatsapp_qr_updates')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'outreach_channel_connections',
+        filter: 'channel=eq.whatsapp'
+      }, (payload) => {
+        setOutreachConnection(payload.new);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sub);
+    };
+  }, [isOpen, channelKey]);
   
   const chatSnippet = `<script>
   window.STARX_CONFIG = {
@@ -119,7 +173,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
   const renderFields = () => {
     switch (channelKey) {
       case 'WhatsApp':
-        if (isWhatsAppConnected) {
+        if (isWhatsAppConnected && whatsappCreds.phone_number_id) {
           return (
             <div className="flex flex-col items-center justify-center py-4 text-center space-y-4">
               <div className="relative">
@@ -130,37 +184,78 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
               </div>
               <div className="space-y-1">
                 <h4 className="text-white font-bold text-base">Meta API Connected</h4>
-                {whatsappCreds.phone_number_id && (
-                  <p className="text-emerald-400 font-mono text-sm">Phone ID: {whatsappCreds.phone_number_id}</p>
-                )}
-              </div>
-              <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-lg flex gap-2 items-start text-left w-full">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
-                  Your AI Bot is active and listening via Meta Webhooks. Any message from customers will be processed automatically.
-                </p>
+                <p className="text-emerald-400 font-mono text-sm">Phone ID: {whatsappCreds.phone_number_id}</p>
               </div>
             </div>
           );
         }
 
         return (
-          <>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">Meta Access Token</label>
-              <input 
-                type="password" name="access_token" value={formData.access_token || ''} onChange={handleChange} required
-                placeholder="EAALXxxxxxxxxxxxx..." className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500/50 font-mono"
-              />
+          <div className="space-y-4">
+            {outreachConnection?.status === 'connected' ? (
+              <div className="flex flex-col items-center justify-center py-4 text-center space-y-4">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                    <ShieldCheck className="w-8 h-8 text-emerald-400" />
+                  </div>
+                  <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-[#0a0a0a] rounded-full animate-pulse" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-white font-bold text-base">WhatsApp Web Connected</h4>
+                  <p className="text-emerald-400 text-sm">Session active and listening.</p>
+                </div>
+              </div>
+            ) : outreachConnection?.qr_code_data ? (
+              <div className="rounded-[1.15rem] border border-[color:var(--border-subtle)] bg-[color:var(--surface-0)] p-5 text-center">
+                <div className="mb-4 flex items-center justify-center gap-2 text-[color:var(--text-dim)]">
+                  <QrCode size={16} />
+                  <span className="text-xs uppercase tracking-[0.16em]">Pairing QR</span>
+                </div>
+                <img
+                  src={outreachConnection.qr_code_data}
+                  alt="WhatsApp QR code"
+                  className="mx-auto max-w-[240px] rounded-[1rem] border border-[color:var(--border-subtle)] bg-white p-3"
+                />
+                <p className="mt-4 text-sm text-[color:var(--text-muted)]">
+                  Open WhatsApp on your phone, go to linked devices, and scan this code.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-[1.15rem] border border-[color:var(--border-subtle)] bg-[color:var(--surface-0)] p-5 text-center">
+                <QrCode size={32} className="mx-auto text-zinc-500 mb-3" />
+                <h4 className="text-white font-bold mb-2">WhatsApp Autonomous Engine</h4>
+                <p className="text-sm text-zinc-400 mb-4">
+                  Connect via QR code to enable the Baileys autonomous outreach engine.
+                </p>
+                <button
+                  type="button"
+                  onClick={startWhatsAppPairing}
+                  disabled={pairingLoading}
+                  className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-500/20 transition-colors"
+                >
+                  {pairingLoading ? 'Starting Node Engine...' : 'Generate QR Code'}
+                </button>
+              </div>
+            )}
+            
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <p className="text-xs text-zinc-500 font-semibold mb-3 uppercase tracking-wider">Alternative: Meta Cloud API</p>
+              <div className="space-y-1.5 mb-3">
+                <label className="text-xs font-medium text-zinc-400">Meta Access Token</label>
+                <input 
+                  type="password" name="access_token" value={formData.access_token || ''} onChange={handleChange}
+                  placeholder="EAALXxxxxxxxxxxxx..." className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-emerald-500/50 font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-zinc-400">Phone Number ID</label>
+                <input 
+                  type="text" name="phone_number_id" value={formData.phone_number_id || ''} onChange={handleChange}
+                  placeholder="123456789012345" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-emerald-500/50 font-mono"
+                />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">Phone Number ID</label>
-              <input 
-                type="text" name="phone_number_id" value={formData.phone_number_id || ''} onChange={handleChange} required
-                placeholder="123456789012345" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500/50 font-mono"
-              />
-            </div>
-          </>
+          </div>
         );
       case 'Instagram':
         return (

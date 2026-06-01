@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { useAuthStore } from './authStore';
 
 /* ──────────────────────────────────────────────
    TYPES
@@ -180,7 +181,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       // 1. Get current user
       let user: any = null;
       if (isSupabaseConfigured) {
-        user = (await supabase.auth.getUser()).data.user;
+        user = useAuthStore.getState().user;
       }
       
       // 2. Try loading from LocalStorage first (for instant offline response)
@@ -272,7 +273,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     }
     
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = useAuthStore.getState().user;
       if (!user) return;
       saveToLocalStorage({ ...get(), ...newState } as any, user.id);
       await supabase.from('onboarding_progress').update({
@@ -302,7 +303,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     }
     
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = useAuthStore.getState().user;
       if (!user) return;
       saveToLocalStorage({ ...get(), ...newState } as any, user.id);
       await supabase.from('onboarding_progress').update({
@@ -329,7 +330,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     }
     
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = useAuthStore.getState().user;
       if (!user) return;
       saveToLocalStorage({ ...get(), ...newState } as any, user.id);
       await supabase.from('onboarding_progress').update({
@@ -356,7 +357,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     const { aiConfig } = get();
     if (!isSupabaseConfigured) return;
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = useAuthStore.getState().user;
       if (!user) return;
 
       await supabase.from('onboarding_progress').update({
@@ -383,7 +384,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     }
     
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = useAuthStore.getState().user;
       if (!user) return;
       saveToLocalStorage({ ...get(), testResults: newResults } as any, user.id);
 
@@ -405,7 +406,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     }
     
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = useAuthStore.getState().user;
       if (!user) return;
       saveToLocalStorage({ ...get(), isComplete: true } as any, user.id);
 
@@ -424,7 +425,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     }
     
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = useAuthStore.getState().user;
       if (!user) return;
       saveToLocalStorage({ ...get(), isComplete: true } as any, user.id);
 

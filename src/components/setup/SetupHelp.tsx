@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { HelpCircle, X, MessageSquare, BookOpen, ExternalLink, ChevronDown, Sparkles } from 'lucide-react';

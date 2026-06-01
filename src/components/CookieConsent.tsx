@@ -1,7 +1,9 @@
+"use client";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Cookie, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
+
 
 export function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false);
@@ -52,7 +54,7 @@ export function CookieConsent() {
                 <h3 className="text-sm font-semibold text-white mb-1">We respect your privacy</h3>
                 <p className="text-xs text-zinc-400 leading-relaxed">
                   We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. By clicking "Accept", you consent to our use of cookies as detailed in our{' '}
-                  <Link to="/privacy" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2">Privacy Policy</Link>.
+                  <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2">Privacy Policy</Link>.
                 </p>
               </div>
             </div>
