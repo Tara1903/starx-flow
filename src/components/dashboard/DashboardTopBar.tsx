@@ -50,16 +50,6 @@ export function DashboardTopBar({ onNewWorkflowClick }: DashboardTopBarProps) {
       subtitle: "Configure instant triggers & intelligent AI actions",
       icon: <Layers className="w-4 h-4 text-blue-400" />
     },
-    campaigns: {
-      title: "Campaign Scheduling",
-      subtitle: "Execute targeted outreach campaigns across channels",
-      icon: <Sparkles className="w-4 h-4 text-fuchsia-400" />
-    },
-    discovery: {
-      title: "Lead Discovery",
-      subtitle: "Find and qualify new growth opportunities automatically",
-      icon: <HelpCircle className="w-4 h-4 text-sky-400" />
-    },
     crm: {
       title: "Customer Directory",
       subtitle: "Manage all leads and client relationships",

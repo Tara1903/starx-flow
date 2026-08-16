@@ -10,8 +10,6 @@ export type DashboardSection =
   | 'tasks'
   | 'team'
   | 'workflows'
-  | 'campaigns'
-  | 'discovery'
   | 'playground'
   | 'analytics'
   | 'channels'
@@ -251,8 +249,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      
-      let allConvos: ConversationThread[] = [];
 
       if (data) {
         const mappedConvos: ConversationThread[] = data.map((dbConv: any) => {
@@ -283,52 +279,9 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
             }))
           };
         });
-        allConvos = [...allConvos, ...mappedConvos];
+
+        set({ conversations: mappedConvos });
       }
-
-      // Fetch Outreach Conversations (Baileys Engine)
-      const { data: outreachData, error: outreachError } = await supabase
-        .from('outreach_conversations')
-        .select(`
-          *,
-          outreach_contacts (*),
-          outreach_conversation_messages (*)
-        `)
-        .order('updated_at', { ascending: false });
-
-      if (!outreachError && outreachData) {
-        const outreachConvos: ConversationThread[] = outreachData.map((dbConv: any) => {
-          const sortedMsgs = (dbConv.outreach_conversation_messages || []).sort(
-            (a: any, b: any) => new Date(a.timestamp || a.created_at).getTime() - new Date(b.timestamp || b.created_at).getTime()
-          );
-          
-          const lastMsg = sortedMsgs[sortedMsgs.length - 1];
-
-          return {
-            id: dbConv.id,
-            db_id: dbConv.id,
-            lead_id: dbConv.outreach_contacts?.lead_id || null,
-            lead: dbConv.outreach_contacts,
-            customerName: dbConv.outreach_contacts?.name || 'Automated Outreach',
-            channel: dbConv.channel === 'whatsapp' ? 'WhatsApp' : 'Email' as any,
-            status: dbConv.status,
-            unread: dbConv.unread_count > 0,
-            lastMessage: lastMsg?.content || 'No messages yet',
-            lastMessageAt: lastMsg ? formatTime(lastMsg.timestamp || lastMsg.created_at) : '',
-            messages: sortedMsgs.map((m: any) => ({
-              id: m.id,
-              db_id: m.id,
-              sender: m.sender_type === 'user' ? 'user' : m.sender_type === 'ai' ? 'ai' : 'human',
-              text: m.content,
-              timestamp: formatTime(m.timestamp || m.created_at)
-            }))
-          };
-        });
-        allConvos = [...allConvos, ...outreachConvos];
-      }
-
-      // Sort all convos by lastMessageAt (approximate by sorting messages)
-      set({ conversations: allConvos });
     } catch (err) {
       console.error("Error fetching inbox data:", err);
     } finally {

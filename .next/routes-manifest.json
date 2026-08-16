@@ -99,6 +99,24 @@
       "namedRegex": "^/admin/setup(?:/)?$"
     },
     {
+      "page": "/api/meta/auth",
+      "regex": "^/api/meta/auth(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/meta/auth(?:/)?$"
+    },
+    {
+      "page": "/api/meta/callback",
+      "regex": "^/api/meta/callback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/meta/callback(?:/)?$"
+    },
+    {
+      "page": "/collections",
+      "regex": "^/collections(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/collections(?:/)?$"
+    },
+    {
       "page": "/dashboard",
       "regex": "^/dashboard(?:/)?$",
       "routeKeys": {},

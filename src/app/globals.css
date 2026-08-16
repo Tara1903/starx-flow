@@ -928,3 +928,38 @@ h3 {
     transform: none !important;
   }
 }
+
+/* ============================================
+   COLLECTION SPECIFIC STYLES
+   ============================================ */
+.sticky-filter-bar {
+  position: sticky;
+  top: 73px;
+  z-index: 40;
+}
+
+/* Custom range slider styling for price filter */
+input[type=range].accent-emerald-500 {
+  accent-color: #10b981;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  border: none;
+}

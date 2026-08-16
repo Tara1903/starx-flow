@@ -39,10 +39,10 @@ export function Navbar() {
             />
           </Link>
           <div className="hidden md:flex gap-8 text-sm font-medium text-zinc-400 tracking-wide items-center">
-            <Link href="/product"
+            <Link href="/collections"
               className="hover:text-emerald-400 transition-colors"
             >
-              Product
+              Collection
             </Link>
             <Link href="/features"
               className="hover:text-emerald-400 transition-colors"
@@ -136,11 +136,11 @@ export function Navbar() {
         title="Menu"
       >
         <div className="flex flex-col gap-6 pt-4">
-          <Link href="/product"
+          <Link href="/collections"
             onClick={() => setIsMobileMenuOpen(false)}
             className="text-lg font-medium text-zinc-300 hover:text-emerald-400 transition-colors"
           >
-            Product
+            Collection
           </Link>
           <Link href="/features"
             onClick={() => setIsMobileMenuOpen(false)}

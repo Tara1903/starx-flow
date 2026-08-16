@@ -60,9 +60,7 @@ export function DashboardSidebar() {
       icon: <Layers className="w-4 h-4" />,
       badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : undefined
     },
-    { id: "campaigns", label: "Campaigns", icon: <BarChart3 className="w-4 h-4" /> },
     { id: "crm", label: "Customers", icon: <Users className="w-4 h-4" /> },
-    { id: "discovery", label: "Lead Discovery", icon: <Radio className="w-4 h-4" /> },
     { id: "calendar", label: "Calendar", icon: <CalendarIcon className="w-4 h-4" /> },
     { id: "tasks", label: "Tasks", icon: <CheckSquare className="w-4 h-4" /> },
     { id: "team", label: "Team", icon: <Contact className="w-4 h-4" /> },

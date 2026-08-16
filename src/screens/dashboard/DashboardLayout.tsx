@@ -26,8 +26,6 @@ const CrmSection = React.lazy(() => import("./CrmSection").then(m => ({ default:
 const CalendarSection = React.lazy(() => import("./CalendarSection").then(m => ({ default: m.CalendarSection })));
 const TasksSection = React.lazy(() => import("./TasksSection").then(m => ({ default: m.TasksSection })));
 const TeamSection = React.lazy(() => import("./TeamSection").then(m => ({ default: m.TeamSection })));
-const CampaignsSection = React.lazy(() => import("./CampaignsSection").then(m => ({ default: m.CampaignsSection })));
-const DiscoverySection = React.lazy(() => import("./DiscoverySection").then(m => ({ default: m.DiscoverySection })));
 
 export function DashboardLayout() {
   const activeSection = useDashboardStore((s) => s.activeSection);
@@ -100,10 +98,6 @@ export function DashboardLayout() {
         return <AIPlaygroundSection />;
       case "analytics":
         return <AnalyticsSection />;
-      case "campaigns":
-        return <CampaignsSection />;
-      case "discovery":
-        return <DiscoverySection />;
       case "channels":
         return <ChannelsSection onOpenIntegration={handleOpenIntegration} />;
       case "settings":

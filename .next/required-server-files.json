@@ -113,7 +113,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "C:\\Users\\busin\\Documents\\starx-flow",
+    "outputFileTracingRoot": "C:\\Users\\taras\\OneDrive\\Documents\\starx-flow",
     "cacheComponents": false,
     "cacheLife": {
       "default": {
@@ -313,11 +313,11 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.js",
     "turbopack": {
-      "root": "C:\\Users\\busin\\Documents\\starx-flow"
+      "root": "C:\\Users\\taras\\OneDrive\\Documents\\starx-flow"
     },
     "distDirRoot": ".next"
   },
-  "appDir": "C:\\Users\\busin\\Documents\\starx-flow",
+  "appDir": "C:\\Users\\taras\\OneDrive\\Documents\\starx-flow",
   "relativeAppDir": "",
   "files": [
     ".next\\package.json",

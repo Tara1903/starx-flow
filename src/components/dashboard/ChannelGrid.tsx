@@ -126,8 +126,14 @@ export function ChannelGrid({ onOpenIntegration }: ChannelGridProps) {
                 {isConnected ? (
                   <div className="flex items-center gap-1.5 text-emerald-400/80 font-semibold">
                     <Shield className="w-3 h-3 text-emerald-500" />
-                    {ch.key === "WhatsApp" && connectedState?.credentials?.phone ? (
-                      <span>Active: +{connectedState.credentials.phone}</span>
+                    {ch.key === "WhatsApp" ? (
+                      connectedState?.credentials?.connection_type === 'baileys' ? (
+                        <span>Active: WhatsApp Web</span>
+                      ) : connectedState?.credentials?.phone ? (
+                        <span>Active: +{connectedState.credentials.phone}</span>
+                      ) : (
+                        <span>Active: Official API</span>
+                      )
                     ) : (
                       <span>API active & secure</span>
                     )}
@@ -149,4 +155,3 @@ export function ChannelGrid({ onOpenIntegration }: ChannelGridProps) {
     </div>
   );
 }
-

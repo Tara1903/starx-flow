@@ -1,10 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Key, Save, Loader2, CheckCircle2, ShieldCheck, Shield, Copy, QrCode } from 'lucide-react';
+import { X, Key, Save, Loader2, CheckCircle2, ShieldCheck, Shield, Copy } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
+
+import { Facebook } from 'lucide-react';
 
 interface IntegrationModalProps {
   channelKey: string | null;
@@ -26,59 +28,6 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
   // Snippet Copy State
   const [copied, setCopied] = useState(false);
   const user = useAuthStore(s => s.user);
-
-  // Outreach WhatsApp Engine State
-  const [outreachConnection, setOutreachConnection] = useState<any>(null);
-  const [pairingLoading, setPairingLoading] = useState(false);
-
-  const startWhatsAppPairing = async () => {
-    setPairingLoading(true);
-    try {
-      // Create a pending connection record so the Node backend starts the Baileys session
-      const { error } = await supabase
-        .from('outreach_channel_connections')
-        .upsert({ 
-          channel: 'whatsapp', 
-          status: 'connecting',
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'channel' });
-      
-      if (error) throw error;
-    } catch (err: any) {
-      console.error('Failed to start WhatsApp pairing', err);
-    } finally {
-      setPairingLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!isOpen || channelKey !== 'WhatsApp') return;
-
-    // Fetch initial state
-    supabase
-      .from('outreach_channel_connections')
-      .select('*')
-      .eq('channel', 'whatsapp')
-      .single()
-      .then(({ data }) => setOutreachConnection(data));
-
-    // Subscribe to realtime updates
-    const sub = supabase
-      .channel('whatsapp_qr_updates')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'outreach_channel_connections',
-        filter: 'channel=eq.whatsapp'
-      }, (payload) => {
-        setOutreachConnection(payload.new);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(sub);
-    };
-  }, [isOpen, channelKey]);
   
   const chatSnippet = `<script>
   window.STARX_CONFIG = {
@@ -173,7 +122,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
   const renderFields = () => {
     switch (channelKey) {
       case 'WhatsApp':
-        if (isWhatsAppConnected && whatsappCreds.phone_number_id) {
+        if (isWhatsAppConnected) {
           return (
             <div className="flex flex-col items-center justify-center py-4 text-center space-y-4">
               <div className="relative">
@@ -184,97 +133,85 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
               </div>
               <div className="space-y-1">
                 <h4 className="text-white font-bold text-base">Meta API Connected</h4>
-                <p className="text-emerald-400 font-mono text-sm">Phone ID: {whatsappCreds.phone_number_id}</p>
+                {whatsappCreds.phone_number_id && (
+                  <p className="text-emerald-400 font-mono text-sm">Phone ID: {whatsappCreds.phone_number_id}</p>
+                )}
+              </div>
+              <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-lg flex gap-2 items-start text-left w-full">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  Your AI Bot is active and listening via Meta Webhooks. Any message from customers will be processed automatically.
+                </p>
               </div>
             </div>
           );
         }
 
         return (
-          <div className="space-y-4">
-            {outreachConnection?.status === 'connected' ? (
-              <div className="flex flex-col items-center justify-center py-4 text-center space-y-4">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                    <ShieldCheck className="w-8 h-8 text-emerald-400" />
-                  </div>
-                  <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-[#0a0a0a] rounded-full animate-pulse" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-white font-bold text-base">WhatsApp Web Connected</h4>
-                  <p className="text-emerald-400 text-sm">Session active and listening.</p>
-                </div>
-              </div>
-            ) : outreachConnection?.qr_code_data ? (
-              <div className="rounded-[1.15rem] border border-[color:var(--border-subtle)] bg-[color:var(--surface-0)] p-5 text-center">
-                <div className="mb-4 flex items-center justify-center gap-2 text-[color:var(--text-dim)]">
-                  <QrCode size={16} />
-                  <span className="text-xs uppercase tracking-[0.16em]">Pairing QR</span>
-                </div>
-                <img
-                  src={outreachConnection.qr_code_data}
-                  alt="WhatsApp QR code"
-                  className="mx-auto max-w-[240px] rounded-[1rem] border border-[color:var(--border-subtle)] bg-white p-3"
-                />
-                <p className="mt-4 text-sm text-[color:var(--text-muted)]">
-                  Open WhatsApp on your phone, go to linked devices, and scan this code.
-                </p>
-              </div>
-            ) : (
-              <div className="rounded-[1.15rem] border border-[color:var(--border-subtle)] bg-[color:var(--surface-0)] p-5 text-center">
-                <QrCode size={32} className="mx-auto text-zinc-500 mb-3" />
-                <h4 className="text-white font-bold mb-2">WhatsApp Autonomous Engine</h4>
-                <p className="text-sm text-zinc-400 mb-4">
-                  Connect via QR code to enable the Baileys autonomous outreach engine.
-                </p>
-                <button
-                  type="button"
-                  onClick={startWhatsAppPairing}
-                  disabled={pairingLoading}
-                  className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-500/20 transition-colors"
-                >
-                  {pairingLoading ? 'Starting Node Engine...' : 'Generate QR Code'}
-                </button>
-              </div>
-            )}
+          <div className="flex flex-col items-center justify-center py-6 space-y-4">
+            <div className="text-center space-y-2">
+              <h4 className="text-sm font-bold text-white">Connect with Meta</h4>
+              <p className="text-xs text-zinc-400 max-w-xs leading-relaxed">
+                Automatically link your WhatsApp Business and Instagram accounts by securely logging in with Facebook.
+              </p>
+            </div>
             
-            <div className="mt-4 pt-4 border-t border-white/5">
-              <p className="text-xs text-zinc-500 font-semibold mb-3 uppercase tracking-wider">Alternative: Meta Cloud API</p>
-              <div className="space-y-1.5 mb-3">
-                <label className="text-xs font-medium text-zinc-400">Meta Access Token</label>
-                <input 
-                  type="password" name="access_token" value={formData.access_token || ''} onChange={handleChange}
-                  placeholder="EAALXxxxxxxxxxxxx..." className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-emerald-500/50 font-mono"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-400">Phone Number ID</label>
-                <input 
-                  type="text" name="phone_number_id" value={formData.phone_number_id || ''} onChange={handleChange}
-                  placeholder="123456789012345" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-emerald-500/50 font-mono"
-                />
-              </div>
+            <a 
+              href={`/api/meta/auth?userId=${user?.id}`}
+              className="w-full bg-[#1877F2] hover:bg-[#1864D9] text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(24,119,242,0.3)] flex items-center justify-center gap-2"
+            >
+              <Facebook className="w-5 h-5 fill-current" />
+              Continue with Facebook
+            </a>
+            
+            <div className="flex items-start gap-2 mt-4">
+              <div className="w-1.5 h-1.5 bg-[#1877F2] rounded-full mt-1.5 flex-shrink-0" />
+              <p className="text-[10px] text-zinc-500 leading-relaxed text-left">
+                By connecting, you allow StarX to manage messages and access basic profile information for your connected pages.
+              </p>
             </div>
           </div>
         );
       case 'Instagram':
+        if (isConnected) {
+          return (
+            <div className="flex flex-col items-center justify-center py-4 text-center space-y-4">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full bg-pink-500/10 border border-pink-500/20 flex items-center justify-center">
+                  <ShieldCheck className="w-8 h-8 text-pink-400" />
+                </div>
+                <span className="absolute bottom-0 right-0 w-4 h-4 bg-pink-500 border-2 border-[#0a0a0a] rounded-full animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-white font-bold text-base">Instagram Connected</h4>
+              </div>
+              <div className="bg-pink-500/5 border border-pink-500/10 p-3 rounded-lg flex gap-2 items-start text-left w-full">
+                <div className="w-1.5 h-1.5 bg-pink-500 rounded-full mt-1.5 flex-shrink-0" />
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  Your AI Bot is active and listening to Instagram DMs.
+                </p>
+              </div>
+            </div>
+          );
+        }
+
         return (
-          <>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">Instagram Account ID</label>
-              <input 
-                type="text" name="ig_account_id" value={formData.ig_account_id || ''} onChange={handleChange} required
-                placeholder="e.g. 1784XXXXXXXX" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500/50"
-              />
+          <div className="flex flex-col items-center justify-center py-6 space-y-4">
+            <div className="text-center space-y-2">
+              <h4 className="text-sm font-bold text-white">Connect with Meta</h4>
+              <p className="text-xs text-zinc-400 max-w-xs leading-relaxed">
+                Automatically link your Instagram Professional account by securely logging in with Facebook.
+              </p>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">Meta Access Token</label>
-              <input 
-                type="password" name="access_token" value={formData.access_token || ''} onChange={handleChange} required
-                placeholder="EAAO..." className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500/50"
-              />
-            </div>
-          </>
+            
+            <a 
+              href={`/api/meta/auth?userId=${user?.id}`}
+              className="w-full bg-[#1877F2] hover:bg-[#1864D9] text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(24,119,242,0.3)] flex items-center justify-center gap-2"
+            >
+              <Facebook className="w-5 h-5 fill-current" />
+              Continue with Facebook
+            </a>
+          </div>
         );
       case 'SMS':
         return (
@@ -397,7 +334,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
             ) : (
               <>
                 {renderFields()}
-                {(!isConnected) && (
+                {(!isConnected && channelKey !== 'WhatsApp' && channelKey !== 'Instagram') && (
                   <div className="bg-white/[0.02] border border-white/5 p-3 rounded-lg flex gap-2 items-start mt-2">
                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
                     <p className="text-[10px] text-zinc-500 leading-relaxed">
@@ -420,7 +357,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                     {loading ? 'Disconnecting...' : `Disconnect ${channelKey}`}
                   </button>
-                ) : (
+                ) : (channelKey !== 'WhatsApp' && channelKey !== 'Instagram') ? (
                   <button
                     type="submit"
                     disabled={loading}
@@ -429,7 +366,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {loading ? 'Saving...' : (channelKey === 'Web' ? 'Mark as Embedded' : 'Save & Connect')}
                   </button>
-                )}
+                ) : null}
               </div>
             )}
           </form>
