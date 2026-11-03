@@ -10,6 +10,10 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
+  "allowScripts": {
+    "esbuild": true,
+    "sharp": true
+  },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@supabase/ssr": "^0.12.7",
