@@ -7,6 +7,8 @@ export type DashboardSection =
   | 'conversations'
   | 'crm'
   | 'calendar'
+  | 'orders'
+  | 'knowledge'
   | 'tasks'
   | 'team'
   | 'workflows'
@@ -28,12 +30,13 @@ export interface Message {
   conversation_id?: string;
   direction?: 'inbound' | 'outbound';
   status?: 'sent' | 'delivered' | 'read' | 'failed';
+  is_internal?: boolean;
 }
 
 export interface ConversationThread {
   id: string;
   customerName: string;
-  channel: 'WhatsApp' | 'Instagram' | 'SMS';
+  channel: 'WhatsApp' | 'Instagram' | 'SMS' | 'Email' | 'Web' | string;
   status: 'active' | 'resolved' | 'needs_attention' | string;
   lastMessage: string;
   lastMessageAt: string;
@@ -42,11 +45,13 @@ export interface ConversationThread {
   db_id?: string;
   lead_id?: string;
   lead?: any; // To store full lead info for CustomerProfile
+  assigned_to?: string | null;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
 }
 
 export interface ActivityFeedEntry {
   id: string;
-  channel: 'WhatsApp' | 'Instagram' | 'SMS' | 'Reviews' | 'Web';
+  channel: 'WhatsApp' | 'Instagram' | 'SMS' | 'Reviews' | 'Web' | 'Email';
   type: 'success' | 'warning' | 'error' | 'info';
   message: string;
   timeAgo: string;
@@ -70,12 +75,19 @@ interface DashboardState {
   isSidebarCollapsed: boolean;
   isLoading: boolean;
   subscriptionActive: boolean;
+  isInternalMode: boolean;
+  collisionWarning: { isCollision: boolean; activeViewers: string[] } | null;
 
   // Actions
   setActiveSection: (section: DashboardSection) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   selectConversation: (id: string | null) => void;
-  sendMessageToThread: (threadId: string, text: string, sender: 'user' | 'ai' | 'human') => void;
+  setIsInternalMode: (mode: boolean) => void;
+  toggleInternalMode: () => void;
+  setCollisionWarning: (warning: { isCollision: boolean; activeViewers: string[] } | null) => void;
+  setConversationPriority: (threadId: string, priority: 'low' | 'medium' | 'high' | 'urgent') => Promise<void>;
+  setConversationAssignee: (threadId: string, assignedTo: string | null) => Promise<void>;
+  sendMessageToThread: (threadId: string, text: string, sender: 'user' | 'ai' | 'human', isInternal?: boolean) => Promise<void>;
   toggleThreadStatus: (threadId: string, status: string) => void;
   markThreadRead: (threadId: string) => void;
   addActivityEntry: (entry: Omit<ActivityFeedEntry, 'id' | 'timestamp' | 'timeAgo'>) => void;
@@ -122,12 +134,17 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   isSidebarCollapsed: false,
   isLoading: false,
   subscriptionActive: false,
+  isInternalMode: false,
+  collisionWarning: null,
 
   setActiveSection: (section) => set({ activeSection: section }),
   setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
+  setIsInternalMode: (mode) => set({ isInternalMode: mode }),
+  toggleInternalMode: () => set((state) => ({ isInternalMode: !state.isInternalMode })),
+  setCollisionWarning: (warning) => set({ collisionWarning: warning }),
   
   selectConversation: async (id) => {
-    set({ selectedConversationId: id });
+    set({ selectedConversationId: id, collisionWarning: null, isInternalMode: false });
     if (id) {
       // Mark read in DB
       const user = useAuthStore.getState().user;
@@ -142,7 +159,25 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     }
   },
 
-  sendMessageToThread: async (threadId, text, sender) => {
+  setConversationPriority: async (threadId, priority) => {
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === threadId ? { ...c, priority } : c
+      )
+    }));
+    await supabase.from('conversations').update({ metadata: { priority } }).eq('id', threadId);
+  },
+
+  setConversationAssignee: async (threadId, assignedTo) => {
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === threadId ? { ...c, assigned_to: assignedTo } : c
+      )
+    }));
+    await supabase.from('conversations').update({ assigned_to: assignedTo }).eq('id', threadId);
+  },
+
+  sendMessageToThread: async (threadId, text, sender, isInternal = false) => {
     const user = useAuthStore.getState().user;
     if (!user) return;
 
@@ -155,18 +190,18 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       role: sender,
       content: text,
       status: 'sent',
+      is_internal: isInternal,
       created_at: timestamp
     }).select().single();
 
-    // The realtime subscription will pick this up and update the store, 
-    // but we can optimistically update for snappiness
     if (insertedMsg) {
       const newMessage: Message = {
         id: insertedMsg.id,
         db_id: insertedMsg.id,
         sender: insertedMsg.role as any,
         text: insertedMsg.content,
-        timestamp: formatTime(insertedMsg.created_at)
+        timestamp: formatTime(insertedMsg.created_at),
+        is_internal: isInternal,
       };
 
       set((state) => {
@@ -177,8 +212,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
             return {
               ...c,
               messages: [...c.messages, newMessage],
-              lastMessage: text,
-              lastMessageAt: 'Just now',
+              lastMessage: isInternal ? c.lastMessage : text,
+              lastMessageAt: isInternal ? c.lastMessageAt : 'Just now',
               unread: sender === 'user' ? true : c.unread
             };
           }
@@ -264,10 +299,12 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
             db_id: dbConv.id,
             lead_id: dbConv.lead_id,
             lead: dbConv.leads,
-            customerName: dbConv.leads?.name || 'Unknown',
+            customerName: dbConv.leads?.name || dbConv.customer_name || 'Unknown',
             channel: dbConv.channel as any,
             status: dbConv.status,
             unread: dbConv.unread_count > 0,
+            assigned_to: dbConv.assigned_to || null,
+            priority: (dbConv.metadata?.priority || 'medium') as any,
             lastMessage: lastMsg?.content || 'No messages yet',
             lastMessageAt: lastMsg ? formatTime(lastMsg.created_at) : '',
             messages: sortedMsgs.map((m: any) => ({
@@ -275,7 +312,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
               db_id: m.id,
               sender: m.role,
               text: m.content,
-              timestamp: formatTime(m.created_at)
+              timestamp: formatTime(m.created_at),
+              is_internal: m.is_internal || false,
             }))
           };
         });
@@ -299,8 +337,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         'postgres_changes',
         { event: '*', schema: 'public', table: 'messages' },
         (payload) => {
-          // Trigger a re-fetch to get the full joined data to be safe and simple
-          // In a heavily loaded app, we'd manually merge the payload into the state.
           get().fetchInboxData();
         }
       )
@@ -333,7 +369,9 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       activityFeed: [],
       smartNudges: INITIAL_NUDGES,
       isSidebarCollapsed: false,
-      subscriptionActive: false
+      subscriptionActive: false,
+      isInternalMode: false,
+      collisionWarning: null
     });
   }
 }));

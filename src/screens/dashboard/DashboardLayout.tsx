@@ -26,6 +26,8 @@ const CrmSection = React.lazy(() => import("./CrmSection").then(m => ({ default:
 const CalendarSection = React.lazy(() => import("./CalendarSection").then(m => ({ default: m.CalendarSection })));
 const TasksSection = React.lazy(() => import("./TasksSection").then(m => ({ default: m.TasksSection })));
 const TeamSection = React.lazy(() => import("./TeamSection").then(m => ({ default: m.TeamSection })));
+const OrdersSection = React.lazy(() => import("./OrdersSection").then(m => ({ default: m.OrdersSection })));
+const KnowledgeSection = React.lazy(() => import("./KnowledgeSection").then(m => ({ default: m.KnowledgeSection })));
 
 export function DashboardLayout() {
   const activeSection = useDashboardStore((s) => s.activeSection);
@@ -88,6 +90,10 @@ export function DashboardLayout() {
         return <CrmSection />;
       case "calendar":
         return <CalendarSection />;
+      case "orders":
+        return <OrdersSection />;
+      case "knowledge":
+        return <KnowledgeSection />;
       case "tasks":
         return <TasksSection />;
       case "team":
@@ -177,3 +183,5 @@ export function DashboardLayout() {
     </div>
   );
 }
+
+

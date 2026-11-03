@@ -287,6 +287,14 @@ export function VoiceSection() {
   return (
     <div className="h-full flex flex-col space-y-6">
       
+      {/* Post-Launch Dormancy Banner */}
+      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center gap-3 text-amber-300">
+        <Info className="w-5 h-5 flex-shrink-0 text-amber-400" />
+        <div className="text-xs">
+          <span className="font-bold">Post-Launch Roadmap Notice:</span> Voice intelligence capabilities are currently dormant and preserved for post-launch release. The commercial launch focuses strictly on 24/7 multi-channel chat reception (WhatsApp, Instagram, Facebook Messenger, Live Web Chat, and Email).
+        </div>
+      </div>
+
       {/* top banner / triggers */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>

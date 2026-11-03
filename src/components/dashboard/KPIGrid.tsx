@@ -77,11 +77,10 @@ export function KPIGrid() {
       <KPICard
         icon={<DollarSign className="w-4 h-4 text-amber-400" />}
         label="Rev Protected"
-        value={`$${estimatedRevenue.toLocaleString()}`}
+        value={`€${estimatedRevenue.toLocaleString()}`}
         trend="+24%"
         delayIndex={3}
       />
     </div>
   );
 }
-

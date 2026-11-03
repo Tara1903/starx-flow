@@ -4,7 +4,7 @@ import React from "react";
 import { 
   Home, MessageSquare, Layers, Brain, BarChart3, Radio, Settings,
   Sparkles, Plus, TestTube, HelpCircle, Activity, Calendar,
-  Users, Calendar as CalendarIcon, CheckSquare, Contact, Bot, Phone, Cpu, LogOut
+  Users, Calendar as CalendarIcon, CheckSquare, Contact, Bot, Phone, Cpu, LogOut, ShoppingBag, BookOpen
 } from "lucide-react";
 import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
 import { useAuthStore } from "../../store/authStore";
@@ -59,6 +59,16 @@ export function DashboardTopBar({ onNewWorkflowClick }: DashboardTopBarProps) {
       title: "Bookings",
       subtitle: "Manage your upcoming appointments and schedule",
       icon: <CalendarIcon className="w-4 h-4 text-indigo-400" />
+    },
+    orders: {
+      title: "Orders & Operations",
+      subtitle: "Track European customer orders, payments and fulfillment",
+      icon: <ShoppingBag className="w-4 h-4 text-emerald-400" />
+    },
+    knowledge: {
+      title: "Knowledge Base",
+      subtitle: "Manage vectorized business FAQs, policies and documents",
+      icon: <BookOpen className="w-4 h-4 text-sky-400" />
     },
     tasks: {
       title: "Tasks",

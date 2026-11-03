@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import { motion } from "motion/react";
 import {
-  Layers, Brain, BarChart3, Radio, Settings, MessageSquare,
+  ShoppingBag, BookOpen, Layers, Brain, BarChart3, Radio, Settings, MessageSquare,
   LogOut, Shield, ChevronLeft, ChevronRight, Menu, HelpCircle,
   Home, Activity, RefreshCw, Smartphone, Users, Calendar as CalendarIcon, CheckSquare, Contact, Bot, Phone, Cpu
 } from "lucide-react";
@@ -62,11 +62,13 @@ export function DashboardSidebar() {
     },
     { id: "crm", label: "Customers", icon: <Users className="w-4 h-4" /> },
     { id: "calendar", label: "Calendar", icon: <CalendarIcon className="w-4 h-4" /> },
+    { id: "orders", label: "Orders", icon: <ShoppingBag className="w-4 h-4" /> },
+    { id: "knowledge", label: "Knowledge", icon: <BookOpen className="w-4 h-4" /> },
     { id: "tasks", label: "Tasks", icon: <CheckSquare className="w-4 h-4" /> },
     { id: "team", label: "Team", icon: <Contact className="w-4 h-4" /> },
     { id: "playground", label: "AI Playground", icon: <Brain className="w-4 h-4" /> },
-    { id: "agents", label: "AI Agents", icon: <Bot className="w-4 h-4" /> },
-    { id: "voice", label: "Voice Assistant", icon: <Phone className="w-4 h-4" /> },
+    { id: "agents", label: "AI Receptionist", icon: <Bot className="w-4 h-4" /> },
+    { id: "voice", label: "Voice (Post-Launch)", icon: <Phone className="w-4 h-4" /> },
     { id: "os", label: "Business OS", icon: <Cpu className="w-4 h-4" /> },
     { id: "analytics", label: "Analytics", icon: <BarChart3 className="w-4 h-4" /> },
     {
@@ -278,3 +280,4 @@ export function DashboardSidebar() {
     </>
   );
 }
+

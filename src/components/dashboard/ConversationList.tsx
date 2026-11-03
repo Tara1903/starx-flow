@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MessageCircle, Phone, Star, Instagram, Globe, Search, Bell } from "lucide-react";
+import { MessageCircle, Phone, Instagram, Globe, Mail, Search } from "lucide-react";
 import { useDashboardStore, type ConversationThread } from "../../store/dashboardStore";
 import { cn } from "../../lib/utils";
 
@@ -7,12 +7,16 @@ const CHANNEL_ICON: Record<string, React.ReactNode> = {
   WhatsApp:  <MessageCircle className="w-3.5 h-3.5" />,
   SMS:       <Phone className="w-3.5 h-3.5" />,
   Instagram: <Instagram className="w-3.5 h-3.5 text-pink-400" />,
+  Email:     <Mail className="w-3.5 h-3.5 text-indigo-400" />,
+  Web:       <Globe className="w-3.5 h-3.5 text-amber-400" />,
 };
 
 const CHANNEL_COLOR: Record<string, string> = {
   WhatsApp:  "text-green-400 bg-green-500/10 border-green-500/20",
   SMS:       "text-blue-400 bg-blue-500/10 border-blue-500/20",
   Instagram: "text-pink-400 bg-pink-500/10 border-pink-500/20",
+  Email:     "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+  Web:       "text-amber-400 bg-amber-500/10 border-amber-500/20",
 };
 
 export function ConversationList() {
@@ -21,13 +25,13 @@ export function ConversationList() {
   const selectConversation = useDashboardStore((s) => s.selectConversation);
 
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"All" | "WhatsApp" | "Instagram" | "SMS">("All");
+  const [filter, setFilter] = useState<"All" | "WhatsApp" | "Instagram" | "SMS" | "Email" | "Web">("All");
 
   const filteredThreads = conversations.filter((thread) => {
-    const matchesFilter = filter === "All" || thread.channel === filter;
+    const matchesFilter = filter === "All" || thread.channel?.toLowerCase() === filter.toLowerCase();
     const matchesSearch =
-      thread.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      thread.lastMessage.toLowerCase().includes(search.toLowerCase());
+      (thread.customerName || '').toLowerCase().includes(search.toLowerCase()) ||
+      (thread.lastMessage || '').toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -42,6 +46,16 @@ export function ConversationList() {
       default:
         return "bg-zinc-500";
     }
+  };
+
+  const getPriorityBadge = (priority?: string) => {
+    if (priority === 'urgent') {
+      return <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-red-500/15 text-red-400 border border-red-500/30">Urgent</span>;
+    }
+    if (priority === 'high') {
+      return <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/30">High</span>;
+    }
+    return null;
   };
 
   return (
@@ -60,15 +74,15 @@ export function ConversationList() {
         </div>
 
         {/* Filter Badges */}
-        <div className="flex items-center gap-1 bg-white/[0.01] border border-white/5 rounded-lg p-0.5 text-[10px] font-bold">
-          {(["All", "WhatsApp", "Instagram", "SMS"] as const).map((opt) => (
+        <div className="flex items-center gap-1 bg-white/[0.01] border border-white/5 rounded-lg p-0.5 text-[9px] font-bold overflow-x-auto console-scroll">
+          {(["All", "WhatsApp", "Instagram", "SMS", "Email", "Web"] as const).map((opt) => (
             <button
               key={opt}
               onClick={() => setFilter(opt)}
               className={cn(
-                "flex-1 py-2 rounded-md transition-all uppercase tracking-wider text-center",
+                "flex-1 min-w-[50px] py-1.5 px-1 rounded-md transition-all uppercase tracking-wider text-center",
                 filter === opt
-                  ? "bg-white/5 text-white"
+                  ? "bg-white/10 text-white font-bold"
                   : "text-zinc-500 hover:text-zinc-300"
               )}
             >
@@ -87,6 +101,10 @@ export function ConversationList() {
         ) : (
           filteredThreads.map((thread) => {
             const isSelected = selectedId === thread.id;
+            const channelKey = thread.channel || 'WhatsApp';
+            const icon = CHANNEL_ICON[channelKey] || <MessageCircle className="w-3.5 h-3.5" />;
+            const colorClass = CHANNEL_COLOR[channelKey] || "text-zinc-400 bg-white/5 border-white/10";
+
             return (
               <div
                 key={thread.id}
@@ -107,13 +125,15 @@ export function ConversationList() {
                     <span className={cn("text-xs font-bold truncate", thread.unread ? "text-white" : "text-zinc-300")}>
                       {thread.customerName}
                     </span>
+
+                    {getPriorityBadge(thread.priority)}
                   </div>
 
                   {/* Timestamp and channel */}
                   <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium flex-shrink-0">
                     <span>{thread.lastMessageAt}</span>
-                    <span className={cn("px-1.5 py-0.5 rounded border text-[9px] flex items-center justify-center font-bold uppercase tracking-widest", CHANNEL_COLOR[thread.channel])}>
-                      {CHANNEL_ICON[thread.channel]}
+                    <span className={cn("px-1.5 py-0.5 rounded border text-[9px] flex items-center justify-center font-bold uppercase tracking-widest", colorClass)}>
+                      {icon}
                     </span>
                   </div>
                 </div>
