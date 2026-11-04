@@ -54,6 +54,59 @@ export class DocumentParser {
   }
 
   /**
+   * SSRF Protection: Checks if a hostname or IP address resolves to private, loopback, or metadata ranges.
+   */
+  static isPrivateOrReservedHost(hostname: string): boolean {
+    const cleanHost = hostname.trim().toLowerCase().replace(/^\[|\]$/g, '');
+
+    // Hostname checks
+    if (
+      cleanHost === 'localhost' ||
+      cleanHost.endsWith('.localhost') ||
+      cleanHost.endsWith('.local') ||
+      cleanHost.endsWith('.internal') ||
+      cleanHost.endsWith('.arpa')
+    ) {
+      return true;
+    }
+
+    // IPv6 checks
+    if (
+      cleanHost === '::1' ||
+      cleanHost === '::' ||
+      cleanHost.startsWith('fe80:') ||
+      cleanHost.startsWith('fc00:') ||
+      cleanHost.startsWith('fd00:')
+    ) {
+      return true;
+    }
+
+    // IPv4 checks
+    const ipv4Match = cleanHost.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (ipv4Match) {
+      const octet1 = parseInt(ipv4Match[1], 10);
+      const octet2 = parseInt(ipv4Match[2], 10);
+
+      // 0.0.0.0/8 (Broadcast/Current)
+      if (octet1 === 0) return true;
+      // 127.0.0.0/8 (Loopback)
+      if (octet1 === 127) return true;
+      // 10.0.0.0/8 (Private)
+      if (octet1 === 10) return true;
+      // 169.254.0.0/16 (Link-local & Cloud Metadata e.g. AWS/GCP 169.254.169.254)
+      if (octet1 === 169 && octet2 === 254) return true;
+      // 172.16.0.0/12 (Private: 172.16.x.x - 172.31.x.x)
+      if (octet1 === 172 && octet2 >= 16 && octet2 <= 31) return true;
+      // 192.168.0.0/16 (Private)
+      if (octet1 === 192 && octet2 === 168) return true;
+      // 100.64.0.0/10 (Carrier-grade NAT)
+      if (octet1 === 100 && octet2 >= 64 && octet2 <= 127) return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Extracts text from website URL by fetching HTML and stripping non-content tags.
    */
   static async parseUrl(url: string, customTitle?: string): Promise<ParsedDocument> {
@@ -61,6 +114,10 @@ export class DocumentParser {
       const parsedUrl = new URL(url);
       if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
         throw new Error('Invalid URL protocol. Only HTTP and HTTPS are supported.');
+      }
+
+      if (this.isPrivateOrReservedHost(parsedUrl.hostname)) {
+        throw new Error('SECURITY VIOLATION: URL points to a restricted internal or private network address (SSRF protection).');
       }
 
       const controller = new AbortController();

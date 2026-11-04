@@ -426,6 +426,17 @@ export class GoogleCalendarAdapter implements CalendarProviderAdapter {
     return res.ok || res.status === 404; // 404 considered successfully absent
   }
 
+  static setSimulatedEvents(events: NormalizedCalendarEvent[]): void {
+    this.simulatedEvents.clear();
+    for (const evt of events) {
+      this.simulatedEvents.set(evt.externalEventId, evt);
+    }
+  }
+
+  static addSimulatedEvent(event: NormalizedCalendarEvent): void {
+    this.simulatedEvents.set(event.externalEventId, event);
+  }
+
   static clearSimulated(): void {
     this.simulatedEvents.clear();
   }

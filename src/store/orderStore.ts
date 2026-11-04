@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useAuthStore } from './authStore';
+import { supabase } from '../lib/supabase';
 import { Order } from '../types/database';
 
 interface OrderState {
@@ -18,6 +19,18 @@ interface OrderState {
   }) => Promise<{ success: boolean; error?: string }>;
   updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
   updatePaymentStatus: (orderId: string, paymentStatus: Order['payment_status']) => Promise<void>;
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      return { Authorization: `Bearer ${session.access_token}` };
+    }
+  } catch {
+    // Ignore error in offline mode
+  }
+  return {};
 }
 
 export const useOrderStore = create<OrderState>((set, get) => ({
@@ -85,7 +98,10 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`/api/orders?userId=${user.id}`);
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`/api/orders?userId=${user.id}`, {
+        headers: authHeaders,
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.orders && data.orders.length > 0) {
@@ -105,9 +121,13 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
     set({ isLoading: true });
     try {
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({
           userId: user.id,
           ...orderData
@@ -139,9 +159,13 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     }));
 
     try {
+      const authHeaders = await getAuthHeaders();
       await fetch('/api/orders', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({ orderId, status })
       });
     } catch (err) {
@@ -156,9 +180,13 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     }));
 
     try {
+      const authHeaders = await getAuthHeaders();
       await fetch('/api/orders', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({ orderId, paymentStatus })
       });
     } catch (err) {

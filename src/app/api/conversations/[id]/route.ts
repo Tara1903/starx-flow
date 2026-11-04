@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { InboxService } from '@/lib/inbox/inboxService';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -11,25 +10,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params;
-    const { data: conversation, error } = await supabaseAdmin
-      .from('conversations')
-      .select('*, leads(*), messages(*)')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (error || !conversation) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+    const access = await InboxService.verifyConversationAccess(id, auth.session);
+    if (!access.authorized) {
+      return NextResponse.json({ error: access.error }, { status: access.status || 403 });
     }
 
-    // Verify tenant ownership / organization authorization
-    const isOwner = conversation.user_id === auth.session.user.id;
-    const isOrgMember = conversation.organization_id && conversation.organization_id === auth.session.organizationId;
-
-    if (!isOwner && !isOrgMember) {
-      return NextResponse.json({ error: 'Forbidden: You do not have access to this conversation' }, { status: 403 });
-    }
-
-    return NextResponse.json({ conversation });
+    return NextResponse.json({ conversation: access.conversation });
   } catch (err: any) {
     console.error('[API /api/conversations/[id] GET error]:', err);
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
@@ -44,6 +30,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const { id } = await params;
+    const access = await InboxService.verifyConversationAccess(id, auth.session);
+    if (!access.authorized) {
+      return NextResponse.json({ error: access.error }, { status: access.status || 403 });
+    }
+
     const body = await req.json();
     const { status, assignedTo, priority, tags, controlMode, handoffReason } = body;
 

@@ -6,12 +6,12 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  */
 export async function POST(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization');
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
     if (!authHeader) {
       return NextResponse.json({ error: 'Missing authorization token' }, { status: 401 });
     }
 
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
     const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
     if (authErr || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

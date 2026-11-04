@@ -55,7 +55,8 @@ export class IngestionGateway {
    */
   static async process(event: CanonicalInboundEvent): Promise<IngestionResult> {
     const startMs = Date.now();
-    const { eventId, channel, sender, message } = event;
+    const eventId = event.eventId || event.message?.messageId || (event as any).messageId || `evt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const { channel, sender, message } = event;
 
     // 1. Idempotency Check & Duplicate Event Detection
     if (IdempotencyManager.isDuplicate(channel, eventId)) {
@@ -152,6 +153,7 @@ export class IngestionGateway {
    */
   private static async resolveTargetUser(event: CanonicalInboundEvent): Promise<string | null> {
     if (event.userId) return event.userId;
+    if (event.organizationId) return event.organizationId;
 
     // Check connected_channels
     if (event.channel === 'whatsapp' && event.metadata?.phoneNumberId) {

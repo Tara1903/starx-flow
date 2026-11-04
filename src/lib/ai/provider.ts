@@ -55,9 +55,13 @@ SAFETY & INTEGRITY RULES:
       .map((m) => `${m.role === 'user' ? 'Customer' : 'Assistant'}: ${m.text}`)
       .join('\n');
 
+    const sanitizedMsg = input.customerMessage
+      .replace(/<\/customer_message>/gi, '&lt;/customer_message&gt;')
+      .replace(/<customer_message>/gi, '&lt;customer_message&gt;');
+
     const promptWithHistory = historyText
-      ? `${historyText}\nCustomer: <customer_message>${input.customerMessage}</customer_message>\nAssistant:`
-      : `<customer_message>${input.customerMessage}</customer_message>`;
+      ? `${historyText}\nCustomer: <customer_message>${sanitizedMsg}</customer_message>\nAssistant:`
+      : `<customer_message>${sanitizedMsg}</customer_message>`;
 
     // 4. Try Gemini API first if configured
     if (GEMINI_API_KEY && !GEMINI_API_KEY.includes('your-')) {
@@ -238,8 +242,29 @@ SAFETY & INTEGRITY RULES:
       msg.includes('speak to');
 
     let reply = `Thank you for contacting ${businessProfile?.businessName || 'us'}! We have received your inquiry: "${input.customerMessage}". Our receptionist team is reviewing your message and will follow up shortly.`;
-    let suggestedAction: AgentExecutionResult['suggestedAction'] = { type: 'none' };
+    let suggestedAction: AgentExecutionResult['suggestedAction'] = { type: 'human_handoff' };
     const toolExecutions: ToolExecutionRecord[] = [];
+
+    // Precompute FAQ match with strict token filtering
+    const STOPWORDS = new Set([
+      'accept', 'accepts', 'accepted', 'please', 'thanks', 'thank', 'about',
+      'would', 'could', 'should', 'there', 'their', 'which', 'where', 'hello',
+      'having', 'doing', 'being', 'what', 'when', 'does', 'your', 'have',
+      'with', 'from', 'this', 'that', 'they', 'will', 'offer'
+    ]);
+
+    const matchedFaq = businessProfile?.faqs && businessProfile.faqs.length > 0
+      ? businessProfile.faqs.find((f) => {
+          const qClean = f.question.toLowerCase();
+          if (msg.includes(qClean)) return true;
+          const tokens = qClean
+            .replace(/[^\w\s]/g, '')
+            .split(/\s+/)
+            .filter((w) => w.length > 3 && !STOPWORDS.has(w));
+          const matches = tokens.filter((t) => msg.includes(t));
+          return matches.length >= 2 || (tokens.length === 1 && matches.length === 1);
+        })
+      : null;
 
     // Order lookup intent: check if order number (e.g. ORD-1001) is present
     const orderMatch = input.customerMessage.match(/ORD-[A-Za-z0-9]+/i);
@@ -279,8 +304,7 @@ SAFETY & INTEGRITY RULES:
     } else if (businessProfile?.policies?.cancellation && (msg.includes('cancellation') || (msg.includes('cancel') && msg.includes('policy')))) {
       reply = `Our cancellation policy: ${businessProfile.policies.cancellation}`;
       suggestedAction = { type: 'none' };
-    } else if (businessProfile?.faqs && businessProfile.faqs.some((f) => msg.includes(f.question.toLowerCase()) || f.question.toLowerCase().split(' ').some((w) => w.length > 4 && msg.includes(w)))) {
-      const matchedFaq = businessProfile.faqs.find((f) => msg.includes(f.question.toLowerCase()) || f.question.toLowerCase().split(' ').some((w) => w.length > 4 && msg.includes(w)))!;
+    } else if (matchedFaq) {
       reply = `${matchedFaq.answer}`;
       suggestedAction = { type: 'none' };
     } else if (msg.includes('price') || msg.includes('cost') || msg.includes('rate') || msg.includes('fee') || msg.includes('how much')) {
@@ -298,12 +322,14 @@ SAFETY & INTEGRITY RULES:
       if (matched.length > 0) {
         const lines = matched.map((s) => `• ${s.name}: €${s.priceEur ?? s.price ?? 0} (${s.durationMinutes} min)`).join('\n');
         reply = `Here is our transparent pricing for the requested service:\n${lines}\nWould you like to schedule an appointment?`;
+        suggestedAction = { type: 'none' };
       } else if (services.length > 0) {
         // If customer asked generally about prices without specifying an unlisted service
         const isGeneralPriceInquiry = msg.includes('menu') || msg.includes('catalog') || msg.includes('services') || msg.includes('list');
         if (isGeneralPriceInquiry) {
           const lines = services.map((s) => `• ${s.name}: €${s.priceEur ?? s.price ?? 0} (${s.durationMinutes} min)`).join('\n');
           reply = `Here are our verified services and rates:\n${lines}\nPlease let us know which service you are interested in!`;
+          suggestedAction = { type: 'none' };
         } else {
           reply = `That service is not listed in our verified catalog. Would you like me to connect you with our team for assistance?`;
           suggestedAction = { type: 'human_handoff' };
@@ -313,6 +339,7 @@ SAFETY & INTEGRITY RULES:
         suggestedAction = { type: 'human_handoff' };
       }
     } else if (msg.includes('hours') || msg.includes('open') || msg.includes('location') || msg.includes('when') || msg.includes('where')) {
+      suggestedAction = { type: 'none' };
       // ZERO-HALLUCINATION: Verified opening hours and timezone status
       if (businessProfile) {
         const hoursStatus = BusinessProfileService.isWithinBusinessHours(businessProfile);

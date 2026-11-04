@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 });
+    const auth = await authenticateStaffRequest(req);
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+
+    const tenantId = auth.session.organizationId || auth.session.user.id;
 
     const { data: docs, error } = await supabaseAdmin
       .from('knowledge_documents')
       .select('id, user_id, title, document_type, source_url, chunks_count, status, created_at, updated_at')
-      .eq('user_id', userId)
+      .eq('user_id', tenantId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -29,21 +30,26 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const documentId = searchParams.get('id');
-    const userId = searchParams.get('userId');
-
-    if (!documentId || !userId) {
-      return NextResponse.json({ error: 'Missing id or userId parameter' }, { status: 400 });
+    const auth = await authenticateStaffRequest(req, { requiredRole: 'admin' });
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // Cascade delete chunks and master document
+    const tenantId = auth.session.organizationId || auth.session.user.id;
+    const { searchParams } = new URL(req.url);
+    const documentId = searchParams.get('id');
+
+    if (!documentId) {
+      return NextResponse.json({ error: 'Missing id parameter' }, { status: 400 });
+    }
+
+    // Cascade delete chunks and master document strictly scoped to caller's tenant
     await supabaseAdmin.from('knowledge_chunks').delete().eq('document_id', documentId);
     const { error } = await supabaseAdmin
       .from('knowledge_documents')
       .delete()
       .eq('id', documentId)
-      .eq('user_id', userId);
+      .eq('user_id', tenantId);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

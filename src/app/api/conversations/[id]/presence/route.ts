@@ -10,6 +10,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const { id } = await params;
+    const access = await InboxService.verifyConversationAccess(id, auth.session);
+    if (!access.authorized) {
+      return NextResponse.json({ error: access.error }, { status: access.status || 403 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const agentName = body.agentName || auth.session.user.email || 'Staff Agent';
 

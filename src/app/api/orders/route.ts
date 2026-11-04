@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabaseAdmin';
+import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 });
+    const auth = await authenticateStaffRequest(req);
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+
+    const tenantId = auth.session.organizationId || auth.session.user.id;
 
     const { data: orders, error } = await supabaseAdmin
       .from('orders')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', tenantId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -28,12 +29,18 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { userId, customerName, customerPhone, customerEmail, items, totalAmount, status, paymentStatus } = body;
+    const auth = await authenticateStaffRequest(req);
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
 
-    if (!userId || !customerName || !items || items.length === 0) {
+    const tenantId = auth.session.organizationId || auth.session.user.id;
+    const body = await req.json();
+    const { customerName, customerPhone, customerEmail, items, totalAmount, status, paymentStatus } = body;
+
+    if (!customerName || !items || items.length === 0) {
       return NextResponse.json(
-        { error: 'Missing required parameters: userId, customerName, items' },
+        { error: 'Missing required parameters: customerName, items' },
         { status: 400 }
       );
     }
@@ -43,7 +50,7 @@ export async function POST(req: NextRequest) {
     const { data: order, error } = await supabaseAdmin
       .from('orders')
       .insert({
-        user_id: userId,
+        user_id: tenantId,
         order_number: orderNumber,
         customer_name: customerName,
         customer_phone: customerPhone || null,
@@ -62,7 +69,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         order: {
           id: `order-${Date.now()}`,
-          user_id: userId,
+          user_id: tenantId,
           order_number: orderNumber,
           customer_name: customerName,
           customer_phone: customerPhone,
@@ -86,11 +93,33 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const auth = await authenticateStaffRequest(req);
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const tenantId = auth.session.organizationId || auth.session.user.id;
     const body = await req.json();
     const { orderId, status, paymentStatus } = body;
 
     if (!orderId) {
       return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });
+    }
+
+    if (isSupabaseAdminConfigured) {
+      // Check that existing order belongs to the caller's tenant
+      const { data: existingOrder } = await supabaseAdmin
+        .from('orders')
+        .select('id, user_id')
+        .eq('id', orderId)
+        .maybeSingle();
+
+      if (existingOrder && existingOrder.user_id !== tenantId) {
+        return NextResponse.json(
+          { error: 'Forbidden: You do not have permission to modify orders in this tenant' },
+          { status: 403 }
+        );
+      }
     }
 
     const updates: Record<string, any> = { updated_at: new Date().toISOString() };
@@ -101,11 +130,18 @@ export async function PATCH(req: NextRequest) {
       .from('orders')
       .update(updates)
       .eq('id', orderId)
+      .eq('user_id', tenantId)
       .select()
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({
+        order: {
+          id: orderId,
+          user_id: tenantId,
+          ...updates,
+        }
+      });
     }
 
     return NextResponse.json({ order: updated });

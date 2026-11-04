@@ -59,6 +59,53 @@ export class InboxService {
   private static inMemoryConversations = new Map<string, Conversation & { messages: Message[]; priority?: string }>();
 
   /**
+   * Verifies that the requesting staff session owns or belongs to the organization of the conversation.
+   */
+  static async verifyConversationAccess(
+    conversationId: string,
+    session: { user: { id: string }; organizationId?: string }
+  ): Promise<{ authorized: boolean; status?: 403 | 404; error?: string; conversation?: any }> {
+    const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+
+    // Check in-memory cache first
+    const cached = this.inMemoryConversations.get(conversationId);
+    let convo = cached as any;
+
+    if (!convo) {
+      try {
+        const { data, error } = await client
+          .from('conversations')
+          .select('*, leads(*), messages(*)')
+          .eq('id', conversationId)
+          .maybeSingle();
+
+        if (!error && data) {
+          convo = data;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+
+    if (!convo) {
+      return { authorized: false, status: 404, error: 'Conversation not found' };
+    }
+
+    const isOwner = convo.user_id === session.user.id;
+    const isOrgMember = Boolean(convo.organization_id && session.organizationId && convo.organization_id === session.organizationId);
+
+    if (!isOwner && !isOrgMember) {
+      return {
+        authorized: false,
+        status: 403,
+        error: 'Forbidden: You do not have access to this conversation',
+      };
+    }
+
+    return { authorized: true, conversation: convo };
+  }
+
+  /**
    * Fetches organization-scoped conversations with filtering, search, and pagination.
    */
   static async fetchConversations(options: InboxFilterOptions): Promise<{ conversations: any[]; totalCount: number }> {

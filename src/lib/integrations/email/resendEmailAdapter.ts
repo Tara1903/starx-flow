@@ -308,10 +308,13 @@ export class ResendEmailAdapter {
     if (!rawHtml) return '';
     return rawHtml
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
       .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
       .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-      .replace(/javascript:/gi, '')
+      .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+      .replace(/\s*on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+      .replace(/\s*(?:href|src)\s*=\s*(?:"[^"]*(?:javascript|vbscript|data):[^"]*"|'[^']*(?:javascript|vbscript|data):[^']*'|(?:javascript|vbscript|data):[^\s>]*)/gi, ' href="#"')
+      .replace(/(?:javascript|vbscript):/gi, '')
       .trim();
   }
 
@@ -593,6 +596,7 @@ export class ResendEmailAdapter {
     reason?: string;
   }> {
     const { from, to, subject, html, text, message_id, in_reply_to, references } = payload.data || {};
+    const inReplyTo = in_reply_to || (payload.data as any)?.headers?.['in-reply-to'] || (payload.data as any)?.headers?.['In-Reply-To'];
 
     const workerId = options?.workerId || `worker_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
@@ -634,9 +638,9 @@ export class ResendEmailAdapter {
     let existingLeadId: string | undefined;
 
     // 2.1 Thread Resolution: Check if this email is replying to an existing tracked thread
-    if (in_reply_to) {
-      if (ResendEmailAdapter.simulatedThreads.has(in_reply_to)) {
-        const thread = ResendEmailAdapter.simulatedThreads.get(in_reply_to)!;
+    if (inReplyTo) {
+      if (ResendEmailAdapter.simulatedThreads.has(inReplyTo)) {
+        const thread = ResendEmailAdapter.simulatedThreads.get(inReplyTo)!;
         threadOrgId = thread.organizationId;
         conversationId = thread.conversationId;
         existingLeadId = thread.leadId;
@@ -646,7 +650,7 @@ export class ResendEmailAdapter {
           const { data: thread } = await client
             .from('email_threads')
             .select('organization_id, conversation_id, lead_id')
-            .eq('message_id', in_reply_to)
+            .eq('message_id', inReplyTo)
             .maybeSingle();
 
           if (thread) {
@@ -663,7 +667,7 @@ export class ResendEmailAdapter {
     // 2.2 Inbound Recipient Address Mapping with Verified Database Validation (C2)
     if (to && to.length > 0) {
       for (const recipient of to) {
-        const tagMatch = recipient.match(/inbox\+([a-zA-Z0-9_-]+)@/i);
+        const tagMatch = recipient.match(/(?:inbox|receptionist|support|contact|[a-zA-Z0-9_-]+)\+([a-zA-Z0-9_-]+)@/i);
         if (tagMatch) {
           const validatedOrg = await this.validateSubaddressOrganization(tagMatch[1]);
           if (validatedOrg) {

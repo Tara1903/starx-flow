@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useAuthStore } from './authStore';
+import { supabase } from '../lib/supabase';
 import { KnowledgeDocument } from '../types/database';
 
 interface KnowledgeState {
@@ -14,6 +15,18 @@ interface KnowledgeState {
     sourceUrl?: string;
   }) => Promise<{ success: boolean; error?: string }>;
   deleteDocument: (id: string) => Promise<{ success: boolean; error?: string }>;
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      return { Authorization: `Bearer ${session.access_token}` };
+    }
+  } catch {
+    // Ignore error in offline mode
+  }
+  return {};
 }
 
 export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
@@ -52,7 +65,10 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`/api/knowledge?userId=${user.id}`);
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`/api/knowledge?userId=${user.id}`, {
+        headers: authHeaders,
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.documents && data.documents.length > 0) {
@@ -72,9 +88,13 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/knowledge/ingest', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({
           userId: user.id,
           title,
@@ -121,7 +141,11 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
     if (!user) return { success: false, error: 'User not authenticated' };
 
     try {
-      await fetch(`/api/knowledge?id=${id}&userId=${user.id}`, { method: 'DELETE' });
+      const authHeaders = await getAuthHeaders();
+      await fetch(`/api/knowledge?id=${id}&userId=${user.id}`, {
+        method: 'DELETE',
+        headers: authHeaders,
+      });
       set((state) => ({
         documents: state.documents.filter((d) => d.id !== id)
       }));

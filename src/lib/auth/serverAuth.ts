@@ -59,12 +59,12 @@ export async function authenticateStaffRequest(
     return { authenticated: true, session: testSessionOverride };
   }
 
-  // 1. Extract Bearer token or cookie
-  const authHeader = req.headers.get('authorization');
+  // 1. Extract Bearer token (case-insensitive) or cookie
+  const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
   let token: string | null = null;
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.replace('Bearer ', '').trim();
+  if (authHeader && /^Bearer\s+/i.test(authHeader)) {
+    token = authHeader.replace(/^Bearer\s+/i, '').trim();
   }
 
   if (!token) {
@@ -73,7 +73,25 @@ export async function authenticateStaffRequest(
     if (cookieHeader) {
       const match = cookieHeader.match(/sb-access-token=([^;]+)/) || cookieHeader.match(/sb-[^;]+-auth-token=([^;]+)/);
       if (match) {
-        token = match[1];
+        const raw = decodeURIComponent(match[1].trim());
+        if (raw.startsWith('base64-')) {
+          try {
+            const decoded = Buffer.from(raw.slice(7), 'base64').toString('utf-8');
+            const parsed = JSON.parse(decoded);
+            token = parsed.access_token || parsed[0] || raw;
+          } catch {
+            token = raw;
+          }
+        } else if (raw.startsWith('{') || raw.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(raw);
+            token = parsed.access_token || parsed[0] || raw;
+          } catch {
+            token = raw;
+          }
+        } else {
+          token = raw;
+        }
       }
     }
   }
@@ -144,6 +162,11 @@ export async function authenticateStaffRequest(
     } else {
       // Pick first verified organization
       targetOrg = Array.from(validOrgIds)[0] || user.id;
+    }
+
+    // When operating on direct personal user account, user is the owner of their workspace
+    if (targetOrg === user.id && resolvedRole === 'agent' && validOrgIds.size === 1) {
+      resolvedRole = 'owner';
     }
 
     // 5. Role and Permission Enforcement

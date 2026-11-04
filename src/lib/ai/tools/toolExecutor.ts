@@ -256,6 +256,29 @@ export class ToolExecutor {
       };
     }
 
+    // Also check database appointments if connected
+    try {
+      const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+      const { data: dbConflicts } = await client
+        .from('appointments')
+        .select('id, start_time, end_time')
+        .eq('user_id', userId)
+        .neq('status', 'cancelled')
+        .lt('start_time', endTime)
+        .gt('end_time', startTime);
+
+      if (dbConflicts && dbConflicts.length > 0) {
+        return {
+          success: false,
+          tool: 'bookAppointment',
+          conflict: true,
+          error: 'Time slot conflict detected. An active appointment is already scheduled during this window.',
+        };
+      }
+    } catch {
+      // In-memory fallback
+    }
+
     // 2. Create appointment record
     const aptId = `apt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const confirmationCode = `SF-${Math.floor(100000 + Math.random() * 900000)}`;

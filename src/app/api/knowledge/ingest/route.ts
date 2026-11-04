@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MultiTenantRAG } from '@/lib/rag/multiTenantRAG';
 import { DocumentParser } from '@/lib/rag/documentParser';
+import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { userId, organizationId, title, documentType, content, sourceUrl, fileBase64 } = body;
+    const auth = await authenticateStaffRequest(req, { requiredRole: 'admin' });
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
 
-    if (!userId || !title || !documentType) {
+    const body = await req.json();
+    const { title, documentType, content, sourceUrl, fileBase64 } = body;
+    const userId = auth.session.user.id;
+    const organizationId = auth.session.organizationId;
+
+    if (!title || !documentType) {
       return NextResponse.json(
-        { error: 'Missing required parameters: userId, title, documentType' },
+        { error: 'Missing required parameters: title, documentType' },
         { status: 400 }
       );
     }

@@ -17,8 +17,10 @@ export class IdempotencyManager {
   /**
    * Generates a deterministic idempotency key for an event.
    */
-  static buildKey(channel: string, eventId: string): string {
-    return `${channel.toLowerCase()}:${eventId.trim()}`;
+  static buildKey(channel: string, eventId?: string | null): string {
+    const safeChannel = (channel || 'unknown').toLowerCase();
+    const safeId = (eventId || '').trim();
+    return `${safeChannel}:${safeId}`;
   }
 
   /**
@@ -65,7 +67,8 @@ export class IdempotencyManager {
   /**
    * Explicitly clear an event (useful for rollback on processing failure).
    */
-  static clear(channel: string, eventId: string): void {
+  static clear(channel: string, eventId?: string | null): void {
+    if (!eventId) return;
     const key = this.buildKey(channel, eventId);
     this.cache.delete(key);
   }

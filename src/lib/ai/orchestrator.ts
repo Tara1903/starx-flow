@@ -71,20 +71,40 @@ export class AIOrchestrator {
 
     // 2. Locate or create active Conversation thread
     let conversationId: string | null = null;
-    const phoneFilter = senderPhone || '';
-    const { data: existingConvo } = await supabaseAdmin
-      .from('conversations')
-      .select('id, status, control_mode, unread_count')
-      .eq('user_id', userId)
-      .eq('channel', channel)
-      .match(leadId ? { lead_id: leadId } : phoneFilter ? { customer_phone: phoneFilter } : { customer_name: senderName })
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    let activeConvo: any = null;
 
-    const inMemConvo = (event.conversationId && this.inMemoryConversations.get(event.conversationId)) ||
-      (leadId ? Array.from(this.inMemoryConversations.values()).find((c) => c.leadId === leadId) : undefined);
-    const activeConvo = existingConvo || inMemConvo;
+    if (event.conversationId) {
+      const { data: directConvo } = await supabaseAdmin
+        .from('conversations')
+        .select('id, status, control_mode, unread_count')
+        .eq('id', event.conversationId)
+        .maybeSingle();
+
+      if (directConvo) {
+        activeConvo = directConvo;
+      } else if (this.inMemoryConversations.has(event.conversationId)) {
+        activeConvo = this.inMemoryConversations.get(event.conversationId);
+      } else {
+        // Conversation was referenced directly by external adapter / thread
+        conversationId = event.conversationId;
+      }
+    }
+
+    if (!activeConvo && !conversationId) {
+      const phoneFilter = senderPhone || '';
+      const { data: existingConvo } = await supabaseAdmin
+        .from('conversations')
+        .select('id, status, control_mode, unread_count')
+        .eq('user_id', userId)
+        .eq('channel', channel)
+        .match(leadId ? { lead_id: leadId } : phoneFilter ? { customer_phone: phoneFilter } : { customer_name: senderName })
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const inMemConvo = leadId ? Array.from(this.inMemoryConversations.values()).find((c) => c.leadId === leadId) : undefined;
+      activeConvo = existingConvo || inMemConvo;
+    }
 
     if (activeConvo) {
       conversationId = activeConvo.id;
@@ -124,7 +144,7 @@ export class AIOrchestrator {
           },
         };
       }
-    } else {
+    } else if (!conversationId) {
       const { data: newConvo } = await supabaseAdmin
         .from('conversations')
         .insert({
@@ -148,7 +168,7 @@ export class AIOrchestrator {
     }
 
     if (!conversationId) {
-      conversationId = `convo-${Date.now()}`;
+      conversationId = event.conversationId || `convo-${Date.now()}`;
     }
 
     // 3. Save Inbound Customer Message

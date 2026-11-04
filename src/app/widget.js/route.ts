@@ -5,7 +5,8 @@ export async function GET() {
 (function() {
   var currentScript = document.currentScript;
   var orgId = currentScript ? (currentScript.getAttribute('data-org-id') || currentScript.getAttribute('data-business-id')) : 'default-org';
-  var host = window.location.origin;
+  var scriptUrl = (currentScript && currentScript.src) ? new URL(currentScript.src) : window.location;
+  var host = scriptUrl.origin;
 
   // Create widget container
   var container = document.createElement('div');

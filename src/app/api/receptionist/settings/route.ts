@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const auth = await authenticateStaffRequest(req);
+    const auth = await authenticateStaffRequest(req, { requiredRole: 'admin' });
     if (!auth.authenticated) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

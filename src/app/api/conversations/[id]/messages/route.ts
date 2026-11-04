@@ -10,10 +10,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params;
+    const access = await InboxService.verifyConversationAccess(id, auth.session);
+    if (!access.authorized) {
+      return NextResponse.json({ error: access.error }, { status: access.status || 403 });
+    }
+
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
-    // Authenticated staff can view internal notes
+    // Authenticated staff of this tenant can view message history including internal notes
     const messages = await InboxService.fetchMessages(id, limit, true);
     return NextResponse.json({ messages });
   } catch (err: any) {
@@ -30,6 +35,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const { id } = await params;
+    const access = await InboxService.verifyConversationAccess(id, auth.session);
+    if (!access.authorized) {
+      return NextResponse.json({ error: access.error }, { status: access.status || 403 });
+    }
+
     const body = await req.json();
     const { role, content, isInternal = false, attachments, agentName } = body;
 
