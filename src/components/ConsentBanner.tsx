@@ -36,11 +36,11 @@ export function ConsentBanner() {
   return (
     <div
       id="consent-banner"
-      className="fixed bottom-0 left-0 right-0 z-[9999] p-4"
-      style={{ pointerEvents: 'auto' }}
+      className="fixed bottom-0 left-0 right-0 z-[9999] p-4 pointer-events-none"
+      
     >
       <div
-        className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-gray-900/95 p-5 shadow-2xl backdrop-blur-xl"
+        className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-gray-900/95 p-5 shadow-2xl backdrop-blur-xl pointer-events-auto"
         style={{
           animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
         }}

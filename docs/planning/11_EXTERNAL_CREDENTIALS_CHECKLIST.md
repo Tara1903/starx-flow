@@ -40,12 +40,12 @@ The following webhooks must be registered in the respective external developer p
 
 | Webhook Identifier | External Provider Dashboard | Target Webhook URL in StarX-Flow | Verification Method | Subscribed Events |
 | :--- | :--- | :--- | :--- | :--- |
-| **WhatsApp Webhook** | Meta App Dashboard → WhatsApp → Configuration | `https://starx-flow.vercel.app/api/whatsapp/webhook` | `hub.verify_token` challenge + HMAC SHA-256 | `messages`, `message_deliveries`, `message_reads` |
-| **Instagram Webhook** | Meta App Dashboard → Instagram Graph API → Webhooks | `https://starx-flow.vercel.app/api/instagram/webhook` | `hub.verify_token` challenge + HMAC SHA-256 | `messages`, `messaging_postbacks`, `messaging_seen` |
-| **Stripe Webhook** | Stripe Dashboard → Developers → Webhooks | `https://starx-flow.vercel.app/api/billing/webhook` | `stripe-signature` header (`<YOUR_WEBHOOK_SECRET>`) | `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.deleted` |
-| **Inbound Email** | Resend / Postmark Dashboard → Inbound Routing | `https://starx-flow.vercel.app/api/email/webhook/inbound` | `X-Webhook-Secret` header | `email.received`, `email.bounced` |
-| **Twilio Voice Webhook**| Twilio Console → Phone Numbers → Active Numbers | `https://starx-flow.vercel.app/api/voice/incoming` | `X-Twilio-Signature` HMAC | `Incoming Call (Voice)`, `Call Status Changes` |
-| **Google Calendar Push**| Google Cloud Console → Calendar API Webhooks | `https://starx-flow.vercel.app/api/calendar/webhook` | Channel token verification | `calendar.events.change` |
+| **WhatsApp Webhook** | Meta App Dashboard → WhatsApp → Configuration | `https://starx-flow.runs-on.dev/api/whatsapp/webhook` | `hub.verify_token` challenge + HMAC SHA-256 | `messages`, `message_deliveries`, `message_reads` |
+| **Instagram Webhook** | Meta App Dashboard → Instagram Graph API → Webhooks | `https://starx-flow.runs-on.dev/api/instagram/webhook` | `hub.verify_token` challenge + HMAC SHA-256 | `messages`, `messaging_postbacks`, `messaging_seen` |
+| **Stripe Webhook** | Stripe Dashboard → Developers → Webhooks | `https://starx-flow.runs-on.dev/api/billing/webhook` | `stripe-signature` header (`<YOUR_WEBHOOK_SECRET>`) | `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.deleted` |
+| **Inbound Email** | Resend / Postmark Dashboard → Inbound Routing | `https://starx-flow.runs-on.dev/api/email/webhook/inbound` | `X-Webhook-Secret` header | `email.received`, `email.bounced` |
+| **Twilio Voice Webhook**| Twilio Console → Phone Numbers → Active Numbers | `https://starx-flow.runs-on.dev/api/voice/incoming` | `X-Twilio-Signature` HMAC | `Incoming Call (Voice)`, `Call Status Changes` |
+| **Google Calendar Push**| Google Cloud Console → Calendar API Webhooks | `https://starx-flow.runs-on.dev/api/calendar/webhook` | Channel token verification | `calendar.events.change` |
 
 ---
 
@@ -57,8 +57,8 @@ The following webhooks must be registered in the respective external developer p
 # -----------------------------------------------------------------------------
 
 # Application URLs
-APP_URL="https://starx-flow.vercel.app"
-NEXT_PUBLIC_APP_URL="https://starx-flow.vercel.app"
+APP_URL="https://starx-flow.runs-on.dev"
+NEXT_PUBLIC_APP_URL="https://starx-flow.runs-on.dev"
 
 # Supabase Infrastructure (EU Frankfurt)
 NEXT_PUBLIC_SUPABASE_URL="https://iotuxpcqewdzvqzncpad.supabase.co"

@@ -3,13 +3,16 @@
  * All metadata, site constants, and helper functions for SEO live here.
  */
 
+const rawSiteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "https://starx-flow.runs-on.dev";
+const siteUrl = rawSiteUrl.replace(/\/+$/, "");
+
 export const SEO_CONFIG = {
   siteName: "StarX-Flow",
-  siteUrl: "https://starx-flow.vercel.app",
+  siteUrl,
   defaultTitle: "StarX-Flow | AI Receptionist for WhatsApp",
   defaultDescription:
     "The easiest way to turn your WhatsApp into a 24/7 booking engine. Never miss a booking again with the autonomous front desk for local service businesses.",
-  defaultOgImage: "https://starx-flow.vercel.app/og-image.png",
+  defaultOgImage: `${siteUrl}/og-image.png`,
   twitterHandle: "@starxflow",
   locale: "en_US",
   themeColor: "#10b981",

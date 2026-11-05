@@ -1,7 +1,7 @@
 import path from 'path';
 
 export const CONFIG = {
-  baseUrl: process.env.LIVE_URL || 'https://starx-flow.vercel.app',
+  baseUrl: process.env.LIVE_URL || 'https://starx-flow.runs-on.dev',
   viewports: {
     desktop: { width: 1440, height: 900 },
     mobile: { width: 390, height: 844, isMobile: true, hasTouch: true },

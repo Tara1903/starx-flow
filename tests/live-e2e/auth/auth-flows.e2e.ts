@@ -35,6 +35,15 @@ export async function runPhaseBAndCAuthTests(): Promise<{
       // 1. Open Homepage and launch Registration Modal
       console.log('1. Testing Registration Modal Launch...');
       await page.goto(`${CONFIG.baseUrl}/`, { waitUntil: 'networkidle', timeout: 30000 });
+      await page.waitForTimeout(1000);
+
+      // Dismiss consent banner if visible
+      const acceptCookies = page.locator('button:has-text("Accept All"), button:has-text("Essential Only")').first();
+      if (await acceptCookies.isVisible().catch(() => false)) {
+        await acceptCookies.click().catch(() => {});
+        await page.waitForTimeout(500);
+      }
+
       const trialBtn = page.locator('button:has-text("Start Free Trial")').first();
       await trialBtn.click({ timeout: 5000 });
       await page.waitForTimeout(1000);
@@ -162,7 +171,7 @@ export async function runPhaseBAndCAuthTests(): Promise<{
   }
 
   const passedCount = results.filter((r) => r.passed).length;
-  const failedCount = results.length - failedCount;
+  const failedCount = results.length - passedCount;
 
   console.log(`\n[PHASE B & C SUMMARY] Tested: ${results.length} | Passed: ${passedCount} | Failed: ${failedCount}`);
   return { results, passedCount, failedCount };

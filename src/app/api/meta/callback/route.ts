@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const error = searchParams.get('error');
   const userId = searchParams.get('state');
 
-  const appUrl = process.env.APP_URL || 'http://localhost:3000';
+  const appUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
   
   if (error) {
     console.error('Meta OAuth error:', searchParams.get('error_description'));

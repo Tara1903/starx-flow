@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   const userId = searchParams.get('userId');
 
   const appId = process.env.META_APP_ID;
-  const appUrl = process.env.APP_URL || 'http://localhost:3000';
+  const appUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
   
   if (!appId) {
     return NextResponse.json({ error: 'META_APP_ID is not configured' }, { status: 500 });
