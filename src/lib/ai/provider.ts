@@ -11,6 +11,7 @@ const GEMINI_API_KEY =
   '';
 
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY || '';
+const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'deepseek-ai/deepseek-v4.1-flash';
 
 export class AIProvider {
   /**
@@ -63,7 +64,21 @@ SAFETY & INTEGRITY RULES:
       ? `${historyText}\nCustomer: <customer_message>${sanitizedMsg}</customer_message>\nAssistant:`
       : `<customer_message>${sanitizedMsg}</customer_message>`;
 
-    // 4. Try Gemini API first if configured
+    const preferNvidia = process.env.DEFAULT_AI_PROVIDER === 'nvidia';
+
+    // 4a. If NVIDIA is preferred, execute first
+    if (preferNvidia && NVIDIA_API_KEY && !NVIDIA_API_KEY.includes('your-')) {
+      try {
+        const nvidiaRes = await this.callNvidia(secureSystemPrompt, promptWithHistory, input.imageUrl);
+        if (nvidiaRes) {
+          return this.processOutput(nvidiaRes, 'nvidia', relevantChunks.map((c) => c.documentTitle));
+        }
+      } catch (err) {
+        console.warn('[AIProvider] Primary Nvidia call failed:', err);
+      }
+    }
+
+    // 4b. Try Gemini API if configured
     if (GEMINI_API_KEY && !GEMINI_API_KEY.includes('your-')) {
       try {
         const geminiRes = await this.callGemini(secureSystemPrompt, promptWithHistory, input);
@@ -80,15 +95,15 @@ SAFETY & INTEGRITY RULES:
       }
     }
 
-    // 5. Try Nvidia API as secondary provider if available
-    if (NVIDIA_API_KEY && !NVIDIA_API_KEY.includes('your-')) {
+    // 5. Try Nvidia API as secondary provider if not preferred
+    if (!preferNvidia && NVIDIA_API_KEY && !NVIDIA_API_KEY.includes('your-')) {
       try {
-        const nvidiaRes = await this.callNvidia(secureSystemPrompt, promptWithHistory);
+        const nvidiaRes = await this.callNvidia(secureSystemPrompt, promptWithHistory, input.imageUrl);
         if (nvidiaRes) {
           return this.processOutput(nvidiaRes, 'nvidia', relevantChunks.map((c) => c.documentTitle));
         }
       } catch (err) {
-        console.warn('[AIProvider] Nvidia call failed:', err);
+        console.warn('[AIProvider] Nvidia fallback call failed:', err);
       }
     }
 
@@ -163,28 +178,48 @@ SAFETY & INTEGRITY RULES:
     };
   }
 
-  private static async callNvidia(systemPrompt: string, userMessage: string): Promise<string | null> {
-    const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${NVIDIA_API_KEY}`,
-      },
-      signal: AbortSignal.timeout(3500),
-      body: JSON.stringify({
-        model: 'google/gemma-4-31b-it',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage },
-        ],
-        max_tokens: 600,
-        temperature: 0.5,
-      }),
-    });
+  private static async callNvidia(
+    systemPrompt: string,
+    userMessage: string,
+    imageUrl?: string
+  ): Promise<string | null> {
+    const userContent: any = imageUrl
+      ? [
+          { type: 'text', text: userMessage },
+          { type: 'image_url', image_url: { url: imageUrl } },
+        ]
+      : userMessage;
 
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.choices?.[0]?.message?.content || null;
+    try {
+      const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${NVIDIA_API_KEY}`,
+        },
+        signal: AbortSignal.timeout(15000),
+        body: JSON.stringify({
+          model: NVIDIA_MODEL,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userContent },
+          ],
+          max_tokens: 800,
+          temperature: 0.5,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => '');
+        console.warn(`[AIProvider] Nvidia API error ${res.status}:`, errorText);
+        return null;
+      }
+      const data = await res.json();
+      return data?.choices?.[0]?.message?.content || null;
+    } catch (err) {
+      console.warn('[AIProvider] Nvidia network exception:', err);
+      return null;
+    }
   }
 
   private static processOutput(

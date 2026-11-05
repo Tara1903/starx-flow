@@ -41,6 +41,7 @@ export interface AgentExecutionInput {
   conversationHistory?: Array<{ role: 'user' | 'ai' | 'human' | 'system'; text: string }>;
   customSystemPrompt?: string;
   tone?: 'Friendly' | 'Professional' | 'Casual' | 'Urgent';
+  imageUrl?: string;
 }
 
 export interface ToolExecutionRecord {

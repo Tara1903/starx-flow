@@ -89,7 +89,7 @@ If the user speaks in an Indian language (Hindi, Tamil, Telugu, etc.) or uses "H
             'Authorization': `Bearer ${nvidiaApiKey}`
           },
           body: JSON.stringify({
-            model: "google/gemma-4-31b-it",
+            model: Deno.env.get('NVIDIA_MODEL') || "deepseek-ai/deepseek-v4.1-flash",
             messages: [
               { role: "system", content: systemPrompt },
               { role: "user", content: messageText }
