@@ -28,7 +28,7 @@ export default function Privacy() {
             <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-white mb-6">
               Privacy <span className="text-gradient-silver">Policy</span>
             </h1>
-            <p className="text-zinc-400 font-medium">Last updated: {new Date().toLocaleDateString()}</p>
+            <p className="text-zinc-400 font-medium">Last updated: November 4, 2026</p>
           </motion.div>
 
           <motion.div

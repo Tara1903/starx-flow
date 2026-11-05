@@ -234,6 +234,9 @@ export function SignupModal({ onClose }: SignupModalProps) {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="signup-modal-title"
         className="relative w-full max-w-md glass-panel rounded-2xl overflow-hidden ring-1 ring-emerald-500/10 flex flex-col"
       >
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
@@ -241,7 +244,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/5 relative z-10">
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">
+            <h2 id="signup-modal-title" className="text-xl font-bold text-white tracking-tight">
               {isLoginMode ? "Sign In to StarX Flow" : "Start Free Trial"}
             </h2>
             {!isLoginMode && (
