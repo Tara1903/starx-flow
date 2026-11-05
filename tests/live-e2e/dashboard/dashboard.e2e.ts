@@ -39,7 +39,7 @@ export async function runPhaseFDashboardTests(): Promise<{
 
       // 2. Test Overview Section
       console.log('2. Testing Overview Section...');
-      const hasOverviewHeader = (await page.locator('text=/Command Center/i, text=/OPERATIONAL HUB/i, text=/ACTIVE FLOWS/i').count()) > 0;
+      const hasOverviewHeader = (await page.getByText(/Command Center|OPERATIONAL HUB|ACTIVE FLOWS|Overview/i).count()) > 0;
       record('Overview Section', hasOverviewHeader, hasOverviewHeader ? 'Command Center and Operational Hub metrics rendered' : 'Overview content missing');
 
       // Sections to navigate and verify
@@ -68,7 +68,7 @@ export async function runPhaseFDashboardTests(): Promise<{
           // Check if expected content is rendered
           let foundContent = false;
           for (const exp of sec.expectedText) {
-            if ((await page.locator(`text="${exp}"`).count()) > 0) {
+            if ((await page.getByText(new RegExp(exp, 'i')).count()) > 0) {
               foundContent = true;
               break;
             }

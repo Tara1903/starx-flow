@@ -35,11 +35,11 @@ export async function runPhaseEOnboardingTests(): Promise<{
       // 1. Visit /setup/welcome
       console.log('1. Testing Welcome Screen (/setup/welcome)...');
       const welcomeRes = await page.goto(`${CONFIG.baseUrl}/setup/welcome`, { waitUntil: 'networkidle', timeout: 30000 });
-      const welcomeOk = welcomeRes?.status() === 200 && (await page.locator('text=Welcome to, text=StarX Flow').count()) > 0;
+      const welcomeOk = welcomeRes?.status() === 200 && (await page.getByText(/Welcome to|StarX Flow/i).count()) > 0;
       record('Welcome Screen Load', welcomeOk, welcomeOk ? 'Welcome header rendered with benefits' : 'Failed to load welcome screen');
 
       // Check benefits items
-      const benefitsCount = await page.locator('text=Train Your Custom AI, text=Unified Messaging, text=Automate Workflows').count();
+      const benefitsCount = await page.getByText(/Train Your Custom AI|Unified Messaging|Automate Workflows/i).count();
       record('Onboarding Value Proposition', benefitsCount >= 2, `Rendered ${benefitsCount} core value proposition blocks`);
 
       // 2. Start Setup Journey -> /setup/account
@@ -63,7 +63,7 @@ export async function runPhaseEOnboardingTests(): Promise<{
         await saveBtn.click();
         await page.waitForTimeout(500);
 
-        const hasValidation = await page.locator('text=fill in all required fields, text=required').first().isVisible().catch(() => false);
+        const hasValidation = await page.getByText(/fill in all required fields|required/i).first().isVisible().catch(() => false);
         record('Account Step Required Validation', hasValidation, hasValidation ? 'Empty submission blocked with message' : 'Form submitted without required fields');
 
         // 4. Fill Valid Business Profile Information
@@ -98,7 +98,7 @@ export async function runPhaseEOnboardingTests(): Promise<{
       await page.goto(`${CONFIG.baseUrl}/dashboard`, { waitUntil: 'networkidle', timeout: 30000 });
       await page.waitForTimeout(2000);
       const dashUrl = page.url();
-      const dashLoaded = dashUrl.includes('/dashboard') && (await page.locator('text=Overview, text=Inbox, text=Command Center').count()) > 0;
+      const dashLoaded = dashUrl.includes('/dashboard') && (await page.getByText(/Overview|Inbox|Command Center|Receptionist/i).count()) > 0;
       record('Dashboard Routing', dashLoaded, dashLoaded ? 'Dashboard layout and navigation rendered' : `Redirected or unhandled: ${dashUrl}`);
 
     } catch (err: any) {

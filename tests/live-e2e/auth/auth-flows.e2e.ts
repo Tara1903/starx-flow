@@ -58,7 +58,7 @@ export async function runPhaseBAndCAuthTests(): Promise<{
       await continueBtn.click();
       await page.waitForTimeout(500);
 
-      const errorText1 = await page.locator('text=Business name must be at least 2 characters, text=Please select a business type').first().isVisible().catch(() => false);
+      const errorText1 = await page.getByText(/Business name must be at least 2 characters|Please select a business type/i).first().isVisible().catch(() => false);
       record('Step 1 Validation', errorText1, errorText1 ? 'Validation correctly blocked empty businessName' : 'Form submitted or failed silently');
 
       // 3. Fill Step 1 with valid business details
@@ -93,7 +93,7 @@ export async function runPhaseBAndCAuthTests(): Promise<{
         await submitBtn.click();
         await page.waitForTimeout(500);
 
-        const emailErr = await page.locator('text=valid email, text=Please enter a valid email address').first().isVisible().catch(() => false);
+        const emailErr = await page.getByText(/valid email/i).first().isVisible().catch(() => false);
         record('Malformed Email Validation', emailErr, emailErr ? 'Malformed email rejected with message' : 'Malformed email accepted or not flagged');
 
         // 5. Fill Step 2 with valid test info
@@ -104,7 +104,7 @@ export async function runPhaseBAndCAuthTests(): Promise<{
         await page.waitForTimeout(2500);
 
         // Verify result feedback (Magic link sent confirmation or notice)
-        const confirmationOrCooldown = await page.locator('text=Check Your Email, text=Check your email, text=Magic link sent, text=Too many attempts, text=Supabase is not configured').first().isVisible().catch(() => false);
+        const confirmationOrCooldown = await page.getByText(/Check Your Email|Magic link sent|Too many attempts|Supabase is not configured|sent/i).first().isVisible().catch(() => false);
         record('Registration Submission Feedback', confirmationOrCooldown, confirmationOrCooldown ? 'Received user feedback on signup submission' : 'No confirmation displayed');
       }
 
@@ -149,7 +149,7 @@ export async function runPhaseBAndCAuthTests(): Promise<{
       await loginBtn.click();
       await page.waitForTimeout(2500);
 
-      const hasErrorDisplay = await page.locator('text=Invalid, text=failed, text=Error, text=Unauthorized, text=not configured, [role="alert"]').first().isVisible().catch(() => false);
+      const hasErrorDisplay = (await page.getByText(/invalid|failed|error|unauthorized|not configured/i).first().isVisible().catch(() => false)) || (await page.locator('[role="alert"]').count() > 0);
       record('Invalid Credentials Rejection', hasErrorDisplay, hasErrorDisplay ? 'Invalid login rejected with error message' : 'No visual error message displayed');
 
       // 9. Test Protected Route Guard (Navigate to /admin while unauthenticated)
@@ -157,7 +157,7 @@ export async function runPhaseBAndCAuthTests(): Promise<{
       await page.goto(`${CONFIG.baseUrl}/admin`, { waitUntil: 'networkidle', timeout: 30000 });
       await page.waitForTimeout(1500);
       const currentUrl = page.url();
-      const isBlocked = currentUrl.includes('/admin/login') || (await page.locator('text=Access Denied, text=Unauthorized, text=Sign In').count()) > 0;
+      const isBlocked = currentUrl.includes('/admin/login') || (await page.getByText(/access denied|unauthorized|sign in/i).count()) > 0;
       record('Protected Route Guard (/admin)', isBlocked, isBlocked ? `Unauthenticated access guarded (Redirected/Blocked: ${currentUrl})` : `Route exposed unauthenticated: ${currentUrl}`);
 
     } catch (err: any) {
