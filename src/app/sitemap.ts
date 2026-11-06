@@ -9,6 +9,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '' ? 1 : 0.8,
   }));
 
+  const legalRoutes = ['/privacy', '/terms'].map((route) => ({
+    url: `${SEO_CONFIG.siteUrl}${route}`,
+    lastModified: new Date().toISOString().split('T')[0],
+    changeFrequency: 'monthly' as const,
+    priority: 0.4,
+  }));
+
   const clusterRoutes = [
     '/compare/starx-flow-vs-zapier',
     '/compare/starx-flow-vs-make',
@@ -23,7 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/industries/barber',
     '/industries/dentist',
     '/industries/med-spa',
-    '/industries/personal-trainer'
+    '/industries/personal-trainer',
   ].map((route) => ({
     url: `${SEO_CONFIG.siteUrl}${route}`,
     lastModified: new Date().toISOString().split('T')[0],
@@ -31,6 +38,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...baseRoutes, ...clusterRoutes];
+  return [...baseRoutes, ...legalRoutes, ...clusterRoutes];
 }
-
