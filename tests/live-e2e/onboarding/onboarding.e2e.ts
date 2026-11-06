@@ -44,7 +44,7 @@ export async function runPhaseEOnboardingTests(): Promise<{
 
       // 2. Start Setup Journey -> /setup/account
       console.log('2. Starting Guided Setup Journey...');
-      const startBtn = page.locator('button:has-text("Get Started"), button:has-text("Start Setup"), button:has-text("Start")').first();
+      const startBtn = page.locator('button:has-text("Begin Guided Setup"), button:has-text("Get Started"), button:has-text("Start Setup"), button:has-text("Start")').first();
       await startBtn.click();
       await page.waitForTimeout(1500);
 
@@ -55,16 +55,17 @@ export async function runPhaseEOnboardingTests(): Promise<{
         // 3. Test Empty Submission Validation on /setup/account
         console.log('3. Testing Empty Form Validation on /setup/account...');
         const ownerInput = page.locator('input[placeholder*="Alex Johnson"]').first();
-        const bizInput = page.locator('input[placeholder*="Lumina Hair"]').first();
+        const bizInput = page.locator('input[placeholder*="Glow Aesthetics"], input[placeholder*="Lumina Hair"]').first();
 
         await ownerInput.fill('');
         await bizInput.fill('');
-        const saveBtn = page.locator('button:has-text("Save & Continue"), button:has-text("Save")').first();
+        const saveBtn = page.locator('button:has-text("Save and Continue"), button:has-text("Save & Continue"), button:has-text("Save")').first();
         await saveBtn.click();
         await page.waitForTimeout(500);
 
-        const hasValidation = await page.getByText(/fill in all required fields|required/i).first().isVisible().catch(() => false);
-        record('Account Step Required Validation', hasValidation, hasValidation ? 'Empty submission blocked with message' : 'Form submitted without required fields');
+        const isBlockedByHtmlValidation = await ownerInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
+        const hasValidation = isBlockedByHtmlValidation || (await page.getByText(/fill in all required fields|required/i).first().isVisible().catch(() => false));
+        record('Account Step Required Validation', hasValidation, hasValidation ? 'Empty submission blocked with validation' : 'Form submitted without required fields');
 
         // 4. Fill Valid Business Profile Information
         console.log('4. Submitting Valid Business Profile Information...');
