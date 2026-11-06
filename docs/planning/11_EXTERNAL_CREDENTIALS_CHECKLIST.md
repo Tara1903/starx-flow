@@ -69,7 +69,7 @@ SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 # AI Provider Gateway
 GEMINI_API_KEY="AIzaSy..."
 NEXT_PUBLIC_GEMINI_API_KEY="AIzaSy..."
-NVIDIA_API_KEY="nvapi-..."
+NVIDIA_API_KEY="nvapi-your-key-here"
 
 # Meta Developer Platform (WhatsApp & Instagram)
 META_APP_ID="123456789012345"
