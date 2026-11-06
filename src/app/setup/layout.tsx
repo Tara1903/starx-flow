@@ -19,14 +19,10 @@ export default function SetupLayout({ children }: { children: React.ReactNode })
     // 1. If auth is loading, wait
     if (authLoading) return;
 
-    // 2. If not logged in, redirect to home / login
-    if (!isLoggedIn) {
-      router.push('/');
-      return;
+    // 2. Sync onboarding progress from DB if logged in
+    if (isLoggedIn) {
+      fetchOnboarding();
     }
-
-    // 3. Sync onboarding progress from DB/Local
-    fetchOnboarding();
   }, [isLoggedIn, authLoading, router]);
 
   useEffect(() => {
