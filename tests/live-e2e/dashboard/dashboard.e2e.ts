@@ -76,7 +76,7 @@ export async function runPhaseFDashboardTests(): Promise<{
 
           const hasNoErrors = diagnostics.pageErrors.length === 0;
           const passed = foundContent && hasNoErrors;
-          record(sec.id, passed, passed ? `Rendered expected content with 0 errors` : `Found: ${foundContent}, Errors: ${diagnostics.pageErrors.length}`);
+          record(sec.id, passed, passed ? `Rendered expected content with 0 errors` : `Found: ${foundContent}, Errors: ${diagnostics.pageErrors.length} (${diagnostics.pageErrors.join('; ')})`);
 
           if (!passed) {
             await takeFailureScreenshot(page, `dashboard_${sec.id.replace(/[^a-zA-Z0-9]/g, '_')}`);

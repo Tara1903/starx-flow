@@ -197,7 +197,7 @@ SAFETY & INTEGRITY RULES:
           'Content-Type': 'application/json',
           Authorization: `Bearer ${NVIDIA_API_KEY}`,
         },
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(6000),
         body: JSON.stringify({
           model: NVIDIA_MODEL,
           messages: [

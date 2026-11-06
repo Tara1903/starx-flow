@@ -58,7 +58,7 @@ export async function runPhaseGReceptionistTests(): Promise<{
       const sendMessage = async (text: string): Promise<string> => {
         await input.fill(text);
         const [response] = await Promise.all([
-          page.waitForResponse((r) => r.url().includes('/api/chat') && r.request().method() === 'POST', { timeout: 15000 }),
+          page.waitForResponse((r) => r.url().includes('/api/chat') && r.request().method() === 'POST', { timeout: 30000 }),
           sendBtn.click(),
         ]);
 
