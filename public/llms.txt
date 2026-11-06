@@ -45,9 +45,9 @@ All plans include a 14-day free trial.
 
 ## Links
 
-- Homepage: https://starx-flow.vercel.app/
-- Product: https://starx-flow.vercel.app/product
-- Features: https://starx-flow.vercel.app/features
-- Pricing: https://starx-flow.vercel.app/pricing
-- Resources: https://starx-flow.vercel.app/resources
-- About: https://starx-flow.vercel.app/about
+- Homepage: https://starx-flow.runs-on.dev/
+- Product: https://starx-flow.runs-on.dev/product
+- Features: https://starx-flow.runs-on.dev/features
+- Pricing: https://starx-flow.runs-on.dev/pricing
+- Resources: https://starx-flow.runs-on.dev/resources
+- About: https://starx-flow.runs-on.dev/about
