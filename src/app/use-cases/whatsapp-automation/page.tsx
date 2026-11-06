@@ -5,10 +5,29 @@ import { Footer } from '@/components/Footer';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  title: `WhatsApp Automation | ${SEO_CONFIG.siteName}`,
+  title: 'WhatsApp Automation',
   description: 'Automate WhatsApp conversations with AI agents using StarX Flow.',
   alternates: {
     canonical: `${SEO_CONFIG.siteUrl}/use-cases/whatsapp-automation`,
+  },
+  openGraph: {
+    title: `WhatsApp Automation | ${SEO_CONFIG.siteName}`,
+    description: 'Automate WhatsApp conversations with AI agents using StarX Flow.',
+    url: `${SEO_CONFIG.siteUrl}/use-cases/whatsapp-automation`,
+    images: [
+      {
+        url: SEO_CONFIG.defaultOgImage,
+        width: 1200,
+        height: 630,
+        alt: `WhatsApp Automation | ${SEO_CONFIG.siteName}`,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `WhatsApp Automation | ${SEO_CONFIG.siteName}`,
+    description: 'Automate WhatsApp conversations with AI agents using StarX Flow.',
+    images: [SEO_CONFIG.defaultOgImage],
   },
 };
 

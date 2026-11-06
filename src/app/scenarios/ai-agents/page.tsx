@@ -6,10 +6,29 @@ import Script from 'next/script';
 
 
 export const metadata: Metadata = {
-  title: `AI Agents Scenarios | ${SEO_CONFIG.siteName}`,
+  title: 'AI Agents Scenarios',
   description: 'Explore how AI Agents can automate your workflow, customer support, and sales with StarX Flow.',
   alternates: {
     canonical: `${SEO_CONFIG.siteUrl}/scenarios/ai-agents`,
+  },
+  openGraph: {
+    title: `AI Agents Scenarios | ${SEO_CONFIG.siteName}`,
+    description: 'Explore how AI Agents can automate your workflow, customer support, and sales with StarX Flow.',
+    url: `${SEO_CONFIG.siteUrl}/scenarios/ai-agents`,
+    images: [
+      {
+        url: SEO_CONFIG.defaultOgImage,
+        width: 1200,
+        height: 630,
+        alt: `AI Agents Scenarios | ${SEO_CONFIG.siteName}`,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `AI Agents Scenarios | ${SEO_CONFIG.siteName}`,
+    description: 'Explore how AI Agents can automate your workflow, customer support, and sales with StarX Flow.',
+    images: [SEO_CONFIG.defaultOgImage],
   },
 };
 
