@@ -3,7 +3,12 @@
  * All metadata, site constants, and helper functions for SEO live here.
  */
 
-const rawSiteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "https://starx-flow.runs-on.dev";
+const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
+// In SEO contexts, canonical tags, sitemaps, and robots directives must never point to localhost
+const rawSiteUrl =
+  envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")
+    ? envUrl
+    : "https://starx-flow.runs-on.dev";
 const siteUrl = rawSiteUrl.replace(/\/+$/, "");
 
 export const SEO_CONFIG = {
