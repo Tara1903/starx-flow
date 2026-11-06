@@ -37,38 +37,38 @@ export const PAGE_META: Record<string, PageMeta> = {
       "Never miss a booking again. StarX-Flow chats with clients on WhatsApp, answers FAQs, and syncs directly with your calendar in under 2 seconds.",
   },
   "/product": {
-    title: "Product | StarX-Flow",
+    title: "Product",
     description:
       "Discover the AI-powered operating system that automates booking, WhatsApp customer care, calendar sync, and client management for local service businesses.",
   },
   "/features": {
-    title: "Features | StarX-Flow",
+    title: "Features",
     description:
       "24/7 WhatsApp AI assistant, multi-calendar sync, CRM, Google Review Booster, intake forms, HIPAA-compliant security, and multi-staff rostering — all included.",
   },
   "/pricing": {
-    title: "Pricing | StarX-Flow",
+    title: "Pricing",
     description:
       "Simple flat-rate plans with zero booking commissions. Start with a 14-day free trial. Plans from $29/mo for solo practitioners to $99/mo for multi-location businesses.",
     ogType: "product",
   },
   "/resources": {
-    title: "Resources | StarX-Flow",
+    title: "Resources",
     description:
       "Guides, playbooks, templates, and articles to help you automate your local service business with AI-powered WhatsApp booking and scheduling.",
   },
   "/about": {
-    title: "About | StarX-Flow",
+    title: "About",
     description:
       "Built by local service business owners who faced the same challenges you do. Learn how StarX-Flow was born from the need to automate front-desk operations.",
   },
   "/privacy": {
-    title: "Privacy Policy | StarX-Flow",
+    title: "Privacy Policy",
     description:
       "StarX-Flow privacy policy. Learn how we collect, use, protect, and handle your personal data and business information.",
   },
   "/terms": {
-    title: "Terms of Service | StarX-Flow",
+    title: "Terms of Service",
     description:
       "StarX-Flow terms of service. Read the legal agreement governing your use of the StarX-Flow platform and services.",
   },
@@ -103,7 +103,7 @@ export function getPageMeta(pathname: string): PageMeta {
   // Dynamic route matching
   if (pathname.startsWith("/resources/articles/")) {
     return {
-      title: "Article | StarX-Flow",
+      title: "Article",
       description: "Read this guide on StarX-Flow — the AI automation platform for local service businesses.",
       ogType: "article",
     };
@@ -111,20 +111,32 @@ export function getPageMeta(pathname: string): PageMeta {
 
   if (pathname.startsWith("/resources/")) {
     return {
-      title: "Presentation | StarX-Flow",
+      title: "Presentation",
       description: "View this StarX-Flow resource presentation on AI-powered business automation.",
     };
   }
 
   if (pathname.startsWith("/compare/")) {
-    const slug = pathname.replace("/compare/", "");
+    const slug = pathname.replace("/compare/", "").replace(/^starx-flow-vs-/i, "");
     const formatted = slug
       .split("-")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
     return {
-      title: `${formatted} | StarX-Flow`,
-      description: `Compare StarX-Flow with alternatives. See how StarX-Flow stacks up in features, pricing, and automation capabilities.`,
+      title: `StarX-Flow vs ${formatted}`,
+      description: `Compare StarX-Flow with ${formatted}. See how StarX-Flow stacks up in features, pricing, and automation capabilities.`,
+    };
+  }
+
+  if (pathname.startsWith("/industries/")) {
+    const slug = pathname.replace("/industries/", "");
+    const formatted = slug
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+    return {
+      title: `AI Receptionist for ${formatted}s`,
+      description: `Automate your ${formatted} bookings and client intake 24/7 on WhatsApp with StarX-Flow.`,
     };
   }
 
@@ -135,7 +147,7 @@ export function getPageMeta(pathname: string): PageMeta {
     pathname.startsWith("/admin")
   ) {
     return {
-      title: "Dashboard | StarX-Flow",
+      title: "Dashboard",
       description: "StarX-Flow dashboard",
       noindex: true,
     };

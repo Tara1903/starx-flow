@@ -14,7 +14,9 @@ import { AuthRedirect } from '@/components/AuthRedirect';
 export async function generateMetadata(): Promise<Metadata> {
   const pageMeta = getPageMeta('/');
   return {
-    title: pageMeta.title,
+    title: {
+      absolute: pageMeta.title,
+    },
     description: pageMeta.description,
     alternates: {
       canonical: SEO_CONFIG.siteUrl,
@@ -23,6 +25,20 @@ export async function generateMetadata(): Promise<Metadata> {
       title: pageMeta.title,
       description: pageMeta.description,
       url: SEO_CONFIG.siteUrl,
+      images: [
+        {
+          url: SEO_CONFIG.defaultOgImage,
+          width: 1200,
+          height: 630,
+          alt: pageMeta.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageMeta.title,
+      description: pageMeta.description,
+      images: [SEO_CONFIG.defaultOgImage],
     },
   };
 }

@@ -173,7 +173,8 @@ export function Hero() {
             </div>
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-white leading-[1.05] mb-6">
-              Your front desk, <br />`n              <span className="text-zinc-500">now on autopilot.</span>
+              Your front desk, <br />
+              <span className="text-zinc-500">now on autopilot.</span>
             </h1>
             
             <p className="text-lg sm:text-xl text-zinc-400 font-medium leading-relaxed max-w-lg mb-10">
