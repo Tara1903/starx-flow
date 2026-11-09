@@ -46,6 +46,12 @@ All plans include a 14-day free trial.
 ## Links
 
 - Homepage: https://starx-flow.runs-on.dev/
+- AI Automation: https://starx-flow.runs-on.dev/ai-automation
+- WhatsApp AI Chatbot: https://starx-flow.runs-on.dev/whatsapp-ai-chatbot
+- Instagram DM Automation: https://starx-flow.runs-on.dev/instagram-ai-automation
+- AI Customer Support: https://starx-flow.runs-on.dev/ai-customer-support
+- AI Agents: https://starx-flow.runs-on.dev/ai-agents
+- Business Workflow Automation: https://starx-flow.runs-on.dev/business-workflow-automation
 - Product: https://starx-flow.runs-on.dev/product
 - Features: https://starx-flow.runs-on.dev/features
 - Pricing: https://starx-flow.runs-on.dev/pricing

@@ -77,6 +77,36 @@ export const PAGE_META: Record<string, PageMeta> = {
     description:
       "StarX-Flow terms of service. Read the legal agreement governing your use of the StarX-Flow platform and services.",
   },
+  "/ai-automation": {
+    title: "AI Automation for Business | Autonomous Workflows",
+    description:
+      "Deploy AI business automation in minutes. StarX-Flow unifies 24/7 conversational AI, WhatsApp booking, Google Calendar sync, and operational workflows.",
+  },
+  "/whatsapp-ai-chatbot": {
+    title: "WhatsApp AI Chatbot & Booking Assistant",
+    description:
+      "Turn your WhatsApp into an autonomous 24/7 front desk. Answer customer questions, check Google Calendar availability, and book appointments automatically.",
+  },
+  "/instagram-ai-automation": {
+    title: "Instagram DM AI Automation & Chatbot",
+    description:
+      "Automate Instagram Direct Messages with conversational AI. StarX-Flow qualifies inbound leads, answers product questions, and schedules appointments directly in DMs.",
+  },
+  "/ai-customer-support": {
+    title: "AI Customer Support Software & Chatbots",
+    description:
+      "Deliver instant 24/7 customer support across WhatsApp, Instagram, and Web. StarX-Flow resolves routine inquiries automatically with RAG knowledge retrieval.",
+  },
+  "/ai-agents": {
+    title: "AI Agents for Business Automation | Autonomous Workforce",
+    description:
+      "Deploy autonomous AI agents that perform real business actions: scheduling appointments, updating CRM records, and orchestrating operational workflows.",
+  },
+  "/business-workflow-automation": {
+    title: "Business Workflow Automation Platform",
+    description:
+      "Streamline operations with event-driven business workflow automation. Connect customer communications, calendar schedules, CRM records, and tasks in one dashboard.",
+  },
 };
 
 /**

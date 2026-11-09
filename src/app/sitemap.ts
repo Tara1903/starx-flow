@@ -2,24 +2,44 @@ import { MetadataRoute } from 'next';
 import { SEO_CONFIG } from '@/lib/seoConfig';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const currentDate = new Date().toISOString().split('T')[0];
+
   const baseRoutes = ['', '/product', '/features', '/pricing', '/about', '/resources'].map((route) => ({
     url: `${SEO_CONFIG.siteUrl}${route}`,
-    lastModified: new Date().toISOString().split('T')[0],
+    lastModified: currentDate,
     changeFrequency: 'daily' as const,
     priority: route === '' ? 1 : 0.8,
   }));
 
+  const pillarRoutes = [
+    '/ai-automation',
+    '/whatsapp-ai-chatbot',
+    '/instagram-ai-automation',
+    '/ai-customer-support',
+    '/ai-agents',
+    '/business-workflow-automation',
+  ].map((route) => ({
+    url: `${SEO_CONFIG.siteUrl}${route}`,
+    lastModified: currentDate,
+    changeFrequency: 'daily' as const,
+    priority: 0.9,
+  }));
+
   const legalRoutes = ['/privacy', '/terms'].map((route) => ({
     url: `${SEO_CONFIG.siteUrl}${route}`,
-    lastModified: new Date().toISOString().split('T')[0],
+    lastModified: currentDate,
     changeFrequency: 'monthly' as const,
     priority: 0.4,
   }));
 
   const clusterRoutes = [
+    '/compare/starx-flow-vs-manychat',
+    '/compare/starx-flow-vs-intercom',
     '/compare/starx-flow-vs-zapier',
     '/compare/starx-flow-vs-make',
     '/compare/starx-flow-vs-n8n',
+    '/compare/starx-flow-vs-wati',
+    '/compare/starx-flow-vs-respond-io',
     '/compare/starx-flow-vs-langflow',
     '/compare/starx-flow-vs-mindbody',
     '/compare/starx-flow-vs-vagaro',
@@ -33,10 +53,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/industries/personal-trainer',
   ].map((route) => ({
     url: `${SEO_CONFIG.siteUrl}${route}`,
-    lastModified: new Date().toISOString().split('T')[0],
+    lastModified: currentDate,
     changeFrequency: 'weekly' as const,
     priority: 0.7,
   }));
 
-  return [...baseRoutes, ...legalRoutes, ...clusterRoutes];
+  return [...baseRoutes, ...pillarRoutes, ...legalRoutes, ...clusterRoutes];
 }

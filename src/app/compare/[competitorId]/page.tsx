@@ -2,10 +2,17 @@ import { Metadata } from 'next';
 import { SEO_CONFIG, getCanonicalUrl } from '@/lib/seoConfig';
 import { ComparisonPageClient } from './ComparisonPageClient';
 import { comparisonData } from './comparisonData';
+import Script from 'next/script';
 
 type Props = {
   params: Promise<{ competitorId: string }>;
 };
+
+export async function generateStaticParams() {
+  return Object.keys(comparisonData).map((competitorId) => ({
+    competitorId,
+  }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { competitorId } = await params;
@@ -81,6 +88,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ComparisonPage({ params }: Props) {
-  await params;
-  return <ComparisonPageClient />;
+  const { competitorId } = await params;
+  const data = comparisonData[competitorId];
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: data ? data.title : `StarX-Flow vs ${competitorId}`,
+    description: data ? data.description : `Comparison of StarX-Flow and ${competitorId}`,
+    url: getCanonicalUrl(`/compare/${competitorId}`),
+    isPartOf: {
+      "@type": "WebSite",
+      name: SEO_CONFIG.siteName,
+      url: SEO_CONFIG.siteUrl,
+    },
+  };
+
+  return (
+    <>
+      <Script
+        id={`schema-compare-${competitorId}`}
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ComparisonPageClient />
+    </>
+  );
 }
