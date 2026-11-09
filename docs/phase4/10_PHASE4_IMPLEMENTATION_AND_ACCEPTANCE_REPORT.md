@@ -141,14 +141,17 @@ Three authoritative, peer-level engineering and operations guides were implement
 
 A submission-ready directory and listing package was generated in `docs/phase4/06_EXTERNAL_AUTHORITY_OPPORTUNITY_MATRIX.md`. The plan strictly forbids link farms, private blog networks (PBNs), paid spam placements, or low-quality directory submission schemes.
 
-### 7.1 Digital SaaS Discovery Platforms (No Physical Address Required)
-- **Product Hunt:** Launch asset checklist, copy, and visual specs formatted for digital launch.
-- **G2 & Capterra:** Structured profile data with verified feature classifications (verified via business email/domain).
-- **AlternativeTo & SaaSHub:** Organic software listing packages prepared with zero physical address requirements.
-- **Trustpilot:** Digital SaaS profile ready for customer reviews using domain email.
-- **Privacy Shield:** Purely online SaaS model protects founder privacy; no personal residential address is published or required.
-- **G2 & Capterra:** Structured profile data with verified feature classifications.
-- **Trustpilot:** Organic business profile ready for authentic customer reviews.
+### 7.1 Pure-Play Digital SaaS Model & Local Directories (NOT APPLICABLE)
+- **Operating Model:** StarX-Flow operates exclusively as an online, cloud-hosted SaaS platform without a customer-facing physical storefront, walk-in office, or physical service territory.
+- **Google Business Profile (GBP) & Local Directories:** Under Google's official representation guidelines, pure-play online businesses without in-person customer interactions are explicitly ineligible. In compliance with Google anti-abuse guidelines, StarX-Flow strictly prohibits using virtual offices, PO boxes, rented desks, or residential addresses to bypass local verification.
+- **Status:** **Google Business Profile, Apple Business Connect, and Bing Places are designated as NOT APPLICABLE.**
+
+### 7.2 High-Authority Online SaaS Platforms (Prioritized)
+- **G2:** High-authority B2B software directory (DA 92) — vendor profile eligible via corporate domain email.
+- **Capterra / Gartner Digital Markets:** B2B software catalog (DA 91) — vendor listing eligible.
+- **Trustpilot:** Global consumer and business review platform (DA 93) — domain-level verification ready.
+- **LinkedIn Company Page:** Verified corporate entity profile (DA 98) — corporate presence ready.
+- **Product Hunt:** Global software launch platform (DA 91) — maker launch package prepared.
 
 ### 7.3 High-Authority Ecosystem Marketplaces
 - **Meta App Directory / WhatsApp Business Directory:** Technical prerequisites, privacy policies, and webhook verification endpoints formatted.
@@ -329,18 +332,21 @@ A unified technical and commercial analytics framework was established in `docs/
 
 ## 17. OUTSTANDING EXTERNAL ACTIONS (REQUIRES OWNER ACTION)
 
-The following actions require domain-level ownership, third-party authentication, or physical mail verification and cannot be performed autonomously by an agent:
+The following actions require domain-level ownership or third-party platform authentication. In accordance with the pure-play digital SaaS operating model, **physical-address verification and Google Business Profile claiming have been removed as NOT APPLICABLE**:
 
-1. **Digital SaaS Profiles (Zero Address Needed):** Claim vendor profiles on G2, Capterra, AlternativeTo, and Trustpilot using your official `@starx-flow.runs-on.dev` domain email. (No physical or home address is needed or published).
-2. **Meta WhatsApp Cloud API Production App Review:** Submit the Meta Developer App for Business Verification and WhatsApp Official Business Account (OBA) green checkmark.
-3. **Google OAuth Production App Verification:** Complete the Google Cloud Trust & Safety review to remove the "Google hasn't verified this app" interstitial on Google Calendar OAuth grants.
-4. **Product Hunt Maker Profile:** Schedule the official Product Hunt launch using the prepared assets in `docs/phase4/06_EXTERNAL_AUTHORITY_OPPORTUNITY_MATRIX.md`.
+1. **G2 & Capterra Vendor Profiles:** Claim SaaS vendor profiles on G2 and Capterra / Gartner Digital Markets using the official corporate domain email (`support@starx-flow.runs-on.dev`).
+2. **Trustpilot Business Profile:** Claim and verify the StarX-Flow domain profile on Trustpilot via DNS TXT or admin domain email.
+3. **LinkedIn Company Page:** Publish the official StarX-Flow corporate company page on LinkedIn to anchor the brand entity graph.
+4. **Product Hunt Maker Launch:** Schedule the official Product Hunt launch using the prepared assets in `docs/phase4/06_EXTERNAL_AUTHORITY_OPPORTUNITY_MATRIX.md`.
+5. **Meta WhatsApp Cloud API Production App Review:** Submit the Meta Developer App for Business Verification and WhatsApp Official Business Account (OBA) status.
+6. **Google OAuth Production App Verification:** Complete the Google Cloud Trust & Safety review to remove the "Google hasn't verified this app" interstitial on Google Calendar OAuth grants.
+7. **Local Storefront Directories (GBP / Apple Business / Bing Places):** **NOT APPLICABLE.** StarX-Flow has no physical storefront or in-person operations; virtual, rented, or residential addresses are strictly forbidden to ensure full policy compliance.
 
 ---
 
 ## 18. REMAINING LIMITATIONS
 
-1. **Organic Reviews / Social Proof Volume:** Because StarX-Flow strictly avoids fabricated reviews, third-party review counters will remain at zero until initial live pilot users submit authentic feedback on G2, Google, or Trustpilot.
+1. **Organic Reviews / Social Proof Volume:** Because StarX-Flow strictly avoids fabricated reviews, third-party review counters will remain at zero until initial live pilot users submit authentic feedback on G2, Capterra, or Trustpilot.
 2. **Third-Party POS Integrations:** Clover and Square connectors are architecturally documented and planned, but not yet live in production code.
 3. **Voice AI Interface:** Inbound telephony via Twilio Voice / ElevenLabs remains an active development workstream and is transparently disclosed as such.
 
@@ -348,10 +354,11 @@ The following actions require domain-level ownership, third-party authentication
 
 ## 19. RECOMMENDED PHASE 5 PRIORITIES
 
-1. **Pilot Program Customer Case Studies:** Onboard 3-5 real European service businesses (clinics, salons, gyms) to generate verified, attributable case studies with documented performance metrics (e.g. reduction in missed calls, appointment booking volume).
-2. **Expanded Integration Ecosystem:** Implement live OAuth connectors for Clover POS and Square Appointments to bridge online bookings with point-of-sale inventory.
-3. **Inbound Voice AI Receptionist:** Connect Twilio Voice WebSockets to Gemini Multimodal Live API to provide voice telephony reception alongside WhatsApp and Web Chat.
-4. **Community Knowledge Base & Interactive Playground:** Deploy interactive sandbox widgets allowing prospective users to test AI knowledge retrieval directly on the public website without creating an account.
+1. **Pilot Program Customer Case Studies:** Onboard 3-5 real European service businesses (clinics, salons, gyms) to generate verified, attributable SaaS case studies with documented operational outcomes (e.g. reduction in missed calls, appointment booking volume).
+2. **Online SaaS Directory Activation & Authentic Review Accrual:** Activate claimed profiles on G2, Capterra, and Trustpilot to begin accruing authentic customer reviews from early adopters.
+3. **Expanded Integration Ecosystem:** Implement live OAuth connectors for Clover POS and Square Appointments to bridge online bookings with point-of-sale inventory.
+4. **Inbound Voice AI Receptionist:** Connect Twilio Voice WebSockets to Gemini Multimodal Live API to provide voice telephony reception alongside WhatsApp and Web Chat.
+5. **Community Knowledge Base & Interactive Playground:** Deploy interactive sandbox widgets allowing prospective users to test AI knowledge retrieval directly on the public website without creating an account.
 
 ---
 
@@ -374,7 +381,7 @@ The following actions require domain-level ownership, third-party authentication
 | **WS-D-02** | Article Publication Roadmap | **COMPLETED & VERIFIED** | Written to `docs/phase4/05_ARTICLE_PRIORITY_AND_PUBLICATION_ROADMAP.md` |
 | **WS-D-03** | Author & Pre-render Top 3 Technical Articles | **COMPLETED & VERIFIED** | Live on `/resources/articles/*`, SSG generated |
 | **WS-E-01** | External Authority Opportunity Matrix | **COMPLETED & VERIFIED** | Written to `docs/phase4/06_EXTERNAL_AUTHORITY_OPPORTUNITY_MATRIX.md` |
-| **WS-E-02** | Third-Party Directory Profile Submission | **REQUIRES OWNER ACTION** | Requires domain owner email verification on G2, Product Hunt, Capterra (no physical address needed) |
+| **WS-E-02** | Third-Party SaaS Directory Profile Submissions | **REQUIRES OWNER ACTION** | Requires domain owner claiming on G2, Capterra, Trustpilot, LinkedIn & Product Hunt. GBP marked NOT APPLICABLE |
 | **WS-F-01** | AI Search Discoverability Audit Document | **COMPLETED & VERIFIED** | Written to `docs/phase4/07_AI_SEARCH_DISCOVERABILITY_AUDIT.md` |
 | **WS-F-02** | Update `public/llms.txt` Manifest | **COMPLETED & VERIFIED** | Updated with clean brand taxonomy & deep links |
 | **WS-G-01** | Search & Conversion Framework Document | **COMPLETED & VERIFIED** | Written to `docs/phase4/08_SEARCH_AND_CONVERSION_MEASUREMENT_FRAMEWORK.md` |
