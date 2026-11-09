@@ -13,7 +13,7 @@ const KEY = 'a3f81e9b204847e199d750c18d360f72';
 const KEY_LOCATION = `https://${HOST}/${KEY}.txt`;
 
 const URL_LIST = [
-  `https://${HOST}/`,
+  `https://${HOST}`,
   `https://${HOST}/product`,
   `https://${HOST}/features`,
   `https://${HOST}/pricing`,
