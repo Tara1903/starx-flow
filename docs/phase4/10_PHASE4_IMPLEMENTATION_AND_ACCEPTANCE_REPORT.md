@@ -141,13 +141,12 @@ Three authoritative, peer-level engineering and operations guides were implement
 
 A submission-ready directory and listing package was generated in `docs/phase4/06_EXTERNAL_AUTHORITY_OPPORTUNITY_MATRIX.md`. The plan strictly forbids link farms, private blog networks (PBNs), paid spam placements, or low-quality directory submission schemes.
 
-### 7.1 Tier 1 Verified Business Directories
-- **Google Business Profile:** Configured for local verification in target jurisdiction.
-- **Apple Business Connect:** Configured for Apple Maps and Siri search integration.
-- **Bing Places for Business:** Verified via Google Business Profile import.
-
-### 7.2 SaaS Discovery Platforms (Profiles Prepared)
-- **Product Hunt:** Launch asset checklist, copy, and visual specs formatted.
+### 7.1 Digital SaaS Discovery Platforms (No Physical Address Required)
+- **Product Hunt:** Launch asset checklist, copy, and visual specs formatted for digital launch.
+- **G2 & Capterra:** Structured profile data with verified feature classifications (verified via business email/domain).
+- **AlternativeTo & SaaSHub:** Organic software listing packages prepared with zero physical address requirements.
+- **Trustpilot:** Digital SaaS profile ready for customer reviews using domain email.
+- **Privacy Shield:** Purely online SaaS model protects founder privacy; no personal residential address is published or required.
 - **G2 & Capterra:** Structured profile data with verified feature classifications.
 - **Trustpilot:** Organic business profile ready for authentic customer reviews.
 
@@ -332,11 +331,10 @@ A unified technical and commercial analytics framework was established in `docs/
 
 The following actions require domain-level ownership, third-party authentication, or physical mail verification and cannot be performed autonomously by an agent:
 
-1. **Google Business Profile Claim:** Complete business address verification postcard or video recording for the legal entity behind StarX-Flow.
+1. **Digital SaaS Profiles (Zero Address Needed):** Claim vendor profiles on G2, Capterra, AlternativeTo, and Trustpilot using your official `@starx-flow.runs-on.dev` domain email. (No physical or home address is needed or published).
 2. **Meta WhatsApp Cloud API Production App Review:** Submit the Meta Developer App for Business Verification and WhatsApp Official Business Account (OBA) green checkmark.
 3. **Google OAuth Production App Verification:** Complete the Google Cloud Trust & Safety review to remove the "Google hasn't verified this app" interstitial on Google Calendar OAuth grants.
 4. **Product Hunt Maker Profile:** Schedule the official Product Hunt launch using the prepared assets in `docs/phase4/06_EXTERNAL_AUTHORITY_OPPORTUNITY_MATRIX.md`.
-5. **G2 & Capterra Vendor Claim:** Claim vendor profiles on G2, Capterra, and Trustpilot using the official company domain email.
 
 ---
 
@@ -376,7 +374,7 @@ The following actions require domain-level ownership, third-party authentication
 | **WS-D-02** | Article Publication Roadmap | **COMPLETED & VERIFIED** | Written to `docs/phase4/05_ARTICLE_PRIORITY_AND_PUBLICATION_ROADMAP.md` |
 | **WS-D-03** | Author & Pre-render Top 3 Technical Articles | **COMPLETED & VERIFIED** | Live on `/resources/articles/*`, SSG generated |
 | **WS-E-01** | External Authority Opportunity Matrix | **COMPLETED & VERIFIED** | Written to `docs/phase4/06_EXTERNAL_AUTHORITY_OPPORTUNITY_MATRIX.md` |
-| **WS-E-02** | Third-Party Directory Profile Submission | **REQUIRES OWNER ACTION** | Requires domain owner authorization & physical postcard/SMS verification |
+| **WS-E-02** | Third-Party Directory Profile Submission | **REQUIRES OWNER ACTION** | Requires domain owner email verification on G2, Product Hunt, Capterra (no physical address needed) |
 | **WS-F-01** | AI Search Discoverability Audit Document | **COMPLETED & VERIFIED** | Written to `docs/phase4/07_AI_SEARCH_DISCOVERABILITY_AUDIT.md` |
 | **WS-F-02** | Update `public/llms.txt` Manifest | **COMPLETED & VERIFIED** | Updated with clean brand taxonomy & deep links |
 | **WS-G-01** | Search & Conversion Framework Document | **COMPLETED & VERIFIED** | Written to `docs/phase4/08_SEARCH_AND_CONVERSION_MEASUREMENT_FRAMEWORK.md` |
