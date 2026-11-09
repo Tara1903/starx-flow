@@ -67,40 +67,64 @@ const payload = JSON.stringify({
   urlList: URL_LIST,
 });
 
-const options = {
-  hostname: 'api.indexnow.org',
-  port: 443,
-  path: '/indexnow',
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Content-Length': Buffer.byteLength(payload),
-  },
-};
+const ENDPOINTS = [
+  { hostname: 'api.indexnow.org', path: '/indexnow' },
+  { hostname: 'www.bing.com', path: '/indexnow' },
+];
 
-console.log(`[IndexNow] Submitting ${URL_LIST.length} URLs to api.indexnow.org...`);
+function submitToEndpoint(endpointIndex = 0) {
+  if (endpointIndex >= ENDPOINTS.length) {
+    console.error('❌ [IndexNow] All endpoints failed.');
+    process.exit(1);
+  }
 
-const req = https.request(options, (res) => {
-  console.log(`[IndexNow] Response status code: ${res.statusCode} ${res.statusMessage}`);
+  const endpoint = ENDPOINTS[endpointIndex];
+  console.log(`[IndexNow] Submitting ${URL_LIST.length} URLs to ${endpoint.hostname}...`);
 
-  let responseBody = '';
-  res.on('data', (chunk) => {
-    responseBody += chunk;
+  const options = {
+    hostname: endpoint.hostname,
+    port: 443,
+    path: endpoint.path,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Content-Length': Buffer.byteLength(payload),
+    },
+  };
+
+  const req = https.request(options, (res) => {
+    console.log(`[IndexNow] Response from ${endpoint.hostname}: ${res.statusCode} ${res.statusMessage}`);
+
+    let responseBody = '';
+    res.on('data', (chunk) => {
+      responseBody += chunk;
+    });
+
+    res.on('end', () => {
+      if (res.statusCode === 200 || res.statusCode === 202) {
+        console.log(`✅ [IndexNow] URLs submitted successfully via ${endpoint.hostname}!`);
+      } else if (res.statusCode === 403) {
+        console.warn(`⚠️ [IndexNow] 403 Forbidden received from ${endpoint.hostname}: ${responseBody || 'User unauthorized'}`);
+        console.warn('ℹ️ [IndexNow] Note: Bing Webmaster requires its verification crawler to finish validating the key file on starx-flow.runs-on.dev, or requires the key to match the one generated under Bing Webmaster Tools > IndexNow.');
+      } else {
+        console.warn(`⚠️ [IndexNow] Non-success response (${res.statusCode}): ${responseBody || 'No body returned'}`);
+      }
+    });
   });
 
-  res.on('end', () => {
-    if (res.statusCode === 200 || res.statusCode === 202) {
-      console.log('✅ [IndexNow] URLs submitted successfully! Key will be validated once deployed to starx-flow.runs-on.dev.');
+  req.on('error', (error) => {
+    console.warn(`⚠️ [IndexNow] Failed connecting to ${endpoint.hostname}: ${error.message}`);
+    if (endpointIndex + 1 < ENDPOINTS.length) {
+      console.log(`[IndexNow] Trying fallback endpoint...`);
+      submitToEndpoint(endpointIndex + 1);
     } else {
-      console.warn(`⚠️ [IndexNow] Non-success response: ${responseBody || 'No body returned'}`);
+      console.error('❌ [IndexNow] All submission attempts failed.');
+      process.exit(1);
     }
   });
-});
 
-req.on('error', (error) => {
-  console.error('❌ [IndexNow] Submission request failed:', error.message);
-  process.exit(1);
-});
+  req.write(payload);
+  req.end();
+}
 
-req.write(payload);
-req.end();
+submitToEndpoint(0);
