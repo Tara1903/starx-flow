@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "scan:secrets": "node scripts/scan-secrets.cjs"
+    "scan:secrets": "node scripts/scan-secrets.cjs",
+    "indexnow:submit": "node scripts/submit-indexnow.cjs"
   },
   "allowScripts": {
     "esbuild": true,
