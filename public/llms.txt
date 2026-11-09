@@ -23,8 +23,11 @@ StarX-Flow serves local service businesses that rely on appointments and booking
 - Medical clinics and dental offices
 - Hair salons and beauty studios
 - Spas and wellness centers
-- Coaching and tutoring practices
-- Pilates and yoga studios
+- Real estate brokerages and property managers
+- Boutique hotels and hospitality venues
+- Restaurants and dining establishments
+- Tutoring academies and music schools
+- Plumbers and home service contractors
 
 ## Pricing
 
@@ -43,7 +46,39 @@ All plans include a 14-day free trial.
 4. **Direct client ownership**: You own your client data, unlike marketplace aggregators
 5. **Enterprise infrastructure for SMBs**: Multi-calendar sync, POS integration, and compliance features typically reserved for enterprise
 
-## Links
+## Industry Solutions
+
+- Gyms & Fitness Studios: https://starx-flow.runs-on.dev/industries/gyms-fitness
+- Hair Salons & Beauty: https://starx-flow.runs-on.dev/industries/beauty-salons
+- Dental & Medical Clinics: https://starx-flow.runs-on.dev/industries/dental-clinics
+- Wellness & Therapy Centers: https://starx-flow.runs-on.dev/industries/wellness-therapy
+- Real Estate Agencies: https://starx-flow.runs-on.dev/industries/real-estate
+- Hotels & Hospitality: https://starx-flow.runs-on.dev/industries/hospitality
+- Restaurants & Dining: https://starx-flow.runs-on.dev/industries/restaurants
+- Educational Academies: https://starx-flow.runs-on.dev/industries/education
+- Personal Trainers & Coaches: https://starx-flow.runs-on.dev/industries/personal-trainer
+- Barbershops & Grooming: https://starx-flow.runs-on.dev/industries/barber
+- Dentists: https://starx-flow.runs-on.dev/industries/dentist
+- Med Spas & Aesthetics: https://starx-flow.runs-on.dev/industries/med-spa
+- Plumbers & Home Contractors: https://starx-flow.runs-on.dev/industries/plumber
+
+## Verified Competitor Comparisons
+
+- StarX-Flow vs Mindbody: https://starx-flow.runs-on.dev/compare/starx-flow-vs-mindbody
+- StarX-Flow vs Vagaro: https://starx-flow.runs-on.dev/compare/starx-flow-vs-vagaro
+- StarX-Flow vs Calendly: https://starx-flow.runs-on.dev/compare/starx-flow-vs-calendly
+- StarX-Flow vs ManyChat: https://starx-flow.runs-on.dev/compare/starx-flow-vs-manychat
+- StarX-Flow vs WATI: https://starx-flow.runs-on.dev/compare/starx-flow-vs-wati
+- StarX-Flow vs Acuity Scheduling: https://starx-flow.runs-on.dev/compare/starx-flow-vs-acuity-scheduling
+- StarX-Flow vs Phorest: https://starx-flow.runs-on.dev/compare/starx-flow-vs-phorest
+- StarX-Flow vs Intercom: https://starx-flow.runs-on.dev/compare/starx-flow-vs-intercom
+- StarX-Flow vs Respond.io: https://starx-flow.runs-on.dev/compare/starx-flow-vs-respond-io
+- StarX-Flow vs n8n: https://starx-flow.runs-on.dev/compare/starx-flow-vs-n8n
+- StarX-Flow vs Zapier: https://starx-flow.runs-on.dev/compare/starx-flow-vs-zapier
+- StarX-Flow vs Make: https://starx-flow.runs-on.dev/compare/starx-flow-vs-make
+- StarX-Flow vs Langflow: https://starx-flow.runs-on.dev/compare/starx-flow-vs-langflow
+
+## Product & Capabilities
 
 - Homepage: https://starx-flow.runs-on.dev/
 - AI Automation: https://starx-flow.runs-on.dev/ai-automation

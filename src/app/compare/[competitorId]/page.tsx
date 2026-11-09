@@ -91,26 +91,94 @@ export default async function ComparisonPage({ params }: Props) {
   const { competitorId } = await params;
   const data = comparisonData[competitorId];
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: data ? data.title : `StarX-Flow vs ${competitorId}`,
-    description: data ? data.description : `Comparison of StarX-Flow and ${competitorId}`,
-    url: getCanonicalUrl(`/compare/${competitorId}`),
-    isPartOf: {
-      "@type": "WebSite",
-      name: SEO_CONFIG.siteName,
-      url: SEO_CONFIG.siteUrl,
-    },
-  };
+  const schemas: Record<string, unknown>[] = [];
+
+  if (data) {
+    // 1. WebPage Schema
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: data.title,
+      description: data.description,
+      url: getCanonicalUrl(`/compare/${competitorId}`),
+      isPartOf: {
+        "@type": "WebSite",
+        name: SEO_CONFIG.siteName,
+        url: SEO_CONFIG.siteUrl,
+      },
+    });
+
+    // 2. BreadcrumbList Schema
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: SEO_CONFIG.siteUrl,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Comparisons",
+          item: `${SEO_CONFIG.siteUrl}/compare/${competitorId}`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: `StarX-Flow vs ${data.competitor}`,
+          item: getCanonicalUrl(`/compare/${competitorId}`),
+        },
+      ],
+    });
+
+    // 3. Product Schema for StarX-Flow
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "StarX-Flow AI Receptionist & Business Operating System",
+      description: "Autonomous 24/7 AI receptionist for WhatsApp and Instagram that schedules appointments, syncs calendars, and handles client intake without booking commissions.",
+      brand: {
+        "@type": "Brand",
+        name: SEO_CONFIG.siteName,
+      },
+      offers: {
+        "@type": "Offer",
+        price: "29.00",
+        priceCurrency: "USD",
+        url: getCanonicalUrl(`/compare/${competitorId}`),
+      },
+    });
+
+    // 4. FAQPage Schema (if FAQs exist)
+    if (data.faqs && data.faqs.length > 0) {
+      schemas.push({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: data.faqs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: faq.answer,
+          },
+        })),
+      });
+    }
+  }
 
   return (
     <>
-      <Script
-        id={`schema-compare-${competitorId}`}
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {schemas.map((schema, index) => (
+        <Script
+          key={index}
+          id={`compare-schema-${competitorId}-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
       <ComparisonPageClient />
     </>
   );

@@ -32,25 +32,41 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.4,
   }));
 
-  const clusterRoutes = [
-    '/compare/starx-flow-vs-manychat',
-    '/compare/starx-flow-vs-intercom',
-    '/compare/starx-flow-vs-zapier',
-    '/compare/starx-flow-vs-make',
-    '/compare/starx-flow-vs-n8n',
-    '/compare/starx-flow-vs-wati',
-    '/compare/starx-flow-vs-respond-io',
-    '/compare/starx-flow-vs-langflow',
-    '/compare/starx-flow-vs-mindbody',
-    '/compare/starx-flow-vs-vagaro',
-    '/compare/starx-flow-vs-calendly',
-    '/scenarios/ai-agents',
-    '/use-cases/whatsapp-automation',
-    '/industries/plumber',
+  const industryRoutes = [
+    '/industries/gyms-fitness',
+    '/industries/beauty-salons',
+    '/industries/dental-clinics',
+    '/industries/wellness-therapy',
+    '/industries/real-estate',
+    '/industries/hospitality',
+    '/industries/restaurants',
+    '/industries/education',
+    '/industries/personal-trainer',
     '/industries/barber',
     '/industries/dentist',
     '/industries/med-spa',
-    '/industries/personal-trainer',
+    '/industries/plumber',
+  ].map((route) => ({
+    url: `${SEO_CONFIG.siteUrl}${route}`,
+    lastModified: currentDate,
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
+
+  const comparisonRoutes = [
+    '/compare/starx-flow-vs-manychat',
+    '/compare/starx-flow-vs-wati',
+    '/compare/starx-flow-vs-respond-io',
+    '/compare/starx-flow-vs-mindbody',
+    '/compare/starx-flow-vs-vagaro',
+    '/compare/starx-flow-vs-calendly',
+    '/compare/starx-flow-vs-acuity-scheduling',
+    '/compare/starx-flow-vs-phorest',
+    '/compare/starx-flow-vs-intercom',
+    '/compare/starx-flow-vs-n8n',
+    '/compare/starx-flow-vs-zapier',
+    '/compare/starx-flow-vs-make',
+    '/compare/starx-flow-vs-langflow',
   ].map((route) => ({
     url: `${SEO_CONFIG.siteUrl}${route}`,
     lastModified: currentDate,
@@ -58,5 +74,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...baseRoutes, ...pillarRoutes, ...legalRoutes, ...clusterRoutes];
+  const scenarioRoutes = [
+    '/scenarios/ai-agents',
+    '/use-cases/whatsapp-automation',
+  ].map((route) => ({
+    url: `${SEO_CONFIG.siteUrl}${route}`,
+    lastModified: currentDate,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
+  return [
+    ...baseRoutes,
+    ...pillarRoutes,
+    ...legalRoutes,
+    ...industryRoutes,
+    ...comparisonRoutes,
+    ...scenarioRoutes,
+  ];
 }

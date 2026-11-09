@@ -27,34 +27,45 @@ const URL_LIST = [
   `https://${HOST}/ai-customer-support`,
   `https://${HOST}/ai-agents`,
   `https://${HOST}/business-workflow-automation`,
-  `https://${HOST}/compare/starx-flow-vs-manychat`,
-  `https://${HOST}/compare/starx-flow-vs-intercom`,
-  `https://${HOST}/compare/starx-flow-vs-zapier`,
-  `https://${HOST}/compare/starx-flow-vs-make`,
-  `https://${HOST}/compare/starx-flow-vs-n8n`,
-  `https://${HOST}/compare/starx-flow-vs-wati`,
-  `https://${HOST}/compare/starx-flow-vs-respond-io`,
-  `https://${HOST}/compare/starx-flow-vs-langflow`,
-  `https://${HOST}/compare/starx-flow-vs-mindbody`,
-  `https://${HOST}/compare/starx-flow-vs-vagaro`,
-  `https://${HOST}/compare/starx-flow-vs-calendly`,
-  `https://${HOST}/scenarios/ai-agents`,
-  `https://${HOST}/use-cases/whatsapp-automation`,
-  `https://${HOST}/industries/plumber`,
+  // Industry Solutions
+  `https://${HOST}/industries/gyms-fitness`,
+  `https://${HOST}/industries/beauty-salons`,
+  `https://${HOST}/industries/dental-clinics`,
+  `https://${HOST}/industries/wellness-therapy`,
+  `https://${HOST}/industries/real-estate`,
+  `https://${HOST}/industries/hospitality`,
+  `https://${HOST}/industries/restaurants`,
+  `https://${HOST}/industries/education`,
+  `https://${HOST}/industries/personal-trainer`,
   `https://${HOST}/industries/barber`,
   `https://${HOST}/industries/dentist`,
   `https://${HOST}/industries/med-spa`,
-  `https://${HOST}/industries/personal-trainer`
+  `https://${HOST}/industries/plumber`,
+  // Competitor Comparisons
+  `https://${HOST}/compare/starx-flow-vs-manychat`,
+  `https://${HOST}/compare/starx-flow-vs-wati`,
+  `https://${HOST}/compare/starx-flow-vs-respond-io`,
+  `https://${HOST}/compare/starx-flow-vs-mindbody`,
+  `https://${HOST}/compare/starx-flow-vs-vagaro`,
+  `https://${HOST}/compare/starx-flow-vs-calendly`,
+  `https://${HOST}/compare/starx-flow-vs-acuity-scheduling`,
+  `https://${HOST}/compare/starx-flow-vs-phorest`,
+  `https://${HOST}/compare/starx-flow-vs-intercom`,
+  `https://${HOST}/compare/starx-flow-vs-n8n`,
+  `https://${HOST}/compare/starx-flow-vs-zapier`,
+  `https://${HOST}/compare/starx-flow-vs-make`,
+  `https://${HOST}/compare/starx-flow-vs-langflow`,
+  // Scenarios
+  `https://${HOST}/scenarios/ai-agents`,
+  `https://${HOST}/use-cases/whatsapp-automation`,
 ];
 
 const payload = JSON.stringify({
   host: HOST,
   key: KEY,
   keyLocation: KEY_LOCATION,
-  urlList: URL_LIST
+  urlList: URL_LIST,
 });
-
-console.log(`[IndexNow] Submitting ${URL_LIST.length} URLs to api.indexnow.org...`);
 
 const options = {
   hostname: 'api.indexnow.org',
@@ -63,26 +74,32 @@ const options = {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json; charset=utf-8',
-    'Content-Length': Buffer.byteLength(payload)
-  }
+    'Content-Length': Buffer.byteLength(payload),
+  },
 };
+
+console.log(`[IndexNow] Submitting ${URL_LIST.length} URLs to api.indexnow.org...`);
 
 const req = https.request(options, (res) => {
   console.log(`[IndexNow] Response status code: ${res.statusCode} ${res.statusMessage}`);
+
   let responseBody = '';
-  res.on('data', chunk => responseBody += chunk);
+  res.on('data', (chunk) => {
+    responseBody += chunk;
+  });
+
   res.on('end', () => {
     if (res.statusCode === 200 || res.statusCode === 202) {
-      console.log(`✅ [IndexNow] URLs submitted successfully! Key will be validated once deployed to ${HOST}.`);
+      console.log('✅ [IndexNow] URLs submitted successfully! Key will be validated once deployed to starx-flow.runs-on.dev.');
     } else {
-      console.log(`[IndexNow] Response body:`, responseBody || '(empty)');
-      console.log(`(Note: Status 400 or 422 occurs if key file is not yet verified on live host ${HOST}).`);
+      console.warn(`⚠️ [IndexNow] Non-success response: ${responseBody || 'No body returned'}`);
     }
   });
 });
 
-req.on('error', (err) => {
-  console.error('[IndexNow] Submission error:', err.message);
+req.on('error', (error) => {
+  console.error('❌ [IndexNow] Submission request failed:', error.message);
+  process.exit(1);
 });
 
 req.write(payload);
