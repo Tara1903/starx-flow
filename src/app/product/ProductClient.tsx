@@ -92,7 +92,7 @@ export function ProductClient() {
               <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
             </div>
             <div className="mx-auto bg-white/5 text-zinc-500 text-xs px-3 py-1 rounded-md flex items-center gap-2 font-semibold">
-              <Lock className="w-3 h-3" /> crm.starxflow.com
+              <Lock className="w-3 h-3" /> starx-flow.runs-on.dev
             </div>
           </div>
 

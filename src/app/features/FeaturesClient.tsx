@@ -27,7 +27,7 @@ export function FeaturesClient() {
       title: "24/7 WhatsApp AI Assistant",
       desc: "Let clients message naturally on WhatsApp to book slots, reschedule appointments, and ask FAQs. Zero front desk delays, zero manual calls.",
       points: [
-        "Replies instantly (under 2 seconds) in multiple languages.",
+        "Instant natural-language booking and scheduling in multiple languages.",
         "Synchronizes automatically with multiple team members.",
         "Collects intake details natively inside the chat flow.",
       ],
@@ -36,7 +36,7 @@ export function FeaturesClient() {
     {
       icon: <RefreshCw className="text-emerald-400" size={32} />,
       title: "Multi-Calendar Sync Infrastructure",
-      desc: "A single scheduler synced in real-time across Clover, Square POS, Google Calendars, and Outlook rosters. Safe against double bookings.",
+      desc: "Real-time bi-directional synchronization across Google Calendar and Microsoft Outlook rosters, backed by PostgreSQL exclusion constraint locks.",
       points: [
         "Matches appointments with specific staff capacity.",
         "Sends instant calendar invites and email receipts.",
@@ -80,8 +80,8 @@ export function FeaturesClient() {
     },
     {
       icon: <ShieldAlert />,
-      title: "HIPAA-Compliant Security",
-      desc: "Rest assured that all patient information and digital waivers are fully secure.",
+      title: "Strict Tenant Privacy & RLS",
+      desc: "Client records and waivers are protected with PostgreSQL Row Level Security (RLS) and TLS 1.3 transport encryption.",
     },
     {
       icon: <Smartphone />,

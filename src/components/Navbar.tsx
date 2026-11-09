@@ -39,15 +39,20 @@ export function Navbar() {
             />
           </Link>
           <div className="hidden md:flex gap-8 text-sm font-medium text-zinc-400 tracking-wide items-center">
-            <Link href="/collections"
+            <Link href="/how-it-works"
               className="hover:text-emerald-400 transition-colors"
             >
-              Collection
+              How It Works
             </Link>
             <Link href="/features"
               className="hover:text-emerald-400 transition-colors"
             >
               Features
+            </Link>
+            <Link href="/integrations"
+              className="hover:text-emerald-400 transition-colors"
+            >
+              Integrations
             </Link>
             <Link href="/pricing"
               className="hover:text-emerald-400 transition-colors"
@@ -136,17 +141,23 @@ export function Navbar() {
         title="Menu"
       >
         <div className="flex flex-col gap-6 pt-4">
-          <Link href="/collections"
+          <Link href="/how-it-works"
             onClick={() => setIsMobileMenuOpen(false)}
             className="text-lg font-medium text-zinc-300 hover:text-emerald-400 transition-colors"
           >
-            Collection
+            How It Works
           </Link>
           <Link href="/features"
             onClick={() => setIsMobileMenuOpen(false)}
             className="text-lg font-medium text-zinc-300 hover:text-emerald-400 transition-colors"
           >
             Features
+          </Link>
+          <Link href="/integrations"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-lg font-medium text-zinc-300 hover:text-emerald-400 transition-colors"
+          >
+            Integrations
           </Link>
           <Link href="/pricing"
             onClick={() => setIsMobileMenuOpen(false)}

@@ -6,19 +6,32 @@ type Props = {
   params: Promise<{ articleSlug: string }>;
 };
 
+export async function generateStaticParams() {
+  return [
+    { articleSlug: 'calendar-integration' },
+    { articleSlug: 'clinic-receptionist' },
+    { articleSlug: 'google-reviews-seo' },
+    { articleSlug: 'gym-onboarding' },
+    { articleSlug: 'spa-no-shows' },
+    { articleSlug: 'scaling-failures' },
+  ];
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { articleSlug } = await params;
   const pageMeta = getPageMeta(`/resources/articles/${articleSlug}`);
+  const canonicalUrl = getCanonicalUrl(`/resources/articles/${articleSlug}`);
+
   return {
     title: pageMeta.title,
     description: pageMeta.description,
     alternates: {
-      canonical: getCanonicalUrl(`/resources/articles/${articleSlug}`),
+      canonical: canonicalUrl,
     },
     openGraph: {
       title: `${pageMeta.title} | ${SEO_CONFIG.siteName}`,
       description: pageMeta.description,
-      url: getCanonicalUrl(`/resources/articles/${articleSlug}`),
+      url: canonicalUrl,
       type: 'article',
       images: [
         {

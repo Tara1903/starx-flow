@@ -56,39 +56,39 @@ export function AboutClient() {
           </motion.div>
         </div>
 
-        {/* Metrics Grid */}
+        {/* Platform Operating Standards Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-y border-white/10 py-16 mb-28 relative">
           <div className="absolute inset-0 bg-white/5 pointer-events-none" />
           <div className="flex flex-col items-center justify-center text-center relative z-10">
             <span className="text-4xl md:text-5xl font-extrabold text-white mb-2">
-              10M+
+              0%
             </span>
             <span className="text-zinc-500 text-xs tracking-wider uppercase font-bold">
-              Bookings Automated
+              Booking Commissions
             </span>
           </div>
           <div className="flex flex-col items-center justify-center text-center relative z-10">
             <span className="text-4xl md:text-5xl font-extrabold text-white mb-2">
-              8,500+
+              100%
             </span>
             <span className="text-zinc-500 text-xs tracking-wider uppercase font-bold">
-              Active Businesses
+              Customer Data Ownership
             </span>
           </div>
           <div className="flex flex-col items-center justify-center text-center relative z-10">
             <span className="text-4xl md:text-5xl font-extrabold text-white mb-2">
-              98.6%
+              2-Way
             </span>
             <span className="text-zinc-500 text-xs tracking-wider uppercase font-bold">
-              Response Accuracy
+              Live Calendar Sync
             </span>
           </div>
           <div className="flex flex-col items-center justify-center text-center relative z-10">
             <span className="text-4xl md:text-5xl font-extrabold text-emerald-400 mb-2">
-              $40k+
+              TLS 1.3
             </span>
             <span className="text-zinc-500 text-xs tracking-wider uppercase font-bold">
-              Saved in Admin Costs/Yr
+              Encrypted Transport & RLS
             </span>
           </div>
         </div>
@@ -136,7 +136,7 @@ export function AboutClient() {
                   Existing booking systems required clients to click clunky external links, create logins, and navigate dense calendars. Many drop-offs occurred. We realized that in a world of instant messaging, a business's response speed is its greatest competitive edge.
                 </p>
                 <p>
-                  So, we built StarX Flow. An AI-powered operating system that turns WhatsApp into a 24/7 smart reservation channel and automatically syncs bookings with Google Calendar, Clover, or Square. No logins, no app downloads, no friction.
+                  So, we built StarX Flow. An AI-powered operating system that turns WhatsApp into a 24/7 smart reservation channel and automatically syncs bookings with Google Calendar or Microsoft Outlook. No logins, no app downloads, no friction.
                 </p>
               </div>
             </div>
@@ -162,9 +162,9 @@ export function AboutClient() {
               <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mb-6 border border-emerald-500/20 group-hover:scale-110 transition-transform">
                 <ShieldCheck size={24} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-4">Enterprise Security & Compliance</h3>
+              <h3 className="text-xl font-bold text-white mb-4">Enterprise Security & Tenant Isolation</h3>
               <p className="text-zinc-400 text-sm leading-relaxed font-medium">
-                We handle client contact details, clinical bookings, and calendar databases with end-to-end encryption. Your information is private and strictly protected.
+                Client records and appointments are isolated via PostgreSQL Row Level Security (RLS), transmitted over TLS 1.3, and encrypted at rest with AES-256.
               </p>
             </div>
 
@@ -172,9 +172,9 @@ export function AboutClient() {
               <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mb-6 border border-emerald-500/20 group-hover:scale-110 transition-transform">
                 <Calendar size={24} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-4">Zero-Double-Booking Guarantee</h3>
+              <h3 className="text-xl font-bold text-white mb-4">Engineered Concurrency Locking</h3>
               <p className="text-zinc-400 text-sm leading-relaxed font-medium">
-                Our smart calendar integration reads real-time availability from Google Calendar, Outlook, and Square, locking in slots instantly without overlaps.
+                Two-way calendar synchronization with Google Calendar and Microsoft Outlook, backed by PostgreSQL exclusion constraint locks to eliminate double-bookings.
               </p>
             </div>
 
@@ -182,9 +182,9 @@ export function AboutClient() {
               <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mb-6 border border-emerald-500/20 group-hover:scale-110 transition-transform">
                 <Zap size={24} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-4">Ultra-Low Latency Booking</h3>
+              <h3 className="text-xl font-bold text-white mb-4">Real-Time Conversational Booking</h3>
               <p className="text-zinc-400 text-sm leading-relaxed font-medium">
-                Our WhatsApp AI agent takes less than 2 seconds to respond and schedule, engaging leads at peak intent when they are most likely to convert.
+                Our conversational receptionist engages WhatsApp and Instagram inquiries instantly at peak intent, qualifying leads and locking in slots in seconds.
               </p>
             </div>
           </div>

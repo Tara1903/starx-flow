@@ -9,12 +9,12 @@ StarX-Flow is an AI workflow automation platform designed specifically for local
 ## Core Capabilities
 
 - **WhatsApp AI Receptionist**: Instant natural-language booking and scheduling via WhatsApp in multiple languages.
-- **Multi-Calendar Sync**: Real-time two-way sync with Google Calendar, Outlook, Square POS, and Clover POS. Zero double-booking guarantee.
+- **Multi-Calendar Sync**: Real-time two-way sync with Google Calendar and Microsoft Outlook. PostgreSQL exclusion constraint double-booking prevention.
 - **CRM & Client Ownership**: Full client profile management, booking history, intake waivers, and no-show tracking. No aggregator fees.
 - **Google Review Booster**: Automated post-appointment follow-ups to drive 5-star Google reviews.
 - **WhatsApp Intake Forms**: Digital waivers, health questionnaires, and registration forms sent automatically before visits.
 - **Multi-Staff Rostering**: Balance and assign shifts across trainers, therapists, dentists, or stylists.
-- **HIPAA-Compliant Security**: End-to-end encryption for patient information and digital waivers.
+- **Enterprise Data Protection**: Row Level Security (RLS) on PostgreSQL, TLS 1.3 encryption in transit, and AES-256 encryption at rest.
 
 ## Who is StarX-Flow for?
 
@@ -41,10 +41,10 @@ All plans include a 14-day free trial.
 ## Key Differentiators
 
 1. **WhatsApp-native**: Clients book via the messaging app they already use — no app downloads, no account creation required
-2. **Zero commissions**: Flat subscription pricing, never takes a cut of your revenue
+2. **Zero commissions**: Flat subscription pricing, never takes a cut of your service revenue
 3. **Real-time response**: AI engages leads at peak intent before they move to a competitor
 4. **Direct client ownership**: You own your client data, unlike marketplace aggregators
-5. **Enterprise infrastructure for SMBs**: Multi-calendar sync, POS integration, and compliance features typically reserved for enterprise
+5. **Enterprise infrastructure for SMBs**: Multi-calendar sync, CRM unification, and data protection typically reserved for enterprise
 
 ## Industry Solutions
 
@@ -78,17 +78,29 @@ All plans include a 14-day free trial.
 - StarX-Flow vs Make: https://starx-flow.runs-on.dev/compare/starx-flow-vs-make
 - StarX-Flow vs Langflow: https://starx-flow.runs-on.dev/compare/starx-flow-vs-langflow
 
-## Product & Capabilities
+## Product, Trust & Architecture
 
 - Homepage: https://starx-flow.runs-on.dev/
+- Product Overview: https://starx-flow.runs-on.dev/product
+- Features Directory: https://starx-flow.runs-on.dev/features
+- How It Works & Architecture: https://starx-flow.runs-on.dev/how-it-works
+- Security & Privacy Architecture: https://starx-flow.runs-on.dev/security
+- Verified Integrations: https://starx-flow.runs-on.dev/integrations
+- Pricing & Plans: https://starx-flow.runs-on.dev/pricing
+- Resources Hub: https://starx-flow.runs-on.dev/resources
+- About StarX-Flow: https://starx-flow.runs-on.dev/about
+
+## Core Feature Pillars
+
 - AI Automation: https://starx-flow.runs-on.dev/ai-automation
 - WhatsApp AI Chatbot: https://starx-flow.runs-on.dev/whatsapp-ai-chatbot
 - Instagram DM Automation: https://starx-flow.runs-on.dev/instagram-ai-automation
 - AI Customer Support: https://starx-flow.runs-on.dev/ai-customer-support
 - AI Agents: https://starx-flow.runs-on.dev/ai-agents
 - Business Workflow Automation: https://starx-flow.runs-on.dev/business-workflow-automation
-- Product: https://starx-flow.runs-on.dev/product
-- Features: https://starx-flow.runs-on.dev/features
-- Pricing: https://starx-flow.runs-on.dev/pricing
-- Resources: https://starx-flow.runs-on.dev/resources
-- About: https://starx-flow.runs-on.dev/about
+
+## Editorial Runbooks & Research
+
+- Why Polling APIs Cause Double-Bookings: https://starx-flow.runs-on.dev/resources/articles/calendar-integration
+- Deploying AI Receptionists in Medical Practices: https://starx-flow.runs-on.dev/resources/articles/clinic-receptionist
+- The Local SEO Review Engine: https://starx-flow.runs-on.dev/resources/articles/google-reviews-seo

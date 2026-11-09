@@ -39,7 +39,7 @@ export const PAGE_META: Record<string, PageMeta> = {
   "/": {
     title: "StarX-Flow | AI Receptionist for WhatsApp",
     description:
-      "Never miss a booking again. StarX-Flow chats with clients on WhatsApp, answers FAQs, and syncs directly with your calendar in under 2 seconds.",
+      "Never miss a booking again. StarX-Flow chats with clients on WhatsApp, answers FAQs, and syncs directly with your calendar in real time.",
   },
   "/product": {
     title: "Product",
@@ -49,7 +49,40 @@ export const PAGE_META: Record<string, PageMeta> = {
   "/features": {
     title: "Features",
     description:
-      "24/7 WhatsApp AI assistant, multi-calendar sync, CRM, Google Review Booster, intake forms, HIPAA-compliant security, and multi-staff rostering — all included.",
+      "24/7 WhatsApp AI assistant, multi-calendar sync, CRM, Google Review Booster, intake forms, strict tenant data isolation, and multi-staff rostering — all included.",
+  },
+  "/security": {
+    title: "Security & Privacy Architecture",
+    description:
+      "Learn how StarX-Flow secures merchant and customer data with Supabase Row Level Security, TLS 1.3 encryption, database concurrency locks, and GDPR controls.",
+  },
+  "/integrations": {
+    title: "Verified Integrations Directory",
+    description:
+      "Explore StarX-Flow integrations with Google Calendar, Microsoft Outlook, Meta WhatsApp Cloud API, Instagram Graph API, and Stripe.",
+  },
+  "/how-it-works": {
+    title: "How It Works | Technical Architecture & Workflow",
+    description:
+      "Understand StarX-Flow's end-to-end booking architecture: multi-channel webhook ingestion, RAG knowledge retrieval, and real-time calendar locking.",
+  },
+  "/resources/articles/calendar-integration": {
+    title: "Why Polling APIs Cause Double-Bookings | Calendar Architecture",
+    description:
+      "Technical deep dive on why polling interval APIs fail and how real-time webhook synchronization and database exclusion constraints prevent scheduling conflicts.",
+    ogType: "article",
+  },
+  "/resources/articles/clinic-receptionist": {
+    title: "Deploying AI Receptionists in Medical Practices | Clinical Guide",
+    description:
+      "How dental and wellness clinics safely deploy AI receptionists with administrative guardrails, symptom escalation protocols, and patient privacy boundaries.",
+    ogType: "article",
+  },
+  "/resources/articles/google-reviews-seo": {
+    title: "The Local SEO Review Engine | Automated WhatsApp Follow-Ups",
+    description:
+      "How local service businesses scale Google Map Pack prominence using automated post-appointment review requests during the golden two-hour window.",
+    ogType: "article",
   },
   "/pricing": {
     title: "Pricing",

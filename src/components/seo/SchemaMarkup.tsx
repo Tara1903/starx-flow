@@ -15,11 +15,26 @@ export function organizationSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${SEO_CONFIG.siteUrl}/#organization`,
     name: SEO_CONFIG.siteName,
     url: SEO_CONFIG.siteUrl,
-    logo: `${SEO_CONFIG.siteUrl}/logo.svg`,
+    logo: {
+      "@type": "ImageObject",
+      url: `${SEO_CONFIG.siteUrl}/logo.svg`,
+      caption: `${SEO_CONFIG.siteName} Logo`,
+    },
     description: SEO_CONFIG.defaultDescription,
+    email: "support@starxflow.com",
+    foundingDate: "2024",
     sameAs: [],
+    knowsAbout: [
+      "WhatsApp AI Automation",
+      "Instagram Lead Automation",
+      "Conversational AI Booking",
+      "Calendar Synchronization",
+      "CRM Lead Management",
+      "Local Service Business Automation"
+    ],
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
@@ -33,6 +48,7 @@ export function websiteSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": `${SEO_CONFIG.siteUrl}/#website`,
     name: SEO_CONFIG.siteName,
     url: SEO_CONFIG.siteUrl,
     description: SEO_CONFIG.defaultDescription,
@@ -52,9 +68,11 @@ export function softwareApplicationSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
+    "@id": `${SEO_CONFIG.siteUrl}/#software`,
     name: SEO_CONFIG.siteName,
     applicationCategory: "BusinessApplication",
-    operatingSystem: "Web",
+    operatingSystem: "Web, Cloud",
+    url: SEO_CONFIG.siteUrl,
     description:
       "AI-powered operating system that automates WhatsApp booking, customer care, calendar sync, and client management for local service businesses.",
     offers: {
@@ -64,20 +82,15 @@ export function softwareApplicationSchema(): Record<string, unknown> {
       highPrice: "99",
       offerCount: "3",
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      reviewCount: "850",
-      bestRating: "5",
-    },
     featureList: [
       "24/7 WhatsApp AI Receptionist",
-      "Multi-Calendar Sync (Google, Outlook, Square, Clover)",
-      "CRM & Customer Ownership",
-      "Google Review Booster",
-      "WhatsApp Intake Forms",
-      "Multi-Staff Rostering",
-      "HIPAA-Compliant Security",
+      "Two-Way Google Calendar & Microsoft Outlook Sync",
+      "Multi-Channel Ingestion (WhatsApp, Instagram, Web)",
+      "Customer Relationship Management (CRM) & Lead Scoring",
+      "Automated Google Review Follow-Up Sequences",
+      "Digital Intake Questionnaires",
+      "Multi-Staff Shift & Room Rostering",
+      "Row Level Security (RLS) Tenant Data Isolation",
     ],
   };
 }

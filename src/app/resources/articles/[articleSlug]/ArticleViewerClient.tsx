@@ -47,289 +47,211 @@ interface ArticleData {
 }
 
 const ARTICLES_DATABASE: Record<string, ArticleData> = {
-  "gym-onboarding": {
-    title: "How Gyms Can Automate Member Onboarding & Retention",
-    category: "Member Engagement",
+  "calendar-integration": {
+    title: "Why Polling APIs Cause Double-Bookings: How Real-Time Webhooks Protect Service Calendars",
+    category: "Integrations & Concurrency",
     readTime: "6 min read",
-    date: "May 18, 2026",
-    author: "StarX Growth Team",
-    intro: "Boutique gyms and wellness clubs lose up to 40% of prospective members between the initial trial signup and their first physical visit. In this guide, we break down how automated WhatsApp onboarding sequences secure class bookings, collect waivers, and convert trials to long-term memberships on autopilot.",
+    date: "November 2026",
+    author: "StarX-Flow Engineering Team",
+    intro: "Most scheduling widgets check external calendars on 10 to 15-minute polling cycles. In a busy clinic, gym, or salon, a 15-minute sync delay is a serious liability: multiple clients can book the same provider slot simultaneously. In this technical runbook, we explain how bi-directional webhook synchronization and database exclusion constraints eliminate double-bookings at the engine level.",
     sections: [
       {
-        heading: "1. The 'Waiver Leak' administrative bottleneck",
+        heading: "1. The Inherent Fragility of Polling-Interval Scheduling",
         paragraphs: [
-          "In traditional gym operations, a prospective member signs up for a free trial online and is expected to fill out a PDF waiver, or stand in line at the front desk for 10 minutes during their first visit. This administrative friction causes drop-offs. If a client has to do paperwork before experiencing the gym, the excitement fades.",
-          "By syncing your member database (Mindbody, Pike13, or Zen Planner) to StarX Flow, you can trigger an instant WhatsApp workflow the second a trial is registered. The AI assistant greets the user, answers any initial class concerns, and sends a secure signature link. Over 88% of waivers are signed within 2 hours of receipt when delivered via text, compared to just 14% via email."
+          "Legacy scheduling software relies on polling: scheduled background jobs that request calendar data every few minutes. When two customers attempt to book the same therapist or dental chair during that sync window, both requests appear valid to the client software.",
+          "By the time the system attempts to write the second event to Google Calendar, an irreconcilable conflict occurs. Staff are forced to call or message the client to reschedule, damaging customer trust and increasing administrative friction."
         ]
       },
       {
-        heading: "2. The First-Class Hook Conversation",
+        heading: "2. Real-Time Bi-Directional Webhooks: Google Calendar & Microsoft Outlook",
         paragraphs: [
-          "Getting them to register is only half the battle; getting them through the front door is the real challenge. Automating class prep answers ensures they arrive confident and prepared.",
-          "Our recommended dialogue model answers parking queries, locker rules, and dress codes instantly. Here is an example conversation flow handled entirely by the AI assistant:"
+          "StarX-Flow replaces polling loops with event-driven webhooks. When an appointment is scheduled or modified on Google Calendar or Microsoft Outlook, an authorized webhook event notifies StarX-Flow within milliseconds.",
+          "The autonomous AI receptionist references live availability via official APIs (Google Calendar v3 and Microsoft Graph API), checking provider capacity, lunch breaks, and buffer times before offering any time slot to a customer on WhatsApp or Instagram."
         ],
         snippet: {
-          title: "WhatsApp Intake Template Script",
-          code: `AI: "Hey Alex! Welcome to Nexus Fitness. Your 3-Class Trial is active! 🏋️
-
-To make your first visit smooth tomorrow:
-- Parking is free in the rear lot.
-- Please arrive 10 minutes early so we can show you the lockers.
-- Bring a water bottle; towels are provided.
-
-Do you need help booking your slot with Coach David at 9:00 AM?"
-Client: "Yes, please book me in."
-AI: "Done! Slot locked. Click here to sign your first-visit liability waiver: [Secure-Link]. See you tomorrow!"`
+          title: "Calendar Availability Check Trace",
+          code: "[API Query: checkCalendarAvailability]\nProvider: 'Dr. Martinez' | Date: '2026-11-12'\nWorking Hours: 09:00 - 17:00\nGoogle Calendar Events:\n- 10:00 - 10:45 (Confirmed Cleaning)\n- 12:30 - 13:30 (Lunch Blockout)\nAvailable Slots Offered to WhatsApp Client:\n[09:00, 11:00, 14:00, 15:30]"
         }
       },
       {
-        heading: "3. The Day 6 Trial-to-Paid Conversion Sequence",
+        heading: "3. Database Exclusion Constraints: Concurrency Defense at the PostgreSQL Engine",
         paragraphs: [
-          "Most gyms wait until the trial has already expired to send an email offer. By then, the client's momentum has stalled. The most effective conversion window is 24 to 48 hours before the trial ends.",
-          "On Day 6 of a 7-day trial, StarX Flow automatically checks class attendance. If the client attended at least two classes, it triggers a personalized discount offer. If they attended zero, it triggers a recovery sequence to extend their trial by another 3 days, saving the lead from going cold."
+          "Even with real-time webhooks, network concurrency can allow two incoming messages to target the same slot simultaneously. To guarantee absolute concurrency defense, StarX-Flow enforces PostgreSQL btree_gist exclusion constraints on appointment timestamp ranges.",
+          "If two booking transactions for the same provider overlap, the PostgreSQL database engine immediately rejects the second transaction with a unique exclusion error. The AI receptionist gracefully offers the client the next available alternative slot in real time, preventing duplicate calendar writes."
         ]
       }
     ],
     metrics: [
-      { label: "Waiver Completion Rate", value: "88%", sub: "vs 14% on email templates" },
-      { label: "First-Class Show Rate", value: "+35%", sub: "due to automated pre-arrival FAQs" },
-      { label: "Trial-to-Member Conv.", value: "28.4%", sub: "industry average is 12%" }
+      { label: "Sync Latency", value: "<300ms", sub: "event-driven webhook execution" },
+      { label: "Concurrency Defense", value: "PostgreSQL", sub: "btree_gist exclusion constraints" },
+      { label: "Supported Calendars", value: "Google & Outlook", sub: "two-way OAuth 2.0 authorization" }
+    ]
+  },
+  "clinic-receptionist": {
+    title: "Deploying AI Receptionists in Medical Practices: Administrative Guardrails and Triage",
+    category: "Clinical AI & Operations",
+    readTime: "7 min read",
+    date: "November 2026",
+    author: "StarX-Flow Product & Clinical Architecture Team",
+    intro: "Dental practices, physical therapy clinics, and medical offices face a delicate balancing act: they must eliminate missed patient inquiries while upholding patient data privacy and safety boundaries. This runbook details how to configure conversational AI receptionists for administrative logistics without crossing clinical lines.",
+    sections: [
+      {
+        heading: "1. Administrative Logistics vs. Medical Diagnoses: The Boundary Rule",
+        paragraphs: [
+          "In healthcare administration, conversational AI must strictly focus on administrative logistics: scheduling appointments, sharing clinic locations, confirming operating hours, and explaining cancellation policies. AI should never solicit, record, or attempt to diagnose medical symptoms over public messaging networks.",
+          "StarX-Flow enforces prompt-level safety boundaries and RAG context retrieval. The assistant draws facts exclusively from verified merchant practice profiles and redirects clinical questions to licensed human practitioners."
+        ]
+      },
+      {
+        heading: "2. The Critical Symptom Escalation & Emergency Handoff Protocol",
+        paragraphs: [
+          "When a patient texts about severe symptoms—such as chest pain, sudden vision loss, severe dental bleeding, or acute trauma—the software must immediately halt automated conversation.",
+          "Our system scans inbound text for clinical emergency trigger terms. When triggered, the assistant immediately advises the patient to seek urgent medical attention, alerts the clinic's staff dashboard with an audible chime, and routes the thread for human takeover."
+        ],
+        snippet: {
+          title: "Clinical Emergency Escalation Script",
+          code: "Patient: 'Hey, I had an extraction this morning and my jaw is bleeding heavily and throbbing.'\nAI Assistant: 'I am routing your message to our clinical staff immediately. Our practice manager has been notified.\n\nIf you are experiencing a life-threatening medical emergency, please call 911 or visit the nearest emergency room. A clinic staff member will text you directly here shortly.'\n[SYSTEM TRIGGER: Priority Alert dispatched to Dental Staff Dashboard]"
+        }
+      },
+      {
+        heading: "3. Two-Way Provider Calendar Synchronization & Room Allocation",
+        paragraphs: [
+          "To book effectively, the assistant must understand provider specialties, treatment durations, and operatory chair availability. Connecting Google Calendar or Microsoft Outlook ensures that routine cleanings, initial consultations, and follow-ups are booked with the correct staff member and room buffer.",
+          "Client records and appointments are isolated in your dedicated tenant database with Row Level Security, ensuring patient contact information is never shared or aggregated across practices."
+        ]
+      }
+    ],
+    metrics: [
+      { label: "Administrative Coverage", value: "24/7/365", sub: "hours, directions & bookings" },
+      { label: "Emergency Escalation", value: "Instant", sub: "automated staff notification" },
+      { label: "Data Isolation", value: "Row Level", sub: "PostgreSQL tenant boundary security" }
+    ]
+  },
+  "google-reviews-seo": {
+    title: "The Local SEO Review Engine: How Automated WhatsApp Follow-Ups Drive Google Map Pack Prominence",
+    category: "Local SEO & Reputation",
+    readTime: "5 min read",
+    date: "November 2026",
+    author: "StarX-Flow Growth & SEO Team",
+    intro: "For local service businesses (gyms, dental clinics, beauty salons, med spas, and plumbers), ranking in the Google Map Pack (the top 3 local search results) is the single highest-converting organic discovery channel. In this guide, we analyze how post-service WhatsApp workflows dramatically improve review velocity.",
+    sections: [
+      {
+        heading: "1. The Google Local Search Algorithm: Relevance, Distance & Prominence",
+        paragraphs: [
+          "Google Maps determines local ranking through three primary signals: Distance, Relevance, and Prominence. While a business cannot control searcher Distance, it has immense influence over Prominence.",
+          "Prominence is heavily weighted by total review count, average numerical rating, and the consistency (velocity) of fresh customer reviews. Local businesses with steady, recent positive reviews consistently rank in the Map Pack, capturing up to 4x more inbound calls than competitors ranked below position 3."
+        ]
+      },
+      {
+        heading: "2. The Golden '2-Hour' Post-Checkout Follow-Up Window",
+        paragraphs: [
+          "Timing is decisive in customer feedback collection. Email review requests sent 2 or 3 days after a visit are routinely ignored, marked as promotions, or deleted. By contrast, text messaging achieves open rates exceeding 90%.",
+          "StarX-Flow automatically detects appointment completion. Exactly 2 hours after a customer checks out, the system sends a personalized, courteous WhatsApp message thanking the client and providing a direct, 1-click link to your Google Business Profile review dialog."
+        ],
+        snippet: {
+          title: "Post-Service Review Prompt Script",
+          code: "[Automated Trigger: +2 Hours Post-Appointment]\nAI: 'Hi Alex! Thank you for visiting Apex Wellness today. We hope you had a wonderful session with David! 🌸\n\nIf you have 10 seconds, sharing your experience on Google supports our local team immensely:\nhttps://g.page/r/your-business-id/review\n\nHave a fantastic week!'"
+        }
+      },
+      {
+        heading: "3. Private Merchant Feedback Gates vs. Public Review Links",
+        paragraphs: [
+          "Not every customer interaction goes perfectly. Sometimes a client experiences an unexpected delay or leaves feeling neutral.",
+          "StarX-Flow includes an optional feedback gate. The assistant can ask the customer to rate their experience inside the chat. High ratings receive the direct Google review link, while lower ratings trigger a prompt for private feedback that routes directly to the owner's private inbox, allowing staff to resolve concerns before negative reviews are posted publicly."
+        ]
+      }
+    ],
+    metrics: [
+      { label: "Optimal Request Timing", value: "2 Hours", sub: "post-service checkout trigger" },
+      { label: "Message Visibility", value: ">90%", sub: "direct WhatsApp open rates" },
+      { label: "Reputation Protection", value: "Two-Tier", sub: "private feedback gate mechanism" }
+    ]
+  },
+  "gym-onboarding": {
+    title: "How Gyms Can Automate Member Onboarding & Retention",
+    category: "Member Engagement",
+    readTime: "6 min read",
+    date: "November 2026",
+    author: "StarX-Flow Growth Team",
+    intro: "Boutique gyms and wellness clubs lose prospective members between the initial trial signup and their first physical visit. In this guide, we break down how automated WhatsApp onboarding sequences secure class bookings, collect waivers, and convert trials to long-term memberships on autopilot.",
+    sections: [
+      {
+        heading: "1. The 'Waiver Leak' Administrative Bottleneck",
+        paragraphs: [
+          "In traditional gym operations, a prospective member signs up for a free trial online and is expected to fill out a PDF waiver, or stand in line at the front desk for 10 minutes during their first visit. This administrative friction causes drop-offs.",
+          "By syncing your member calendar to StarX-Flow, you can trigger an instant WhatsApp workflow the second a trial is registered. The AI assistant greets the user, answers initial class concerns, and sends a secure signature link directly in chat."
+        ]
+      },
+      {
+        heading: "2. The First-Class Prep Conversation",
+        paragraphs: [
+          "Automating class prep answers ensures new members arrive confident and prepared. Our recommended dialogue model answers parking queries, locker rules, and dress codes instantly."
+        ]
+      }
+    ],
+    metrics: [
+      { label: "Delivery Channel", value: "WhatsApp", sub: "direct mobile engagement" },
+      { label: "Calendar Sync", value: "Live", sub: "Google & Outlook integration" },
+      { label: "Waiver Collection", value: "Automated", sub: "pre-arrival digital links" }
     ]
   },
   "spa-no-shows": {
-    title: "Reducing Spa & Salon No-Shows by 90% via WhatsApp Chatbots",
+    title: "Reducing Spa & Salon No-Shows via WhatsApp Chatbots",
     category: "Operations",
     readTime: "5 min read",
-    date: "May 15, 2026",
-    author: "Elena Rostova, Operations Lead",
+    date: "November 2026",
+    author: "StarX-Flow Operations Team",
     intro: "For high-end spas and salons, empty treatment rooms represent lost revenue that can never be recovered. When a client forgets an appointment, the therapist sits idle while overhead remains fixed. Learn how interactive double-confirmation WhatsApp threads secure calendar rosters automatically.",
     sections: [
       {
-        heading: "1. The True Cost of Empty Treatment Slots",
+        heading: "1. The Cost of Empty Treatment Slots",
         paragraphs: [
-          "For a boutique salon or wellness spa charging an average of $110 per hour, a single daily no-show drains over $3,000 in monthly revenue. Standard email reminders are frequently ignored, marked as spam, or buried in promotions tabs.",
-          "Interactive text messaging achieves a 98% open rate, with most responses arriving within 90 seconds. Moving confirmation workflows to WhatsApp bridges the communication gap instantly."
+          "For a boutique salon or wellness spa charging premium hourly rates, no-shows directly drain monthly revenue. Standard email reminders are frequently ignored or buried in promotions tabs.",
+          "Interactive text messaging achieves rapid open rates, with most responses arriving within minutes. Moving confirmation workflows to WhatsApp bridges the communication gap instantly."
         ]
       },
       {
         heading: "2. Constructing the 24-Hour Double Confirmation Bot",
         paragraphs: [
-          "Traditional systems send a passive text like: 'Your appointment is tomorrow at 2PM.' This does not guarantee the customer read it or is actually planning to attend.",
-          "A double-confirmation script requires an active response, forcing the user to commit or reschedule on the spot, freeing up slots for waitlisted clients if they cancel."
-        ],
-        snippet: {
-          title: "Double-Confirmation Flow Script",
-          code: `AI: "Hi Sarah! Your 90-Minute Hot Stone Massage with Emily is scheduled for tomorrow at 2:00 PM. 🌸
-
-Please confirm your attendance:
-Reply '1' to CONFIRM
-Reply '2' to RESCHEDULE (free up to 12h prior)
-
-Which matches your schedule?"
-Client: "2"
-AI: "No problem! I can move that for you. Here are Emily's alternative slots this week:
-- Thursday: 10:30 AM, 4:00 PM
-- Friday: 1:30 PM
-
-Reply with your preferred time to swap instantly."`
-        }
-      },
-      {
-        heading: "3. Stripe deposit hooks for high-value services",
-        paragraphs: [
-          "For high-ticket treatments (microblading, full-day packages, medical peels), confirmations alone aren't enough. Spas must secure slots with financial commitment.",
-          "StarX Flow allows you to configure deposit triggers. First-time clients booking services over $150 automatically receive a secure, glassmorphic Stripe link inside the WhatsApp thread. The slot is temporarily held for 15 minutes and locked permanently once the deposit payment is confirmed by our API."
+          "A double-confirmation script requires an active response, prompting the client to confirm attendance or reschedule on the spot, freeing up slots for waitlisted clients if they need to cancel."
         ]
       }
     ],
     metrics: [
-      { label: "No-Show Reduction", value: "90%", sub: "down to less than 1.5% overall" },
-      { label: "Reschedule Fluidity", value: "<2m", sub: "average automated swap time" },
-      { label: "Recovered Leakage", value: "$4,200", sub: "average monthly salon savings" }
-    ]
-  },
-  "clinic-receptionist": {
-    title: "The Complete Guide to 24/7 AI Receptionists for Chiropractic & Dental Clinics",
-    category: "Clinical Admin",
-    readTime: "8 min read",
-    date: "May 12, 2026",
-    author: "Dr. Marcus Vance, Healthcare Advisor",
-    intro: "Private clinics face a unique challenge: they must manage heavy call volumes, reschedule recurring adjustments, and answer emergency inquiries, all while staying fully compliant with patient data privacy standards. This runbook details how to securely deploy AI receptionists in clinical offices.",
-    sections: [
-      {
-        heading: "1. HIPAA Compliant Patient Triage Safeguards",
-        paragraphs: [
-          "In healthcare administrative workflows, privacy is the absolute priority. AI chatbots should never solicit or record complex medical diagnoses, sensitive medical history, or insurance details over public messaging networks.",
-          "The primary function of the clinical AI is administrative logistics: scheduling appointments, checking operating hours, sharing directions, and routing clinical concerns to licensed human staff. Our template automatically detects diagnostic terms and redirects patients to secure clinic portals, ensuring data protection rules are upheld."
-        ]
-      },
-      {
-        heading: "2. The Critical Care Handoff Mechanism",
-        paragraphs: [
-          "A patient asking to schedule a routine dental checkup is a standard administrative task. A patient texting that they have severe, throbbing jaw pain after an extraction requires immediate clinical intervention.",
-          "Our system is trained to scan incoming messages for priority keywords such as 'pain', 'emergency', 'bleeding', 'accident', or 'infection'. When a match occurs, the AI instantly pauses automated responses, alerts the office desktop with a high-priority tone, and notifies the clinic manager via SMS for manual takeover."
-        ],
-        snippet: {
-          title: "Clinic Emergency Handover Script",
-          code: `Client: "Hey, my crown fell out and my tooth is bleeding and hurts bad."
-AI: "I am routing your message to our clinical staff immediately. Dr. Vance has been notified and we are reviewing your file. 
-
-If this is a life-threatening medical emergency, please call 911. A member of our staff will text you here within 3 minutes."
-[STARX ADMIN ALARM TRIGGERED: Clinical escalation for Patient Alex Jones]`
-        }
-      },
-      {
-        heading: "3. Direct EHR / EMR Calendar Synchronization",
-        paragraphs: [
-          "To be useful, the AI must have access to real-time provider schedules. StarX Flow connects natively with leading EMR/EHR tools (Jane App, WebPT, Dentrix, and AthenaHealth).",
-          "When a patient books or changes an adjustment slot via the chatbot, the appointment is written directly into your clinic roster, keeping therapists, treatment chairs, and patient records aligned across the board."
-        ]
-      }
-    ],
-    metrics: [
-      { label: "Admin Workload Red.", value: "65%", sub: "freed from routine phone calls" },
-      { label: "Escalation Speed", value: "<15s", sub: "average staff notification delay" },
-      { label: "EHR Sync Accuracy", value: "100%", sub: "zero calendar overlaps recorded" }
-    ]
-  },
-  "google-reviews-seo": {
-    title: "Google Reviews On Autopilot: How To Boost Your Local Service SEO",
-    category: "Local SEO",
-    readTime: "4 min read",
-    date: "May 10, 2026",
-    author: "StarX Local Search Team",
-    intro: "For local service businesses (electricians, auto shops, beauty salons, HVAC), ranking in the 'Google Map Pack' (the top 3 local search results) is the single biggest driver of customer acquisition. In this guide, we show how automated post-checkout WhatsApp follow-ups double your five-star review volume on autopilot.",
-    sections: [
-      {
-        heading: "1. The Google Local Search Algorithm",
-        paragraphs: [
-          "Google Maps uses three primary ranking signals to display local listings: Relevance, Distance, and Prominence. While you cannot control Distance (where the searcher is standing), you can heavily influence Prominence.",
-          "Google measures Prominence by your total review volume, average rating, and the frequency (velocity) of incoming reviews. Listings with consistent, fresh five-star ratings are pushed to the top, capturing up to 450% more phone calls and booking clicks than listings positioned below slot 3."
-        ]
-      },
-      {
-        heading: "2. The Golden '2-Hour' Review Request Window",
-        paragraphs: [
-          "Timing is everything. If you ask for a Google review three days after a service, the client's excitement has faded, and email requests are ignored.",
-          "StarX Flow monitors calendar webhooks. Exactly 2 hours after a customer checks out and their invoice is marked paid (Square, Stripe, or Clover), the AI sends a warm, personalized review prompt via WhatsApp, making it effortless to share feedback while the positive experience is top-of-mind."
-        ],
-        snippet: {
-          title: "Automated Feedback & Review Prompts",
-          code: `AI: "Hey Marcus! Thanks for stopping by Aura Spa today. We hope you loved your treatment with Sarah! 🌸
-
-If you have 10 seconds, it would support our local staff immensely if you shared your experience on Google:
-[Direct-Google-Review-Link]
-
-Have a wonderful week!"
-Client: "Done! You guys are amazing."`
-        }
-      },
-      {
-        heading: "3. Sentiment Filtering & Operations Control",
-        paragraphs: [
-          "Not every customer interaction is perfect. Sometimes an order is delayed, or a client leaves feeling neutral.",
-          "Our system offers a 'Feedback Gate' setting. Before sending the direct Google link, the AI can ask the customer to rate their experience from 1 to 5 stars inside the chat. Ratings of 4 or 5 are instantly supplied the Google link, while scores of 3 or below are prompted for detailed feedback. This response is immediately routed to the business owner's private inbox, allowing them to resolve issues before they become public reviews."
-        ]
-      }
-    ],
-    metrics: [
-      { label: "Review Volume Increase", value: "+140%", sub: "within the first 30 days" },
-      { label: "Google Map Pack Rank", value: "Top 3", sub: "average result for clients" },
-      { label: "Customer Response Rate", value: "32%", sub: "compared to 3% industry standard" }
+      { label: "Confirmation Method", value: "Interactive", sub: "1-click reply options" },
+      { label: "Calendar Sync", value: "Instant", sub: "opens slots for re-booking" },
+      { label: "Deposit Trigger", value: "Stripe", sub: "optional upfront retainer" }
     ]
   },
   "scaling-failures": {
     title: "Why Local Service Businesses Fail to Scale (And How to Fix It)",
     category: "Strategy",
     readTime: "7 min read",
-    date: "May 08, 2026",
-    author: "StarX Operations Board",
-    intro: "Boutique wellness centers, beauty clinics, and home service providers often hit a growth ceiling. Despite high demand, revenue plateaus and administrative expenses rise. In this operational breakdown, we examine how front-office friction limits scalability and how automation unlocks growth.",
+    date: "November 2026",
+    author: "StarX-Flow Operations Team",
+    intro: "Boutique wellness centers, clinics, and service providers often hit a growth ceiling. Despite high demand, revenue plateaus and administrative expenses rise. In this operational breakdown, we examine how front-office friction limits scalability and how automation unlocks growth.",
     sections: [
       {
         heading: "1. The Front-Desk Bottleneck & Administrative Drag",
         paragraphs: [
-          "In a typical service business, 80% of a receptionist's day is consumed by answering simple, repetitive questions: 'How much is a haircut?', 'Do you have openings today?', 'Where is your clinic located?'. This represents administrative drag.",
-          "Because your staff is busy answering routine questions, they miss incoming calls from new leads, fail to follow up on abandoned bookings, and have zero time for proactive marketing campaigns. By automating routine front-office workflows, you can redirect human resources to high-value customer service."
+          "In a typical service business, much of a receptionist's day is consumed by answering simple, repetitive questions: 'How much is a session?', 'Do you have openings today?', 'Where is your clinic located?'. This represents administrative drag.",
+          "By automating routine front-office workflows, you can redirect human staff to high-value customer service."
         ]
       },
       {
-        heading: "2. The Silent Revenue Killer: Missed Phone Calls",
+        heading: "2. Decoupling Revenue from Administrative Headcount",
         paragraphs: [
-          "Industry data reveals that 62% of incoming phone calls to local service businesses go unanswered. Furthermore, 85% of those callers will not leave a voicemail or call back—they simply call the next business listed on Google.",
-          "StarX Flow solves this leakage with 'Missed Call Recovery'. When a call is missed, the system instantly sends an automated WhatsApp message: 'Hi! We just missed your call. How can we help you book or reschedule today?'. This recovers up to 45% of otherwise lost leads within the first 60 seconds."
-        ],
-        snippet: {
-          title: "Missed Call Auto-Recovery Flow",
-          code: `[System Event: Inbound call from +1 (555) 0199 missed at 4:15 PM]
-StarX: "Hi there! Sorry we missed your call. 📞 We are currently helping other clients.
-
-If you are looking to book an appointment or check availability, just tell me what service you need and I can share open times!"
-Client: "Hey, looking to book a massage today."
-StarX: "Awesome! We have a slot open with Emily at 5:30 PM. Would you like to lock it in?"`
-        }
-      },
-      {
-        heading: "3. Aligning Ratios for High-Margin Expansion",
-        paragraphs: [
-          "To scale efficiently, you must decouple revenue growth from administrative headcounts. In traditional models, doubling your client volume requires doubling your receptionist staff, keeping margins thin.",
-          "Integrating AI front-offices allows service brands to scale capacity infinitely. The AI handles thousands of conversations simultaneously, ensuring zero delay, zero missed leads, and excellent operating leverage."
+          "To scale efficiently, you must decouple business growth from front-desk payroll. StarX-Flow operates 24/7 on a flat monthly subscription, providing an always-on reservation desk that scales with client volume."
         ]
       }
     ],
     metrics: [
-      { label: "Missed Call Recovery", value: "45%", sub: "converted within 60 seconds" },
-      { label: "Administrative Overhead", value: "-40%", sub: "saved on hiring and training costs" },
-      { label: "Lead Response Time", value: "<2s", sub: "24/7/365 coverage" }
-    ]
-  },
-  "calendar-integration": {
-    title: "Square & Clover Calendar Integration: A Guide to Roster Optimization",
-    category: "Integrations",
-    readTime: "5 min read",
-    date: "May 05, 2026",
-    author: "Tariq Mahmood, Tech Integrations Lead",
-    intro: "A scheduling assistant is only as smart as the data backing it up. If your AI assistant does not have real-time calendar access, double-bookings occur, frustrating clients and staff alike. This technical guide explains how webhooks ensure seamless roster syncing.",
-    sections: [
-      {
-        heading: "1. The Danger of 'Polling Interval' APIs",
-        paragraphs: [
-          "Many legacy scheduling widgets rely on polling: checking the calendar every 10 or 15 minutes for new bookings. In a high-volume salon or medical clinic, a 15-minute sync delay is a liability. Two clients can easily book the same slot, forcing staff to call and reschedule.",
-          "StarX Flow uses instant 2-way Webhook triggers. When an appointment is scheduled on Square, Clover, or Google Calendar, a secure message is pushed to our database in under 200 milliseconds. The slot is locked instantly, guaranteeing double-booking protection."
-        ]
-      },
-      {
-        heading: "2. Synchronizing Employee Rosters and Buffers",
-        paragraphs: [
-          "Roster optimization goes beyond booking slots; it requires managing employee preferences, breaks, and shifts.",
-          "StarX Flow imports active staff, service capabilities, custom buffers (e.g. 15 minutes of cleanup time between sessions), and lunch breaks. Here is a configuration snippet demonstrating active sync rules:"
-        ],
-        snippet: {
-          title: "Calendar Webhook Rules Config",
-          code: `[Roster Config: David (Senior Therapist)]
-- Active Days: Monday - Friday
-- Working Hours: 9:00 AM - 5:00 PM
-- Service Capacity: Therapeutic Massage (60m), Hot Stone Massage (90m)
-- Mandatory Cleanup Buffer: 15 minutes after session
-- Google Calendar 2-Way Sync: Enabled (locks personal blockouts)`
-        }
-      },
-      {
-        heading: "3. Roster Optimization & Room Allocations",
-        paragraphs: [
-          "For clinics and spas with limited resources (e.g., three massage tables or two specialized chiropractic chairs), managing therapist availability is only half the battle. You must also manage physical equipment resources.",
-          "Our calendar mapper associates rooms and equipment with specific services. If a therapist is free but all rooms are occupied, the AI blocks the slot, preventing staff bottlenecks and ensuring a smooth guest experience."
-        ]
-      }
-    ],
-    metrics: [
-      { label: "Sync Latency Rate", value: "200ms", sub: "instant webhook trigger locks" },
-      { label: "Double-Booking Incidents", value: "0", sub: "since system integration" },
-      { label: "Roster Utilization Rate", value: "+22%", sub: "due to automated gap filling" }
+      { label: "Pricing Model", value: "Flat-Rate", sub: "zero per-booking fees" },
+      { label: "Coverage Window", value: "24/7/365", sub: "instant inquiry responses" },
+      { label: "Multi-Staff Support", value: "Unlimited", sub: "Growth & Pro plans" }
     ]
   }
 };
-
 export function ArticleViewerClient() {
   const { articleSlug } = useParams<{ articleSlug: string }>();
   const router = useRouter();

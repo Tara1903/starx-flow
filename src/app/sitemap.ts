@@ -11,6 +11,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '' ? 1 : 0.8,
   }));
 
+  const trustRoutes = ['/how-it-works', '/security', '/integrations'].map((route) => ({
+    url: `${SEO_CONFIG.siteUrl}${route}`,
+    lastModified: currentDate,
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
+
   const pillarRoutes = [
     '/ai-automation',
     '/whatsapp-ai-chatbot',
@@ -84,12 +91,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
+  const articleRoutes = [
+    '/resources/articles/calendar-integration',
+    '/resources/articles/clinic-receptionist',
+    '/resources/articles/google-reviews-seo',
+  ].map((route) => ({
+    url: `${SEO_CONFIG.siteUrl}${route}`,
+    lastModified: currentDate,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
   return [
     ...baseRoutes,
+    ...trustRoutes,
     ...pillarRoutes,
     ...legalRoutes,
     ...industryRoutes,
     ...comparisonRoutes,
     ...scenarioRoutes,
+    ...articleRoutes,
   ];
 }

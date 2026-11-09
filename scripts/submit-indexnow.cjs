@@ -21,6 +21,10 @@ const URL_LIST = [
   `https://${HOST}/resources`,
   `https://${HOST}/privacy`,
   `https://${HOST}/terms`,
+  // Trust & Architecture
+  `https://${HOST}/how-it-works`,
+  `https://${HOST}/security`,
+  `https://${HOST}/integrations`,
   `https://${HOST}/ai-automation`,
   `https://${HOST}/whatsapp-ai-chatbot`,
   `https://${HOST}/instagram-ai-automation`,
@@ -58,6 +62,10 @@ const URL_LIST = [
   // Scenarios
   `https://${HOST}/scenarios/ai-agents`,
   `https://${HOST}/use-cases/whatsapp-automation`,
+  // Editorial Runbooks
+  `https://${HOST}/resources/articles/calendar-integration`,
+  `https://${HOST}/resources/articles/clinic-receptionist`,
+  `https://${HOST}/resources/articles/google-reviews-seo`,
 ];
 
 const payload = JSON.stringify({

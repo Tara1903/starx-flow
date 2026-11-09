@@ -48,9 +48,9 @@ export default function Home() {
     organizationSchema(),
     softwareApplicationSchema(),
     howToSchema([
-      { name: 'Connect Your Calendar', text: 'Sync Google Calendar, Outlook, Square, or Clover in one click.' },
+      { name: 'Connect Your Calendar', text: 'Sync Google Calendar and Microsoft Outlook in one click.' },
       { name: 'Configure Your AI Receptionist', text: 'Enter your services, staff schedule, pricing, and FAQs.' },
-      { name: 'Go Live on WhatsApp', text: 'Clients message your number. AI books slots in under 2 seconds.' }
+      { name: 'Go Live on WhatsApp', text: 'Clients message your number. AI engages clients and books slots in real time.' }
     ])
   ];
 
