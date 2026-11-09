@@ -13,7 +13,6 @@ import {
   ChevronDown,
   ShieldCheck,
   AlertCircle,
-  Calendar,
   Layers,
   ChevronRight
 } from 'lucide-react';
@@ -112,29 +111,22 @@ export function IndustryPageClient() {
                   The Operational Bottleneck
                 </h2>
                 <div className="space-y-6">
-                  {data.painPoints.map((point, idx) => {
-                    const isObj = typeof point === 'object' && point !== null;
-                    const title = isObj ? (point as IndustryPainPoint).title : `Problem ${idx + 1}`;
-                    const desc = isObj ? (point as IndustryPainPoint).description : (point as string);
-                    const impact = isObj ? (point as IndustryPainPoint).impact : null;
-
-                    return (
-                      <div key={idx} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5">
-                        <div className="flex items-center gap-2 text-white font-semibold text-lg mb-2">
-                          <span className="w-2 h-2 rounded-full bg-red-400" />
-                          <h3>{title}</h3>
-                        </div>
-                        <p className="text-zinc-400 text-sm leading-relaxed mb-3">
-                          {desc}
-                        </p>
-                        {impact && (
-                          <div className="inline-block px-3 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-medium">
-                            Operational Impact: {impact}
-                          </div>
-                        )}
+                  {data.painPoints.map((point, idx) => (
+                    <div key={idx} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5">
+                      <div className="flex items-center gap-2 text-white font-semibold text-lg mb-2">
+                        <span className="w-2 h-2 rounded-full bg-red-400" />
+                        <h3>{point.title}</h3>
                       </div>
-                    );
-                  })}
+                      <p className="text-zinc-400 text-sm leading-relaxed mb-3">
+                        {point.description}
+                      </p>
+                      {point.impact && (
+                        <div className="inline-block px-3 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-medium">
+                          Operational Consequence: {point.impact}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </GlassPanel>
@@ -146,40 +138,34 @@ export function IndustryPageClient() {
                   <span className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-black">
                     <MessageSquare className="w-5 h-5" />
                   </span>
-                  The StarX-Flow AI Solution
+                  The StarX-Flow Solution
                 </h2>
                 <div className="space-y-6">
-                  {data.aiSolutions.map((sol, idx) => {
-                    const isObj = typeof sol === 'object' && sol !== null;
-                    const title = isObj ? (sol as IndustrySolution).title : `Autonomous Capability ${idx + 1}`;
-                    const desc = isObj ? (sol as IndustrySolution).description : (sol as string);
-
-                    return (
-                      <div key={idx} className="bg-emerald-500/[0.03] border border-emerald-500/10 rounded-2xl p-5">
-                        <div className="flex items-center gap-2 text-white font-semibold text-lg mb-2">
-                          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                          <h3>{title}</h3>
-                        </div>
-                        <p className="text-zinc-300 text-sm leading-relaxed">
-                          {desc}
-                        </p>
+                  {data.aiSolutions.map((sol, idx) => (
+                    <div key={idx} className="bg-emerald-500/[0.03] border border-emerald-500/10 rounded-2xl p-5">
+                      <div className="flex items-center gap-2 text-white font-semibold text-lg mb-2">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                        <h3>{sol.title}</h3>
                       </div>
-                    );
-                  })}
+                      <p className="text-zinc-300 text-sm leading-relaxed">
+                        {sol.description}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </GlassPanel>
           </div>
 
-          {/* Workflow Sequence (If available) */}
+          {/* Workflow Sequence */}
           {data.workflowSteps && data.workflowSteps.length > 0 && (
             <div className="mb-24 max-w-5xl mx-auto">
               <div className="text-center mb-12">
                 <h2 className="text-3xl font-bold tracking-tight mb-4">
-                  How Autonomous Booking Works in {data.name}
+                  How Autonomous Booking Operates in {data.name}
                 </h2>
                 <p className="text-zinc-400 text-lg">
-                  Real step-by-step interaction between your customer and your StarX-Flow AI receptionist.
+                  Illustrative step-by-step workflow between your prospective client and your StarX-Flow AI receptionist.
                 </p>
               </div>
 
@@ -212,15 +198,48 @@ export function IndustryPageClient() {
             </div>
           )}
 
+          {/* Verified Platform Guarantees & Operating Commitments */}
+          {data.platformGuarantees && data.platformGuarantees.length > 0 && (
+            <div className="max-w-5xl mx-auto mb-24">
+              <div className="text-center mb-10">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold tracking-wide mb-4">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Verified Architecture Standards
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
+                  Platform Commitments for {data.name}
+                </h2>
+                <p className="text-zinc-400 text-base max-w-2xl mx-auto">
+                  Architectural guarantees designed to protect your appointments, calendar integrity, and client relationships.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                {data.platformGuarantees.map((item, idx) => (
+                  <GlassPanel key={idx} tier="panel" className="p-6 rounded-2xl border-emerald-500/20 relative">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
+                    <p className="text-zinc-300 text-sm leading-relaxed mb-4">{item.description}</p>
+                    <div className="text-xs text-zinc-400 bg-white/5 rounded-lg p-2.5 border border-white/5">
+                      <strong className="text-emerald-400">Enforcement:</strong> {item.verificationMethod}
+                    </div>
+                  </GlassPanel>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Transparent Limitations & Better Alternatives */}
           {data.limitations && data.limitations.length > 0 && (
             <div className="mb-24 max-w-5xl mx-auto">
               <div className="text-center mb-10">
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-                  Honest Scope: When StarX-Flow Fits & When Another Tool Fits Better
+                  Scope Transparency: When StarX-Flow Fits & When Another Tool Fits Better
                 </h2>
                 <p className="text-zinc-400 text-base">
-                  We believe in complete transparency. We don't try to be an enterprise ERP or physical hardware controller.
+                  We maintain complete transparency regarding our product boundaries. StarX-Flow is focused on front-desk conversational booking, not enterprise ERP or hardware systems.
                 </p>
               </div>
 
@@ -248,10 +267,10 @@ export function IndustryPageClient() {
             <div className="mb-24 max-w-5xl mx-auto">
               <div className="text-center mb-10">
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-                  Compatible Infrastructure & Integrations
+                  Supported Infrastructure & Integrations
                 </h2>
                 <p className="text-zinc-400 text-base">
-                  StarX-Flow integrates directly with the tools you already rely on daily.
+                  StarX-Flow integrates with standard calendars, messaging channels, and payment gateways.
                 </p>
               </div>
 
@@ -270,31 +289,6 @@ export function IndustryPageClient() {
               </div>
             </div>
           )}
-
-          {/* Testimonial */}
-          <div className="max-w-4xl mx-auto mb-24">
-            <GlassPanel tier="mist" className="p-10 md:p-12 rounded-[2rem] text-center border border-emerald-500/20 relative">
-              <div className="flex justify-center mb-6">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <svg key={star} className="w-6 h-6 text-emerald-400 fill-emerald-400" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <blockquote className="text-2xl md:text-3xl font-medium text-white mb-6 leading-relaxed">
-                "{data.testimonial.quote}"
-              </blockquote>
-              <div>
-                <div className="font-bold text-lg text-white">{data.testimonial.author}</div>
-                <div className="text-emerald-400 text-sm">{data.testimonial.role}</div>
-                {data.testimonial.metric && (
-                  <div className="inline-block mt-3 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-300 text-xs font-semibold">
-                    Verified Outcome: {data.testimonial.metric}
-                  </div>
-                )}
-              </div>
-            </GlassPanel>
-          </div>
 
           {/* Industry FAQs Accordion */}
           {data.faqs && data.faqs.length > 0 && (
@@ -378,10 +372,10 @@ export function IndustryPageClient() {
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none" />
               <div className="relative z-10">
                 <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                  Ready to put your {data.name.toLowerCase()} front desk on autopilot?
+                  Ready to automate your {data.name.toLowerCase()} front desk?
                 </h2>
                 <p className="text-zinc-300 text-lg mb-8 max-w-2xl mx-auto">
-                  Join hundreds of service businesses that never miss a booking. Set up in under 5 minutes with our 14-day free trial.
+                  Experience autonomous appointment scheduling with real-time Google and Outlook calendar synchronization. Start your 14-day free trial.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <button

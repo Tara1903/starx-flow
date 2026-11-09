@@ -8,7 +8,7 @@ StarX-Flow is an AI workflow automation platform designed specifically for local
 
 ## Core Capabilities
 
-- **WhatsApp AI Receptionist**: Instant natural-language booking and scheduling via WhatsApp. Responds in under 2 seconds in multiple languages.
+- **WhatsApp AI Receptionist**: Instant natural-language booking and scheduling via WhatsApp in multiple languages.
 - **Multi-Calendar Sync**: Real-time two-way sync with Google Calendar, Outlook, Square POS, and Clover POS. Zero double-booking guarantee.
 - **CRM & Client Ownership**: Full client profile management, booking history, intake waivers, and no-show tracking. No aggregator fees.
 - **Google Review Booster**: Automated post-appointment follow-ups to drive 5-star Google reviews.
@@ -42,7 +42,7 @@ All plans include a 14-day free trial.
 
 1. **WhatsApp-native**: Clients book via the messaging app they already use — no app downloads, no account creation required
 2. **Zero commissions**: Flat subscription pricing, never takes a cut of your revenue
-3. **Sub-2-second response time**: AI engages leads at peak intent before they move to a competitor
+3. **Real-time response**: AI engages leads at peak intent before they move to a competitor
 4. **Direct client ownership**: You own your client data, unlike marketplace aggregators
 5. **Enterprise infrastructure for SMBs**: Multi-calendar sync, POS integration, and compliance features typically reserved for enterprise
 

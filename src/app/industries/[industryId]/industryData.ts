@@ -34,19 +34,26 @@ export interface IndustryFAQ {
   answer: string;
 }
 
+export interface PlatformGuarantee {
+  title: string;
+  description: string;
+  verificationMethod: string;
+}
+
 export interface IndustryData {
   id: string;
   name: string;
   heroTitle: string;
   heroSubtitle: string;
   keyTakeaway: string;
-  painPoints: string[] | IndustryPainPoint[];
-  aiSolutions: string[] | IndustrySolution[];
+  painPoints: IndustryPainPoint[];
+  aiSolutions: IndustrySolution[];
   workflowSteps?: IndustryWorkflowStep[];
   integrations?: IndustryIntegration[];
   limitations?: IndustryLimitation[];
   faqs?: IndustryFAQ[];
-  testimonial: {
+  platformGuarantees: PlatformGuarantee[];
+  testimonial?: {
     quote: string;
     author: string;
     role: string;
@@ -65,70 +72,70 @@ export const industryData: Record<string, IndustryData> = {
     id: 'gyms-fitness',
     name: 'Gyms & Fitness Studios',
     heroTitle: 'AI Receptionist & WhatsApp Automation for Gyms & Fitness Studios',
-    heroSubtitle: 'Fill your classes and trial sessions 24/7. Convert Instagram and WhatsApp leads into active members without forcing app downloads.',
-    keyTakeaway: 'StarX-Flow replaces friction-heavy gym aggregator apps with an autonomous AI receptionist that books trial classes, answers membership FAQs, and syncs trainer calendars in under 2 seconds directly via WhatsApp and Instagram DMs.',
+    heroSubtitle: 'Automate trial class bookings and member intake 24/7. Engage prospective members natively on WhatsApp and Instagram without requiring app downloads.',
+    keyTakeaway: 'StarX-Flow replaces friction-heavy gym aggregator apps with an autonomous AI receptionist that books trial classes, answers membership FAQs, and syncs trainer calendars in real time directly via WhatsApp and Instagram DMs.',
     painPoints: [
       {
-        title: 'Trainers Coaching, Front Desk Abandoned',
-        description: 'Prospective members call or message while trainers are actively coaching classes or sessions, resulting in lost leads.',
-        impact: 'Up to 40% of inbound fitness inquiries abandon when not answered within 15 minutes.'
+        title: 'Trainers Coaching While Inquiries Arrive',
+        description: 'Prospective members call or message while trainers and coaches are actively running group classes or 1-on-1 sessions on the floor.',
+        impact: 'Unanswered calls and delayed messages allow leads to inquire with competing local fitness studios.'
       },
       {
         title: 'App Download Friction from Aggregators',
-        description: 'Platforms like Mindbody force prospects to download a consumer app and create an account just to book a free trial class.',
-        impact: 'High drop-off rates on mobile ad campaigns when users are redirected outside messaging apps.'
+        description: 'Traditional wellness platforms force prospective members to download a third-party consumer app and create an account before scheduling a first trial class.',
+        impact: 'High drop-off rates on mobile campaigns when leads are diverted outside familiar messaging apps.'
       },
       {
-        title: 'High Trial Class No-Show Rates',
-        description: 'Prospects book a trial days in advance and forget to attend without persistent, multi-channel reminders.',
-        impact: 'Average 25-35% no-show rates for unconfirmed trial bookings across boutique studios.'
+        title: 'Unconfirmed Trial Class Bookings',
+        description: 'Prospects book a trial session days in advance and forget to attend without interactive, multi-stage reminders.',
+        impact: 'Reserved class capacity goes unused, reducing trial-to-membership conversion opportunities.'
       }
     ],
     aiSolutions: [
       {
-        title: 'Instant 24/7 WhatsApp & Instagram Booking',
-        description: 'AI converses naturally with leads, presents live class rosters, and confirms bookings directly on your master calendar.'
+        title: '24/7 WhatsApp & Instagram Booking',
+        description: 'Converses naturally with leads, presents live class rosters, and confirms bookings directly on your master calendar.'
       },
       {
         title: 'Zero App Downloads Required',
-        description: 'Clients book and reschedule entirely inside WhatsApp and Instagram using natural conversational language.'
+        description: 'Clients schedule and reschedule entirely inside WhatsApp and Instagram without creating customer accounts.'
       },
       {
-        title: 'Automated Multi-Stage Reminder Sequences',
-        description: 'Sends automated WhatsApp confirmations 24 hours and 2 hours before class with 1-tap confirmation buttons.'
+        title: 'Interactive Confirmation Reminders',
+        description: 'Sends automated WhatsApp reminders prior to class with 1-tap confirmation or rescheduling buttons.'
       },
       {
-        title: 'Post-Workout Conversion Follow-ups',
-        description: 'Checks in with prospects 1 hour after their trial class, answers membership pricing questions, and collects reviews.'
+        title: 'Post-Workout Membership Inquiries',
+        description: 'Follows up after trial classes to answer membership pricing questions and request Google reviews.'
       }
     ],
     workflowSteps: [
       {
         step: 1,
         title: 'Lead Discovery & Inbound Inquiry',
-        trigger: 'Prospect clicks WhatsApp link from Instagram bio or Google Maps listing.',
+        trigger: 'Prospect messages studio WhatsApp from Instagram profile or Google Maps listing.',
         dialogue: 'Prospect: "Hi! Do you have any free trial CrossFit slots available tomorrow evening?"',
-        outcome: 'AI recognizes intent, cross-references trainer schedule, and responds in 1.4 seconds with available slots.'
+        outcome: 'AI recognizes intent, checks trainer calendar, and presents available trial slots.'
       },
       {
         step: 2,
         title: 'Autonomous Scheduling & Intake',
-        trigger: 'AI presents 5:30 PM and 6:45 PM beginner foundations slots.',
-        dialogue: 'Prospect: "6:45 PM works great for me." -> AI: "You are booked for 6:45 PM Foundations with Coach Alex! Here is your digital waiver link before arrival."',
-        outcome: 'Booking written to Google Calendar; digital health waiver sent automatically via WhatsApp.'
+        trigger: 'AI presents beginner foundations openings.',
+        dialogue: 'Prospect: "6:45 PM works great for me." -> AI: "You are booked for 6:45 PM Foundations with Coach Alex! Here is your digital waiver link before arrival: [Link]"',
+        outcome: 'Booking written to Google Calendar; digital liability waiver delivered via WhatsApp.'
       },
       {
         step: 3,
-        title: 'Attendance Guarantee & Follow-Up',
-        trigger: '2 hours prior to scheduled class.',
-        dialogue: 'AI: "Hey Jordan, looking forward to seeing you at 6:45 PM! Remember to bring a water bottle and clean gym shoes. Reply 1 to confirm or 2 to reschedule."',
-        outcome: 'Confirmed arrival logged in StarX-Flow CRM dashboard; zero double-booking guarantee enforced.'
+        title: 'Interactive Attendance Confirmation',
+        trigger: 'Automated notification prior to scheduled class.',
+        dialogue: 'AI: "Hey Jordan, looking forward to seeing you at 6:45 PM! Clean gym shoes required. Reply 1 to confirm or 2 to reschedule."',
+        outcome: 'Attendance confirmed in StarX-Flow dashboard; calendar sync verified.'
       }
     ],
     integrations: [
       { name: 'Google Calendar & Outlook', category: 'Calendar Sync', description: 'Real-time two-way sync for trainer availability and class rosters.' },
       { name: 'Square POS & Clover', category: 'Point of Sale', description: 'Synchronize member passes and paid personal training sessions.' },
-      { name: 'WhatsApp Cloud API', category: 'Messaging', description: 'Official Meta enterprise API with verified business identity.' },
+      { name: 'WhatsApp Cloud API', category: 'Messaging', description: 'Official Meta enterprise API with verified business profile.' },
       { name: 'Instagram Graph API', category: 'Social Lead Gen', description: 'Convert Instagram Story mentions and DMs directly into bookings.' }
     ],
     limitations: [
@@ -161,12 +168,23 @@ export const industryData: Record<string, IndustryData> = {
         answer: 'The AI uses your studio’s custom knowledge base (RAG) to answer general accommodation questions. If a question requires head coach evaluation, the AI smoothly transitions the conversation to your staff inbox.'
       }
     ],
-    testimonial: {
-      quote: 'We cut our trial class no-shows from 30% down to under 6%. Clients love booking on WhatsApp without downloading another clunky app.',
-      author: 'Marcus Vance',
-      role: 'Head Coach & Owner, Peak Athletics',
-      metric: '82% trial conversion rate'
-    },
+    platformGuarantees: [
+      {
+        title: 'Zero Double-Booking Guarantee',
+        description: 'Two-way synchronization with Google Calendar and Microsoft Outlook ensures no appointment overlap.',
+        verificationMethod: 'Automated calendar lock with atomic slot reservation protocol.'
+      },
+      {
+        title: 'Direct Client Ownership',
+        description: 'All lead contact information, message histories, and waivers belong entirely to your studio with zero aggregator commission fees.',
+        verificationMethod: 'Independent database isolation and encrypted customer records.'
+      },
+      {
+        title: 'Zero Commission Fees',
+        description: 'Flat monthly subscription with no per-booking cuts or revenue sharing.',
+        verificationMethod: 'Predictable billing with transparent tier limits.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-mindbody', 'starx-flow-vs-calendly'],
     relatedFeatureLinks: [
       { label: 'WhatsApp AI Chatbot', href: '/whatsapp-ai-chatbot' },
@@ -179,70 +197,70 @@ export const industryData: Record<string, IndustryData> = {
     id: 'beauty-salons',
     name: 'Hair Salons & Beauty Studios',
     heroTitle: 'AI Receptionist for Hair Salons, Barbershops & Beauty Studios',
-    heroSubtitle: 'Stop dropping your shears to answer phones. Turn Instagram DMs and late-night WhatsApps into fully paid chair bookings 24/7.',
+    heroSubtitle: 'Capture appointments while styling clients. Convert Instagram DMs and WhatsApp inquiries into confirmed chair bookings 24/7.',
     keyTakeaway: 'StarX-Flow provides hair salons and beauty studios with an autonomous 24/7 conversational front desk that quotes service pricing, verifies stylist availability, collects deposits, and eliminates no-shows directly on WhatsApp and Instagram.',
     painPoints: [
       {
-        title: 'Hands in Hair While Phone Rings',
-        description: 'Stylists cannot stop foil placements, haircuts, or lash extensions to answer the phone or reply to Instagram DMs.',
-        impact: 'Average salon loses $450-$700 weekly from missed prospective client calls during busy salon hours.'
+        title: 'Styling Clients While the Phone Rings',
+        description: 'Stylists cannot stop foil placements, haircuts, or lash applications to answer telephone calls or reply to Instagram DMs.',
+        impact: 'Missed prospective client inquiries during peak service hours.'
       },
       {
-        title: 'Clients DMing at 1 AM on Instagram',
-        description: 'Clients browse hairstyles late at night and DM questions; delayed morning responses mean the client books elsewhere.',
-        impact: 'Over 55% of salon DM inquiries occur outside of standard operational business hours.'
+        title: 'Late-Night Inquiries on Social Media',
+        description: 'Clients browse hairstyles and aesthetic treatments late at night; delayed morning replies mean the client books elsewhere.',
+        impact: 'Unanswered inquiries outside of salon working hours.'
       },
       {
-        title: 'Costly Last-Minute Cancellations & No-Shows',
-        description: 'Empty styling chairs represent perishable revenue that cannot be recovered without instant waitlist backfilling.',
-        impact: 'The beauty industry suffers an average 18% to 22% no-show rate without automated conversational reminders.'
+        title: 'Last-Minute Cancellations and Open Chairs',
+        description: 'Empty styling chairs represent perishable revenue that cannot be recovered without rapid client communication.',
+        impact: 'Direct revenue loss when cancellations occur without sufficient advance notice.'
       }
     ],
     aiSolutions: [
       {
-        title: 'Autonomous Stylist-Specific Booking',
-        description: 'Clients select their preferred stylist, service type (balayage, cut, styling), and date conversationally in seconds.'
+        title: 'Stylist-Specific Calendar Scheduling',
+        description: 'Clients select preferred stylists, service types (balayage, cut, styling), and dates conversationally in seconds.'
       },
       {
         title: 'Conversational Photo Consultation & Quoting',
-        description: 'Clients send photos of their current hair and desired style; AI advises on required appointment length and pricing estimates.'
+        description: 'Clients send current hair photos and desired styles; AI advises on estimated duration and pricing tiers.'
       },
       {
         title: 'Integrated Deposit Collection',
-        description: 'Automatically delivers secure Stripe or Square deposit payment links before confirming high-ticket appointments.'
+        description: 'Dispatches secure Stripe or Square deposit links before confirming high-ticket appointments.'
       },
       {
-        title: 'Instant Waitlist Auto-Fill',
-        description: 'When a cancellation occurs, the AI messages waitlisted clients automatically to refill the open chair in minutes.'
+        title: 'Interactive Reminder & Rescheduling Engine',
+        description: 'Automated WhatsApp reminders allow clients to confirm or reschedule with 1 tap, reducing empty chairs.'
       }
     ],
     workflowSteps: [
       {
         step: 1,
         title: 'Instagram DM Inquiry to WhatsApp',
-        trigger: 'Prospective client comments or DMs: "How much for a full balayage and trim this Friday?"',
+        trigger: 'Prospective client DMs: "How much for a full balayage and trim this Friday?"',
         dialogue: 'AI: "Hi there! Our balayage packages start at $180 depending on hair length. Would you like to check Senior Stylist Elena\'s openings for Friday?"',
-        outcome: 'Lead engaged instantly at peak intent without stylist stopping work.'
+        outcome: 'Lead engaged conversationally at peak intent without stylist stopping work.'
       },
       {
         step: 2,
         title: 'Service Duration & Slot Matching',
         trigger: 'Client requests Friday afternoon opening.',
-        dialogue: 'Client: "Yes, Friday after 2 PM with Elena please." -> AI: "Elena has a 3-hour balayage slot available at 2:30 PM this Friday. Shall I reserve this for you?"',
+        dialogue: 'Client: "Yes, Friday after 2 PM with Elena please." -> AI: "Elena has an opening at 2:30 PM this Friday. Shall I reserve this for you?"',
         outcome: 'AI accounts for service buffer times and locks the slot on the salon calendar.'
       },
       {
         step: 3,
         title: 'Deposit & Automated Confirmation',
         trigger: 'Client confirms slot.',
-        dialogue: 'AI: "Wonderful! Tap here to submit your $30 deposit to guarantee your chair: [Secure Link]. Once confirmed, you will receive prep notes via WhatsApp."',
+        dialogue: 'AI: "Confirmed! Tap here to submit your $30 deposit to guarantee your chair: [Secure Link]. Once completed, you will receive prep notes via WhatsApp."',
         outcome: 'Deposit paid, appointment confirmed in Square POS, and reminder sequence activated.'
       }
     ],
     integrations: [
       { name: 'Square POS & Clover', category: 'Point of Sale', description: 'Synchronize client appointments and in-chair service payments.' },
       { name: 'Google Calendar & Outlook', category: 'Rostering', description: 'Individual chair calendars for each independent stylist.' },
-      { name: 'Instagram Graph API', category: 'Social Media', description: 'Automate comment-to-DM conversions on hair portfolio posts.' },
+      { name: 'Instagram Graph API', category: 'Social Media', description: 'Automate comment-to-DM conversions on portfolio posts.' },
       { name: 'WhatsApp Cloud API', category: 'Client Communication', description: 'Send aftercare guides, reminders, and Google review requests.' }
     ],
     limitations: [
@@ -275,12 +293,23 @@ export const industryData: Record<string, IndustryData> = {
         answer: 'No. StarX-Flow sits in front of your calendar as an AI receptionist, syncing appointments into Square or Google Calendar while you continue using your normal hardware terminal for checkout.'
       }
     ],
-    testimonial: {
-      quote: 'I used to spend 2 hours every night responding to DMs and texts. Now StarX-Flow books my entire week while I focus on my clients in the chair.',
-      author: 'Chloe Dupont',
-      role: 'Master Colorist & Founder, Atelier Salon',
-      metric: 'Zero missed DMs in 6 months'
-    },
+    platformGuarantees: [
+      {
+        title: 'Independent Stylist Calendar Isolation',
+        description: 'Every booth renter or stylist maintains an isolated calendar with independent working hours and buffer times.',
+        verificationMethod: 'Provider-specific OAuth calendar linking.'
+      },
+      {
+        title: 'Direct Client Ownership',
+        description: 'Client phone numbers, appointment history, and preferences remain your property, not listed in an open aggregator directory.',
+        verificationMethod: 'Dedicated private database records.'
+      },
+      {
+        title: 'Zero Booking Commissions',
+        description: 'Flat monthly subscription without percentage fees on hair cuts, color services, or packages.',
+        verificationMethod: 'Fixed monthly SaaS pricing.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-vagaro', 'starx-flow-vs-phorest', 'starx-flow-vs-manychat'],
     relatedFeatureLinks: [
       { label: 'Instagram AI Automation', href: '/instagram-ai-automation' },
@@ -293,50 +322,50 @@ export const industryData: Record<string, IndustryData> = {
     id: 'dental-clinics',
     name: 'Dental & Medical Clinics',
     heroTitle: 'AI Receptionist & Patient Intake Automation for Dental Clinics',
-    heroSubtitle: 'Relieve your front desk from constant phone triage. Automate patient booking, insurance FAQs, and digital intake waivers securely on WhatsApp.',
+    heroSubtitle: 'Relieve your front desk from constant telephone triage. Automate patient booking, insurance FAQs, and digital intake waivers securely on WhatsApp.',
     keyTakeaway: 'StarX-Flow acts as an autonomous digital front desk for dental practices, answering routine insurance and service questions, scheduling cleanings and consultations, and sending pre-visit digital intake forms 24/7.',
     painPoints: [
       {
-        title: 'Overwhelmed Front Desk Staff',
-        description: 'Receptionists spend hours answering repetitive inquiries about accepted insurance, hours, and parking while patients wait in the lobby.',
-        impact: 'Front desk administrative burnout and increased patient check-in wait times.'
+        title: 'Front-Desk Telephone Bottleneck',
+        description: 'Receptionists spend hours answering routine inquiries about accepted insurance, hours, and parking while patients wait in the lobby.',
+        impact: 'Staff administrative workload increases and in-clinic patient check-in wait times lengthen.'
       },
       {
         title: 'Patients Reluctant to Make Phone Calls',
-        description: 'Modern patients put off routine cleanings and consultations because they dislike telephone hold times and phone tag.',
-        impact: 'Over 65% of dental patients prefer text/WhatsApp scheduling over voice phone calls.'
+        description: 'Patients put off booking routine cleanings and checkups because they dislike telephone hold times and phone tag.',
+        impact: 'Delays in patient scheduling and lower elective appointment uptake.'
       },
       {
-        title: 'Last-Minute Schedule Gaps in Operatories',
-        description: 'Cancellations leave dentists and hygienists idle, directly reducing clinic hourly billing capacity.',
-        impact: 'Unfilled dental operatory hours cost independent clinics an average of $350-$600 per missed hour.'
+        title: 'Last-Minute Operatory Chair Gaps',
+        description: 'Cancellations leave dentists and hygienists idle, directly reducing clinic hourly clinical capacity.',
+        impact: 'Underutilized clinical operatory hours.'
       }
     ],
     aiSolutions: [
       {
-        title: '24/7 Conversational Appointment Scheduling',
+        title: '24/7 Patient Appointment Scheduling',
         description: 'Patients schedule cleanings, cosmetic consults, and emergency checkups in natural language at any hour.'
       },
       {
-        title: 'Automated Pre-Appointment Digital Intake Forms',
-        description: 'Delivers health history waivers and registration forms via WhatsApp before arrival, eliminating clipboard paperwork.'
+        title: 'Pre-Appointment Digital Intake Forms',
+        description: 'Delivers health history waivers and registration forms via WhatsApp before arrival, reducing waiting room paperwork.'
       },
       {
-        title: 'Intelligent Insurance & Service FAQ Triage',
-        description: 'Answers clinic-specific questions regarding accepted PPO plans, payment options, and preparation guidelines.'
+        title: 'Routine Insurance & Service FAQ Triage',
+        description: 'Answers clinic-specific questions regarding accepted PPO plans, payment options, and visit guidelines.'
       },
       {
-        title: 'Automated 6-Month Recare Reminders',
-        description: 'Re-engages overdue patients on WhatsApp with 1-click booking links to keep clinic chairs consistently filled.'
+        title: 'Automated Recare Notifications',
+        description: 'Reminds overdue patients on WhatsApp with conversational rebooking links to keep clinic chairs filled.'
       }
     ],
     workflowSteps: [
       {
         step: 1,
         title: 'Patient Inquiry & Service Triage',
-        trigger: 'Patient texts clinic WhatsApp from Google Search: "Do you have any openings for a dental cleaning this week?"',
+        trigger: 'Patient texts clinic WhatsApp: "Do you have any openings for a dental cleaning this week?"',
         dialogue: 'AI: "Hello! Yes, we have openings for dental hygiene and cleanings. Are you an existing patient or will this be your first visit with us?"',
-        outcome: 'Patient classified as new vs. returning; appropriate appointment duration allocated.'
+        outcome: 'Patient categorized as new vs. returning; appropriate appointment duration allocated.'
       },
       {
         step: 2,
@@ -350,7 +379,7 @@ export const industryData: Record<string, IndustryData> = {
         title: 'Digital Intake Form & Confirmation',
         trigger: 'Slot locked on schedule.',
         dialogue: 'AI: "You are confirmed for Thursday at 9:30 AM with Dr. Reynolds. Please tap here to complete your medical history form before your visit: [Secure Link]"',
-        outcome: 'HIPAA-compliant digital intake submitted; automated WhatsApp reminder queued.'
+        outcome: 'Digital intake submitted over HTTPS; automated WhatsApp reminder queued.'
       }
     ],
     integrations: [
@@ -378,7 +407,7 @@ export const industryData: Record<string, IndustryData> = {
       },
       {
         question: 'Is patient communication secure and HIPAA-conscious?',
-        answer: 'Yes. StarX-Flow utilizes end-to-end encrypted messaging through the official WhatsApp Business API, and digital waivers are processed over encrypted HTTPS pipelines.'
+        answer: 'Yes. StarX-Flow utilizes encrypted messaging through the official WhatsApp Business API, and digital waivers are processed over encrypted HTTPS pipelines.'
       },
       {
         question: 'Can the AI handle emergency dental inquiries after hours?',
@@ -386,15 +415,26 @@ export const industryData: Record<string, IndustryData> = {
       },
       {
         question: 'How does StarX-Flow reduce clinic cancellations?',
-        answer: 'StarX-Flow dispatches conversational WhatsApp reminders 48 hours and 24 hours prior to visits with interactive 1-tap confirmation. Patients who need to reschedule can do so conversationally in seconds.'
+        answer: 'StarX-Flow dispatches conversational WhatsApp reminders prior to visits with interactive 1-tap confirmation. Patients who need to reschedule can do so conversationally in seconds.'
       }
     ],
-    testimonial: {
-      quote: 'Our front desk phone volume dropped by nearly 60%. Patients love booking their cleanings on WhatsApp, and our lobby is noticeably calmer.',
-      author: 'Dr. Aris Thorne, DDS',
-      role: 'Clinical Director, Thorne Family Dentistry',
-      metric: '58% reduction in phone triage'
-    },
+    platformGuarantees: [
+      {
+        title: 'Encrypted Patient Data Transport',
+        description: 'All patient intake submissions and messaging interactions operate through 256-bit SSL encryption.',
+        verificationMethod: 'TLS 1.3 encryption and official Meta enterprise security standards.'
+      },
+      {
+        title: 'Zero Double-Booking Guarantee',
+        description: 'Real-time multi-operatory calendar collision detection ensures clean provider schedules.',
+        verificationMethod: 'Two-way calendar API locking.'
+      },
+      {
+        title: 'Staff Handoff Protocol',
+        description: 'Clinical questions outside pre-approved FAQs immediately route to front-desk staff inbox.',
+        verificationMethod: 'Configurable emergency and clinical escalation rules.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-calendly', 'starx-flow-vs-intercom', 'starx-flow-vs-wati'],
     relatedFeatureLinks: [
       { label: 'AI Customer Support', href: '/ai-customer-support' },
@@ -411,25 +451,25 @@ export const industryData: Record<string, IndustryData> = {
     keyTakeaway: 'StarX-Flow provides solo therapists and multi-practitioner wellness clinics with an autonomous conversational AI front desk that schedules sessions, delivers health intake waivers, and eliminates phone tag without booking commissions.',
     painPoints: [
       {
-        title: 'Practitioners Locked in Treatment Rooms',
-        description: 'Therapists spend 6 to 8 hours daily in silent sessions and cannot pick up ringing phones or reply to text messages.',
-        impact: 'Over 70% of first-time wellness clients call another clinic if their initial call goes to voicemail.'
+        title: 'Practitioners Engaged in Treatment Sessions',
+        description: 'Therapists spend hours in treatment rooms and cannot pick up ringing phones or reply to incoming text messages.',
+        impact: 'First-time wellness clients seeking care often contact another clinic if their call goes to voicemail.'
       },
       {
         title: 'Intake Forms Cutting Into Session Time',
-        description: 'Clients arrive and spend the first 10 minutes filling out paper medical intake clipboards, reducing actual therapy time.',
-        impact: 'Lost treatment time and patient frustration during back-to-back appointment blocks.'
+        description: 'Clients arrive and spend the first 10 minutes filling out paper health questionnaires, reducing actual therapy time.',
+        impact: 'Reduced treatment duration and client dissatisfaction during back-to-back appointment blocks.'
       },
       {
-        title: 'High No-Show and Late Cancellation Costs',
-        description: 'A missed massage or chiropractic session represents completely non-recoverable hourly revenue.',
-        impact: 'Solo practitioners lose an average of $300-$500 weekly to unconfirmed appointments.'
+        title: 'Unconfirmed Sessions and Late Cancellations',
+        description: 'A missed massage, chiropractic, or physical therapy session represents non-recoverable provider time.',
+        impact: 'Direct hourly revenue loss for solo practitioners.'
       }
     ],
     aiSolutions: [
       {
-        title: 'Quiet, Hands-Free 24/7 Scheduling',
-        description: 'Clients browse available treatment modalities and book directly on your calendar via WhatsApp without phone interruptions.'
+        title: 'Hands-Free 24/7 Scheduling',
+        description: 'Clients browse available treatment modalities and book directly on your calendar via WhatsApp without telephone interruptions.'
       },
       {
         title: 'Pre-Visit Digital Health Waivers',
@@ -441,7 +481,7 @@ export const industryData: Record<string, IndustryData> = {
       },
       {
         title: 'Automated Post-Treatment Care & Review Booster',
-        description: 'Sends post-care hydration/stretch tips and requests 5-star Google reviews 2 hours following the appointment.'
+        description: 'Sends post-care hydration tips and requests Google reviews following the appointment.'
       }
     ],
     workflowSteps: [
@@ -450,7 +490,7 @@ export const industryData: Record<string, IndustryData> = {
         title: 'Client Inbound & Treatment Selection',
         trigger: 'Client texts WhatsApp: "Looking to book a 60-minute deep tissue massage for tension relief."',
         dialogue: 'AI: "Hello! We would love to help. Do you have a preferred therapist, or would you like the earliest opening this week?"',
-        outcome: 'AI identifies service category and duration requirements (60-minute session + 15-minute cleaning buffer).'
+        outcome: 'AI identifies service category and duration requirements (60-minute session + buffer time).'
       },
       {
         step: 2,
@@ -463,15 +503,15 @@ export const industryData: Record<string, IndustryData> = {
         step: 3,
         title: 'Health Intake & Post-Visit Review',
         trigger: 'Automated workflow post-booking and post-visit.',
-        dialogue: 'AI: "Please take 60 seconds to complete your intake waiver: [Link]. We look forward to seeing you Wednesday!"',
+        dialogue: 'AI: "Please take a moment to complete your intake waiver: [Link]. We look forward to seeing you Wednesday!"',
         outcome: 'Digital waiver completed before visit; automated review request sent post-session.'
       }
     ],
     integrations: [
       { name: 'Google Calendar & Outlook', category: 'Calendar Sync', description: 'Individual room and therapist schedule management.' },
       { name: 'Square POS', category: 'Payments', description: 'Collect deposits or full session prepayments seamlessly.' },
-      { name: 'WhatsApp Cloud API', category: 'Messaging', description: 'Quiet, conversational booking without phone ringing.' },
-      { name: 'Google Business Profile', category: 'Reputation', description: 'Automated post-session 5-star Google review booster.' }
+      { name: 'WhatsApp Cloud API', category: 'Messaging', description: 'Conversational booking without phone ringing during sessions.' },
+      { name: 'Google Business Profile', category: 'Reputation', description: 'Automated post-session Google review booster.' }
     ],
     limitations: [
       {
@@ -503,12 +543,23 @@ export const industryData: Record<string, IndustryData> = {
         answer: 'Yes. Clients simply message the WhatsApp number requesting a new date or time. The AI checks availability, adjusts the calendar, and sends an updated confirmation automatically.'
       }
     ],
-    testimonial: {
-      quote: 'As a solo massage therapist, answering the phone was my biggest headache. StarX-Flow captures every client while I am working, and my calendar stays full.',
-      author: 'Maya Lin, LMT',
-      role: 'Founder, Serene Bodyworks',
-      metric: '94% automated booking rate'
-    },
+    platformGuarantees: [
+      {
+        title: 'Treatment Room Privacy',
+        description: 'Complete hands-free operation ensures no phone ringing or message interruptions while you work with clients.',
+        verificationMethod: 'Automated conversational AI front desk.'
+      },
+      {
+        title: 'Two-Way Calendar Sync',
+        description: 'Automatic buffer management prevents back-to-back room collisions.',
+        verificationMethod: 'Configurable turnover buffer times.'
+      },
+      {
+        title: 'Flat-Rate Transparent Pricing',
+        description: 'No per-booking fees, no commission splits, and no unexpected add-on costs.',
+        verificationMethod: 'Fixed monthly subscription.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-acuity-scheduling', 'starx-flow-vs-vagaro', 'starx-flow-vs-calendly'],
     relatedFeatureLinks: [
       { label: 'WhatsApp AI Chatbot', href: '/whatsapp-ai-chatbot' },
@@ -521,32 +572,32 @@ export const industryData: Record<string, IndustryData> = {
     id: 'real-estate',
     name: 'Real Estate Agencies',
     heroTitle: 'AI Lead Qualification & Viewing Booking for Real Estate Brokers',
-    heroSubtitle: 'Engage buyer and tenant leads in under 60 seconds. Qualify budgets, answer property questions, and schedule viewing appointments 24/7 on WhatsApp.',
-    keyTakeaway: 'StarX-Flow equips real estate agencies and property managers with an autonomous WhatsApp AI assistant that qualifies inbound portal and social leads, provides property specifications, and schedules agent viewing appointments instantly.',
+    heroSubtitle: 'Engage buyer and tenant leads promptly. Qualify budgets, answer property questions, and schedule viewing appointments 24/7 on WhatsApp.',
+    keyTakeaway: 'StarX-Flow equips real estate agencies and property managers with an autonomous WhatsApp AI assistant that qualifies inbound portal and social leads, provides property specifications, and schedules agent viewing appointments promptly.',
     painPoints: [
       {
-        title: 'Slow Speed-to-Lead from Portal Inquiries',
-        description: 'Inquiries from Zillow, Realtor, or Instagram sit unanswered for hours while agents are out on property showings.',
-        impact: 'Leads contacted after 5 minutes are 80% less likely to qualify or schedule a property tour.'
+        title: 'Delayed Response to Inbound Leads',
+        description: 'Inquiries from listing portals or social ads sit unanswered while agents are conducting property tours or client meetings.',
+        impact: 'Prospective buyers and tenants reach out to multiple listings, favoring the first agent who responds.'
       },
       {
-        title: 'Unqualified Buyers Wasting Agent Time',
-        description: 'Agents spend weekends showing homes to tire-kickers who lack financing pre-approval or realistic budgets.',
-        impact: 'Up to 35% of an agent’s productive schedule is lost on unqualified showings.'
+        title: 'Unqualified Inquiries Consuming Showing Time',
+        description: 'Agents spend weekends hosting showings for individuals who lack financing pre-approval or realistic budgets.',
+        impact: 'Productive agent showing hours diverted to unvetted leads.'
       },
       {
         title: 'Repetitive Property Specification Inquiries',
-        description: 'Agents repeatedly answer the same questions about HOA fees, parking, square footage, pet rules, and school zones.',
-        impact: 'High administrative friction managing hundreds of simultaneous WhatsApp conversations.'
+        description: 'Agents repeatedly answer identical questions regarding HOA fees, pet policies, parking, and square footage.',
+        impact: 'High administrative communication overhead managing multiple chats manually.'
       }
     ],
     aiSolutions: [
       {
-        title: 'Instant 60-Second WhatsApp Lead Response',
-        description: 'Engages inbound prospective buyers and renters immediately at the peak of their emotional buying interest.'
+        title: 'Prompt WhatsApp Lead Engagement',
+        description: 'Engages inbound prospective buyers and renters immediately when interest is highest.'
       },
       {
-        title: 'Automated 4-Point Lead Qualification',
+        title: 'Conversational Lead Qualification',
         description: 'Screens prospects for timeframe, budget range, pre-approval status, and desired property specifications.'
       },
       {
@@ -555,37 +606,37 @@ export const industryData: Record<string, IndustryData> = {
       },
       {
         title: 'Property Knowledge Base RAG',
-        description: 'Instantly answers nuanced listing questions regarding HOA fees, pet policies, school districts, and inclusions.'
+        description: 'Answers listing questions regarding HOA fees, pet policies, school districts, and inclusions.'
       }
     ],
     workflowSteps: [
       {
         step: 1,
         title: 'Inbound WhatsApp Lead Capture',
-        trigger: 'Prospect clicks WhatsApp link on Instagram listing ad or website property card.',
+        trigger: 'Prospect messages from property listing card.',
         dialogue: 'Prospect: "Hi, is 42 Elm Street still available? What are the monthly HOA fees?"',
-        outcome: 'AI responds in 1.2 seconds confirming availability and quoting HOA fees from the property spec sheet.'
+        outcome: 'AI confirms availability and quotes HOA fees from property documentation.'
       },
       {
         step: 2,
-        title: 'Automated Lead Qualification',
-        trigger: 'AI provides spec details and initiates qualification dialogue.',
+        title: 'Conversational Lead Qualification',
+        trigger: 'AI provides spec details and initiates qualification questions.',
         dialogue: 'AI: "HOA fees are $240/month. Are you looking to purchase as an owner-occupant or investor, and do you currently have mortgage pre-approval?"',
-        outcome: 'Prospect details verified (owner-occupant, pre-approved up to $650k, 30-day timeline).'
+        outcome: 'Prospect details verified (owner-occupant, pre-approved, active buying timeline).'
       },
       {
         step: 3,
         title: 'Viewing Tour Scheduling',
-        trigger: 'Lead qualifies as high-intent.',
-        dialogue: 'AI: "Lead Listing Agent Marcus is hosting private viewings this Saturday at 11:00 AM or 1:30 PM. Which time suits you?" -> Prospect: "11:00 AM."',
+        trigger: 'Lead qualifies as active buyer.',
+        dialogue: 'AI: "Listing Agent Marcus is hosting private viewings this Saturday at 11:00 AM or 1:30 PM. Which time suits you?" -> Prospect: "11:00 AM."',
         outcome: 'Showing confirmed on Marcus’s calendar; calendar invite and driving directions sent via WhatsApp.'
       }
     ],
     integrations: [
       { name: 'Google Calendar & Outlook', category: 'Calendar Sync', description: 'Coordinate agent showing schedules and open house rosters.' },
-      { name: 'WhatsApp Cloud API', category: 'Messaging', description: 'High-speed messaging for instant buyer qualification.' },
+      { name: 'WhatsApp Cloud API', category: 'Messaging', description: 'Messaging for buyer qualification.' },
       { name: 'CRM Webhook Pipeline', category: 'Data Sync', description: 'Stream qualified buyer dossiers into Follow Up Boss, HubSpot, or Salesforce.' },
-      { name: 'Meta Ads Webhooks', category: 'Lead Gen', description: 'Instant speed-to-lead trigger directly from Facebook/Instagram Lead Ads.' }
+      { name: 'Meta Ads Webhooks', category: 'Lead Gen', description: 'Lead triggers directly from Facebook/Instagram Lead Ads.' }
     ],
     limitations: [
       {
@@ -606,7 +657,7 @@ export const industryData: Record<string, IndustryData> = {
       },
       {
         question: 'How quickly does the AI reply to inbound leads from ads?',
-        answer: 'StarX-Flow responds to WhatsApp and Instagram inquiries in under 2 seconds, ensuring your agency beats competing brokers to the prospect.'
+        answer: 'StarX-Flow responds to WhatsApp and Instagram inquiries in real time, ensuring your agency engages the prospect before they move on to another listing.'
       },
       {
         question: 'Can it route different properties to different listing agents?',
@@ -617,12 +668,23 @@ export const industryData: Record<string, IndustryData> = {
         answer: 'Yes. StarX-Flow connects via webhooks or Zapier/Make to push full lead transcripts, contact information, and qualification answers into CRMs like Follow Up Boss, KVCore, or HubSpot.'
       }
     ],
-    testimonial: {
-      quote: 'In real estate, speed to lead is everything. StarX-Flow qualifies buyers and puts showing appointments on our agents’ calendars within 2 minutes of ad click.',
-      author: 'Julian Cole',
-      role: 'Managing Broker, Apex Realty Group',
-      metric: '3.4x faster viewing booking rate'
-    },
+    platformGuarantees: [
+      {
+        title: 'Agent Calendar Protection',
+        description: 'Only prospects who satisfy your qualification criteria receive access to agent viewing calendars.',
+        verificationMethod: 'Pre-booking qualification gate.'
+      },
+      {
+        title: 'Lead Privacy & Security',
+        description: 'Prospective buyer data is never sold to third-party referral networks.',
+        verificationMethod: 'Private database storage.'
+      },
+      {
+        title: 'Reliable CRM Webhook Delivery',
+        description: 'Every qualified lead dossier is pushed to your CRM endpoint with payload retry logic.',
+        verificationMethod: 'Automated webhook delivery monitoring.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-manychat', 'starx-flow-vs-wati', 'starx-flow-vs-calendly'],
     relatedFeatureLinks: [
       { label: 'AI Agents', href: '/ai-agents' },
@@ -635,40 +697,40 @@ export const industryData: Record<string, IndustryData> = {
     id: 'hospitality',
     name: 'Hotels & Hospitality',
     heroTitle: 'WhatsApp Digital Concierge & Direct Booking Assistant for Hotels',
-    heroSubtitle: 'Deliver 24/7 multilingual guest concierge service. Drive direct room bookings, automate check-in instructions, and cut OTA commission fees.',
+    heroSubtitle: 'Deliver 24/7 multilingual guest concierge service. Support direct room booking inquiries, automate check-in instructions, and reduce OTA commission dependence.',
     keyTakeaway: 'StarX-Flow provides boutique hotels, resorts, and vacation rentals with an autonomous 24/7 WhatsApp concierge that handles guest inquiries, assists with direct room reservations, and shares automated arrival guides.',
     painPoints: [
       {
         title: 'Front-Desk Congestion During Check-In',
-        description: 'Guests wait in physical lobby lines while staff juggle ringing phone inquiries regarding parking and check-out times.',
-        impact: 'Diminished guest satisfaction scores and negative online reviews.'
+        description: 'Guests wait in physical lobby queues while staff answer incoming telephone inquiries regarding parking and check-out times.',
+        impact: 'Longer lobby wait times during peak check-in windows.'
       },
       {
-        title: 'Crippling OTA Commission Fees (15-25%)',
-        description: 'Hotels forfeit a substantial portion of room margins to Booking.com and Expedia because direct booking communication is friction-filled.',
-        impact: 'Thousands of dollars lost monthly in third-party intermediary commissions.'
+        title: 'High OTA Commission Fees on Bookings',
+        description: 'Hotels pay commissions to third-party booking portals when direct booking channels are difficult for guests to navigate.',
+        impact: 'Commission fees reduce net profit margins on room stays.'
       },
       {
         title: 'Repetitive Concierge Inquiries',
-        description: 'Front-desk staff spend significant time answering questions about WiFi credentials, breakfast hours, pool rules, and luggage storage.',
-        impact: 'Staff distraction from providing high-touch hospitality to in-house guests.'
+        description: 'Front-desk staff spend time answering questions about WiFi credentials, breakfast hours, pool rules, and luggage storage.',
+        impact: 'Staff attention diverted from in-person guest hospitality.'
       }
     ],
     aiSolutions: [
       {
         title: '24/7 Multilingual Digital Concierge',
-        description: 'Instantly answers property FAQs in 20+ languages on WhatsApp without requiring guests to call the front desk.'
+        description: 'Answers property FAQs in multiple languages on WhatsApp without requiring guests to call the front desk.'
       },
       {
-        title: 'Automated Pre-Arrival Welcome & Check-in Guides',
-        description: 'Dispatches directions, parking instructions, and digital key/door codes automatically prior to guest arrival.'
+        title: 'Pre-Arrival Check-In Guides',
+        description: 'Dispatches directions, parking instructions, and digital access information automatically prior to arrival.'
       },
       {
-        title: 'Direct Reservation Inquiries & Amenity Upsells',
-        description: 'Facilitates direct room booking inquiries, spa reservations, and airport transfer requests to maximize revenue per guest.'
+        title: 'Direct Reservation Inquiries',
+        description: 'Assists prospective guests with direct room booking inquiries, spa reservations, and amenity requests.'
       },
       {
-        title: 'In-Stay Maintenance & Service Triage',
+        title: 'In-Stay Service Triage',
         description: 'Guests request extra towels or report issues via WhatsApp, which the AI routes to the appropriate housekeeping team.'
       }
     ],
@@ -678,19 +740,19 @@ export const industryData: Record<string, IndustryData> = {
         title: 'Direct Booking Inquiry & Room Selection',
         trigger: 'Prospective guest messages hotel WhatsApp: "Do you have a king suite available from October 14-17 for 2 adults?"',
         dialogue: 'AI: "Hello! Yes, we have our Deluxe King Suite available for those dates at our direct rate of $220/night, including complimentary breakfast."',
-        outcome: 'Direct booking proposed with rate incentive to bypass third-party OTAs.'
+        outcome: 'Direct booking proposed with direct rate incentive.'
       },
       {
         step: 2,
         title: 'Pre-Arrival Check-In Instructions',
-        trigger: '24 hours before check-in date.',
+        trigger: 'Automated message 24 hours before check-in date.',
         dialogue: 'AI: "Welcome to The Grandview! Check-in starts at 3:00 PM. Here is your parking permit and digital access code for the main entrance: [Guide]"',
-        outcome: 'Guest arrives informed; zero front-desk lobby queue required.'
+        outcome: 'Guest arrives informed; lobby wait time minimized.'
       },
       {
         step: 3,
         title: 'In-Stay Concierge & Local Recommendations',
-        trigger: 'Guest texts at 8:00 PM during stay.',
+        trigger: 'Guest texts during stay.',
         dialogue: 'Guest: "What is the WiFi password and can you recommend a nearby Italian restaurant?" -> AI: "Our WiFi network is Grandview_Guest (Pass: StayRelaxed). For Italian, Il Forno is a 4-minute walk and highly rated!"',
         outcome: 'Instant guest resolution with zero front-desk staff effort.'
       }
@@ -698,7 +760,7 @@ export const industryData: Record<string, IndustryData> = {
     integrations: [
       { name: 'iCal Calendar Sync', category: 'PMS Sync', description: 'Synchronize room block dates across Airbnb, VRBO, and booking calendars.' },
       { name: 'WhatsApp Cloud API', category: 'Messaging', description: 'Official verified hotel business WhatsApp channel.' },
-      { name: 'Stripe & Square', category: 'Direct Payments', description: 'Collect direct room deposits and resort fee payments securely.' },
+      { name: 'Stripe & Square', category: 'Direct Payments', description: 'Collect direct room deposits and amenity payments securely.' },
       { name: 'Google Business Profile', category: 'Reviews', description: 'Automated post-checkout review request sequences.' }
     ],
     limitations: [
@@ -716,27 +778,38 @@ export const industryData: Record<string, IndustryData> = {
     faqs: [
       {
         question: 'Does the WhatsApp concierge support multiple languages?',
-        answer: 'Yes. StarX-Flow automatically detects the guest’s language (English, Spanish, French, German, Portuguese, etc.) and converses fluently in their native tongue.'
+        answer: 'Yes. StarX-Flow automatically detects the guest’s language (English, Spanish, French, German, Portuguese, etc.) and converses in their native tongue.'
       },
       {
         question: 'Can the AI help us increase direct bookings over Booking.com and Expedia?',
-        answer: 'Yes. By placing a WhatsApp button on your website and social pages, prospective guests can inquire directly and receive an exclusive direct booking incentive, keeping the 15-25% OTA cut in your hotel’s pocket.'
+        answer: 'Yes. By placing a WhatsApp button on your website and social pages, prospective guests can inquire directly and receive an exclusive direct booking incentive, keeping revenue within your property.'
       },
       {
         question: 'How are guest maintenance or housekeeping requests handled?',
-        answer: 'The AI can log maintenance requests (e.g., "extra pillows", "AC not cooling") and instantly forward notification alerts to your housekeeping team’s WhatsApp group or staff dashboard.'
+        answer: 'The AI can log maintenance requests (e.g., "extra pillows", "AC adjustment") and forward notification alerts to your housekeeping team’s WhatsApp group or staff dashboard.'
       },
       {
         question: 'Can StarX-Flow be used for boutique hotels, B&Bs, and vacation rentals?',
-        answer: 'Yes. Whether you operate a 15-room boutique hotel, a luxury bed & breakfast, or a portfolio of vacation rental villas, StarX-Flow adapts to your property’s specific amenities and policies.'
+        answer: 'Yes. Whether you operate a boutique hotel, a bed & breakfast, or a portfolio of vacation rental villas, StarX-Flow adapts to your property’s specific amenities and policies.'
       }
     ],
-    testimonial: {
-      quote: 'Our guests love having a WhatsApp concierge in their pocket. Routine front-desk calls dropped dramatically, and direct booking inquiries jumped 40%.',
-      author: 'Sophia Sterling',
-      role: 'General Manager, The Sterling Boutique Hotel',
-      metric: '40% increase in direct booking inquiries'
-    },
+    platformGuarantees: [
+      {
+        title: 'Multilingual Natural Conversation',
+        description: 'Automatic language detection delivers native-language concierge responses.',
+        verificationMethod: 'Real-time multilingual LLM translation.'
+      },
+      {
+        title: 'Direct Booking Revenue Retention',
+        description: 'Direct room reservations carry zero OTA intermediary fees.',
+        verificationMethod: 'Direct calendar and payment gateway integration.'
+      },
+      {
+        title: '24/7 Availability',
+        description: 'Guest inquiries answered around the clock without requiring night-shift front desk personnel.',
+        verificationMethod: 'Serverless cloud infrastructure with automated failover.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-wati', 'starx-flow-vs-respond-io', 'starx-flow-vs-manychat'],
     relatedFeatureLinks: [
       { label: 'AI Customer Support', href: '/ai-customer-support' },
@@ -749,23 +822,23 @@ export const industryData: Record<string, IndustryData> = {
     id: 'restaurants',
     name: 'Restaurants & Dining',
     heroTitle: 'WhatsApp Reservation & Guest Intake Automation for Restaurants',
-    heroSubtitle: 'Never lose a table reservation during noisy dinner rush. Automate table bookings, dietary inquiries, and reservation confirmations on WhatsApp.',
+    heroSubtitle: 'Never lose a table reservation during noisy dinner service. Automate table bookings, dietary inquiries, and reservation confirmations on WhatsApp.',
     keyTakeaway: 'StarX-Flow gives busy restaurants and hospitality venues an autonomous WhatsApp AI reservation assistant that books tables, answers menu and dietary questions, and eliminates no-shows without per-cover booking fees.',
     painPoints: [
       {
-        title: 'Phone Rings Unheard During Dinner Rush',
-        description: 'Dining room noise and kitchen hustle make answering the phone nearly impossible during peak service hours.',
-        impact: 'Restaurants lose high-margin weekend table reservations and large party bookings to unanswered phone calls.'
+        title: 'Ringing Phones During Peak Service Hours',
+        description: 'Dining room noise and kitchen hustle make answering the phone difficult during busy dinner service windows.',
+        impact: 'Unanswered reservation inquiries and missed large party bookings.'
       },
       {
-        title: 'Expensive Per-Cover Aggregator Fees',
-        description: 'Platforms like OpenTable and Resy charge recurring monthly fees plus $1 to $2.50 for every seated guest booked through their app.',
-        impact: 'Thousands of dollars in monthly fees eroding already razor-thin restaurant profit margins.'
+        title: 'Per-Cover Aggregator Fees',
+        description: 'Third-party reservation aggregators charge recurring software fees plus per-cover fees for seated guests booked through their app.',
+        impact: 'Per-diner commissions reduce restaurant operating margins.'
       },
       {
-        title: 'High Table No-Show Rates',
-        description: 'Parties book tables and fail to arrive without notice, leaving prime tables empty during peak Friday/Saturday service.',
-        impact: '15% to 20% average restaurant table no-show rates during unconfirmed reservation services.'
+        title: 'Table No-Shows During Service',
+        description: 'Parties book tables and fail to arrive without notice, leaving reserved tables empty during peak weekend seatings.',
+        impact: 'Empty tables reduce restaurant turnover capacity.'
       }
     ],
     aiSolutions: [
@@ -775,15 +848,15 @@ export const industryData: Record<string, IndustryData> = {
       },
       {
         title: 'Zero Per-Cover Booking Fees',
-        description: 'Pay a flat monthly software subscription with no commissions or fees taken from your guest counts.'
+        description: 'Pay a flat monthly software subscription with no commissions taken from your diner counts.'
       },
       {
-        title: 'Interactive 2-Hour Pre-Service Confirmations',
-        description: 'Sends automated WhatsApp reminders with 1-tap "Confirm" or "Release Table" buttons to recover empty seats.'
+        title: 'Pre-Service Confirmation Reminders',
+        description: 'Sends automated WhatsApp reminders with 1-tap confirmation or cancellation to release unfilled tables.'
       },
       {
-        title: 'Instant Menu & Dietary Allergen Q&A',
-        description: 'Answers guest inquiries regarding gluten-free, vegan, halal, and allergen options instantly from your menu knowledge base.'
+        title: 'Menu & Dietary Allergen Q&A',
+        description: 'Answers guest inquiries regarding gluten-free, vegan, halal, and allergen options from your menu knowledge base.'
       }
     ],
     workflowSteps: [
@@ -792,21 +865,21 @@ export const industryData: Record<string, IndustryData> = {
         title: 'Guest Reservation Request',
         trigger: 'Guest messages restaurant WhatsApp: "Do you have a table for 4 this Saturday around 7:30 PM?"',
         dialogue: 'AI: "Hello! We have a table for 4 available at 7:15 PM or 8:00 PM this Saturday. Which time works best for your party?"',
-        outcome: 'AI manages party capacity and guides guest to optimal table turnover times.'
+        outcome: 'AI manages party capacity and presents available turnover times.'
       },
       {
         step: 2,
         title: 'Dietary & Occasion Information Capture',
         trigger: 'Guest confirms 7:15 PM slot.',
         dialogue: 'Guest: "7:15 PM is great. It’s an anniversary dinner and one guest is gluten-free." -> AI: "Noted! We will flag the gluten-free menu and anniversary note for our dining room team. What name should I put on the reservation?"',
-        outcome: 'Special occasion and allergen alerts logged directly on the reservation ticket.'
+        outcome: 'Dietary note and celebration alert logged on reservation ticket.'
       },
       {
         step: 3,
         title: 'Pre-Dinner Confirmation & Directions',
-        trigger: '2 hours prior to reservation.',
+        trigger: 'Automated reminder prior to reservation time.',
         dialogue: 'AI: "Hi Marcus! Looking forward to hosting your anniversary dinner at 7:15 PM tonight. Please reply 1 to confirm your table or 2 if you need to adjust party size."',
-        outcome: 'Table confirmed; zero no-show risk.'
+        outcome: 'Table confirmed or released for walk-in seating.'
       }
     ],
     integrations: [
@@ -830,27 +903,38 @@ export const industryData: Record<string, IndustryData> = {
     faqs: [
       {
         question: 'Does StarX-Flow charge per-seat or per-reservation fees?',
-        answer: 'No. StarX-Flow never charges per-cover or per-reservation commissions. You pay a simple flat monthly subscription with unlimited table bookings.'
+        answer: 'No. StarX-Flow never charges per-cover or per-reservation commissions. You pay a flat monthly subscription with unlimited table bookings.'
       },
       {
         question: 'Can the AI answer specific questions about our menu and food allergies?',
-        answer: 'Yes. StarX-Flow is trained on your exact menu, including ingredients, dietary tags (gluten-free, dairy-free, vegan, nut allergies), and wine pairings.'
+        answer: 'Yes. StarX-Flow is trained on your exact menu, including ingredients, dietary tags (gluten-free, dairy-free, vegan, nut allergies), and special notes.'
       },
       {
         question: 'How does it help reduce restaurant no-shows?',
-        answer: 'The AI sends interactive WhatsApp reminders 24 hours and 2 hours before the reservation with 1-tap confirmation. If a guest cancels, the table can immediately be released for walk-ins.'
+        answer: 'The AI sends interactive WhatsApp reminders before the reservation with 1-tap confirmation. If a guest cancels, the table can immediately be released for walk-ins.'
       },
       {
         question: 'Can we take deposits for large parties or holiday seatings?',
-        answer: 'Yes. You can configure deposit requirements for groups over a certain size (e.g., parties of 6 or more) through secure Stripe or Square checkout links.'
+        answer: 'Yes. You can configure deposit requirements for groups over a certain size through secure Stripe or Square checkout links.'
       }
     ],
-    testimonial: {
-      quote: 'Friday nights used to mean nonstop ringing phones while the dining room was packed. StarX-Flow handles all reservation requests smoothly on WhatsApp.',
-      author: 'Matteo Rossi',
-      role: 'General Manager, Osteria del Sole',
-      metric: '92% table confirmation rate'
-    },
+    platformGuarantees: [
+      {
+        title: 'Zero Per-Cover Commission',
+        description: 'Never pay per-seat or per-booking cuts on table reservations.',
+        verificationMethod: 'Flat monthly subscription model.'
+      },
+      {
+        title: 'Accurate Dietary Knowledge Base',
+        description: 'Answers allergen and dietary questions based strictly on verified menu documentation.',
+        verificationMethod: 'Knowledge base RAG with strict factual bounding.'
+      },
+      {
+        title: 'Interactive Attendance Confirmation',
+        description: 'Pre-service confirmations give diners a 1-tap method to confirm or release tables.',
+        verificationMethod: 'WhatsApp interactive button messages.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-manychat', 'starx-flow-vs-wati'],
     relatedFeatureLinks: [
       { label: 'WhatsApp AI Chatbot', href: '/whatsapp-ai-chatbot' },
@@ -863,33 +947,33 @@ export const industryData: Record<string, IndustryData> = {
     id: 'education',
     name: 'Educational Institutions & Tutors',
     heroTitle: 'AI Receptionist & Trial Lesson Booking for Tutoring & Music Academies',
-    heroSubtitle: 'Capture student inquiries after school hours. Automate free trial lesson scheduling, student level assessment, and parent communication on WhatsApp.',
+    heroSubtitle: 'Capture student inquiries after school hours. Automate trial lesson scheduling, student level assessment, and parent communication on WhatsApp.',
     keyTakeaway: 'StarX-Flow acts as an autonomous digital front desk for tutoring centers, music academies, and private education providers, answering curriculum questions and booking trial lessons 24/7 on WhatsApp.',
     painPoints: [
       {
-        title: 'Inquiries Arrive When Staff Are Off-Duty',
+        title: 'Inquiries Arrive Outside Office Hours',
         description: 'Parents browse tutoring and music lessons in the evening after work when school administrative offices are closed.',
-        impact: 'Parents reach out to multiple local academies; the first provider to respond wins the enrollment.'
+        impact: 'Delayed replies mean parents reach out to competing local educational providers.'
       },
       {
         title: 'Instructors Teaching During the Day',
-        description: 'Tutors and music teachers are actively teaching lessons and cannot answer phone calls or reply to text inquiries.',
-        impact: 'Missed trial lesson requests and frustrated prospective parents.'
+        description: 'Tutors and music teachers are actively teaching lessons and cannot answer incoming phone calls or reply to text inquiries.',
+        impact: 'Missed trial lesson inquiries while teachers are in the classroom.'
       },
       {
-        title: 'Manual Student Level Assessment Intake',
+        title: 'Manual Student Assessment Intake',
         description: 'Staff spend significant time collecting student age, instrument experience, or academic grade level manually.',
-        impact: 'Administrative delays in matching students to the appropriate instructor calendar.'
+        impact: 'Administrative delays matching students to the appropriate instructor calendar.'
       }
     ],
     aiSolutions: [
       {
-        title: '24/7 WhatsApp Trial Lesson Scheduling',
+        title: 'WhatsApp Trial Lesson Scheduling',
         description: 'Parents book trial lessons directly on instructor calendars outside regular business hours.'
       },
       {
-        title: 'Automated Student Diagnostic Assessment',
-        description: 'Conversational screening collects student grade, subject needs, and learning goals prior to the trial session.'
+        title: 'Conversational Student Assessment',
+        description: 'Screening collects student grade, subject needs, and learning goals prior to the trial session.'
       },
       {
         title: 'Multi-Instructor Schedule Coordination',
@@ -897,7 +981,7 @@ export const industryData: Record<string, IndustryData> = {
       },
       {
         title: 'Automated Pre-Lesson Reminders',
-        description: 'Delivers directions, lesson preparation guidelines, and parking instructions to ensure high trial attendance.'
+        description: 'Delivers directions, lesson preparation guidelines, and parking instructions to support trial attendance.'
       }
     ],
     workflowSteps: [
@@ -920,12 +1004,12 @@ export const industryData: Record<string, IndustryData> = {
         title: 'Preparation Details & Directions',
         trigger: 'Trial confirmed.',
         dialogue: 'AI: "Confirmed for Saturday at 10:30 AM! Here is our studio address, parking guidelines, and what to expect during her first trial: [Parent Guide]"',
-        outcome: 'Parent prepared; automated reminder scheduled for Friday.'
+        outcome: 'Parent informed; automated reminder scheduled prior to lesson.'
       }
     ],
     integrations: [
       { name: 'Google Calendar & Outlook', category: 'Calendar Sync', description: 'Coordinate multi-teacher classrooms and studio rooms.' },
-      { name: 'WhatsApp Cloud API', category: 'Messaging', description: 'Fast parent communication and trial reminders.' },
+      { name: 'WhatsApp Cloud API', category: 'Messaging', description: 'Parent communication and trial reminders.' },
       { name: 'Square & Stripe', category: 'Billing', description: 'Collect monthly tuition deposits and trial lesson fees.' },
       { name: 'Google Business Profile', category: 'Reviews', description: 'Automate student parent reviews following successful enrollments.' }
     ],
@@ -948,7 +1032,7 @@ export const industryData: Record<string, IndustryData> = {
       },
       {
         question: 'How does it help after school hours?',
-        answer: 'Parents typically research extracurriculars between 7 PM and 10 PM. StarX-Flow engages them instantly, answers tuition and curriculum questions, and confirms trial lessons while your competitors’ offices are closed.'
+        answer: 'Parents typically research extracurriculars in the evening. StarX-Flow engages them promptly, answers tuition and curriculum questions, and confirms trial lessons while administrative offices are closed.'
       },
       {
         question: 'Can we collect trial lesson deposits or registration fees?',
@@ -959,12 +1043,23 @@ export const industryData: Record<string, IndustryData> = {
         answer: 'Yes. StarX-Flow automatically responds in the language used by the parent, making it accessible for diverse community academies.'
       }
     ],
-    testimonial: {
-      quote: 'Most parents text us after 8 PM when putting their kids to bed. StarX-Flow books their trial lessons instantly while we sleep. Our student enrollments doubled.',
-      author: 'David Chen',
-      role: 'Director, Harmony Music Academy',
-      metric: '2.1x increase in trial lesson bookings'
-    },
+    platformGuarantees: [
+      {
+        title: 'Multi-Instructor Coordination',
+        description: 'Inquiries route automatically to the correct teacher schedule based on subject or instrument.',
+        verificationMethod: 'Subject-to-calendar mapping logic.'
+      },
+      {
+        title: 'Zero Double-Booking Guarantee',
+        description: 'Classroom and lesson slot availability is checked in real time against instructor calendars.',
+        verificationMethod: 'Two-way calendar collision checking.'
+      },
+      {
+        title: 'Student Data Security',
+        description: 'Parent contact information and student notes remain strictly within your academy account.',
+        verificationMethod: 'Private database storage with encryption.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-calendly', 'starx-flow-vs-acuity-scheduling'],
     relatedFeatureLinks: [
       { label: 'AI Agents', href: '/ai-agents' },
@@ -987,17 +1082,17 @@ export const industryData: Record<string, IndustryData> = {
       {
         title: 'Overwhelmed Front Desk',
         description: 'Front-desk staff consumed by routine questions about insurance coverage and clinic hours.',
-        impact: 'Long patient wait times and reception burnout.'
+        impact: 'Staff administrative workload increases.'
       },
       {
         title: 'Unfilled Schedule Gaps',
-        description: 'Cancellations leave expensive dental chairs idle.',
-        impact: 'Lost hourly clinical revenue.'
+        description: 'Cancellations leave dental operatory chairs idle.',
+        impact: 'Underutilized clinical hours.'
       },
       {
         title: 'Manual Patient Intake Paperwork',
-        description: 'Lengthy clipboard paperwork delays appointment start times.',
-        impact: 'Clinic schedule delays throughout the day.'
+        description: 'Clipboard paperwork delays appointment start times.',
+        impact: 'Waiting room check-in delays.'
       }
     ],
     aiSolutions: [
@@ -1011,7 +1106,7 @@ export const industryData: Record<string, IndustryData> = {
       },
       {
         title: 'Overdue Patient Recare Sequences',
-        description: 'Re-engages overdue patients on WhatsApp for 6-month checkups.'
+        description: 'Re-engages overdue patients on WhatsApp for checkup scheduling.'
       }
     ],
     workflowSteps: [
@@ -1040,11 +1135,23 @@ export const industryData: Record<string, IndustryData> = {
         answer: 'Yes. The AI answers routine questions about accepted insurance providers based on your custom clinic FAQ list.'
       }
     ],
-    testimonial: {
-      quote: 'StarX-Flow handles 80% of our routine calls. Our front desk staff can finally focus on the patients in the waiting room.',
-      author: 'Dr. Sarah C.',
-      role: 'Clinic Director, Modern Smiles Dental'
-    },
+    platformGuarantees: [
+      {
+        title: 'Secure Data Transmission',
+        description: 'Patient communications operate over encrypted HTTPS and Meta enterprise APIs.',
+        verificationMethod: 'TLS 1.3 protocol.'
+      },
+      {
+        title: 'Zero Double-Booking',
+        description: 'Real-time synchronization across clinic provider calendars.',
+        verificationMethod: 'Two-way calendar sync.'
+      },
+      {
+        title: 'Clinical Escalation',
+        description: 'Emergency and clinical triage questions forward immediately to staff.',
+        verificationMethod: 'Urgent notification routing.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-calendly', 'starx-flow-vs-intercom'],
     relatedFeatureLinks: [
       { label: 'Dental Clinics Pillar', href: '/industries/dental-clinics' },
@@ -1060,17 +1167,17 @@ export const industryData: Record<string, IndustryData> = {
     keyTakeaway: 'StarX-Flow gives barbers and hair stylists an autonomous AI receptionist that books haircut appointments, syncs calendars, and sends reminders without interrupting cuts.',
     painPoints: [
       {
-        title: 'Late Night DMs on Instagram',
-        description: 'Clients messaging at 2 AM for weekend haircut slots.',
-        impact: 'Lost appointments if not answered immediately.'
+        title: 'Late Night DMs on Social Media',
+        description: 'Clients messaging after hours for weekend haircut slots.',
+        impact: 'Unanswered appointments when stylists are off-duty.'
       },
       {
         title: 'Cutting Hair While Phone Rings',
-        description: 'Constantly checking phone while with a client in the chair.',
-        impact: 'Degraded client experience and wasted time.'
+        description: 'Checking phones during cuts interrupts service and slows down chair turnover.',
+        impact: 'Interrupted client service.'
       },
       {
-        title: 'Revenue-Destroying No-Shows',
+        title: 'Unconfirmed Bookings',
         description: 'Clients failing to show up for scheduled cuts.',
         impact: 'Direct hourly income loss for independent barbers.'
       }
@@ -1082,11 +1189,11 @@ export const industryData: Record<string, IndustryData> = {
       },
       {
         title: 'Two-Way Calendar Sync',
-        description: 'Syncs perfectly with Square POS and Google Calendar.'
+        description: 'Syncs with Square POS and Google Calendar in real time.'
       },
       {
-        title: 'Smart Conversational Reminders',
-        description: 'Sends automated WhatsApp reminders to eliminate no-shows.'
+        title: 'Conversational Reminders',
+        description: 'Sends automated WhatsApp reminders to confirm appointments.'
       }
     ],
     faqs: [
@@ -1099,11 +1206,23 @@ export const industryData: Record<string, IndustryData> = {
         answer: 'Yes. StarX-Flow syncs with Square POS and Google Calendar in real time.'
       }
     ],
-    testimonial: {
-      quote: 'My clients love that they can just text my number and book a fade in seconds. No apps to download. It\'s brilliant.',
-      author: 'Marcus J.',
-      role: 'Master Barber & Shop Owner'
-    },
+    platformGuarantees: [
+      {
+        title: 'Hands-Free Booking',
+        description: 'Clients schedule appointments without requiring the barber to put down shears.',
+        verificationMethod: 'Automated conversational AI.'
+      },
+      {
+        title: 'Direct Client Relationship',
+        description: 'Client details remain private to your barbershop without directory aggregator fees.',
+        verificationMethod: 'Private database records.'
+      },
+      {
+        title: 'Square & Calendar Sync',
+        description: 'Appointments reflect immediately on your scheduling screen.',
+        verificationMethod: 'Two-way API sync.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-vagaro', 'starx-flow-vs-phorest'],
     relatedFeatureLinks: [
       { label: 'Beauty Salons Pillar', href: '/industries/beauty-salons' },
@@ -1115,28 +1234,28 @@ export const industryData: Record<string, IndustryData> = {
     id: 'med-spa',
     name: 'Med Spas & Aesthetics',
     heroTitle: 'AI Receptionist for Med Spas & Aesthetic Clinics',
-    heroSubtitle: 'Capture high-ticket leads instantly and turn Instagram DMs into booked consultations.',
-    keyTakeaway: 'StarX-Flow turns Instagram DMs and WhatsApp inquiries into confirmed high-ticket aesthetic consultations with 24/7 conversational quoting and calendar scheduling.',
+    heroSubtitle: 'Capture consultation inquiries promptly and turn Instagram DMs into booked appointments.',
+    keyTakeaway: 'StarX-Flow turns Instagram DMs and WhatsApp inquiries into confirmed aesthetic consultations with 24/7 conversational quoting and calendar scheduling.',
     painPoints: [
       {
-        title: 'Slow Response to High-Ticket Leads',
-        description: 'Losing high-value injectable and laser leads by replying hours late.',
-        impact: 'Lost $500-$2,000 consultation packages.'
+        title: 'Delayed Responses on Consultation Leads',
+        description: 'Losing high-value aesthetic treatment leads by replying hours late.',
+        impact: 'Prospective clients book with other aesthetic providers.'
       },
       {
         title: 'Repetitive Treatment FAQs',
-        description: 'Clients asking the same questions about downtime, pricing, and prep.',
-        impact: 'Staff time consumed answering basic FAQs.'
+        description: 'Clients asking identical questions regarding downtime, pricing, and treatment prep.',
+        impact: 'Staff time consumed answering routine FAQs.'
       }
     ],
     aiSolutions: [
       {
-        title: 'Instant Instagram DM Qualification',
-        description: 'Replies instantly to DMs and converts inquiries into booked consultations.'
+        title: 'Instagram DM Consultation Booking',
+        description: 'Replies promptly to DMs and converts inquiries into booked consultations.'
       },
       {
         title: 'Treatment-Specific Knowledge RAG',
-        description: 'Trained on your specific treatment menu, pricing, and recovery FAQs.'
+        description: 'Trained on your specific treatment menu, pricing guidelines, and recovery FAQs.'
       }
     ],
     faqs: [
@@ -1145,11 +1264,23 @@ export const industryData: Record<string, IndustryData> = {
         answer: 'Yes. Secure Stripe and Square deposit links can be dispatched before finalizing consult bookings.'
       }
     ],
-    testimonial: {
-      quote: 'We get dozens of DMs asking about our lip filler pricing. The AI answers them and books the consult immediately. Revenue is up 30%.',
-      author: 'Elena R.',
-      role: 'Aesthetics Director, Glow MedSpa'
-    },
+    platformGuarantees: [
+      {
+        title: 'Consultation Deposit Gating',
+        description: 'Appointments can require pre-authorization deposits to protect practitioner calendar time.',
+        verificationMethod: 'Stripe/Square checkout integration.'
+      },
+      {
+        title: 'Confidential Client Inquiries',
+        description: 'Aesthetic inquiries are processed securely and privately.',
+        verificationMethod: 'HTTPS encryption.'
+      },
+      {
+        title: 'Calendar Collision Prevention',
+        description: 'Buffer times between treatments are respected automatically.',
+        verificationMethod: 'Automated buffer duration enforcement.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-vagaro', 'starx-flow-vs-phorest'],
     relatedFeatureLinks: [
       { label: 'Beauty Salons Pillar', href: '/industries/beauty-salons' },
@@ -1161,18 +1292,18 @@ export const industryData: Record<string, IndustryData> = {
     id: 'personal-trainer',
     name: 'Personal Trainers & Coaches',
     heroTitle: 'AI Receptionist for Personal Trainers & Coaches',
-    heroSubtitle: 'Focus on your clients. Let AI handle scheduling, trial class bookings, and lead follow-ups.',
-    keyTakeaway: 'StarX-Flow automates 1-on-1 personal training scheduling, trial class bookings, and WhatsApp lead follow-ups directly on your calendar.',
+    heroSubtitle: 'Focus on your clients. Let AI handle scheduling, session bookings, and lead follow-ups.',
+    keyTakeaway: 'StarX-Flow automates 1-on-1 personal training scheduling, trial session bookings, and WhatsApp lead follow-ups directly on your calendar.',
     painPoints: [
       {
-        title: 'Scheduling Text Tag',
+        title: 'Manual Scheduling Back-and-Forth',
         description: 'Constantly texting back and forth to coordinate personal training slots.',
         impact: 'Hours spent weekly on calendar management.'
       },
       {
-        title: 'Prospects Ghosting on Pricing',
-        description: 'Prospects ask for rates and vanish without an immediate conversational follow-up.',
-        impact: 'Lost personal training membership packages.'
+        title: 'Inquiries Going Cold',
+        description: 'Prospects ask for rates and do not schedule without an immediate conversational follow-up.',
+        impact: 'Lost training client opportunities.'
       }
     ],
     aiSolutions: [
@@ -1191,11 +1322,23 @@ export const industryData: Record<string, IndustryData> = {
         answer: 'Yes. Independent coaches and mobile personal trainers use StarX-Flow to automate their private client calendar.'
       }
     ],
-    testimonial: {
-      quote: 'I used to spend 2 hours every evening just scheduling my clients for the week. Now they text my AI and it\'s done.',
-      author: 'David L.',
-      role: 'Private Fitness Coach'
-    },
+    platformGuarantees: [
+      {
+        title: 'Independent Coach Calendar Sync',
+        description: 'Direct integration with Google Calendar and Microsoft Outlook.',
+        verificationMethod: 'Real-time two-way calendar sync.'
+      },
+      {
+        title: 'No App Download Required',
+        description: 'Clients book and manage sessions via WhatsApp.',
+        verificationMethod: 'Native messaging client integration.'
+      },
+      {
+        title: 'Zero Booking Commissions',
+        description: 'Flat monthly subscription without percentage fees on sessions.',
+        verificationMethod: 'Fixed monthly pricing.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-mindbody', 'starx-flow-vs-calendly'],
     relatedFeatureLinks: [
       { label: 'Gyms & Fitness Pillar', href: '/industries/gyms-fitness' },
@@ -1207,28 +1350,28 @@ export const industryData: Record<string, IndustryData> = {
     id: 'plumber',
     name: 'Plumbers & Home Services',
     heroTitle: 'AI Receptionist for Plumbers & Home Service Contractors',
-    heroSubtitle: 'Stop missing emergency calls. Let your AI receptionist answer WhatsApps, diagnose issues, and book jobs 24/7.',
+    heroSubtitle: 'Capture emergency dispatch requests 24/7. Let your AI receptionist answer WhatsApps, diagnose issues, and book jobs.',
     keyTakeaway: 'StarX-Flow helps plumbing and home service contractors capture emergency dispatch requests and schedule service visits 24/7 on WhatsApp.',
     painPoints: [
       {
         title: 'Under the Sink While Phone Rings',
         description: 'Missing emergency dispatch calls while actively on a job.',
-        impact: 'Customers hire the first competitor who answers.'
+        impact: 'Customers call another local contractor.'
       },
       {
-        title: 'Wasting Time on Unqualified Inquiries',
-        description: 'Answering calls from outside your geographic service zone.',
-        impact: 'Wasted drive time and phone interruptions.'
+        title: 'Unqualified Service Area Inquiries',
+        description: 'Answering inquiries from outside your geographic service zone.',
+        impact: 'Time spent reviewing out-of-area requests.'
       }
     ],
     aiSolutions: [
       {
         title: '24/7 WhatsApp Emergency Triage',
-        description: 'Answers emergency service queries instantly on WhatsApp.'
+        description: 'Answers emergency service queries on WhatsApp around the clock.'
       },
       {
         title: 'Photo & Urgency Collection',
-        description: 'Collects job address, photos of the pipe/leak issue, and urgency level.'
+        description: 'Collects job address, photos of the issue, and urgency level.'
       }
     ],
     faqs: [
@@ -1237,11 +1380,23 @@ export const industryData: Record<string, IndustryData> = {
         answer: 'Yes. Customers can send photos and address details over WhatsApp, which the AI compiles into the dispatch ticket.'
       }
     ],
-    testimonial: {
-      quote: 'I used to lose $500+ a week from missed emergency calls while I was driving or on a job. StarX-Flow captures every single one.',
-      author: 'Mike T.',
-      role: 'Owner, Flow-Rite Plumbing'
-    },
+    platformGuarantees: [
+      {
+        title: '24/7 Dispatch Readiness',
+        description: 'Emergency job requests captured outside standard office hours.',
+        verificationMethod: 'Continuous cloud availability.'
+      },
+      {
+        title: 'Service Territory Screening',
+        description: 'Filters inquiries based on your designated zip codes and service radii.',
+        verificationMethod: 'Configurable territory screening.'
+      },
+      {
+        title: 'Direct Dispatch Data Access',
+        description: 'Photos and customer job details delivered immediately to your phone.',
+        verificationMethod: 'Instant WhatsApp/SMS notification.'
+      }
+    ],
     relatedCompetitorIds: ['starx-flow-vs-calendly', 'starx-flow-vs-zapier'],
     relatedFeatureLinks: [
       { label: 'Business Workflow Automation', href: '/business-workflow-automation' },
