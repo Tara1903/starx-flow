@@ -7,6 +7,7 @@ import { SocialProof } from '@/components/SocialProof';
 import { Problem } from '@/components/Problem';
 import { HowItWorks } from '@/components/HowItWorks';
 import { Benefits } from '@/components/Benefits';
+import { DualSegmentValue } from '@/components/DualSegmentValue';
 import { Testimonials } from '@/components/Testimonials';
 import { CTA } from '@/components/CTA';
 import { AuthRedirect } from '@/components/AuthRedirect';
@@ -73,6 +74,12 @@ export default function Home() {
         <div className="glass-hero rounded-[3rem] overflow-hidden [&_section]:!bg-transparent border-t-0">
           <HowItWorks />
           <Benefits />
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
+        <div className="glass-panel rounded-[3rem] overflow-hidden [&_section]:!bg-transparent">
+          <DualSegmentValue />
         </div>
       </div>
 

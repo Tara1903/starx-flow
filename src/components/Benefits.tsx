@@ -26,7 +26,7 @@ export function Benefits() {
     {
       icon: <RefreshCw className="w-6 h-6 text-emerald-400" />,
       title: "Staff Calendar Sync",
-      desc: "Real-time, two-way sync with Google Calendar, Outlook, Square, and Clover across all staff members.",
+      desc: "Real-time, two-way sync with Google Calendar and Microsoft Outlook across all staff members.",
     },
     {
       icon: <ClipboardList className="w-6 h-6 text-emerald-400" />,
