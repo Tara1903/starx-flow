@@ -1,65 +1,66 @@
 # StarX-Flow
 
-> AI-powered operating system for local service businesses.
+> AI-powered customer front-desk and appointment automation operating system for service businesses.
 
 ## What is StarX-Flow?
 
-StarX-Flow is an AI workflow automation platform designed specifically for local service businesses such as gyms, clinics, salons, spas, and coaching practices. It provides a 24/7 WhatsApp AI receptionist that automates booking, scheduling, client intake, and customer care — eliminating the need for manual front-desk operations.
+StarX-Flow is an AI customer front-desk and workflow automation platform designed specifically for service businesses such as dental clinics, aesthetic medical practices, hair salons, day spas, gyms, and wellness studios. It provides 24/7 conversational reception across WhatsApp, Instagram DM, SMS, and Web Chat that automates inquiry answering, lead triage, calendar booking, and customer care — eliminating missed appointments and front-desk bottlenecks.
 
 ## Core Capabilities
 
-- **WhatsApp AI Receptionist**: Instant natural-language booking and scheduling via WhatsApp in multiple languages.
-- **Multi-Calendar Sync**: Real-time two-way sync with Google Calendar and Microsoft Outlook. PostgreSQL exclusion constraint double-booking prevention.
-- **CRM & Client Ownership**: Full client profile management, booking history, intake waivers, and no-show tracking. No aggregator fees.
-- **Google Review Booster**: Automated post-appointment follow-ups to drive 5-star Google reviews.
-- **WhatsApp Intake Forms**: Digital waivers, health questionnaires, and registration forms sent automatically before visits.
-- **Multi-Staff Rostering**: Balance and assign shifts across trainers, therapists, dentists, or stylists.
-- **Enterprise Data Protection**: Row Level Security (RLS) on PostgreSQL, TLS 1.3 encryption in transit, and AES-256 encryption at rest.
+- **Omnichannel AI Receptionist**: Instant natural-language inquiry response and appointment scheduling via WhatsApp, Instagram DM, SMS, and Web Chat.
+- **Two-Way Multi-Calendar Sync**: Real-time two-way sync with Google Calendar and Microsoft Outlook. Conflict-free booking prevents double-booking collisions.
+- **CRM & Client Profile Ownership**: Full client profile management, conversation thread history, intake waivers, and no-show tracking. You own 100% of your customer records.
+- **Google Review Booster**: Automated post-appointment follow-ups to drive 5-star Google reviews during the post-service window.
+- **Digital Intake Forms**: Questionnaires, consent forms, and registration links sent automatically in-chat before client visits.
+- **Multi-Staff Rostering**: Automatic practitioner and room routing across stylists, therapists, dentists, or trainers.
+- **Enterprise Data Protection**: Row Level Security (RLS) on PostgreSQL, TLS 1.3 encryption in transit, AES-256 encryption at rest, and full GDPR compliance.
 
 ## Who is StarX-Flow for?
 
-StarX-Flow serves local service businesses that rely on appointments and bookings:
-- Gyms and fitness studios
-- Medical clinics and dental offices
+StarX-Flow serves appointment-driven and high-inquiry businesses:
+- Dental clinics and private medical practices
 - Hair salons and beauty studios
-- Spas and wellness centers
+- Day spas and aesthetic clinics
+- Boutique gyms and fitness studios
+- Physiotherapy, wellness, and therapy centers
 - Real estate brokerages and property managers
-- Boutique hotels and hospitality venues
-- Restaurants and dining establishments
-- Tutoring academies and music schools
-- Plumbers and home service contractors
+- Hospitality and boutique venues
+- Restaurants and dining reservations
+- Educational academies and tutoring centers
+- Plumbers and premium home service contractors
 
-## Pricing
+## Commercial Pricing & Merchant of Record
 
-Three flat-rate monthly plans with no booking commissions:
-- **Starter** ($29/mo): 1 AI receptionist, 150 bookings/month, calendar sync
-- **Growth** ($59/mo): 3 AI receptionists, unlimited bookings, POS sync, review booster
-- **Pro** ($99/mo): Unlimited receptionists, multi-location routing, white-label, dedicated support
+Three predictable flat-rate monthly plans with zero booking commissions, processed securely via **Polar Payments Inc.** as Merchant of Record:
+- **Starter** ($29/mo): Up to 500 AI conversations, 1,000 contacts, 3 staff seats, full calendar sync
+- **Pro** ($59/mo): Up to 5,000 AI conversations, 10,000 contacts, 10 staff seats, POS/review sync
+- **Enterprise** ($99/mo): Unlimited conversations, unlimited contacts, multi-location routing, dedicated SLA
 
-All plans include a 14-day free trial.
+All plans include a 14-day zero-risk trial period. International sales tax, VAT calculation, and receipts are handled automatically by Polar.
 
 ## Key Differentiators
 
-1. **WhatsApp-native**: Clients book via the messaging app they already use — no app downloads, no account creation required
-2. **Zero commissions**: Flat subscription pricing, never takes a cut of your service revenue
-3. **Real-time response**: AI engages leads at peak intent before they move to a competitor
-4. **Direct client ownership**: You own your client data, unlike marketplace aggregators
-5. **Enterprise infrastructure for SMBs**: Multi-calendar sync, CRM unification, and data protection typically reserved for enterprise
+1. **Messaging-Native Booking**: Clients book via the messaging channels they already use (WhatsApp, Instagram, Web) — no app downloads or passwords required.
+2. **0% Booking Commission**: Flat SaaS subscription pricing; StarX-Flow never takes a percentage of your service revenue.
+3. **Sub-3-Second Response**: AI answers after-hours inquiries instantly at peak intent before prospects call a competitor.
+4. **Direct Client Ownership**: You own your client database and contact relationships, unlike marketplace aggregators.
+5. **Robust Concurrency Protection**: Direct calendar synchronization prevents overlapping slots.
 
 ## Industry Solutions
 
-- Gyms & Fitness Studios: https://starx-flow.runs-on.dev/industries/gyms-fitness
 - Hair Salons & Beauty: https://starx-flow.runs-on.dev/industries/beauty-salons
 - Dental & Medical Clinics: https://starx-flow.runs-on.dev/industries/dental-clinics
+- Gyms & Fitness Studios: https://starx-flow.runs-on.dev/industries/gyms-fitness
 - Wellness & Therapy Centers: https://starx-flow.runs-on.dev/industries/wellness-therapy
+- Med Spas & Aesthetics: https://starx-flow.runs-on.dev/industries/med-spa
+- Dentists: https://starx-flow.runs-on.dev/industries/dentist
+- Barbershops & Grooming: https://starx-flow.runs-on.dev/industries/barber
+- Personal Trainers & Coaches: https://starx-flow.runs-on.dev/industries/personal-trainer
 - Real Estate Agencies: https://starx-flow.runs-on.dev/industries/real-estate
 - Hotels & Hospitality: https://starx-flow.runs-on.dev/industries/hospitality
 - Restaurants & Dining: https://starx-flow.runs-on.dev/industries/restaurants
 - Educational Academies: https://starx-flow.runs-on.dev/industries/education
-- Personal Trainers & Coaches: https://starx-flow.runs-on.dev/industries/personal-trainer
-- Barbershops & Grooming: https://starx-flow.runs-on.dev/industries/barber
-- Dentists: https://starx-flow.runs-on.dev/industries/dentist
-- Med Spas & Aesthetics: https://starx-flow.runs-on.dev/industries/med-spa
 - Plumbers & Home Contractors: https://starx-flow.runs-on.dev/industries/plumber
 
 ## Verified Competitor Comparisons
@@ -81,6 +82,7 @@ All plans include a 14-day free trial.
 ## Product, Trust & Architecture
 
 - Homepage: https://starx-flow.runs-on.dev/
+- Live Tailored Demonstration: https://starx-flow.runs-on.dev/demo
 - Product Overview: https://starx-flow.runs-on.dev/product
 - Features Directory: https://starx-flow.runs-on.dev/features
 - How It Works & Architecture: https://starx-flow.runs-on.dev/how-it-works
@@ -99,8 +101,11 @@ All plans include a 14-day free trial.
 - AI Agents: https://starx-flow.runs-on.dev/ai-agents
 - Business Workflow Automation: https://starx-flow.runs-on.dev/business-workflow-automation
 
-## Editorial Runbooks & Research
+## Editorial Research & Guides
 
 - Why Polling APIs Cause Double-Bookings: https://starx-flow.runs-on.dev/resources/articles/calendar-integration
 - Deploying AI Receptionists in Medical Practices: https://starx-flow.runs-on.dev/resources/articles/clinic-receptionist
 - The Local SEO Review Engine: https://starx-flow.runs-on.dev/resources/articles/google-reviews-seo
+- Automating Member Onboarding for Gyms: https://starx-flow.runs-on.dev/resources/articles/gym-onboarding
+- Reducing Spa & Salon No-Shows via WhatsApp: https://starx-flow.runs-on.dev/resources/articles/spa-no-shows
+- Why Local Service Businesses Fail to Scale: https://starx-flow.runs-on.dev/resources/articles/scaling-failures

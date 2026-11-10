@@ -4,7 +4,7 @@ import { SEO_CONFIG } from '@/lib/seoConfig';
 export default function sitemap(): MetadataRoute.Sitemap {
   const currentDate = new Date().toISOString().split('T')[0];
 
-  const baseRoutes = ['', '/product', '/features', '/pricing', '/about', '/resources'].map((route) => ({
+  const baseRoutes = ['', '/product', '/features', '/pricing', '/about', '/resources', '/demo'].map((route) => ({
     url: `${SEO_CONFIG.siteUrl}${route}`,
     lastModified: currentDate,
     changeFrequency: 'daily' as const,
@@ -95,6 +95,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/resources/articles/calendar-integration',
     '/resources/articles/clinic-receptionist',
     '/resources/articles/google-reviews-seo',
+    '/resources/articles/gym-onboarding',
+    '/resources/articles/spa-no-shows',
+    '/resources/articles/scaling-failures',
   ].map((route) => ({
     url: `${SEO_CONFIG.siteUrl}${route}`,
     lastModified: currentDate,

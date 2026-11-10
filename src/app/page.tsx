@@ -46,7 +46,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function Home() {
   const jsonLd = [
-    organizationSchema(),
     softwareApplicationSchema(),
     howToSchema([
       { name: 'Connect Your Calendar', text: 'Sync Google Calendar and Microsoft Outlook in one click.' },

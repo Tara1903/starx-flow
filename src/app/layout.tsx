@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ClientShell } from '@/components/ClientShell';
 import { SEO_CONFIG } from '@/lib/seoConfig';
+import { organizationSchema, websiteSchema } from '@/components/seo/SchemaMarkup';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
   title: {
@@ -53,6 +56,8 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen text-white font-sans overflow-x-hidden bg-black flex flex-col relative z-0 selection:bg-emerald-500/30">
         <ClientShell>{children}</ClientShell>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

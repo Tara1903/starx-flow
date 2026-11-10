@@ -43,3 +43,5 @@ supabase-*.sql
 # Generated presentations
 *.pptx
 
+*.zip
+tests/live-e2e/reports/screenshots/

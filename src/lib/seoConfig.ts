@@ -59,7 +59,7 @@ export const PAGE_META: Record<string, PageMeta> = {
   "/integrations": {
     title: "Verified Integrations Directory",
     description:
-      "Explore StarX-Flow integrations with Google Calendar, Microsoft Outlook, Meta WhatsApp Cloud API, Instagram Graph API, and Stripe.",
+      "Explore StarX-Flow integrations with Google Calendar, Microsoft Outlook, Meta WhatsApp Cloud API, Instagram Graph API, and Polar Payments (Merchant of Record).",
   },
   "/how-it-works": {
     title: "How It Works | Technical Architecture & Workflow",
@@ -83,6 +83,30 @@ export const PAGE_META: Record<string, PageMeta> = {
     description:
       "How local service businesses scale Google Map Pack prominence using automated post-appointment review requests during the golden two-hour window.",
     ogType: "article",
+  },
+  "/resources/articles/gym-onboarding": {
+    title: "How Gyms Can Automate Member Onboarding & Retention",
+    description:
+      "Boutique gyms and wellness studios lose up to 40% of trial members in their first 30 days. Learn how automated WhatsApp check-ins and onboarding workflows double member retention.",
+    ogType: "article",
+  },
+  "/resources/articles/spa-no-shows": {
+    title: "Reducing Spa & Salon No-Shows via WhatsApp Chatbots",
+    description:
+      "For high-end spas and salons, empty treatment slots destroy unit margins. Discover how interactive WhatsApp confirmation prompts, prep waivers, and deposit reminders slash no-show rates below 3%.",
+    ogType: "article",
+  },
+  "/resources/articles/scaling-failures": {
+    title: "Why Local Service Businesses Fail to Scale (And How to Fix It)",
+    description:
+      "Boutique service businesses hit operational ceilings when founders spend hours manually answering repetitive inquiries. Learn how AI front-desk triage unblocks scalable multi-location growth.",
+    ogType: "article",
+  },
+  "/demo": {
+    title: "Book an Interactive Product Demonstration | StarX-Flow",
+    description:
+      "See how StarX-Flow automates customer inquiries, appointment bookings, and calendar synchronization 24/7. Request a live tailored walkthrough for your salon or clinic.",
+    ogType: "website",
   },
   "/pricing": {
     title: "Pricing",
