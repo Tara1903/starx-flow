@@ -43,12 +43,29 @@ const demoRequestSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    // 0. Content-Type & Payload Size Validation
+    const contentType = request.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return NextResponse.json(
+        { error: 'Unsupported media type. Expected application/json' },
+        { status: 415 }
+      );
+    }
+
+    const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
+    if (contentLength > 50000) {
+      return NextResponse.json(
+        { error: 'Payload too large. Maximum 50KB allowed.' },
+        { status: 413 }
+      );
+    }
+
     const clientIp =
       request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       request.headers.get('x-real-ip') ||
       'anonymous';
 
-    // 1. Rate Limiting Check
+    // 1A. First-Tier Local In-Memory Rate Limiting (Circuit-Breaker)
     if (!checkRateLimit(clientIp)) {
       return NextResponse.json(
         {
@@ -57,6 +74,28 @@ export async function POST(request: Request) {
         },
         { status: 429 }
       );
+    }
+
+    // 1B. Second-Tier Distributed Rate Limiting (Querying Supabase demo_requests)
+    try {
+      const windowStart = new Date(Date.now() - WINDOW_DURATION_MS).toISOString();
+      const { count } = await supabaseAdmin
+        .from('demo_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('ip_address', clientIp)
+        .gte('created_at', windowStart);
+
+      if (count && count >= MAX_REQUESTS_PER_WINDOW) {
+        return NextResponse.json(
+          {
+            error:
+              'Too many requests from this address. Please wait a few minutes before submitting again.',
+          },
+          { status: 429 }
+        );
+      }
+    } catch {
+      // Fallback gracefully to in-memory check if DB query fails or table is pending migration
     }
 
     const body = await request.json();

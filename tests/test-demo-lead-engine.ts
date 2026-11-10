@@ -136,6 +136,31 @@ async function runTests() {
   }
   assert(rateLimited === true, 'Submitting > 5 requests from same IP triggers HTTP 429 rate limit');
 
+  // Test 6: Content-Type Validation (Unsupported Media Type)
+  const nonJsonReq = new Request('http://localhost:3000/api/demo', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain',
+      'x-forwarded-for': '198.51.100.5',
+    },
+    body: 'plain text payload',
+  });
+  const res6 = await POST(nonJsonReq);
+  assert(res6.status === 415, 'Non-JSON content type returns HTTP 415 Unsupported Media Type');
+
+  // Test 7: Oversized Payload Rejection
+  const oversizedReq = new Request('http://localhost:3000/api/demo', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': '60000',
+      'x-forwarded-for': '198.51.100.6',
+    },
+    body: JSON.stringify({ notes: 'x'.repeat(60000) }),
+  });
+  const res7 = await POST(oversizedReq);
+  assert(res7.status === 413, 'Oversized payload (>50KB) returns HTTP 413 Payload Too Large');
+
   console.log('----------------------------------------------------------------');
   console.log(`RESULTS: ${passed} PASSED, ${failed} FAILED`);
   console.log('================================================================');

@@ -58,6 +58,14 @@ export async function POST(request: Request) {
       }
     }
 
+    // Production Safety Guard: Never auto-activate paid subscriptions in production if Stripe is unconfigured
+    if (process.env.NODE_ENV === 'production' && (!stripeSecretKey || stripeSecretKey.includes('placeholder'))) {
+      return NextResponse.json(
+        { error: 'Live billing gateway is pending configuration by the platform administrator. Please contact sales to upgrade your plan.' },
+        { status: 503 }
+      );
+    }
+
     // In local / developer mode or placeholder mode, activate subscription directly
     await supabaseAdmin
       .from('subscriptions')

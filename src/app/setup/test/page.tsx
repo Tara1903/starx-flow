@@ -33,41 +33,51 @@ export default function TestStep() {
 
   const handleSendTest = async () => {
     setTestState('sending');
-    setMessages([]);
+    setMessages([{ sender: 'user', text: "Hey! What are your business hours?", time: 'Just now' }]);
+    setTestState('delivered');
 
-    const toneEmoji = aiConfig.tone === 'Friendly' ? ' 😊' : aiConfig.tone === 'Casual' ? ' ✨' : '';
-    const responseText = aiConfig.faqs[0]?.answer || "We are open Monday to Friday from 9 AM to 5 PM.";
-    
-    // 1. Customer sends message
-    setTimeout(() => {
-      setMessages([{ sender: 'user', text: "Hey! What are your business hours?", time: 'Just now' }]);
-      setTestState('delivered');
-      
-      const channelLabel = testingChannel === 'whatsapp' ? 'WhatsApp' : testingChannel === 'instagram' ? 'Instagram' : 'SMS';
+    setTimeout(async () => {
+      setTestState('typing');
 
-      // 2. AI Bot starts typing
-      setTimeout(() => {
-        setTestState('typing');
+      let replyText = '';
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: "Hey! What are your business hours?",
+            sessionId: `setup-test-${Date.now()}`,
+            businessId: aiConfig.businessName || 'starx-flow',
+          }),
+        });
 
-        // 3. AI Bot replies
-        setTimeout(async () => {
-          setMessages(prev => [
-            ...prev,
-            { 
-              sender: 'bot', 
-              text: `Hey! Thanks for reaching out. ${responseText}${toneEmoji}`, 
-              time: 'Just now' 
-            }
-          ]);
-          setTestState('replied');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.reply) {
+            replyText = data.reply;
+          }
+        }
+      } catch {
+        // Fallback to configured tone and FAQ if local/offline
+      }
 
-          // Mark this channel test as complete in Zustand store
-          await markTestSent(testingChannel);
-        }, 1500);
+      if (!replyText) {
+        const toneEmoji = aiConfig.tone === 'Friendly' ? ' 😊' : aiConfig.tone === 'Casual' ? ' ✨' : '';
+        const responseText = aiConfig.faqs[0]?.answer || "We are open Monday to Friday from 9 AM to 5 PM.";
+        replyText = `Hey! Thanks for reaching out. ${responseText}${toneEmoji}`;
+      }
 
-      }, 1000);
-
-    }, 800);
+      setMessages(prev => [
+        ...prev,
+        {
+          sender: 'bot',
+          text: replyText,
+          time: 'Just now'
+        }
+      ]);
+      setTestState('replied');
+      await markTestSent(testingChannel);
+    }, 1200);
   };
 
   const handleNext = async () => {

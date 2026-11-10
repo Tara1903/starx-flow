@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import crypto from 'crypto';
 
 export async function POST(request: Request) {
   try {
@@ -7,13 +8,50 @@ export async function POST(request: Request) {
     const signature = request.headers.get('stripe-signature');
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    // Optional cryptographic verification if webhookSecret configured
-    if (webhookSecret && !webhookSecret.includes('your-') && signature) {
-      // Signature verification stub for Deno/Node WebCrypto
+    const isLiveSecret = Boolean(webhookSecret && !webhookSecret.includes('your-') && webhookSecret.trim().length > 10);
+
+    // Production guard: Fail closed if in production and secret is not configured
+    if (process.env.NODE_ENV === 'production' && !isLiveSecret) {
+      console.warn('[Stripe Webhook] Blocked: STRIPE_WEBHOOK_SECRET not configured in production environment.');
+      return new NextResponse('Webhook endpoint not configured in production', { status: 503 });
+    }
+
+    // Cryptographic HMAC-SHA256 verification when secret is configured
+    if (isLiveSecret) {
+      if (!signature) {
+        return new NextResponse('Missing stripe-signature header', { status: 400 });
+      }
+
       const timestampMatch = signature.match(/t=(\d+)/);
       const sigMatch = signature.match(/v1=([a-f0-9]+)/);
+
       if (!timestampMatch || !sigMatch) {
-        return new NextResponse('Invalid signature format', { status: 400 });
+        return new NextResponse('Invalid stripe-signature format', { status: 400 });
+      }
+
+      const timestamp = parseInt(timestampMatch[1], 10);
+      const receivedSig = sigMatch[1];
+      const now = Math.floor(Date.now() / 1000);
+
+      // 5-minute replay attack tolerance window (300 seconds)
+      if (Math.abs(now - timestamp) > 300) {
+        return new NextResponse('Webhook signature timestamp expired (replay tolerance exceeded)', { status: 400 });
+      }
+
+      const signedPayload = `${timestamp}.${rawBody}`;
+      const expectedSig = crypto
+        .createHmac('sha256', webhookSecret!)
+        .update(signedPayload, 'utf8')
+        .digest('hex');
+
+      const receivedBuffer = Buffer.from(receivedSig, 'hex');
+      const expectedBuffer = Buffer.from(expectedSig, 'hex');
+
+      if (
+        receivedBuffer.length !== expectedBuffer.length ||
+        !crypto.timingSafeEqual(receivedBuffer, expectedBuffer)
+      ) {
+        return new NextResponse('Invalid webhook signature verification failed', { status: 401 });
       }
     }
 

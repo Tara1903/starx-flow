@@ -38,16 +38,16 @@ create policy "Service role has full access to demo requests"
   using (true)
   with check (true);
 
--- Authenticated admins can view demo requests
+-- Platform admins with role = 'admin' in profiles can view demo requests
 create policy "Admins can view demo requests"
   on demo_requests
   for select
   to authenticated
   using (
     exists (
-      select 1 from organization_members
-      where organization_members.user_id = (select auth.uid())
-      and organization_members.role in ('owner', 'admin')
+      select 1 from profiles
+      where profiles.id = (select auth.uid())
+      and profiles.role = 'admin'
     )
   );
 
