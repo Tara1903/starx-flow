@@ -83,6 +83,11 @@ export const PLANS: Record<string, PlanDefinition> = {
 export interface Subscription {
   id: string;
   userId: string;
+  billingProvider?: 'polar' | 'stripe';
+  polarCustomerId?: string | null;
+  polarSubscriptionId?: string | null;
+  polarProductId?: string | null;
+  polarPriceId?: string | null;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
   planId: string;
@@ -104,6 +109,9 @@ export interface Invoice {
   id: string;
   userId: string;
   subscriptionId: string | null;
+  billingProvider?: 'polar' | 'stripe';
+  polarOrderId?: string | null;
+  polarInvoiceId?: string | null;
   stripeInvoiceId: string | null;
   amount: number;
   currency: string;
@@ -139,6 +147,8 @@ interface BillingState {
   downgradePlan: (planId: string) => Promise<{ error: string | null }>;
   cancelSubscription: (reason?: string) => Promise<{ error: string | null }>;
   resumeSubscription: () => Promise<{ error: string | null }>;
+  createPolarCheckout: (planId: string) => Promise<{ url?: string; error: string | null }>;
+  openCustomerPortal: () => Promise<{ url?: string; error: string | null }>;
   resetBillingStore: () => void;
 }
 
@@ -150,6 +160,11 @@ function dbRowToSubscription(row: Record<string, unknown>): Subscription {
   return {
     id: row.id as string,
     userId: row.user_id as string,
+    billingProvider: (row.billing_provider as 'polar' | 'stripe') || 'polar',
+    polarCustomerId: (row.polar_customer_id as string) || null,
+    polarSubscriptionId: (row.polar_subscription_id as string) || null,
+    polarProductId: (row.polar_product_id as string) || null,
+    polarPriceId: (row.polar_price_id as string) || null,
     stripeCustomerId: (row.stripe_customer_id as string) || null,
     stripeSubscriptionId: (row.stripe_subscription_id as string) || null,
     planId: (row.plan_id as string) || 'free',
@@ -588,6 +603,62 @@ export const useBillingStore = create<BillingState>((set, get) => ({
       console.error('[StarX Billing] Resume subscription exception:', e);
       set({ subscription: previousSub });
       return { error: 'Network error. Please try again.' };
+    }
+  },
+
+    /* ─── POLAR CHECKOUT ─── */
+  createPolarCheckout: async (planId: string) => {
+    if (!isSupabaseConfigured) return { error: 'Supabase is not configured.' };
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return { error: 'Please log in to initiate checkout.' };
+
+    try {
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ planId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { error: data.error || 'Failed to initiate Polar checkout.' };
+      }
+      if (data.url) {
+        window.location.href = data.url;
+        return { url: data.url, error: null };
+      }
+      return { error: 'No checkout URL returned.' };
+    } catch (err: any) {
+      return { error: err.message || 'Network error initiating checkout.' };
+    }
+  },
+
+  /* ─── POLAR CUSTOMER PORTAL ─── */
+  openCustomerPortal: async () => {
+    if (!isSupabaseConfigured) return { error: 'Supabase is not configured.' };
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return { error: 'Please log in to manage billing.' };
+
+    try {
+      const res = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { error: data.error || 'Failed to open customer portal.' };
+      }
+      if (data.url) {
+        window.location.href = data.url;
+        return { url: data.url, error: null };
+      }
+      return { error: 'No customer portal URL returned.' };
+    } catch (err: any) {
+      return { error: err.message || 'Network error opening portal.' };
     }
   },
 

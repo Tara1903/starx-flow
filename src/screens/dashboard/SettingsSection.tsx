@@ -15,6 +15,10 @@ export function SettingsSection() {
   const user = useAuthStore((s) => s.user);
   const subscription = useBillingStore((s) => s.subscription);
   const fetchSubscription = useBillingStore((s) => s.fetchSubscription);
+  const openCustomerPortal = useBillingStore((s) => s.openCustomerPortal);
+  const createPolarCheckout = useBillingStore((s) => s.createPolarCheckout);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [name, setName] = useState(user?.name || "");
   const [businessName, setBusinessName] = useState(user?.businessName || "");
   const [businessType, setBusinessType] = useState(user?.businessType || "Salon");
@@ -31,6 +35,24 @@ export function SettingsSection() {
   const [igInputPageId, setIgInputPageId] = useState("");
   const [igInputToken, setIgInputToken] = useState("");
   const [igConnecting, setIgConnecting] = useState(false);
+
+    const handleOpenPortal = async () => {
+    setPortalLoading(true);
+    const res = await openCustomerPortal();
+    setPortalLoading(false);
+    if (res.error) {
+      alert(res.error);
+    }
+  };
+
+  const handleCheckout = async (planId: string) => {
+    setCheckoutLoading(planId);
+    const res = await createPolarCheckout(planId);
+    setCheckoutLoading(null);
+    if (res.error) {
+      alert(res.error);
+    }
+  };
 
   useEffect(() => {
     fetchSubscription();
@@ -518,8 +540,35 @@ export function SettingsSection() {
               </div>
             </div>
 
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleCheckout('pro')}
+                  disabled={checkoutLoading !== null}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-500 text-black hover:bg-emerald-400 font-bold text-xs transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {checkoutLoading === 'pro' ? 'Redirecting...' : 'Upgrade to Pro ($59/mo)'}
+                </button>
+                <button
+                  onClick={() => handleCheckout('enterprise')}
+                  disabled={checkoutLoading !== null}
+                  className="px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/15 font-semibold text-xs transition-colors disabled:opacity-50"
+                >
+                  {checkoutLoading === 'enterprise' ? 'Redirecting...' : 'Upgrade to Enterprise ($99/mo)'}
+                </button>
+              </div>
+              <button
+                onClick={handleOpenPortal}
+                disabled={portalLoading}
+                className="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 font-semibold text-xs transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>{portalLoading ? 'Opening Portal...' : 'Manage Invoices & Billing'}</span>
+              </button>
+            </div>
+
             <div className="p-3 rounded-lg bg-zinc-900/60 border border-white/5 text-[11px] text-zinc-400 flex items-center justify-between">
-              <span>Need multi-location scaling or enterprise SLA terms?</span>
+              <span>Need custom multi-location SLAs or direct invoicing?</span>
               <a
                 href="mailto:support@starx-flow.runs-on.dev?subject=Plan%20Upgrade%20Inquiry"
                 className="text-emerald-400 hover:text-emerald-300 font-semibold text-xs transition-colors"
