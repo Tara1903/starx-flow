@@ -8,15 +8,17 @@ import {
   Building2, 
   CheckCircle2, 
   ArrowRight, 
-  Clock, 
   Lock, 
   ShieldCheck, 
   Calendar, 
   MessageSquare,
   Sparkles
 } from "lucide-react";
+import { useUIStore } from "@/store/uiStore";
 
 export function DualSegmentValue() {
+  const openSignup = useUIStore((state) => state.openSignup);
+
   return (
     <section className="py-20 px-6 relative z-10 bg-black/40">
       <div className="max-w-7xl mx-auto">
@@ -60,29 +62,29 @@ export function DualSegmentValue() {
               </div>
 
               <p className="text-sm text-zinc-300 leading-relaxed mb-8">
-                Eliminate missed appointments when you are busy treating clients. StarX-Flow acts as your full-time digital front desk with zero setup complexity.
+                Eliminate missed appointments when you are busy treating clients. StarX-Flow acts as your full-time digital front desk with streamlined calendar synchronization.
               </p>
 
               <div className="space-y-4 mb-10">
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-sm font-semibold text-white">5-Minute Plug-and-Play Setup:</span>
-                    <span className="text-sm text-zinc-400 ml-1">Connect your Google Calendar, paste your services and FAQs, and go live instantly.</span>
+                    <span className="text-sm font-semibold text-white">5-Minute Core Setup:</span>
+                    <span className="text-sm text-zinc-400 ml-1">Connect your Google Calendar or Outlook, configure your services and FAQs, and test your AI receptionist in seconds.</span>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
                     <span className="text-sm font-semibold text-white">0% Booking Commission:</span>
-                    <span className="text-sm text-zinc-400 ml-1">Flat subscription pricing. You keep 100% of your service revenue with zero per-booking penalties.</span>
+                    <span className="text-sm text-zinc-400 ml-1">Flat subscription pricing. You keep 100% of your service revenue with zero per-booking deductions.</span>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
                     <span className="text-sm font-semibold text-white">Direct Chat Booking:</span>
-                    <span className="text-sm text-zinc-400 ml-1">Clients book in seconds on WhatsApp and Instagram without downloading specialized marketplace apps.</span>
+                    <span className="text-sm text-zinc-400 ml-1">Clients book in seconds on WhatsApp, Instagram, or Web without downloading specialized marketplace apps.</span>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -97,13 +99,13 @@ export function DualSegmentValue() {
 
             <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
               <span className="text-xs text-zinc-500 font-medium">Starter plan from €29/mo • 14-day free trial</span>
-              <Link
-                href="/signup"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider transition-all"
+              <button
+                onClick={openSignup}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
               >
                 Start Free Trial
                 <ArrowRight size={14} />
-              </Link>
+              </button>
             </div>
           </motion.div>
 
@@ -127,7 +129,7 @@ export function DualSegmentValue() {
               </div>
 
               <p className="text-sm text-zinc-300 leading-relaxed mb-8">
-                Coordinate complex team schedules, manage room resources, and maintain enterprise data privacy with deterministic concurrency safeguards.
+                Coordinate team schedules, manage buffer times, and maintain enterprise data privacy with deterministic database concurrency safeguards.
               </p>
 
               <div className="space-y-4 mb-10">
@@ -142,14 +144,14 @@ export function DualSegmentValue() {
                   <Lock className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
                   <div>
                     <span className="text-sm font-semibold text-white">PostgreSQL Row-Level Security:</span>
-                    <span className="text-sm text-zinc-400 ml-1">Cryptographically isolated multi-tenant architecture on Supabase with GDPR export endpoints.</span>
+                    <span className="text-sm text-zinc-400 ml-1">Cryptographically isolated multi-tenant architecture on Supabase with automated GDPR export endpoints.</span>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-sm font-semibold text-white">Multi-Staff Roster Synchronization:</span>
-                    <span className="text-sm text-zinc-400 ml-1">Real-time two-way synchronization with Google Calendar and Microsoft Outlook across all team members.</span>
+                    <span className="text-sm font-semibold text-white">Two-Way Calendar Synchronization:</span>
+                    <span className="text-sm text-zinc-400 ml-1">Real-time webhook integration with Google Calendar and Microsoft Outlook for synchronized provider availability.</span>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

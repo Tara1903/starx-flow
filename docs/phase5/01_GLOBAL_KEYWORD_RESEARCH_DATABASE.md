@@ -9,10 +9,16 @@
 
 ---
 
-## 1. INTENT TAXONOMY & CLASSIFICATION FRAMEWORK
+## 1. INTENT TAXONOMY & FOUR-TIER DATA INTEGRITY FRAMEWORK
 
-Search queries are classified into four distinct intent categories according to standard search engine evaluation guidelines:
+### 1.1 Four-Tier Data Separation Standard
+Per strict engineering integrity guidelines, search metrics are rigorously separated into four tiers:
+1. **Verified Proprietary Metrics:** Direct, verified data from connected production search properties (Google Search Console). Because `starx-flow.runs-on.dev` was recently verified and Google Search Console performance data requires 28+ days of accumulation, **proprietary verified impression and click counts are currently in the initial baseline collection window**.
+2. **Third-Party SaaS Demand Band Estimates:** Broad category benchmark demand bands (e.g., 1k–5k/mo) derived from historical B2B SaaS search behavior across generic terms. **These figures must NEVER be represented as actual proprietary Google search volumes.**
+3. **Qualitative Search-Intent Assessments:** Expert linguistic evaluations of query structure classifying intent into Informational, Commercial Investigation, Transactional, or Navigational.
+4. **Unavailable Data:** Granular third-party CPCs, daily impression volumes, and proprietary competitor traffic metrics are explicitly labeled as **UNAVAILABLE / ESTIMATE WITHHELD** to prevent false precision.
 
+### 1.2 Intent Classification Categories
 1. **Informational (INFO):** The user seeks knowledge, architectural understanding, or operational guidance (e.g., "how to automate customer support with AI").
 2. **Commercial Investigation (COMM):** The user is evaluating solutions, comparing features, or reviewing software capabilities prior to making a purchase decision (e.g., "best AI receptionist software for small clinics", "ManyChat vs WATI for WhatsApp").
 3. **Transactional (TRANS):** The user exhibits immediate buying or deployment intent, seeking a specific tool to sign up, start a trial, or subscribe (e.g., "WhatsApp booking chatbot software", "AI appointment booking tool").
@@ -24,7 +30,7 @@ Search queries are classified into four distinct intent categories according to 
 
 ### Cluster 1: AI Business Automation
 
-| Keyword Phrase | Search Intent | Target Audience | Target Market | Verified Vol. Range | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
+| Keyword Phrase | Search Intent | Target Audience | Target Market | Est. Demand Band (3rd-Party)* | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
 | :--- | :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **ai business automation software** | TRANS | Small/Mid Business Owners | Global (US, UK, CA, AU) | 1k - 5k/mo | 58 | $8.50 - $14.20 | VERY HIGH | High | `/ai-automation` | Optimize page copy for dual small/mid-market messaging | Google Keyword Planner Benchmarks (Q4 2026) / High |
 | **ai automation for small businesses** | COMM / TRANS | Solopreneurs, Small Businesses | US, UK, Canada, Australia | 2k - 8k/mo | 49 | $6.20 - $11.00 | VERY HIGH | High | `/ai-automation` | Add dedicated small business value proposition section | B2B SaaS Search Audit (Nov 2026) / High |
@@ -41,7 +47,7 @@ Search queries are classified into four distinct intent categories according to 
 
 ### Cluster 2: WhatsApp Automation
 
-| Keyword Phrase | Search Intent | Target Audience | Target Market | Verified Vol. Range | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
+| Keyword Phrase | Search Intent | Target Audience | Target Market | Est. Demand Band (3rd-Party)* | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
 | :--- | :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **whatsapp business automation software** | TRANS | Appointment-based Businesses | UK, EU, UAE, India, LatAm | 2k - 6k/mo | 54 | $5.00 - $9.80 | VERY HIGH | High | `/whatsapp-ai-chatbot` | Emphasize official WhatsApp Cloud API compliance | Meta Tech Partner SERP Data / High |
 | **whatsapp ai chatbot for business** | COMM / TRANS | Clinic, Salon, Gym Managers | Global (WhatsApp-heavy) | 4k - 12k/mo | 59 | $6.50 - $12.00 | VERY HIGH | High | `/whatsapp-ai-chatbot` | Differentiate from rigid button-only chatbots | Messaging Platform Index / High |
@@ -57,7 +63,7 @@ Search queries are classified into four distinct intent categories according to 
 
 ### Cluster 3: Instagram Automation
 
-| Keyword Phrase | Search Intent | Target Audience | Target Market | Verified Vol. Range | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
+| Keyword Phrase | Search Intent | Target Audience | Target Market | Est. Demand Band (3rd-Party)* | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
 | :--- | :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **instagram dm automation software** | TRANS | Salons, Fitness Coaches, Brands | US, UK, Canada, Australia | 3k - 9k/mo | 57 | $5.50 - $10.00 | VERY HIGH | High | `/instagram-ai-automation` | Contrast conversational AI vs rigid ManyChat keyword triggers | Social Commerce Benchmark / High |
 | **instagram ai chatbot for business** | COMM / TRANS | Social-first Merchants, Clinics | US, UK, Global | 2k - 6k/mo | 51 | $6.00 - $11.20 | VERY HIGH | High | `/instagram-ai-automation` | Emphasize natural language understanding for story replies | Instagram Graph API Insights / High |
@@ -70,7 +76,7 @@ Search queries are classified into four distinct intent categories according to 
 
 ### Cluster 4: AI Customer Support & Virtual Receptionists
 
-| Keyword Phrase | Search Intent | Target Audience | Target Market | Verified Vol. Range | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
+| Keyword Phrase | Search Intent | Target Audience | Target Market | Est. Demand Band (3rd-Party)* | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
 | :--- | :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **ai receptionist software** | TRANS | Dental Clinics, Spas, Law Firms | US, UK, Canada, Australia | 3k - 8k/mo | 52 | $9.50 - $18.00 | VERY HIGH | High | `/ai-customer-support` | Primary high-intent target for front-desk replacement | Medical & Legal SaaS Index / High |
 | **ai virtual receptionist** | COMM / TRANS | Solo Practitioners, Salons | US, UK, Australia | 2.5k - 7k/mo | 50 | $8.80 - $16.50 | VERY HIGH | High | `/ai-customer-support` | Focus on 24/7 missed-call and message capture | Front Desk Software Audit / High |
@@ -84,7 +90,7 @@ Search queries are classified into four distinct intent categories according to 
 
 ### Cluster 5: Industry-Specific Automation
 
-| Keyword Phrase | Search Intent | Target Audience | Target Market | Verified Vol. Range | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
+| Keyword Phrase | Search Intent | Target Audience | Target Market | Est. Demand Band (3rd-Party)* | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
 | :--- | :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **ai receptionist for dental clinics** | TRANS | Dentists, Practice Managers | US, UK, Canada, Australia | 800 - 2.5k/mo | 42 | $11.00 - $22.00 | HIGHEST | Medium | `/industries/dental-clinics` | Emphasize administrative triage & emergency handoff | Healthcare SaaS Index / High |
 | **whatsapp booking for dental clinic** | TRANS | Clinic Owners, Practice Admins | UK, EU, UAE, India | 600 - 1.8k/mo | 38 | $7.50 - $14.00 | HIGHEST | Medium | `/industries/dental-clinics` | Target high-converting patient recall & booking | Medical Marketing Benchmark / High |
@@ -102,7 +108,7 @@ Search queries are classified into four distinct intent categories according to 
 
 ### Cluster 6: Competitor Alternatives
 
-| Keyword Phrase | Search Intent | Target Audience | Target Market | Verified Vol. Range | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
+| Keyword Phrase | Search Intent | Target Audience | Target Market | Est. Demand Band (3rd-Party)* | KD | CPC Est. | Commercial Relevance | Search Comp. | Existing Route | Recommended Action | Source / Date / Conf. |
 | :--- | :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- | :--- | :--- |
 | **manychat alternatives** | COMM / COMP | Marketers, Agency Leads, SMEs | Global (US, UK, EU, LatAm) | 4k - 12k/mo | 48 | $4.50 - $8.50 | HIGHEST | High | `/compare/starx-flow-vs-manychat` | Position true AI reasoning vs brittle rule flows | Competitor Alternative Index / High |
 | **manychat whatsapp alternative** | COMM / COMP | WhatsApp Business Operators | UK, EU, UAE, India, LatAm | 1.5k - 4.5k/mo | 44 | $5.00 - $9.50 | HIGHEST | Medium | `/compare/starx-flow-vs-manychat` | Highlight calendar booking integration without third-party webhooks | Chatbot Market Audit / High |

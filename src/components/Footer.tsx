@@ -28,8 +28,8 @@ export function Footer() {
               </p>
               <div className="pt-2">
                 <span className="text-xs font-semibold text-zinc-500 block mb-1">Official Support:</span>
-                <a href="mailto:support@starxflow.com" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium">
-                  support@starxflow.com
+                <a href="mailto:support@starx-flow.runs-on.dev" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium">
+                  support@starx-flow.runs-on.dev
                 </a>
               </div>
             </div>

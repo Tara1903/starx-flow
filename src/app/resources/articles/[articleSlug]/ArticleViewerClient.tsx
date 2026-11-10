@@ -248,7 +248,7 @@ const ARTICLES_DATABASE: Record<string, ArticleData> = {
     metrics: [
       { label: "Pricing Model", value: "Flat-Rate", sub: "zero per-booking fees" },
       { label: "Coverage Window", value: "24/7/365", sub: "instant inquiry responses" },
-      { label: "Multi-Staff Support", value: "Unlimited", sub: "Growth & Pro plans" }
+      { label: "Provider Buffers", value: "Custom", sub: "prevents schedule overlaps" }
     ]
   }
 };
