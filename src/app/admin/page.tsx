@@ -8,7 +8,7 @@ import {
   Shield, Clock, Zap, Star,
   ArrowUpRight, BarChart3, UserCheck, UserX,
   AlertTriangle, Mail, Calendar,
-  RefreshCw, ChevronUp, Loader2
+  RefreshCw, ChevronUp, Loader2, Sparkles, Phone, MessageSquare, ExternalLink, CheckCircle2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "../../lib/utils";
@@ -25,6 +25,16 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> =
   Trial:   { bg: "bg-blue-500/10 border-blue-500/20",       text: "text-blue-400",    dot: "bg-blue-500" },
   Inactive:{ bg: "bg-zinc-500/10 border-zinc-500/20",       text: "text-zinc-400",    dot: "bg-zinc-500" },
   Churned: { bg: "bg-red-500/10 border-red-500/20",         text: "text-red-400",     dot: "bg-red-500" },
+};
+
+
+const LEAD_STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
+  new:          { bg: "bg-blue-500/10 border-blue-500/20",       text: "text-blue-400",    dot: "bg-blue-500" },
+  contacted:    { bg: "bg-amber-500/10 border-amber-500/20",     text: "text-amber-400",   dot: "bg-amber-500" },
+  scheduled:    { bg: "bg-purple-500/10 border-purple-500/20",   text: "text-purple-400",  dot: "bg-purple-500" },
+  completed:    { bg: "bg-teal-500/10 border-teal-500/20",       text: "text-teal-400",    dot: "bg-teal-500" },
+  converted:    { bg: "bg-emerald-500/10 border-emerald-500/20", text: "text-emerald-400", dot: "bg-emerald-500" },
+  disqualified: { bg: "bg-zinc-500/10 border-zinc-500/20",       text: "text-zinc-400",    dot: "bg-zinc-500" },
 };
 
 const PLAN_STYLES: Record<string, string> = {
@@ -214,6 +224,14 @@ export default function AdminDashboard() {
   const updateClientStatus = useAdminStore((s) => s.updateClientStatus);
   const updateClientPlan = useAdminStore((s) => s.updateClientPlan);
   const deleteClient = useAdminStore((s) => s.deleteClient);
+  const demoLeads = useAdminStore((s) => s.demoLeads);
+  const fetchDemoLeads = useAdminStore((s) => s.fetchDemoLeads);
+  const updateDemoLeadStatus = useAdminStore((s) => s.updateDemoLeadStatus);
+
+  const [activeTab, setActiveTab] = useState<'clients' | 'leads'>('clients');
+  const [leadSearch, setLeadSearch] = useState('');
+  const [leadStatusFilter, setLeadStatusFilter] = useState('All');
+  const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
 
 
   const [search, setSearch] = useState("");
@@ -240,6 +258,30 @@ export default function AdminDashboard() {
     };
     checkAdmin();
   }, [isAdmin, loginAdmin, router]);
+
+
+  // Filter demo leads
+  const filteredLeads = useMemo(() => {
+    let result = [...demoLeads];
+    if (leadSearch) {
+      const q = leadSearch.toLowerCase();
+      result = result.filter((l) =>
+        l.businessName.toLowerCase().includes(q) ||
+        l.fullName.toLowerCase().includes(q) ||
+        l.workEmail.toLowerCase().includes(q) ||
+        (l.phone && l.phone.toLowerCase().includes(q)) ||
+        l.primaryNeed.toLowerCase().includes(q)
+      );
+    }
+    if (leadStatusFilter !== 'All') {
+      result = result.filter((l) => l.status === leadStatusFilter);
+    }
+    return result;
+  }, [demoLeads, leadSearch, leadStatusFilter]);
+
+  const newLeadsCount = demoLeads.filter((l) => l.status === 'new').length;
+  const scheduledLeadsCount = demoLeads.filter((l) => l.status === 'scheduled').length;
+  const convertedLeadsCount = demoLeads.filter((l) => l.status === 'converted').length;
 
   // Filter & Sort
   const filtered = useMemo(() => {
@@ -328,7 +370,7 @@ export default function AdminDashboard() {
             </div>
             <div className="flex gap-2 self-start sm:self-auto">
               <button
-                onClick={() => fetchClients()}
+                onClick={() => { fetchClients(); fetchDemoLeads(); }}
                 className="text-xs font-medium text-zinc-400 hover:text-white bg-white/5 border border-white/10 px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <RefreshCw className="w-3.5 h-3.5" /> Refresh
@@ -342,6 +384,40 @@ export default function AdminDashboard() {
             </div>
           </div>
         </motion.div>
+
+
+        {/* Navigation Tabs: Clients vs Demo Leads */}
+        <div className="flex gap-2 border-b border-white/10 pb-4 mb-6">
+          <button
+            onClick={() => setActiveTab('clients')}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all",
+              activeTab === 'clients'
+                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-sm"
+                : "text-zinc-400 hover:text-white bg-white/[0.02] border border-white/5"
+            )}
+          >
+            <Users className="w-4 h-4" />
+            <span>Registered Clients ({clients.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('leads')}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all relative",
+              activeTab === 'leads'
+                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-sm"
+                : "text-zinc-400 hover:text-white bg-white/[0.02] border border-white/5"
+            )}
+          >
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <span>Demo Leads & Prospects ({demoLeads.length})</span>
+            {newLeadsCount > 0 && (
+              <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500 text-black ml-1">
+                {newLeadsCount} new
+              </span>
+            )}
+          </button>
+        </div>
 
         {/* Loading */}
         {isLoading ? (

@@ -6,7 +6,42 @@ import { useRouter } from 'next/navigation';
 import { useOnboardingStore, FAQItem } from '../../../store/onboardingStore';
 import { StepCard } from '../../../components/setup/StepCard';
 import { StepHeader } from '../../../components/setup/StepHeader';
-import { Loader2, Check, ArrowRight, Bot, Plus, Trash2, HelpCircle } from 'lucide-react';
+import { Loader2, Check, ArrowRight, Bot, Plus, Trash2, HelpCircle, Sparkles } from 'lucide-react';
+
+const INDUSTRY_STARTER_PACKS = [
+  {
+    name: 'Salon & Spa',
+    icon: '✨',
+    tone: 'Friendly' as const,
+    faqs: [
+      { question: 'What is your appointment deposit policy?', answer: 'We require a £20 deposit to secure your booking, which is deducted from your final bill on the day of treatment.' },
+      { question: 'Do I need a skin patch test before hair color or lash treatments?', answer: 'Yes! For your safety, all new hair color and lash clients require a quick 5-minute patch test at least 48 hours before their appointment.' },
+      { question: 'What is your cancellation and rescheduling policy?', answer: 'We kindly ask for at least 24 hours notice to reschedule or cancel without forfeiting your deposit.' },
+      { question: 'Where can I park when visiting the salon?', answer: 'Complimentary customer parking is available behind our building, plus pay-and-display bays on the high street.' }
+    ]
+  },
+  {
+    name: 'Clinic & Dental',
+    icon: '🦷',
+    tone: 'Professional' as const,
+    faqs: [
+      { question: 'What should I do if I have a dental emergency or severe pain?', answer: 'We reserve emergency priority triage slots daily. Please book an emergency consultation slot immediately or call our reception desk.' },
+      { question: 'Are you accepting new private patients?', answer: 'Yes, we are actively welcoming new private patients. New patient consultations include full digital imaging, comprehensive examination, and a bespoke treatment plan.' },
+      { question: 'Do you offer monthly payment plans or finance?', answer: 'Yes, interest-free payment plans are available for qualifying private treatments over £300 subject to status.' },
+      { question: 'How much notice is required to change an appointment?', answer: 'Please give at least 24 hours notice to change or reschedule so we can allocate the clinical time to patients on our priority waiting list.' }
+    ]
+  },
+  {
+    name: 'Fitness & Studio',
+    icon: '⚡',
+    tone: 'Casual' as const,
+    faqs: [
+      { question: 'What should I bring to my first workout or class?', answer: 'Bring clean trainers, athletic clothing, a water bottle, and a sweat towel. Please arrive 10 minutes early so our coaching team can show you around.' },
+      { question: 'What is the class cancellation window?', answer: 'You can cancel or reschedule bookings via the app up to 2 hours before class time without forfeiting your class credit.' },
+      { question: 'Do you have private changing rooms and showers?', answer: 'Yes, our studio includes private showers, complimentary lockers, hair dryers, and towel service.' }
+    ]
+  }
+];
 
 export default function AIConfigStep() {
   const router = useRouter();
@@ -110,6 +145,37 @@ export default function AIConfigStep() {
               >
                 <div className="text-xs font-bold text-white mb-0.5">{t.label}</div>
                 <div className="text-[10px] text-zinc-400 leading-tight">{t.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 1-Click Industry Starter Packs */}
+        <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04]">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-bold text-white">1-Click Industry Starter Packs</span>
+            </div>
+            <span className="text-[10px] text-emerald-400 font-medium">Instant Setup</span>
+          </div>
+          <p className="text-[11px] text-zinc-400 mb-3">
+            Select your industry to load pre-tested, high-converting customer FAQs and recommended response tone.
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {INDUSTRY_STARTER_PACKS.map((pack) => (
+              <button
+                key={pack.name}
+                type="button"
+                onClick={() => {
+                  setFaqs(pack.faqs);
+                  setTone(pack.tone);
+                }}
+                className="px-2.5 py-2 rounded-lg border border-white/[0.08] bg-white/[0.02] hover:bg-emerald-500/10 hover:border-emerald-500/30 text-left transition-all group"
+              >
+                <div className="text-sm mb-0.5">{pack.icon}</div>
+                <div className="text-xs font-semibold text-zinc-200 group-hover:text-emerald-300">{pack.name}</div>
+                <div className="text-[10px] text-zinc-500">{pack.faqs.length} FAQs loaded</div>
               </button>
             ))}
           </div>

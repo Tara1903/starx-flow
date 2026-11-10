@@ -17,15 +17,34 @@ export interface Client {
   totalExecutions: number;
 }
 
+export interface DemoLead {
+  id: string;
+  fullName: string;
+  workEmail: string;
+  phone: string | null;
+  businessName: string;
+  businessType: string;
+  businessSize: string;
+  primaryNeed: string;
+  preferredContact: 'email' | 'whatsapp' | 'phone';
+  website: string | null;
+  notes: string | null;
+  status: 'new' | 'contacted' | 'scheduled' | 'completed' | 'disqualified' | 'converted';
+  createdAt: string;
+}
+
 interface AdminState {
   isAdmin: boolean;
   isLoading: boolean;
   clients: Client[];
+  demoLeads: DemoLead[];
   loginAdmin: () => Promise<boolean>;
   logoutAdmin: () => void;
   fetchClients: () => Promise<void>;
+  fetchDemoLeads: () => Promise<void>;
   updateClientStatus: (id: string, status: string) => Promise<void>;
   updateClientPlan: (id: string, plan: string) => Promise<void>;
+  updateDemoLeadStatus: (id: string, status: DemoLead['status'], notes?: string) => Promise<{ success: boolean; error: string | null }>;
   deleteClient: (id: string) => Promise<void>;
   claimAdminRole: (secret: string) => Promise<{ success: boolean; error: string | null }>;
 }
@@ -48,6 +67,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   isAdmin: false,
   isLoading: false,
   clients: [],
+  demoLeads: [],
 
   /* ─── LOGIN ADMIN (verify current user is admin) ─── */
   loginAdmin: async () => {
@@ -65,7 +85,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
       if (profile?.role === 'admin') {
         set({ isAdmin: true });
-        await get().fetchClients();
+        await Promise.all([get().fetchClients(), get().fetchDemoLeads()]);
         return true;
       }
 
@@ -75,7 +95,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }
   },
 
-  logoutAdmin: () => set({ isAdmin: false, clients: [] }),
+  logoutAdmin: () => set({ isAdmin: false, clients: [], demoLeads: [] }),
 
   /* ─── CLAIM ADMIN ROLE (one-time setup) ─── */
   claimAdminRole: async (secret: string) => {
@@ -181,6 +201,87 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         .eq('id', id);
 
       if (error) console.error('[Admin] Update plan error:', error);
+    }
+  },
+
+  /* ─── FETCH DEMO LEADS (admin only via API) ─── */
+  fetchDemoLeads: async () => {
+    if (!isSupabaseConfigured) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const res = await fetch('/api/admin/demo-requests', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!res.ok) {
+        console.error('[Admin] Fetch demo leads failed HTTP', res.status);
+        return;
+      }
+
+      const json = await res.json();
+      if (json && Array.isArray(json.leads)) {
+        const demoLeads: DemoLead[] = json.leads.map((row: any) => ({
+          id: row.id,
+          fullName: row.full_name || '',
+          workEmail: row.work_email || '',
+          phone: row.phone || null,
+          businessName: row.business_name || '',
+          businessType: row.business_type || 'Other',
+          businessSize: row.business_size || '',
+          primaryNeed: row.primary_need || '',
+          preferredContact: row.preferred_contact || 'email',
+          website: row.website || null,
+          notes: row.notes || null,
+          status: row.status || 'new',
+          createdAt: row.created_at || '',
+        }));
+
+        set({ demoLeads });
+      }
+    } catch (err) {
+      console.error('[Admin] Fetch demo leads exception:', err);
+    }
+  },
+
+  /* ─── UPDATE DEMO LEAD STATUS ─── */
+  updateDemoLeadStatus: async (id: string, status: DemoLead['status'], notes?: string) => {
+    // Optimistic update
+    set((state) => ({
+      demoLeads: state.demoLeads.map((lead) =>
+        lead.id === id ? { ...lead, status, ...(notes !== undefined ? { notes } : {}) } : lead
+      ),
+    }));
+
+    if (!isSupabaseConfigured) return { success: true, error: null };
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const res = await fetch('/api/admin/demo-requests', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ id, status, notes }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, error: json.error || 'Failed to update lead status' };
+      }
+
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error updating lead status' };
     }
   },
 
