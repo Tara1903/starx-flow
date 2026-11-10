@@ -21,6 +21,7 @@ import { softwareApplicationSchema } from '../../components/seo/SchemaMarkup';
 
 export function ProductClient() {
   const openSignup = useUIStore((state) => state.openSignup);
+  const openDemo = useUIStore((state) => state.openDemo);
 
   return (
     <>
@@ -68,7 +69,7 @@ export function ProductClient() {
               <ArrowRight className="w-4 h-4" />
             </button>
             <button 
-              onClick={openSignup}
+              onClick={openDemo}
               data-magnetic
               className="w-full sm:w-auto glass-panel px-8 py-4 rounded-full text-base font-bold text-white hover:bg-white/10 transition-all flex items-center justify-center gap-2"
             >

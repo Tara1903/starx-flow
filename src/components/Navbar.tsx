@@ -14,6 +14,7 @@ import { Menu } from "lucide-react";
 
 export function Navbar() {
   const openSignup = useUIStore((state) => state.openSignup);
+  const openDemo = useUIStore((state) => state.openDemo);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
@@ -103,6 +104,12 @@ export function Navbar() {
               </>
             ) : (
               <>
+                <button
+                  onClick={openDemo}
+                  className="text-zinc-400 hover:text-emerald-400 transition-colors hidden lg:block text-xs uppercase tracking-wider font-semibold"
+                >
+                  Book Demo
+                </button>
                 <button
                   onClick={openSignup}
                   className="text-zinc-300 hover:text-white transition-colors hidden sm:block"

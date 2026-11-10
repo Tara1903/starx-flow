@@ -4,14 +4,17 @@ import React, { useState, useEffect } from "react";
 import { 
   User, Building, Mail, ShieldAlert, Check, RefreshCw, 
   Key, LogOut, Download, Trash2, ShieldCheck, Globe, AlertTriangle,
-  Calendar, Instagram, CheckCircle2, ExternalLink, Layers, Unlink
+  Calendar, Instagram, CheckCircle2, ExternalLink, Layers, Unlink, CreditCard
 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from "../../store/authStore";
+import { useBillingStore } from "../../store/billingStore";
 import { cn } from "../../lib/utils";
 
 export function SettingsSection() {
   const user = useAuthStore((s) => s.user);
+  const subscription = useBillingStore((s) => s.subscription);
+  const fetchSubscription = useBillingStore((s) => s.fetchSubscription);
   const [name, setName] = useState(user?.name || "");
   const [businessName, setBusinessName] = useState(user?.businessName || "");
   const [businessType, setBusinessType] = useState(user?.businessType || "Salon");
@@ -30,6 +33,7 @@ export function SettingsSection() {
   const [igConnecting, setIgConnecting] = useState(false);
 
   useEffect(() => {
+    fetchSubscription();
     async function loadIntegrations() {
       try {
         const res = await fetch("/api/integrations/calendar");
@@ -470,6 +474,58 @@ export function SettingsSection() {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Subscription Plan & Commercial Limits (Workstream J) */}
+          <div className="glass-card rounded-xl p-5 border border-white/5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-emerald-400" />
+                <span>Subscription Plan & Resource Limits</span>
+              </h3>
+              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold uppercase">
+                {subscription?.status || "Active 14-Day Trial"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02]">
+                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Current Tier</span>
+                <div className="text-sm font-bold text-white mt-0.5 flex items-center gap-2">
+                  <span>{user?.plan || subscription?.planId?.toUpperCase() || "Starter Plan"}</span>
+                  <span className="text-[10px] text-zinc-400 font-normal">($29 / €47/mo)</span>
+                </div>
+                <p className="text-[10px] text-zinc-400 mt-1">Zero booking commissions. Flat monthly billing model.</p>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02]">
+                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Plan Inclusions</span>
+                <ul className="text-[10px] text-zinc-300 mt-1 space-y-1">
+                  <li className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    <span>500 AI conversations / month</span>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    <span>Two-Way Google & Outlook Calendar Sync</span>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    <span>PostgreSQL exclusion lock concurrency protection</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-zinc-900/60 border border-white/5 text-[11px] text-zinc-400 flex items-center justify-between">
+              <span>Need multi-location scaling or enterprise SLA terms?</span>
+              <a
+                href="mailto:support@starx-flow.runs-on.dev?subject=Plan%20Upgrade%20Inquiry"
+                className="text-emerald-400 hover:text-emerald-300 font-semibold text-xs transition-colors"
+              >
+                Contact Enterprise Sales →
+              </a>
             </div>
           </div>
 

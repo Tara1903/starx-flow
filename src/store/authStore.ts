@@ -100,6 +100,7 @@ export interface UserProfile {
   businessType: string;
   role: string;
   onboardingComplete: boolean;
+  plan?: string;
 }
 
 interface AuthState {

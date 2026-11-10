@@ -6,6 +6,7 @@ import { AnimatePresence } from 'motion/react';
 import { useUIStore } from '../store/uiStore';
 import { useAuthStore, setupAuthListener } from '../store/authStore';
 import { SignupModal } from './SignupModal';
+import { DemoModal } from './modals/DemoModal';
 import { CustomCursor } from './CustomCursor';
 import { ConsentBanner } from './ConsentBanner';
 import { Navbar } from './Navbar';
@@ -19,6 +20,8 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
   
   const isSignupOpen = useUIStore((state) => state.isSignupOpen);
   const closeSignup = useUIStore((state) => state.closeSignup);
+  const isDemoOpen = useUIStore((state) => state.isDemoOpen);
+  const closeDemo = useUIStore((state) => state.closeDemo);
   const theme = useUIStore((state) => state.theme);
   const initSession = useAuthStore((state) => state.initSession);
 
@@ -61,6 +64,9 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
       <AnimatePresence>
         {isSignupOpen && (
           <SignupModal onClose={closeSignup} />
+        )}
+        {isDemoOpen && (
+          <DemoModal onClose={closeDemo} />
         )}
       </AnimatePresence>
       <ConsentBanner />
