@@ -237,8 +237,8 @@ export function SecurityClient() {
           </p>
           <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-3 rounded-full text-sm font-bold text-white">
             <span className="text-zinc-400 font-normal">Direct Security Contact:</span>
-            <a href="mailto:security@starxflow.com" className="text-emerald-400 hover:text-emerald-300 transition-colors">
-              security@starxflow.com
+            <a href="mailto:security@starx-flow.runs-on.dev" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+              security@starx-flow.runs-on.dev
             </a>
           </div>
         </GlassPanel>

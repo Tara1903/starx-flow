@@ -92,9 +92,12 @@ A critical walkthrough of user journeys uncovered two high-severity conversion d
   1. Updated `DualSegmentValue.tsx` to bind the "Start Free Trial" button to `openSignup()`, exactly matching `Hero.tsx` and `Navbar.tsx`.
   2. Created `src/app/signup/page.tsx` utilizing Next.js `redirect('/setup/welcome')`. Any visitor following an external link or typing `/signup` is now automatically redirected to the onboarding wizard, completely eliminating the 404.
 
-### 5.2 Defect 2: Inconsistent Legacy Email in Footer
-- **Root Cause:** `src/components/Footer.tsx` line 31 contained `mailto:support@starxflow.com` and displayed `support@starxflow.com` (a legacy domain email).
-- **Remediation Executed:** Replaced with canonical `support@starx-flow.runs-on.dev`, aligning with the production domain and Google Search Console entity declarations.
+### 5.2 Defect 2: Inconsistent Legacy Email and Schema References
+- **Root Cause:** `src/components/Footer.tsx` line 31 contained `mailto:support@starxflow.com`. Furthermore, secondary legacy references existed in `src/components/seo/SchemaMarkup.tsx`, `src/app/privacy/PrivacyClient.tsx`, `src/app/security/SecurityClient.tsx`, and `src/lib/rag/documentParser.ts`. In addition, `SchemaMarkup.tsx` listed "Multi-Staff Shift & Room Rostering" under `softwareApplicationSchema()`.
+- **Remediation Executed:**
+  1. Replaced all occurrences with the canonical domain email addresses (`support@starx-flow.runs-on.dev`, `privacy@starx-flow.runs-on.dev`, `security@starx-flow.runs-on.dev`), aligning with the production domain and Google Search Console entity declarations.
+  2. Updated `SchemaMarkup.tsx` feature list from "Multi-Staff Shift & Room Rostering" to "Two-Way Calendar Synchronization with Provider Buffer Intervals" to match the database single-tenant GiST constraint.
+  3. Updated `DocumentParser.ts` user-agent URL to `https://starx-flow.runs-on.dev`.
 
 ### 5.3 Acquisition Activity Separation (Completed vs. Documented)
 To maintain absolute truth in reporting, external acquisition status is classified:
@@ -135,7 +138,7 @@ To maintain absolute truth in reporting, external acquisition status is classifi
 | **F-08** | Wave 1 Beachhead market selection (UK, AU, IE, CA) | **VERIFIED** | Confirmed: Evidence-based prioritization with documented limitations |
 | **F-09** | Quality disparity between top 3 runbooks and articles 4–6 | **VERIFIED** | Confirmed: Keeping articles 4–6 out of `sitemap.xml` until full runbook expansion |
 | **F-10** | `/signup` anchor link returning 404 in `DualSegmentValue.tsx` | **NEEDS CORRECTION** | **REMEDIATED:** Converted to `openSignup()` modal trigger + created `/signup` redirect |
-| **F-11** | Legacy `support@starxflow.com` email in footer | **NEEDS CORRECTION** | **REMEDIATED:** Replaced with `support@starx-flow.runs-on.dev` in `Footer.tsx` |
+| **F-11** | Legacy `support@starxflow.com` email & schema references across footer, privacy, security, and JSON-LD | **NEEDS CORRECTION** | **REMEDIATED:** Replaced all with canonical `*@starx-flow.runs-on.dev` and updated JSON-LD feature list |
 | **F-12** | SaaS directory profiles (G2, Capterra, Trustpilot, Product Hunt) | **DOCUMENTATION ONLY** | Fully prepared submission packages; requires domain owner credentials |
 | **F-13** | Meta WhatsApp Cloud API production business review | **OWNER ACTION REQUIRED** | Requires owner legal entity verification in Meta Business Manager |
 | **F-14** | Google Cloud OAuth App Verification | **OWNER ACTION REQUIRED** | Requires owner submission in Google Cloud Trust & Safety Console |

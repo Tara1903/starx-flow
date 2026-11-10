@@ -126,7 +126,7 @@ export class DocumentParser {
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; StarXFlowBot/1.0; +https://starxflow.com)',
+          'User-Agent': 'Mozilla/5.0 (compatible; StarXFlowBot/1.0; +https://starx-flow.runs-on.dev)',
           Accept: 'text/html,application/xhtml+xml,text/plain',
         },
       });

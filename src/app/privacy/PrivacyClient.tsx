@@ -65,7 +65,7 @@ export function PrivacyClient() {
             <section>
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">5. Contact Us</h2>
               <p className="text-lg text-zinc-400 leading-relaxed font-medium">
-                If you have any questions about this Privacy Policy, please contact us at privacy@starxflow.com.
+                If you have any questions about this Privacy Policy, please contact us at privacy@starx-flow.runs-on.dev.
               </p>
             </section>
           </div>

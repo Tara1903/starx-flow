@@ -24,7 +24,7 @@ export function organizationSchema(): Record<string, unknown> {
       caption: `${SEO_CONFIG.siteName} Logo`,
     },
     description: SEO_CONFIG.defaultDescription,
-    email: "support@starxflow.com",
+    email: "support@starx-flow.runs-on.dev",
     foundingDate: "2024",
     sameAs: [],
     knowsAbout: [
@@ -89,7 +89,7 @@ export function softwareApplicationSchema(): Record<string, unknown> {
       "Customer Relationship Management (CRM) & Lead Scoring",
       "Automated Google Review Follow-Up Sequences",
       "Digital Intake Questionnaires",
-      "Multi-Staff Shift & Room Rostering",
+      "Two-Way Calendar Synchronization with Provider Buffer Intervals",
       "Row Level Security (RLS) Tenant Data Isolation",
     ],
   };
