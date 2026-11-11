@@ -114,7 +114,22 @@ interface AuthState {
   selectedWorkflowId: string | null;
 
 
-  // Auth (Magic Link & Password)
+  // Auth (8-Character OTP & Password)
+  sendOtp: (
+    email: string,
+    metadata?: {
+      business_name?: string;
+      owner_name?: string;
+      business_type?: string;
+      phone?: string;
+      shield_score?: number;
+    },
+    purpose?: 'signup' | 'login'
+  ) => Promise<{ error: string | null; expiresAt?: string }>;
+  verifyOtp: (
+    email: string,
+    code: string
+  ) => Promise<{ error: string | null; user?: UserProfile; isNewUser?: boolean }>;
   sendMagicLink: (email: string, metadata?: {
     business_name?: string;
     owner_name?: string;
@@ -365,34 +380,75 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     isInitSessionRunning = false;
   },
 
-  /* ─── MAGIC LINK ─── */
-  sendMagicLink: async (email, metadata, redirectTo) => {
-    if (!isSupabaseConfigured) {
-      return { error: 'Supabase is not configured.' };
-    }
-
+  /* ─── 8-CHARACTER OTP AUTHENTICATION ─── */
+  sendOtp: async (email, metadata, purpose = 'login') => {
     try {
-      const options: Record<string, unknown> = {
-        emailRedirectTo: redirectTo || `${window.location.origin}/dashboard`,
-      };
-
-      if (metadata) {
-        options.data = metadata;
-      }
-
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options,
+      const res = await fetch('/api/auth/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, metadata, purpose }),
       });
-
-      if (error) {
-        return { error: error.message };
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        return { error: data.error || 'Failed to send verification code. Please try again.' };
       }
-
-      return { error: null };
-    } catch (e) {
+      return { error: null, expiresAt: data.expiresAt };
+    } catch {
       return { error: 'Network error. Please try again.' };
     }
+  },
+
+  verifyOtp: async (email, code) => {
+    try {
+      const res = await fetch('/api/auth/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        return { error: data.error || 'Verification failed. Please check the code.' };
+      }
+
+      // If tokenHash was returned and Supabase client is active, sync Supabase auth session
+      if (data.tokenHash && isSupabaseConfigured) {
+        try {
+          await supabase.auth.verifyOtp({
+            token_hash: data.tokenHash,
+            type: 'email',
+          });
+        } catch (syncErr) {
+          console.warn('[StarX Auth] Supabase client session sync notice:', syncErr);
+        }
+      }
+
+      if (data.user) {
+        set({
+          isLoggedIn: true,
+          user: data.user,
+        });
+
+        // Trigger background data sync
+        get().fetchWorkflows().catch(console.error);
+        get().fetchChannels().catch(console.error);
+        get().fetchLogs().catch(console.error);
+        get().fetchChartData().catch(console.error);
+        useAgentStore.getState().fetchAgents().catch(console.error);
+        useAgentStore.getState().fetchMemories().catch(console.error);
+        useVoiceStore.getState().fetchCalls().catch(console.error);
+        useBusinessStore.getState().fetchBusinessMemories().catch(console.error);
+        useBusinessStore.getState().fetchBusinessGoals().catch(console.error);
+      }
+
+      return { error: null, user: data.user, isNewUser: data.isNewUser };
+    } catch {
+      return { error: 'Network error. Please try again.' };
+    }
+  },
+
+  /* ─── LEGACY MAGIC LINK ALIAS (ROUTED TO 8-CHAR OTP) ─── */
+  sendMagicLink: async (email, metadata) => {
+    return get().sendOtp(email, metadata, 'login');
   },
 
   /* ─── GOOGLE LOGIN ─── */

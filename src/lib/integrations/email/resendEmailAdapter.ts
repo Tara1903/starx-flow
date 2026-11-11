@@ -116,7 +116,7 @@ export class ResendEmailAdapter {
       }
     }
 
-    const domain = process.env.RESEND_VERIFIED_DOMAIN || 'starx-flow.com';
+    const domain = process.env.RESEND_VERIFIED_DOMAIN || 'starx-flow.runs-on.dev';
     const sender = from || `StarX Assistant <notifications@${domain}>`;
     const messageId = `<starx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@${domain}>`;
 

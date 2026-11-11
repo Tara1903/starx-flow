@@ -1,7 +1,18 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import { X, ArrowRight, Loader2, ChevronDown, Mail, CheckCircle } from "lucide-react";
+import {
+  X,
+  ArrowRight,
+  Loader2,
+  ChevronDown,
+  Mail,
+  ShieldCheck,
+  CheckCircle2,
+  RefreshCw,
+  ChevronLeft,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -29,19 +40,28 @@ interface SignupModalProps {
 }
 
 export function SignupModal({ onClose }: SignupModalProps) {
+  const router = useRouter();
   const [isLoginMode, setIsLoginMode] = useState(false);
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const sendMagicLink = useAuthStore((state) => state.sendMagicLink);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  // 8-character OTP state: 8 separate slots
+  const [otpChars, setOtpChars] = useState<string[]>(Array(8).fill(""));
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const sendOtp = useAuthStore((state) => state.sendOtp);
+  const verifyOtp = useAuthStore((state) => state.verifyOtp);
 
   const shield = useShield();
   const [honeypot, setHoneypot] = useState("");
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState(0);
-  const [cooldown, setCooldown] = useState(false);
 
   const signupForm = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -61,13 +81,32 @@ export function SignupModal({ onClose }: SignupModalProps) {
     mode: "onChange",
   });
 
+  // ESC key handler
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isSubmitting) onClose();
+      if (e.key === "Escape" && !isSubmitting && !isVerifying) onClose();
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose, isSubmitting]);
+  }, [onClose, isSubmitting, isVerifying]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  // Focus first OTP input when entering OTP screen
+  useEffect(() => {
+    if (otpSent && inputRefs.current[0]) {
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 150);
+    }
+  }, [otpSent]);
 
   const nextStep = async () => {
     if (step === 1) {
@@ -76,7 +115,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
     }
   };
 
-  // Sign Up → Send Magic Link with metadata
+  // Sign Up → Send 8-character OTP
   const onSignupSubmit = async (data: SignupFormValues) => {
     setIsSubmitting(true);
     setSubmitError(null);
@@ -84,7 +123,8 @@ export function SignupModal({ onClose }: SignupModalProps) {
     const score = shield.getScore();
     if (score < 5) {
       setSentEmail(data.email);
-      setMagicLinkSent(true);
+      setOtpSent(true);
+      setResendCooldown(60);
       setIsSubmitting(false);
       return;
     }
@@ -95,24 +135,23 @@ export function SignupModal({ onClose }: SignupModalProps) {
       setIsSubmitting(false);
       return;
     }
-    if (cooldown) {
-      setIsSubmitting(false);
-      return;
-    }
 
     setAttempts((prev) => {
       const next = prev + 1;
-      if (next >= 3) setLockedUntil(Date.now() + 5 * 60 * 1000);
+      if (next >= 4) setLockedUntil(Date.now() + 5 * 60 * 1000);
       return next;
     });
-    setCooldown(true);
-    setTimeout(() => setCooldown(false), 30000);
 
-    const { error } = await sendMagicLink(data.email, {
-      business_name: data.businessName,
-      owner_name: data.ownerName,
-      business_type: data.businessType,
-    });
+    const { error } = await sendOtp(
+      data.email,
+      {
+        business_name: data.businessName,
+        owner_name: data.ownerName,
+        business_type: data.businessType,
+        phone: data.phone,
+      },
+      "signup"
+    );
 
     setIsSubmitting(false);
 
@@ -120,11 +159,13 @@ export function SignupModal({ onClose }: SignupModalProps) {
       setSubmitError(error);
     } else {
       setSentEmail(data.email);
-      setMagicLinkSent(true);
+      setOtpSent(true);
+      setResendCooldown(60);
+      setOtpChars(Array(8).fill(""));
     }
   };
 
-  // Login → Send Magic Link (no metadata)
+  // Login → Send 8-character OTP
   const onLoginSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
     setSubmitError(null);
@@ -132,7 +173,8 @@ export function SignupModal({ onClose }: SignupModalProps) {
     const score = shield.getScore();
     if (score < 5) {
       setSentEmail(data.email);
-      setMagicLinkSent(true);
+      setOtpSent(true);
+      setResendCooldown(60);
       setIsSubmitting(false);
       return;
     }
@@ -143,20 +185,14 @@ export function SignupModal({ onClose }: SignupModalProps) {
       setIsSubmitting(false);
       return;
     }
-    if (cooldown) {
-      setIsSubmitting(false);
-      return;
-    }
 
     setAttempts((prev) => {
       const next = prev + 1;
-      if (next >= 3) setLockedUntil(Date.now() + 5 * 60 * 1000);
+      if (next >= 4) setLockedUntil(Date.now() + 5 * 60 * 1000);
       return next;
     });
-    setCooldown(true);
-    setTimeout(() => setCooldown(false), 30000);
 
-    const { error } = await sendMagicLink(data.email);
+    const { error } = await sendOtp(data.email, undefined, "login");
 
     setIsSubmitting(false);
 
@@ -164,55 +200,312 @@ export function SignupModal({ onClose }: SignupModalProps) {
       setSubmitError(error);
     } else {
       setSentEmail(data.email);
-      setMagicLinkSent(true);
+      setOtpSent(true);
+      setResendCooldown(60);
+      setOtpChars(Array(8).fill(""));
     }
   };
 
-  // ── Magic Link Sent Screen ──
-  if (magicLinkSent) {
+  // Resend OTP handler
+  const handleResend = async () => {
+    if (resendCooldown > 0 || isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    const signupData = signupForm.getValues();
+    const metadata = !isLoginMode
+      ? {
+          business_name: signupData.businessName,
+          owner_name: signupData.ownerName,
+          business_type: signupData.businessType,
+          phone: signupData.phone,
+        }
+      : undefined;
+
+    const { error } = await sendOtp(sentEmail, metadata, isLoginMode ? "login" : "signup");
+    setIsSubmitting(false);
+
+    if (error) {
+      setSubmitError(error);
+    } else {
+      setResendCooldown(60);
+      setOtpChars(Array(8).fill(""));
+      inputRefs.current[0]?.focus();
+    }
+  };
+
+  // 8-Character Input Change Handler (Supports typing & paste)
+  const handleCharChange = (index: number, value: string) => {
+    setSubmitError(null);
+
+    // If pasted full code (e.g. "A4K9-2P8M" or "A4K92P8M")
+    const cleaned = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    if (cleaned.length > 1) {
+      const chars = cleaned.slice(0, 8).split("");
+      const newOtp = [...otpChars];
+      for (let i = 0; i < 8; i++) {
+        if (chars[i]) newOtp[i] = chars[i];
+      }
+      setOtpChars(newOtp);
+
+      const nextFocus = Math.min(chars.length, 7);
+      inputRefs.current[nextFocus]?.focus();
+
+      if (chars.length === 8) {
+        triggerVerification(newOtp.join(""));
+      }
+      return;
+    }
+
+    const char = cleaned.slice(-1);
+    const newOtp = [...otpChars];
+    newOtp[index] = char;
+    setOtpChars(newOtp);
+
+    // Auto-advance to next input
+    if (char && index < 7) {
+      inputRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-submit if all 8 characters entered
+    if (char && index === 7) {
+      const fullCode = newOtp.join("");
+      if (fullCode.length === 8) {
+        triggerVerification(fullCode);
+      }
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace") {
+      if (!otpChars[index] && index > 0) {
+        inputRefs.current[index - 1]?.focus();
+      }
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    } else if (e.key === "ArrowRight" && index < 7) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  // Submit & Verify 8-Character OTP
+  const triggerVerification = async (codeToVerify?: string) => {
+    const code = (codeToVerify || otpChars.join("")).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    if (code.length !== 8) {
+      setSubmitError("Please enter all 8 characters of your verification code.");
+      return;
+    }
+
+    setIsVerifying(true);
+    setSubmitError(null);
+
+    const { error, isNewUser } = await verifyOtp(sentEmail, code);
+
+    setIsVerifying(false);
+
+    if (error) {
+      setSubmitError(error);
+      return;
+    }
+
+    setIsSuccess(true);
+    setTimeout(() => {
+      onClose();
+      if (!isLoginMode || isNewUser) {
+        router.push("/setup/account");
+      } else {
+        router.push("/dashboard");
+      }
+    }, 800);
+  };
+
+  // ── 8-CHARACTER OTP VERIFICATION SCREEN ──
+  if (otpSent) {
+    const isCodeComplete = otpChars.join("").length === 8;
+
     return (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onMouseDown={(e) => {
-          if (e.target === e.currentTarget) onClose();
+          if (e.target === e.currentTarget && !isVerifying) onClose();
         }}
-        className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md"
+        className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md"
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="relative w-full max-w-md glass-panel rounded-2xl overflow-hidden"
+          className="relative w-full max-w-lg glass-panel rounded-2xl overflow-hidden ring-1 ring-emerald-500/20"
         >
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400" />
 
-          <div className="p-8 text-center">
+          {/* Close / Back button */}
+          <div className="flex items-center justify-between px-6 pt-5 pb-0">
+            <button
+              onClick={() => {
+                setOtpSent(false);
+                setSubmitError(null);
+                setOtpChars(Array(8).fill(""));
+              }}
+              className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
+            >
+              <ChevronLeft size={16} />
+              <span>Change Email</span>
+            </button>
+            <button
+              onClick={onClose}
+              disabled={isVerifying}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="p-6 sm:p-8 text-center">
+            {/* Header Icon */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", delay: 0.1, damping: 15 }}
-              className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20"
+              className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.2)]"
             >
-              <Mail className="w-9 h-9 text-emerald-400" />
+              {isSuccess ? (
+                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              ) : (
+                <ShieldCheck className="w-8 h-8 text-emerald-400" />
+              )}
             </motion.div>
 
-            <h3 className="text-xl font-bold text-white mb-2">Check Your Email</h3>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-2">
-              We sent a magic login link to
+            <h3 className="text-xl font-bold text-white mb-2">
+              {isSuccess ? "Identity Verified!" : "Enter 8-Character Code"}
+            </h3>
+            <p className="text-sm text-zinc-400 leading-relaxed mb-1">
+              We dispatched a secure 8-character verification code to
             </p>
-            <p className="text-sm font-semibold text-emerald-400 mb-6">{sentEmail}</p>
-            <p className="text-xs text-zinc-500 leading-relaxed mb-8">
-              Click the link in the email to access your dashboard. If you don't see it, check your spam folder.
-            </p>
+            <p className="text-sm font-semibold text-emerald-400 mb-6 font-mono">{sentEmail}</p>
 
+            {/* Error Banner */}
+            {submitError && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium text-center"
+              >
+                {submitError}
+              </motion.div>
+            )}
+
+            {/* 8-Character OTP Input Cluster (4 + 4 layout) */}
+            <div className="mb-6">
+              <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                {/* First 4 characters */}
+                <div className="flex gap-1.5 sm:gap-2">
+                  {[0, 1, 2, 3].map((idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => { inputRefs.current[idx] = el; }}
+                      type="text"
+                      inputMode="text"
+                      maxLength={1}
+                      value={otpChars[idx]}
+                      onChange={(e) => handleCharChange(idx, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(idx, e)}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pasted = e.clipboardData.getData("text");
+                        handleCharChange(idx, pasted);
+                      }}
+                      className={cn(
+                        "w-9 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-mono font-bold rounded-xl outline-none transition-all",
+                        "bg-[#0d0d12] border text-white uppercase",
+                        otpChars[idx]
+                          ? "border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+                          : "border-white/10 hover:border-white/20 focus:border-emerald-500/50"
+                      )}
+                    />
+                  ))}
+                </div>
+
+                {/* Divider hyphen */}
+                <span className="text-zinc-600 font-bold text-lg select-none px-0.5">-</span>
+
+                {/* Second 4 characters */}
+                <div className="flex gap-1.5 sm:gap-2">
+                  {[4, 5, 6, 7].map((idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => { inputRefs.current[idx] = el; }}
+                      type="text"
+                      inputMode="text"
+                      maxLength={1}
+                      value={otpChars[idx]}
+                      onChange={(e) => handleCharChange(idx, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(idx, e)}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pasted = e.clipboardData.getData("text");
+                        handleCharChange(idx, pasted);
+                      }}
+                      className={cn(
+                        "w-9 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-mono font-bold rounded-xl outline-none transition-all",
+                        "bg-[#0d0d12] border text-white uppercase",
+                        otpChars[idx]
+                          ? "border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+                          : "border-white/10 hover:border-white/20 focus:border-emerald-500/50"
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-[11px] text-zinc-500 mt-3">
+                Valid for 10 minutes &bull; Paste supported (e.g. ABCD-EFGH)
+              </p>
+            </div>
+
+            {/* Verify Button */}
             <button
-              onClick={onClose}
-              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 font-medium rounded-full py-3 transition-colors text-sm"
+              onClick={() => triggerVerification()}
+              disabled={!isCodeComplete || isVerifying || isSuccess}
+              className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold rounded-full py-3.5 transition-all shadow-[0_0_25px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 text-sm mb-4"
             >
-              Close
+              {isVerifying ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} />
+                  <span>Verifying Code...</span>
+                </>
+              ) : isSuccess ? (
+                <>
+                  <CheckCircle2 size={18} />
+                  <span>Verified! Redirecting...</span>
+                </>
+              ) : (
+                <>
+                  <span>Verify &amp; Continue</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
             </button>
+
+            {/* Resend Code Section */}
+            <div className="flex items-center justify-center gap-2 text-xs text-zinc-400">
+              <span>Didn&apos;t receive the code?</span>
+              {resendCooldown > 0 ? (
+                <span className="text-zinc-500 font-mono">Resend in {resendCooldown}s</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isSubmitting}
+                  className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors flex items-center gap-1"
+                >
+                  <RefreshCw size={12} className={cn(isSubmitting && "animate-spin")} />
+                  <span>Resend Code</span>
+                </button>
+              )}
+            </div>
           </div>
         </motion.div>
       </motion.div>
@@ -248,10 +541,10 @@ export function SignupModal({ onClose }: SignupModalProps) {
               {isLoginMode ? "Sign In to StarX Flow" : "Start Free Trial"}
             </h2>
             {!isLoginMode && (
-              <p className="text-xs text-zinc-400 mt-1">Step {step} of 2</p>
+              <p className="text-xs text-zinc-400 mt-1">Step {step} of 2 &bull; 8-Character OTP</p>
             )}
             {isLoginMode && (
-              <p className="text-xs text-zinc-400 mt-1">We'll send you a magic login link</p>
+              <p className="text-xs text-zinc-400 mt-1">We&apos;ll send an 8-character verification code</p>
             )}
           </div>
           <button
@@ -328,7 +621,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
                     <Loader2 className="animate-spin" size={18} />
                   ) : (
                     <>
-                      Send Magic Link <ArrowRight size={16} />
+                      Send 8-Character Code <ArrowRight size={16} />
                     </>
                   )}
                 </button>
@@ -366,44 +659,38 @@ export function SignupModal({ onClose }: SignupModalProps) {
                     onClick={() => { setIsLoginMode(false); setSubmitError(null); }}
                     className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
                   >
-                    Don't have an account? Start a free trial
+                    Need an account? Start Free Trial
                   </button>
                 </div>
-                {/* Honeypot */}
-                <input
-                  type="text"
-                  name="website"
-                  value={honeypot}
-                  onChange={(e) => {
-                    setHoneypot(e.target.value);
-                    shield.setHoneypot(e.target.value.length > 0);
-                  }}
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                  style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, overflow: 'hidden', opacity: 0 }}
-                />
               </motion.form>
             ) : (
               /* ── SIGNUP MODE ── */
-              <form key="signup-form" onSubmit={signupForm.handleSubmit(onSignupSubmit)}>
-                <div className="p-6">
+              <motion.form
+                key="signup-form"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                onSubmit={signupForm.handleSubmit(onSignupSubmit)}
+                className="flex flex-col"
+              >
+                <div className="p-6 space-y-4">
                   <AnimatePresence mode="wait">
-                    {step === 1 && (
+                    {step === 1 ? (
                       <motion.div
-                        key="signup-step1"
-                        initial={{ opacity: 0, x: 20 }}
+                        key="step-1"
+                        initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-5"
+                        exit={{ opacity: 0, x: 10 }}
+                        className="space-y-4"
                       >
                         <div>
                           <label className="block text-sm font-medium text-zinc-300 mb-2">
                             Business Name
                           </label>
                           <input
+                            type="text"
                             {...signupForm.register("businessName")}
-                            placeholder="E.g. Apex Massage Salon"
+                            placeholder="e.g. Acme Dental Clinic"
                             className={cn(
                               "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white transition-colors text-sm",
                               signupForm.formState.errors.businessName ? "border-red-500/50" : "border-white/10"
@@ -422,40 +709,43 @@ export function SignupModal({ onClose }: SignupModalProps) {
                             <select
                               {...signupForm.register("businessType")}
                               className={cn(
-                                "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white appearance-none transition-colors text-sm",
+                                "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white transition-colors text-sm appearance-none",
                                 signupForm.formState.errors.businessType ? "border-red-500/50" : "border-white/10"
                               )}
                             >
-                              <option value="" disabled>Select a business type</option>
-                              <option value="Restaurant">Restaurant (e.g., Cafe, Pizzeria)</option>
-                              <option value="Salon">Salon (e.g., Hair, Nails, Spa)</option>
-                              <option value="Gym">Gym (e.g., Fitness Center, Yoga)</option>
-                              <option value="Medical">Medical (e.g., Clinic, Dental)</option>
-                              <option value="Agency">Agency (e.g., Real Estate, Consulting)</option>
-                              <option value="Other">Other Services</option>
+                              <option value="" disabled>Select your industry</option>
+                              <option value="Beauty & Wellness">Beauty &amp; Wellness</option>
+                              <option value="Medical & Dental">Medical &amp; Dental</option>
+                              <option value="Consulting & Agency">Consulting &amp; Agency</option>
+                              <option value="Home Services">Home Services</option>
+                              <option value="Real Estate">Real Estate</option>
+                              <option value="Fitness & Personal Training">Fitness &amp; Personal Training</option>
+                              <option value="Hospitality & Dining">Hospitality &amp; Dining</option>
+                              <option value="Other">Other</option>
                             </select>
-                            <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                            <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
                           </div>
                           {signupForm.formState.errors.businessType && (
                             <p className="text-red-400 text-xs mt-1">{signupForm.formState.errors.businessType.message}</p>
                           )}
                         </div>
                       </motion.div>
-                    )}
-
-                    {step === 2 && (
+                    ) : (
                       <motion.div
-                        key="signup-step2"
-                        initial={{ opacity: 0, x: 20 }}
+                        key="step-2"
+                        initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-5"
+                        exit={{ opacity: 0, x: -10 }}
+                        className="space-y-4"
                       >
                         <div>
-                          <label className="block text-sm font-medium text-zinc-300 mb-2">Owner Name</label>
+                          <label className="block text-sm font-medium text-zinc-300 mb-2">
+                            Owner / Manager Name
+                          </label>
                           <input
+                            type="text"
                             {...signupForm.register("ownerName")}
-                            placeholder="Full Name"
+                            placeholder="John Doe"
                             className={cn(
                               "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white transition-colors text-sm",
                               signupForm.formState.errors.ownerName ? "border-red-500/50" : "border-white/10"
@@ -467,11 +757,13 @@ export function SignupModal({ onClose }: SignupModalProps) {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-zinc-300 mb-2">Email Address</label>
+                          <label className="block text-sm font-medium text-zinc-300 mb-2">
+                            Email Address
+                          </label>
                           <input
                             type="email"
                             {...signupForm.register("email")}
-                            placeholder="you@company.com"
+                            placeholder="john@example.com"
                             className={cn(
                               "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white transition-colors text-sm",
                               signupForm.formState.errors.email ? "border-red-500/50" : "border-white/10"
@@ -483,11 +775,13 @@ export function SignupModal({ onClose }: SignupModalProps) {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-zinc-300 mb-2">Phone Number</label>
+                          <label className="block text-sm font-medium text-zinc-300 mb-2">
+                            Phone Number
+                          </label>
                           <input
                             type="tel"
                             {...signupForm.register("phone")}
-                            placeholder="+44 7123 456789"
+                            placeholder="+1 (555) 000-0000"
                             className={cn(
                               "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white transition-colors text-sm",
                               signupForm.formState.errors.phone ? "border-red-500/50" : "border-white/10"
@@ -528,7 +822,11 @@ export function SignupModal({ onClose }: SignupModalProps) {
                         disabled={isSubmitting}
                         className="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-70 text-black font-bold rounded-full py-3 transition-colors shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 text-sm"
                       >
-                        {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : "Send Magic Link"}
+                        {isSubmitting ? (
+                          <Loader2 className="animate-spin" size={18} />
+                        ) : (
+                          "Send 8-Character Code"
+                        )}
                       </button>
                     )}
                   </div>
@@ -573,8 +871,9 @@ export function SignupModal({ onClose }: SignupModalProps) {
                   >
                     Already have an account? Sign In
                   </button>
-                  <p className="text-center text-[10px] text-zinc-500">No credit card required · Passwordless login</p>
+                  <p className="text-center text-[10px] text-zinc-500">No credit card required &bull; 8-Character Secure Verification</p>
                 </div>
+
                 {/* Honeypot */}
                 <input
                   type="text"
@@ -589,7 +888,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
                   aria-hidden="true"
                   style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, overflow: 'hidden', opacity: 0 }}
                 />
-              </form>
+              </motion.form>
             )}
           </AnimatePresence>
         </div>
