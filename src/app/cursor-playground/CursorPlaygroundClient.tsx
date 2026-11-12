@@ -33,6 +33,7 @@ export function CursorPlaygroundClient() {
   const [telemetry, setTelemetry] = useState<CursorTelemetrySnapshot>(() =>
     getCursorTelemetrySnapshot(),
   );
+  const [peakLagPx, setPeakLagPx] = useState(0);
   const [clickCount, setClickCount] = useState(0);
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '', '', '']);
   const [sampleText, setSampleText] = useState('StarX Flow enterprise WhatsApp engine');
@@ -43,7 +44,9 @@ export function CursorPlaygroundClient() {
 
     const sample = (now: number) => {
       if (now - lastUpdate > 48) {
-        setTelemetry(getCursorTelemetrySnapshot());
+        const snap = getCursorTelemetrySnapshot();
+        setTelemetry(snap);
+        setPeakLagPx((prev) => (snap.lagDistancePx > prev ? snap.lagDistancePx : prev));
         lastUpdate = now;
       }
       rafId = window.requestAnimationFrame(sample);
@@ -135,24 +138,38 @@ export function CursorPlaygroundClient() {
             </div>
 
             <GlassCard variant="obsidian" padding="md" className="font-mono text-xs space-y-3">
-              <div className="text-emerald-300 font-semibold uppercase tracking-wider">
-                Live Physics Telemetry
+              <div className="flex items-center justify-between">
+                <span className="text-emerald-300 font-semibold uppercase tracking-wider">
+                  Live Physics Telemetry
+                </span>
+                <button
+                  type="button"
+                  data-testid="pg-reset-peak"
+                  onClick={() => setPeakLagPx(0)}
+                  className="text-[11px] text-zinc-400 hover:text-emerald-300 transition-colors"
+                >
+                  Reset Peak
+                </button>
               </div>
               <dl className="grid grid-cols-2 gap-y-2.5 gap-x-3 tabular-nums text-zinc-300">
-                <dt className="text-zinc-500">dot (x, y)</dt>
+                <dt className="text-zinc-500">inner dot (x, y)</dt>
                 <dd data-testid="pg-tel-dot">
                   {telemetry.dotX.toFixed(1)}, {telemetry.dotY.toFixed(1)}
                 </dd>
-                <dt className="text-zinc-500">ring (x, y)</dt>
+                <dt className="text-zinc-500">outer ring (x, y)</dt>
                 <dd data-testid="pg-tel-ring">
                   {telemetry.ringX.toFixed(1)}, {telemetry.ringY.toFixed(1)}
                 </dd>
-                <dt className="text-zinc-500">ring vel</dt>
+                <dt className="text-zinc-500">ring vel (px/s)</dt>
                 <dd>
                   {telemetry.ringVelocityX.toFixed(0)}, {telemetry.ringVelocityY.toFixed(0)}
                 </dd>
-                <dt className="text-zinc-500">lag distance</dt>
+                <dt className="text-zinc-500">separation</dt>
                 <dd data-testid="pg-tel-lag">{telemetry.lagDistancePx.toFixed(2)} px</dd>
+                <dt className="text-zinc-500">peak separation</dt>
+                <dd data-testid="pg-tel-peak-lag" className="text-emerald-300">
+                  {peakLagPx.toFixed(1)} px
+                </dd>
                 <dt className="text-zinc-500">active mode</dt>
                 <dd data-testid="pg-tel-mode" className="text-emerald-300">
                   {telemetry.mode}
@@ -510,17 +527,28 @@ export function CursorPlaygroundClient() {
             </GlassButton>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 rounded-2xl border border-white/10 bg-[#050b09] text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 p-6 rounded-2xl border border-white/10 bg-[#050b09] text-xs">
             <TuningSlider
-              label="Outer Stiffness"
+              label="Follow Responsiveness"
+              testId="pg-slider-responsiveness"
+              value={config.followResponsiveness}
+              min={0.25}
+              max={1.5}
+              step={0.05}
+              onChange={(v) => setPlaygroundOverrides({ followResponsiveness: v })}
+            />
+            <TuningSlider
+              label="Spring Stiffness"
+              testId="pg-slider-stiffness"
               value={config.outerStiffness}
-              min={80}
-              max={520}
+              min={60}
+              max={400}
               step={10}
               onChange={(v) => setPlaygroundOverrides({ outerStiffness: v })}
             />
             <TuningSlider
               label="Outer Damping"
+              testId="pg-slider-damping"
               value={config.outerDamping}
               min={10}
               max={46}
@@ -528,23 +556,35 @@ export function CursorPlaygroundClient() {
               onChange={(v) => setPlaygroundOverrides({ outerDamping: v })}
             />
             <TuningSlider
+              label="Max Separation (px)"
+              testId="pg-slider-max-separation"
+              value={config.maxSeparationPx}
+              min={24}
+              max={120}
+              step={2}
+              onChange={(v) => setPlaygroundOverrides({ maxSeparationPx: v })}
+            />
+            <TuningSlider
               label="Default Ring Size (px)"
+              testId="pg-slider-default-ring"
               value={config.defaultRingSize}
-              min={22}
-              max={54}
+              min={28}
+              max={68}
               step={2}
               onChange={(v) => setPlaygroundOverrides({ defaultRingSize: v })}
             />
             <TuningSlider
               label="Hover Ring Size (px)"
+              testId="pg-slider-hover-ring"
               value={config.hoverRingSize}
-              min={40}
-              max={82}
+              min={44}
+              max={96}
               step={2}
               onChange={(v) => setPlaygroundOverrides({ hoverRingSize: v })}
             />
             <TuningSlider
               label="Magnetic Scalar"
+              testId="pg-slider-magnetic"
               value={config.magneticStrength}
               min={0}
               max={1.2}
@@ -553,6 +593,7 @@ export function CursorPlaygroundClient() {
             />
             <TuningSlider
               label="Spotlight Opacity"
+              testId="pg-slider-spotlight"
               value={config.spotlightIntensity}
               min={0}
               max={0.4}
@@ -561,6 +602,7 @@ export function CursorPlaygroundClient() {
             />
             <TuningSlider
               label="Glow Intensity"
+              testId="pg-slider-glow"
               value={config.glowIntensity}
               min={0}
               max={2}
@@ -569,6 +611,7 @@ export function CursorPlaygroundClient() {
             />
             <TuningSlider
               label="Click Compression Scale"
+              testId="pg-slider-compression"
               value={config.clickCompressionScale}
               min={0.55}
               max={0.98}
@@ -577,9 +620,11 @@ export function CursorPlaygroundClient() {
             />
           </div>
           <p className="text-[11px] font-mono text-zinc-500">
-            Active defaults: stiffness={DEFAULT_CURSOR_PHYSICS.outerStiffness}, damping=
-            {DEFAULT_CURSOR_PHYSICS.outerDamping}, dot={DEFAULT_CURSOR_PHYSICS.dotSize}px, ring=
-            {DEFAULT_CURSOR_PHYSICS.defaultRingSize}px/{DEFAULT_CURSOR_PHYSICS.hoverRingSize}px
+            Active defaults: responsiveness={DEFAULT_CURSOR_PHYSICS.followResponsiveness}, stiffness=
+            {DEFAULT_CURSOR_PHYSICS.outerStiffness}, damping={DEFAULT_CURSOR_PHYSICS.outerDamping},
+            maxSep={DEFAULT_CURSOR_PHYSICS.maxSeparationPx}px, dot={DEFAULT_CURSOR_PHYSICS.dotSize}
+            px, ring={DEFAULT_CURSOR_PHYSICS.defaultRingSize}px/{DEFAULT_CURSOR_PHYSICS.hoverRingSize}
+            px
           </p>
         </section>
       </div>
@@ -589,6 +634,7 @@ export function CursorPlaygroundClient() {
 
 function TuningSlider({
   label,
+  testId,
   value,
   min,
   max,
@@ -596,6 +642,7 @@ function TuningSlider({
   onChange,
 }: {
   label: string;
+  testId?: string;
   value: number;
   min: number;
   max: number;
@@ -610,6 +657,7 @@ function TuningSlider({
       </div>
       <input
         type="range"
+        data-testid={testId}
         min={min}
         max={max}
         step={step}

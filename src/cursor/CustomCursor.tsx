@@ -15,8 +15,8 @@ interface CustomCursorProps {
 }
 
 const MAX_FRAME_DELTA_SEC = 0.2;
-const SUBSTEP_SEC = 1 / 120;
-const SETTLE_EPSILON = 0.02;
+const SUBSTEP_SEC = 1 / 240;
+const SETTLE_EPSILON = 0.05;
 
 /**
  * Dual-Layer Custom Cursor 2.0 renderer.
@@ -59,7 +59,7 @@ export function CustomCursor({ pointerRef }: CustomCursorProps) {
       : mode === 'hover'
         ? config.hoverRingSize
         : mode === 'disabled'
-          ? 38
+          ? Math.max(40, config.defaultRingSize)
           : config.defaultRingSize;
 
   const isClickableScale = isPressed && mode !== 'disabled' && !isNativeFallback;
@@ -112,6 +112,11 @@ export function CustomCursor({ pointerRef }: CustomCursorProps) {
         const dotX = pointer.x;
         const dotY = pointer.y;
 
+        const responsiveness = Math.max(
+          0.15,
+          Math.min(2.0, liveConfig.followResponsiveness ?? 0.72),
+        );
+
         if (!state.initialized || rt.isReducedMotion) {
           state.ringX = dotX;
           state.ringY = dotY;
@@ -119,17 +124,30 @@ export function CustomCursor({ pointerRef }: CustomCursorProps) {
           state.velY = 0;
           state.initialized = true;
         } else {
-          // Layer 2: Outer ring chases ONLY inner dot coordinates via frame-rate-independent spring
-          let remaining = dt;
-          const stiffness = Math.max(40, liveConfig.outerStiffness);
+          // Layer 2: Outer ring chases ONLY inner dot coordinates via frame-rate-independent
+          // damped spring with responsiveness scaling & progressive soft separation tether.
+          let remaining = dt * responsiveness;
+          const stiffness = Math.max(30, liveConfig.outerStiffness);
           const damping = Math.max(4, liveConfig.outerDamping);
+          const maxSep = Math.max(16, liveConfig.maxSeparationPx ?? 56);
+          const softStart = maxSep * 0.65;
+          const softBand = Math.max(8, maxSep - softStart);
 
           while (remaining > 0) {
             const step = Math.min(remaining, SUBSTEP_SEC);
             const dx = dotX - state.ringX;
             const dy = dotY - state.ringY;
-            const ax = dx * stiffness - state.velX * damping;
-            const ay = dy * stiffness - state.velY * damping;
+            const dist = Math.hypot(dx, dy);
+
+            let kMult = 1;
+            if (dist > softStart) {
+              const excessRatio = (dist - softStart) / softBand;
+              kMult = Math.min(4.5, 1 + 2.5 * excessRatio * excessRatio);
+            }
+            const cMult = Math.sqrt(kMult);
+
+            const ax = dx * (stiffness * kMult) - state.velX * (damping * cMult);
+            const ay = dy * (stiffness * kMult) - state.velY * (damping * cMult);
 
             state.velX += ax * step;
             state.velY += ay * step;
@@ -163,8 +181,8 @@ export function CustomCursor({ pointerRef }: CustomCursorProps) {
           dotY,
           ringX: state.ringX,
           ringY: state.ringY,
-          ringVelocityX: state.velX,
-          ringVelocityY: state.velY,
+          ringVelocityX: state.velX * responsiveness,
+          ringVelocityY: state.velY * responsiveness,
           lagDistancePx: Math.hypot(dotX - state.ringX, dotY - state.ringY),
           mode: rt.mode,
           label: rt.label,

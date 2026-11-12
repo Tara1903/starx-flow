@@ -28,11 +28,13 @@ export const CURSOR_VISUAL_TOKENS = {
  */
 export const DEFAULT_CURSOR_PHYSICS: CursorPhysicsConfig = {
   dotSize: 6,
-  defaultRingSize: 34,
-  hoverRingSize: 52,
-  labelRingSize: 66,
-  outerStiffness: 300,
-  outerDamping: 29,
+  defaultRingSize: 46,
+  hoverRingSize: 64,
+  labelRingSize: 76,
+  outerStiffness: 140,
+  outerDamping: 20,
+  followResponsiveness: 0.50,
+  maxSeparationPx: 56,
   clickCompressionScale: 0.78,
   glowIntensity: 1,
   magneticStrength: 0.32,

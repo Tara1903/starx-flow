@@ -36,8 +36,12 @@ export interface CursorPhysicsConfig {
   dotSize: number;
   /** Spring stiffness driving outer ring -> inner dot convergence */
   outerStiffness: number;
-  /** Critical damping coefficient preventing erratic overshoot */
+  /** Damping coefficient preventing erratic overshoot and oscillation */
   outerDamping: number;
+  /** Time-scale responsiveness multiplier for follower follow delay (lower = slower catch-up) */
+  followResponsiveness: number;
+  /** Soft upper bound on separation (px) during high-speed sweeps via progressive elastic tether */
+  maxSeparationPx: number;
   /** Scale multiplier applied during pointer down compression */
   clickCompressionScale: number;
   /** Default emerald ring glow radius/alpha scalar (0..2) */

@@ -143,15 +143,20 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
     initial.bodyCursor === 'none',
     `${labelPrefix}: native body cursor cleanly hidden while active (${initial.bodyCursor})`,
   );
+  assert(
+    initial.ringWidth >= 44,
+    `${labelPrefix}: enlarged resting outer circle diameter active (${initial.ringWidth.toFixed(1)}px)`,
+  );
 
-  // 2. Dual-layer physics test: immediate inner dot + delayed outer ring convergence
+  // 2. Dual-layer physics test: immediate inner dot + noticeably delayed outer ring convergence
   const padBox = await getBoxInView(page.getByTestId('pg-tracking-pad'));
 
   const pStart = { x: padBox.x + 40, y: padBox.y + 40 };
   const pJump = { x: padBox.x + padBox.width - 50, y: padBox.y + padBox.height - 45 };
+  const midY = padBox.y + padBox.height / 2;
 
   await page.mouse.move(pStart.x, pStart.y);
-  await page.waitForTimeout(480);
+  await page.waitForTimeout(550);
 
   // Execute instant large pointer displacement & sample immediately (dot must track 0ms, ring must lag behind)
   await page.mouse.move(pJump.x, pJump.y);
@@ -166,13 +171,13 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
     `${labelPrefix}: inner dot tracks target immediately (${dotDeltaJump.toFixed(2)}px delta)`,
   );
   assert(
-    ringLagMid >= 8,
-    `${labelPrefix}: outer circle smoothly trails behind dot rather than teleporting (lag=${ringLagMid.toFixed(2)}px)`,
+    ringLagMid >= 18,
+    `${labelPrefix}: outer circle has unmistakable lag behind dot rather than teleporting (lag=${ringLagMid.toFixed(2)}px)`,
   );
 
-  // Wait for spring convergence at stopped point (poll up to ~1s across Chromium/Firefox/WebKit headless RAF)
+  // Wait for spring convergence at stopped point (poll up to ~1.3s across Chromium/Firefox/WebKit headless RAF)
   let ringLagSettled = 999;
-  for (let i = 0; i < 24; i += 1) {
+  for (let i = 0; i < 30; i += 1) {
     await page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => r())));
     await page.waitForTimeout(40);
     const settled = await getLayerCenters(page);
@@ -184,7 +189,79 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
     `${labelPrefix}: outer ring settles centered around inner dot when stopped (lag=${ringLagSettled.toFixed(2)}px)`,
   );
 
-  // Direction reversal check: bounce left-top corner and confirm outer ring follows dot path & converges
+  if (browserKind === 'chromium') {
+    // Slow steady sweep & fast directional sweep & momentum reversal & circular sweep & abrupt stop
+    await page.mouse.move(padBox.x + 40, midY);
+    await page.waitForTimeout(550);
+    const fastSeps: number[] = [];
+    for (let i = 1; i <= 16; i += 1) {
+      await page.mouse.move(padBox.x + 40 + i * 20, midY);
+      await page.waitForTimeout(16);
+      const s = await getLayerCenters(page);
+      fastSeps.push(Math.hypot(s.dotX - s.ringX, s.dotY - s.ringY));
+    }
+    const peakFastSep = Math.max(...fastSeps);
+    const stopImmediate = await getLayerCenters(page);
+    const stopLagImmediate = Math.hypot(stopImmediate.dotX - stopImmediate.ringX, stopImmediate.dotY - stopImmediate.ringY);
+
+    assert(
+      peakFastSep >= 24 && peakFastSep <= 68,
+      `${labelPrefix}: fast directional sweep maintains clear separation target (${peakFastSep.toFixed(2)}px)`,
+    );
+    assert(
+      stopLagImmediate >= 20,
+      `${labelPrefix}: on abrupt stop outer circle starts noticeably behind dot and travels forward (lag=${stopLagImmediate.toFixed(2)}px)`,
+    );
+
+    // Direction reversal momentum check: keep ring moving along previous trajectory initially
+    await page.mouse.move(padBox.x + 40, midY);
+    await page.waitForTimeout(550);
+    for (let i = 1; i <= 12; i += 1) {
+      await page.mouse.move(padBox.x + 40 + i * 18, midY);
+      await page.waitForTimeout(16);
+    }
+    const beforeRev = await getLayerCenters(page);
+    await page.mouse.move(beforeRev.dotX - 24, midY);
+    await page.waitForTimeout(16);
+    const afterRev = await getLayerCenters(page);
+    assert(
+      afterRev.ringX >= beforeRev.ringX - 2,
+      `${labelPrefix}: sudden reversal carries brief prior momentum before curving (${beforeRev.ringX.toFixed(1)} -> ${afterRev.ringX.toFixed(1)})`,
+    );
+
+    // Circular sweep check
+    const cx = padBox.x + padBox.width / 2;
+    const radius = 75;
+    await page.mouse.move(cx + radius, midY);
+    await page.waitForTimeout(550);
+    let circMax = 0;
+    for (let k = 1; k <= 24; k += 1) {
+      const ang = (k / 24) * Math.PI * 2;
+      await page.mouse.move(cx + Math.cos(ang) * radius, midY + Math.sin(ang) * radius);
+      await page.waitForTimeout(18);
+      const c = await getLayerCenters(page);
+      circMax = Math.max(circMax, Math.hypot(c.dotX - c.ringX, c.dotY - c.ringY));
+    }
+    assert(
+      circMax >= 22,
+      `${labelPrefix}: circular trajectory exhibits fluid orbital outer lag (peak=${circMax.toFixed(2)}px)`,
+    );
+
+    // Live telemetry & tuning controls present in /cursor-playground
+    const telDot = await page.getByTestId('pg-tel-dot').textContent();
+    const telRing = await page.getByTestId('pg-tel-ring').textContent();
+    const hasSliders =
+      (await page.getByTestId('pg-slider-responsiveness').count()) === 1 &&
+      (await page.getByTestId('pg-slider-stiffness').count()) === 1 &&
+      (await page.getByTestId('pg-slider-damping').count()) === 1 &&
+      (await page.getByTestId('pg-slider-max-separation').count()) === 1;
+    assert(
+      Boolean(telDot && telRing && hasSliders),
+      `${labelPrefix}: Playground renders live dot/ring telemetry & responsiveness/stiffness/damping/maxSep controls`,
+    );
+  }
+
+  // Cross-engine direction reversal responsiveness check: bounce left-top corner and confirm dot tracks immediately
   await page.mouse.move(pStart.x + 20, pStart.y + 30, { steps: 3 });
   await page.waitForTimeout(25);
   const reversed = await getLayerCenters(page);
@@ -202,7 +279,7 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
     await page.waitForTimeout(280);
     const hoverState = await getLayerCenters(page);
     assert(
-      hoverState.ringMode === 'hover' && hoverState.ringWidth > 42,
+      hoverState.ringMode === 'hover' && hoverState.ringWidth > 56,
       `${labelPrefix}: hover tile sets mode="hover" & expands outer ring (width=${hoverState.ringWidth.toFixed(1)}px)`,
     );
 
