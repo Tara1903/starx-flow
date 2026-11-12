@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'motion/react'
-import { Heart, Eye, ShoppingBag, Star } from 'lucide-react'
+import { Heart, Eye, ShoppingBag, Star, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Product } from '@/lib/productData'
 
@@ -14,6 +14,13 @@ export function ProductCard({
   onQuickView: (product: Product) => void
 }) {
   const [isWished, setIsWished] = useState(false)
+  const [addedToCart, setAddedToCart] = useState(false)
+
+  const handleAddToCart = () => {
+    setAddedToCart(true)
+    onQuickView(product)
+    setTimeout(() => setAddedToCart(false), 1800)
+  }
   const filledStars = Math.round(product.rating)
 
   const badgeStyles: Record<string, string> = {
@@ -25,9 +32,8 @@ export function ProductCard({
   return (
     <motion.div
       className={cn(
-        'group relative rounded-2xl overflow-hidden transition-all duration-500 flex flex-col',
-        'bg-white/[0.03] border border-white/[0.06] backdrop-blur-xl',
-        'hover:border-emerald-500/20 hover:shadow-[0_8px_40px_-12px_rgba(16,185,129,0.15)]'
+        'group relative rounded-2xl overflow-hidden transition-all duration-300 flex flex-col glass-card-obsidian',
+        'hover:border-emerald-500/35 hover:shadow-[0_12px_40px_-10px_rgba(16,185,129,0.2)] hover:-translate-y-1'
       )}
     >
       {/* IMAGE AREA */}
@@ -149,16 +155,19 @@ export function ProductCard({
 
         {/* Add to Cart Button */}
         <button
+          type="button"
+          onClick={handleAddToCart}
           className={cn(
-            'mt-3 w-full flex items-center justify-center gap-2',
-            'bg-white/5 hover:bg-emerald-500/15 border border-white/[0.08] hover:border-emerald-500/30',
-            'text-zinc-300 hover:text-emerald-400',
+            'mt-3 w-full flex items-center justify-center gap-2 cursor-pointer',
+            addedToCart
+              ? 'bg-emerald-500/20 border border-emerald-400/50 text-emerald-300'
+              : 'bg-white/5 hover:bg-emerald-500/15 border border-white/[0.08] hover:border-emerald-500/30 text-zinc-300 hover:text-emerald-400',
             'rounded-xl py-2.5 text-sm font-medium',
             'transition-all duration-300'
           )}
         >
-          <ShoppingBag size={15} />
-          Add to Cart
+          {addedToCart ? <Check size={15} /> : <ShoppingBag size={15} />}
+          {addedToCart ? 'Added to Cart' : 'Add to Cart'}
         </button>
       </div>
     </motion.div>

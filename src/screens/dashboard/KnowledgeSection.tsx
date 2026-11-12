@@ -181,7 +181,7 @@ export function KnowledgeSection() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search documents and chunks..."
-                className="w-full bg-[#0a0a0a] border border-white/10 rounded-full pl-9 pr-4 py-2 text-xs text-zinc-200 outline-none focus:border-emerald-500/30"
+                className="glass-input w-full rounded-full pl-9 pr-4 py-2 text-xs text-zinc-100"
               />
             </div>
             <button
@@ -263,7 +263,7 @@ export function KnowledgeSection() {
                 onChange={(e) => setTestQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleRunTestSearch()}
                 placeholder="Ask e.g. What is your refund policy?"
-                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-500/30"
+                className="glass-input w-full rounded-xl px-3 py-2 text-xs text-white outline-none"
               />
               <button
                 type="button"
@@ -299,7 +299,7 @@ export function KnowledgeSection() {
       {/* Ingestion Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#0c0c0c] border border-white/10 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+          <div className="glass-card-obsidian border border-white/15 rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-emerald-400" />

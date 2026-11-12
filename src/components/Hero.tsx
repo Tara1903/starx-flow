@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
@@ -20,7 +20,15 @@ import {
 import { useUIStore } from "../store/uiStore";
 import { GlassButton } from "./ui/GlassButton";
 import { GlassCard } from "./ui/GlassCard";
-import { MOTION_EASE, smoothTransition } from "../lib/motionVariants";
+import { AnimatedTabs } from "./ui/AnimatedTabs";
+import { useInViewport, useIsDocumentVisible } from "../hooks/useMotionVisibility";
+import {
+  MOTION_EASE,
+  MOTION_DURATION,
+  smoothTransition,
+  liquidStaggerGrid,
+  liquidCardEntrance,
+} from "../lib/motionVariants";
 
 interface ChatMessage {
   id: string;
@@ -78,13 +86,25 @@ const TypingIndicator = () => (
 export function Hero() {
   const { openSignup, openDemo } = useUIStore();
   const prefersReduced = useReducedMotion();
+  const heroRef = useRef<HTMLElement>(null);
+  const inViewport = useInViewport(heroRef, "120px", true);
+  const isDocVisible = useIsDocumentVisible();
+  const shouldAnimateStage = !prefersReduced && inViewport && isDocVisible;
 
   const [previewMode, setPreviewMode] = useState<"stage" | "chat">("stage");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => (prefersReduced ? chatScript : []));
   const [isTyping, setIsTyping] = useState(false);
   const [activeToastIndex, setActiveToastIndex] = useState<number>(0);
 
   useEffect(() => {
+    if (!shouldAnimateStage || previewMode !== "chat") {
+      if (prefersReduced) {
+        setMessages(chatScript);
+        setIsTyping(false);
+      }
+      return;
+    }
+
     let active = true;
     let timer: NodeJS.Timeout;
 
@@ -134,14 +154,17 @@ export function Hero() {
       active = false;
       clearTimeout(timer);
     };
-  }, []);
+  }, [shouldAnimateStage, previewMode, prefersReduced]);
 
   useEffect(() => {
+    if (!shouldAnimateStage || previewMode !== "stage") {
+      return;
+    }
     const interval = setInterval(() => {
       setActiveToastIndex((prev) => (prev + 1) % floatingToasts.length);
     }, 3200);
     return () => clearInterval(interval);
-  }, []);
+  }, [shouldAnimateStage, previewMode]);
 
   const heroMetrics = [
     {
@@ -167,7 +190,10 @@ export function Hero() {
   ];
 
   return (
-    <section className="relative pt-28 pb-16 lg:pt-36 lg:pb-24 px-4 sm:px-6 overflow-hidden">
+    <section
+      ref={heroRef}
+      className="relative pt-28 pb-16 lg:pt-36 lg:pb-24 px-4 sm:px-6 overflow-hidden"
+    >
       {/* Emerald Atmospheric Stage Glows */}
       <div
         aria-hidden="true"
@@ -180,42 +206,57 @@ export function Hero() {
 
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
-          {/* LEFT CONTENT (7 cols on lg) */}
-          <motion.div
-            className="lg:col-span-6 xl:col-span-6 flex flex-col items-start text-left"
-            initial={prefersReduced ? false : { opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: MOTION_EASE.premium }}
-          >
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-xs font-semibold text-emerald-300 mb-6 shadow-[0_0_20px_rgba(16,185,129,0.12)]">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          {/* LEFT CONTENT (6 cols on lg) — Sequenced Hero Choreography */}
+          <div className="lg:col-span-6 xl:col-span-6 flex flex-col items-start text-left">
+            <motion.div
+              initial={prefersReduced ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.36, ease: MOTION_EASE.premium }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-xs font-semibold text-emerald-300 mb-6 shadow-[0_0_20px_rgba(16,185,129,0.12)]"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse motion-reduce:animate-none" />
               AI Receptionist &amp; Business OS
-            </div>
+            </motion.div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[64px] font-bold tracking-tight text-white leading-[1.06] mb-6">
+            <motion.h1
+              initial={prefersReduced ? false : { opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: MOTION_DURATION.heroChoreography, delay: 0.05, ease: MOTION_EASE.premium }}
+              className="text-4xl sm:text-5xl lg:text-6xl xl:text-[64px] font-bold tracking-tight text-white leading-[1.06] mb-6"
+            >
               Your AI Receptionist{" "}
               <span className="block text-gradient-green">
                 for Service Businesses
               </span>
-            </h1>
+            </motion.h1>
 
-            <p className="text-base sm:text-lg lg:text-xl text-zinc-300 font-normal leading-relaxed max-w-xl mb-8">
+            <motion.p
+              initial={prefersReduced ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.48, delay: 0.12, ease: MOTION_EASE.premium }}
+              className="text-base sm:text-lg lg:text-xl text-zinc-300 font-normal leading-relaxed max-w-xl mb-8"
+            >
               WhatsApp, Instagram, Bookings, Leads, and Follow-ups — all
               automated by AI, 24/7 with zero commission fees.
-            </p>
+            </motion.p>
 
             {/* Primary & Secondary CTAs */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto mb-8">
+            <motion.div
+              initial={prefersReduced ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.44, delay: 0.18, ease: MOTION_EASE.premium }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto mb-8"
+            >
               <GlassButton
                 size="lg"
                 variant="primary"
                 magnetic
                 magneticStrength="medium"
                 onClick={openSignup}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto group"
               >
                 Start Free Trial
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5" />
               </GlassButton>
               <GlassButton
                 size="lg"
@@ -226,10 +267,15 @@ export function Hero() {
               >
                 Book a Demo
               </GlassButton>
-            </div>
+            </motion.div>
 
             {/* Capability Checkmarks Row */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-xs sm:text-sm text-zinc-300 font-medium">
+            <motion.div
+              initial={prefersReduced ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.24, ease: MOTION_EASE.premium }}
+              className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-xs sm:text-sm text-zinc-300 font-medium"
+            >
               {[
                 "AI Voice & Chat",
                 "Lead Management",
@@ -241,8 +287,8 @@ export function Hero() {
                   {item}
                 </span>
               ))}
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
           {/* RIGHT INTERACTIVE GLASS STAGE (6 cols on lg) */}
           <motion.div
@@ -251,39 +297,31 @@ export function Hero() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.15, ease: MOTION_EASE.premium }}
           >
-            {/* Radial Emerald Ring Glow Behind Showcase */}
+            {/* Radial Emerald Ring Glow Behind Showcase (subtle pre-feathered gradient matching original glow) */}
             <div
               aria-hidden="true"
-              className="absolute inset-0 m-auto w-[85%] h-[85%] rounded-full bg-emerald-500/18 blur-[95px] pointer-events-none"
+              className="absolute inset-0 m-auto w-[85%] h-[85%] rounded-full pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(16,185,129,0.10) 0%, rgba(16,185,129,0.03) 45%, transparent 72%)",
+              }}
             />
 
             <div className="w-full max-w-[540px] relative">
               {/* Interactive Preview Mode Switcher */}
-              <div className="flex items-center justify-end gap-2 mb-3">
-                <div className="inline-flex p-1 rounded-full bg-[#08120e]/90 border border-white/10 backdrop-blur-md">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewMode("stage")}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                      previewMode === "stage"
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/35"
-                        : "text-zinc-400 hover:text-white"
-                    }`}
-                  >
-                    Live OS View
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewMode("chat")}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                      previewMode === "chat"
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/35"
-                        : "text-zinc-400 hover:text-white"
-                    }`}
-                  >
-                    WhatsApp Thread
-                  </button>
-                </div>
+              <div className="flex items-center justify-end mb-3">
+                <AnimatedTabs<"stage" | "chat">
+                  layoutId="hero-stage-tabs"
+                  size="sm"
+                  ariaLabel="Hero preview mode"
+                  activeId={previewMode}
+                  onChange={setPreviewMode}
+                  tabs={[
+                    { id: "stage", label: "Live OS View" },
+                    { id: "chat", label: "WhatsApp Thread" },
+                  ]}
+                  className="glass-subtle border-white/14 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+                />
               </div>
 
               <AnimatePresence mode="wait">
@@ -299,7 +337,7 @@ export function Hero() {
                     {/* Tilted Glass Dashboard Backdrop Card */}
                     <div
                       data-cursor-spotlight="true"
-                      className="glass-card-obsidian rounded-[28px] p-5 sm:p-6 border border-emerald-500/25 shadow-[0_30px_80px_rgba(0,0,0,0.85),0_0_45px_rgba(16,185,129,0.14)] overflow-hidden"
+                      className="glass-focal rounded-[28px] p-5 sm:p-6 border border-emerald-400/35 shadow-[0_30px_80px_rgba(0,0,0,0.85),0_0_55px_rgba(16,185,129,0.18)] overflow-hidden"
                     >
                       {/* Window Chrome */}
                       <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/[0.08]">
@@ -315,7 +353,7 @@ export function Hero() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
                         {/* Left: AI Voice / Receptionist Waveform Card */}
-                        <div className="sm:col-span-6 rounded-2xl bg-[#040a08]/95 border border-emerald-500/30 p-4 shadow-[0_0_28px_rgba(16,185,129,0.12)]">
+                        <div className="sm:col-span-6 rounded-2xl glass-card-obsidian border border-emerald-400/30 p-4 shadow-[0_12px_32px_rgba(0,0,0,0.45),0_0_28px_rgba(16,185,129,0.12)]">
                           <div className="flex items-center gap-2.5 mb-3">
                             <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center">
                               <Mic className="w-4 h-4 text-emerald-400" />
@@ -375,8 +413,8 @@ export function Hero() {
                                 transition={{ duration: 0.25 }}
                                 className={`rounded-2xl px-3.5 py-3 border flex items-center justify-between gap-2.5 transition-colors ${
                                   highlighted
-                                    ? "bg-emerald-500/12 shadow-[0_0_24px_rgba(16,185,129,0.16)]"
-                                    : "bg-white/[0.03]"
+                                    ? "glass-card-obsidian border-emerald-400/50 shadow-[0_0_24px_rgba(16,185,129,0.22)]"
+                                    : "glass-subtle border-white/10 hover:border-white/20"
                                 }`}
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
@@ -413,9 +451,9 @@ export function Hero() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: -8 }}
                     transition={smoothTransition}
-                    className="glass-card-obsidian w-full rounded-[28px] overflow-hidden border border-emerald-500/25 shadow-[0_30px_80px_rgba(0,0,0,0.85)]"
+                    className="glass-focal w-full rounded-[28px] overflow-hidden border border-emerald-400/35 shadow-[0_30px_80px_rgba(0,0,0,0.85),0_0_55px_rgba(16,185,129,0.18)]"
                   >
-                    <div className="px-5 py-3.5 bg-white/[0.04] border-b border-white/10 flex items-center gap-3">
+                    <div className="px-5 py-3.5 glass-subtle border-b border-white/10 flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-[#02120c] font-bold text-xs">
                         AI
                       </div>
@@ -478,30 +516,31 @@ export function Hero() {
 
         {/* Bottom 4 Glass Metric Cards Row */}
         <motion.div
-          initial={prefersReduced ? false : { opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, delay: 0.25, ease: MOTION_EASE.premium }}
+          variants={prefersReduced ? undefined : liquidStaggerGrid}
+          initial={prefersReduced ? false : "hidden"}
+          animate="visible"
           className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mt-14 lg:mt-16"
         >
           {heroMetrics.map((metric) => (
-            <GlassCard
-              key={metric.label}
-              variant="obsidian"
-              hover
-              className="p-4 sm:p-5 flex items-center gap-3.5"
-            >
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-500/12 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
-                {metric.icon}
-              </div>
-              <div className="min-w-0">
-                <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                  {metric.value}
+            <motion.div key={metric.label} variants={prefersReduced ? undefined : liquidCardEntrance}>
+              <GlassCard
+                variant="obsidian"
+                hover
+                className="p-4 sm:p-5 h-full flex items-center gap-3.5"
+              >
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-500/12 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
+                  {metric.icon}
                 </div>
-                <div className="text-xs text-zinc-400 font-medium truncate">
-                  {metric.label}
+                <div className="min-w-0">
+                  <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                    {metric.value}
+                  </div>
+                  <div className="text-xs text-zinc-400 font-medium truncate">
+                    {metric.label}
+                  </div>
                 </div>
-              </div>
-            </GlassCard>
+              </GlassCard>
+            </motion.div>
           ))}
         </motion.div>
       </div>

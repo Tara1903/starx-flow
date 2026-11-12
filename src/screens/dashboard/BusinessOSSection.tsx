@@ -249,7 +249,7 @@ export function BusinessOSSection() {
                   cx={c.x} 
                   cy={c.y} 
                   r="4" 
-                  className="fill-emerald-400 stroke-[#0c0c0c] stroke-[2] hover:r-6 cursor-pointer transition-all" 
+                  className="fill-emerald-400 stroke-[#040a08] stroke-[2] hover:r-6 cursor-pointer transition-all" 
                 />
                 {/* Value tooltip */}
                 <text 
@@ -395,7 +395,7 @@ export function BusinessOSSection() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* System Autonomy Status */}
-            <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-5 shadow-2xl space-y-4">
+            <div className="glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl p-5 space-y-4">
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">System Autonomy Mode</span>
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -442,7 +442,7 @@ export function BusinessOSSection() {
             </div>
 
             {/* Core telemetry meters */}
-            <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-5 shadow-2xl space-y-4">
+            <div className="glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl p-5 space-y-4">
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Operational Metrics</span>
               <div className="space-y-3">
                 <div className="space-y-1">
@@ -474,7 +474,7 @@ export function BusinessOSSection() {
             </div>
 
             {/* Advanced OS Switches */}
-            <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-5 shadow-2xl space-y-3">
+            <div className="glass-card-obsidian border border-white/10 rounded-xl p-5 shadow-2xl space-y-3">
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Command Center Switches</span>
               
               <div className="flex items-center justify-between text-xs">
@@ -507,7 +507,7 @@ export function BusinessOSSection() {
           </div>
 
           {/* Executive Observability Deck */}
-          <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-5 shadow-2xl space-y-4">
+          <div className="glass-card-obsidian border border-white/10 rounded-xl p-5 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/[0.03]">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-emerald-400" />
@@ -602,7 +602,7 @@ export function BusinessOSSection() {
         <div className="space-y-4">
           
           {/* Controls Box */}
-          <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-2xl">
+          <div className="glass-card-obsidian border border-white/10 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-2xl">
             <div className="relative w-full md:w-72">
               <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -647,7 +647,7 @@ export function BusinessOSSection() {
             {filteredMemories.map((mem) => (
               <div 
                 key={mem.id} 
-                className="bg-[#0c0c0c] border border-white/5 rounded-xl p-5 shadow-2xl flex flex-col justify-between space-y-4 group relative"
+                className="glass-card-obsidian border border-white/10 rounded-xl p-5 shadow-2xl flex flex-col justify-between space-y-4 group relative"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -684,7 +684,7 @@ export function BusinessOSSection() {
             return (
               <div 
                 key={goal.id} 
-                className="bg-[#0c0c0c] border border-white/5 rounded-xl p-5 shadow-2xl space-y-4 relative overflow-hidden group flex flex-col justify-between"
+                className="glass-card-obsidian border border-white/10 rounded-xl p-5 shadow-2xl space-y-4 relative overflow-hidden group flex flex-col justify-between"
               >
                 {/* Finished glow banner */}
                 {isCompleted && (
@@ -756,7 +756,7 @@ export function BusinessOSSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           {/* Chart visualizers column */}
-          <div className="lg:col-span-8 bg-[#0c0c0c] border border-white/5 rounded-xl p-6 shadow-2xl space-y-6">
+          <div className="lg:col-span-8 glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl p-6 space-y-6">
             <div>
               <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
@@ -771,7 +771,7 @@ export function BusinessOSSection() {
           </div>
 
           {/* Forecasting parameters controller */}
-          <div className="lg:col-span-4 bg-[#0c0c0c] border border-white/5 rounded-xl p-5 shadow-2xl space-y-4">
+          <div className="lg:col-span-4 glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl p-5 space-y-4">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Simulation Adjusters</span>
             
             {/* Growth curve type switcher */}
@@ -838,7 +838,7 @@ export function BusinessOSSection() {
       {/* TAB 5: AUTONOMOUS RUN LOOP ACTIVITY */}
       {/* ──────────────────────────────────────────────────────── */}
       {activeTab === "logs" && (
-        <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-6 shadow-2xl space-y-6">
+        <div className="glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl p-6 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
@@ -874,7 +874,7 @@ export function BusinessOSSection() {
       {/* ──────────────────────────────────────────────────────── */}
       {isAddMemoryOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-[#090909] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden">
+          <div className="glass-card-obsidian border border-emerald-500/20 rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-indigo-500" />
             
             <div className="p-5 border-b border-white/5 flex items-center justify-between">
@@ -942,7 +942,7 @@ export function BusinessOSSection() {
       {/* ──────────────────────────────────────────────────────── */}
       {isAddGoalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-[#090909] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden">
+          <div className="glass-card-obsidian border border-emerald-500/20 rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-indigo-500" />
             
             <div className="p-5 border-b border-white/5 flex items-center justify-between">

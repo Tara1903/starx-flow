@@ -1,26 +1,24 @@
 "use client";
-import React from 'react';
-import { motion } from 'motion/react';
+
+import React from "react";
+import { motion, useReducedMotion } from "motion/react";
 
 interface StepCardProps {
   children: React.ReactNode;
 }
 
 export function StepCard({ children }: StepCardProps) {
+  const prefersReduced = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
+      initial={prefersReduced ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} // Custom premium ease-out
-      className="glass-panel rounded-2xl p-6 sm:p-8 relative overflow-hidden flex-1"
+      exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: -14 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="glass-card-obsidian rounded-2xl p-6 sm:p-8 relative overflow-hidden flex-1 border border-emerald-500/15"
     >
-      {/* Decorative gradient mesh */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] via-transparent to-white/[0.02] pointer-events-none" />
-      <div className="relative z-10 flex flex-col h-full">
-        {children}
-      </div>
+      <div className="relative z-10 flex flex-col h-full">{children}</div>
     </motion.div>
   );
 }
-

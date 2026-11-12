@@ -19,30 +19,25 @@ export function WelcomeHeader() {
   return (
     <div
       data-cursor-spotlight="true"
-      className="liquid-glass glass-hero liquid-glass-sheen rounded-3xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 select-none relative overflow-hidden"
+      className="glass-hero rounded-3xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 select-none relative overflow-hidden"
     >
-      {/* Internal emerald aurora wash */}
+      {/* Internal emerald aurora wash (static pre-feathered radial gradient, zero nested blur) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-20 -right-12 w-72 h-72 rounded-full opacity-35 blur-3xl animate-glow-breathe"
+        className="pointer-events-none absolute -top-20 -right-12 w-72 h-72 rounded-full opacity-55"
         style={{
           background:
-            "radial-gradient(circle, rgba(52,211,153,0.42) 0%, rgba(16,185,129,0.12) 50%, transparent 75%)",
+            "radial-gradient(circle, rgba(52,211,153,0.28) 0%, rgba(16,185,129,0.10) 48%, transparent 72%)",
         }}
       />
 
       <div className="relative z-10">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/12 border border-emerald-400/25 text-[11px] font-bold text-emerald-300 uppercase tracking-widest backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
-          <motion.span
-            animate={{ rotate: [0, 12, -8, 0], scale: [1, 1.15, 1] }}
-            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-          </motion.span>
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/14 border border-emerald-400/25 text-[11px] font-bold text-emerald-300 uppercase tracking-widest shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
+          <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
           <span>Operational Hub</span>
         </div>
 
-        <h2 className="text-2xl font-bold text-white tracking-tight mt-2.5 sm:text-3xl">
+        <h2 suppressHydrationWarning className="text-2xl font-bold text-white tracking-tight mt-2.5 sm:text-3xl">
           {getGreeting()},{" "}
           <span className="text-gradient-green">{user?.name || "Partner"}</span>
         </h2>
@@ -57,11 +52,11 @@ export function WelcomeHeader() {
         </p>
       </div>
 
-      {/* Security Status Liquid Glass Pill */}
+      {/* Security Status Pill (avoids nested backdrop-filter inside glass-hero) */}
       <motion.div
         whileHover={{ y: -2, scale: 1.02 }}
         transition={liquidSpring}
-        className="relative z-10 liquid-glass rounded-2xl flex items-center gap-3.5 px-4 py-3.5 border border-emerald-400/30 max-w-xs md:self-center shadow-[0_12px_32px_rgba(0,0,0,0.45),0_0_24px_rgba(16,185,129,0.15)]"
+        className="relative z-10 bg-emerald-950/55 rounded-2xl flex items-center gap-3.5 px-4 py-3.5 border border-emerald-400/30 max-w-xs md:self-center shadow-[0_12px_32px_rgba(0,0,0,0.45),0_0_24px_rgba(16,185,129,0.15)]"
       >
         <div className="relative w-10 h-10 rounded-xl bg-emerald-500/18 border border-emerald-400/35 flex items-center justify-center text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.28),inset_0_1px_0_rgba(255,255,255,0.25)]">
           <span className="absolute inset-0 rounded-xl bg-emerald-400/20 animate-ping opacity-40" />

@@ -59,23 +59,23 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
     );
 
     const baseClasses =
-      "relative inline-flex items-center justify-center font-semibold transition-[background-color,color,border-color,box-shadow,transform,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] rounded-full select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/75 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-50 cursor-pointer";
+      "relative overflow-hidden inline-flex items-center justify-center font-semibold transition-[background-color,color,border-color,box-shadow,transform,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] rounded-full select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/75 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-50 cursor-pointer";
 
     const variants: Record<CursorButtonVariant, string> = {
       primary:
-        "bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 text-[#02120c] font-bold border border-emerald-300/35 shadow-[0_0_24px_rgba(16,185,129,0.38),inset_0_1px_0_rgba(255,255,255,0.45)] enabled:hover:bg-none enabled:hover:bg-white focus-visible:bg-none focus-visible:bg-white enabled:hover:text-[#03120c] focus-visible:text-[#03120c] enabled:hover:border-emerald-300 focus-visible:border-emerald-300 enabled:hover:shadow-[0_0_32px_rgba(255,255,255,0.28),0_0_26px_rgba(16,185,129,0.36)]",
+        "bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 text-[#02120c] font-bold border border-emerald-300/35 shadow-[0_6px_18px_rgba(16,185,129,0.22),inset_0_1px_0_rgba(255,255,255,0.45)] enabled:hover:bg-none enabled:hover:bg-white focus-visible:bg-none focus-visible:bg-white enabled:hover:text-[#03120c] focus-visible:text-[#03120c] enabled:hover:border-emerald-300 focus-visible:border-emerald-300 enabled:hover:shadow-[0_6px_16px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.75)] focus-visible:shadow-[0_6px_16px_rgba(0,0,0,0.22)]",
       secondary:
-        "bg-[#0b1411]/80 backdrop-blur-md border border-white/15 text-zinc-100 shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] enabled:hover:bg-emerald-400 focus-visible:bg-emerald-400 enabled:hover:text-[#02120c] focus-visible:text-[#02120c] enabled:hover:border-emerald-300 focus-visible:border-emerald-300 enabled:hover:shadow-[0_0_28px_rgba(16,185,129,0.45)]",
+        "bg-[#0b1411]/80 backdrop-blur-md border border-white/15 text-zinc-100 shadow-[0_6px_20px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] enabled:hover:bg-emerald-400 focus-visible:bg-emerald-400 enabled:hover:text-[#02120c] focus-visible:text-[#02120c] enabled:hover:border-emerald-300 focus-visible:border-emerald-300 enabled:hover:shadow-[0_6px_16px_rgba(0,0,0,0.26)] focus-visible:shadow-[0_6px_16px_rgba(0,0,0,0.26)]",
       outline:
-        "bg-transparent border border-emerald-400/55 text-emerald-300 enabled:hover:bg-emerald-400 focus-visible:bg-emerald-400 enabled:hover:text-[#02120c] focus-visible:text-[#02120c] enabled:hover:border-emerald-300 focus-visible:border-emerald-300 enabled:hover:shadow-[0_0_26px_rgba(16,185,129,0.42)]",
+        "bg-transparent border border-emerald-400/55 text-emerald-300 enabled:hover:bg-emerald-400 focus-visible:bg-emerald-400 enabled:hover:text-[#02120c] focus-visible:text-[#02120c] enabled:hover:border-emerald-300 focus-visible:border-emerald-300 enabled:hover:shadow-none focus-visible:shadow-none",
       white:
-        "bg-white border border-white text-[#040807] font-bold shadow-[0_6px_22px_rgba(255,255,255,0.16)] enabled:hover:bg-[#050b08] focus-visible:bg-[#050b08] enabled:hover:text-white focus-visible:text-white enabled:hover:border-emerald-400/80 focus-visible:border-emerald-400/80 enabled:hover:shadow-[0_0_28px_rgba(16,185,129,0.38)]",
+        "bg-white border border-white text-[#040807] font-bold shadow-[0_6px_22px_rgba(255,255,255,0.12)] enabled:hover:bg-[#050b08] focus-visible:bg-[#050b08] enabled:hover:text-white focus-visible:text-white enabled:hover:border-emerald-400/80 focus-visible:border-emerald-400/80 enabled:hover:shadow-[0_6px_18px_rgba(0,0,0,0.42)] focus-visible:shadow-[0_6px_18px_rgba(0,0,0,0.42)]",
       ghost:
-        "bg-transparent text-zinc-300 border border-transparent enabled:hover:text-white focus-visible:text-white enabled:hover:bg-white/[0.1] focus-visible:bg-white/[0.1] enabled:hover:border-emerald-400/35 focus-visible:border-emerald-400/35",
+        "bg-transparent text-zinc-300 border border-transparent enabled:hover:text-white focus-visible:text-white enabled:hover:bg-white/[0.08] focus-visible:bg-white/[0.08] enabled:hover:border-emerald-400/35 focus-visible:border-emerald-400/35",
       focus:
-        "bg-emerald-500/14 backdrop-blur-md text-emerald-300 border border-emerald-500/40 shadow-[0_0_22px_rgba(16,185,129,0.2)] enabled:hover:bg-emerald-400 focus-visible:bg-emerald-400 enabled:hover:text-[#02120c] focus-visible:text-[#02120c] enabled:hover:border-emerald-300 focus-visible:border-emerald-300",
+        "bg-emerald-500/14 backdrop-blur-md text-emerald-300 border border-emerald-500/40 shadow-[0_6px_16px_rgba(0,0,0,0.28)] enabled:hover:bg-emerald-400 focus-visible:bg-emerald-400 enabled:hover:text-[#02120c] focus-visible:text-[#02120c] enabled:hover:border-emerald-300 focus-visible:border-emerald-300 enabled:hover:shadow-none focus-visible:shadow-none",
       danger:
-        "bg-red-500/15 border border-red-500/40 text-red-200 enabled:hover:bg-red-500 focus-visible:bg-red-500 enabled:hover:text-white focus-visible:text-white enabled:hover:border-red-400 focus-visible:border-red-400 enabled:hover:shadow-[0_0_24px_rgba(239,68,68,0.45)]",
+        "bg-red-500/15 border border-red-500/40 text-red-200 enabled:hover:bg-red-500 focus-visible:bg-red-500 enabled:hover:text-white focus-visible:text-white enabled:hover:border-red-400 focus-visible:border-red-400 enabled:hover:shadow-none focus-visible:shadow-none",
     };
 
     const sizes = {
@@ -91,6 +91,7 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
         aria-disabled={isBlocked || undefined}
         aria-busy={isLoading || undefined}
         data-cursor-invert={isBlocked ? undefined : variant}
+        data-cursor-spotlight={isBlocked ? undefined : "button"}
         data-cursor-disabled={isBlocked ? "true" : undefined}
         data-cursor-magnetic={isMagneticActive ? resolvedStrength : undefined}
         whileHover={prefersReduced || isBlocked ? undefined : { y: -1 }}

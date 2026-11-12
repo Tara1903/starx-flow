@@ -125,7 +125,7 @@ export function ActivityFeed() {
         
         <div className="flex items-center gap-2">
           {/* Quick Filters */}
-          <div className="flex items-center bg-white/[0.06] border border-white/[0.1] rounded-xl p-0.5 text-[10px] font-bold backdrop-blur-md">
+          <div className="flex items-center bg-white/[0.06] border border-white/[0.1] rounded-xl p-0.5 text-[10px] font-bold">
             {(["all", "WhatsApp", "Instagram", "SMS", "System"] as const).map((opt) => (
               <button
                 type="button"
@@ -203,7 +203,7 @@ export function ActivityFeed() {
                     </span>
 
                     {/* Timeline Event Card */}
-                    <div className={cn("p-3 rounded-xl border backdrop-blur-md flex items-start justify-between gap-3 text-xs leading-relaxed transition-all hover:bg-white/[0.06]", styles.bg)}>
+                    <div className={cn("p-3 rounded-xl border flex items-start justify-between gap-3 text-xs leading-relaxed transition-colors hover:bg-white/[0.06]", styles.bg)}>
                       <div className="flex items-start gap-2.5 min-w-0">
                         {/* Channel Icon Badge */}
                         <div className={cn("w-6 h-6 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5", CHANNEL_COLOR[log.channel] || CHANNEL_COLOR.System)}>

@@ -1,12 +1,21 @@
 "use client";
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
 import { DashboardSidebar } from "../../components/dashboard/DashboardSidebar";
 import { DashboardTopBar } from "../../components/dashboard/DashboardTopBar";
-import { IntegrationModal } from "../../components/IntegrationModal";
-import { CreateWorkflowWizard } from "../../components/dashboard/CreateWorkflowWizard";
+import { GlassSkeleton, NetworkStatusBanner } from "../../components/ui";
 import { cn } from "../../lib/utils";
+import dynamic from "next/dynamic";
+
+const IntegrationModal = dynamic(
+  () => import("../../components/IntegrationModal").then((m) => m.IntegrationModal),
+  { ssr: false }
+);
+const CreateWorkflowWizard = dynamic(
+  () => import("../../components/dashboard/CreateWorkflowWizard").then((m) => m.CreateWorkflowWizard),
+  { ssr: false }
+);
 
 // Sections (Lazy Loaded)
 const OverviewSection = React.lazy(() => import("./OverviewSection").then(m => ({ default: m.OverviewSection })));
@@ -30,6 +39,7 @@ const OrdersSection = React.lazy(() => import("./OrdersSection").then(m => ({ de
 const KnowledgeSection = React.lazy(() => import("./KnowledgeSection").then(m => ({ default: m.KnowledgeSection })));
 
 export function DashboardLayout() {
+  const prefersReduced = useReducedMotion();
   const activeSection = useDashboardStore((s) => s.activeSection);
   const setActiveSection = useDashboardStore((s) => s.setActiveSection);
   const isSidebarCollapsed = useDashboardStore((s) => s.isSidebarCollapsed);
@@ -83,7 +93,12 @@ export function DashboardLayout() {
   const renderActiveSection = () => {
     switch (activeSection) {
       case "overview":
-        return <OverviewSection onOpenIntegration={handleOpenIntegration} />;
+        return (
+          <OverviewSection
+            onOpenIntegration={handleOpenIntegration}
+            onNewWorkflowClick={handleOpenWorkflowWizard}
+          />
+        );
       case "conversations":
         return <ConversationsSection />;
       case "crm":
@@ -117,51 +132,48 @@ export function DashboardLayout() {
       case "os":
         return <BusinessOSSection />;
       default:
-        return <OverviewSection onOpenIntegration={handleOpenIntegration} />;
+        return (
+          <OverviewSection
+            onOpenIntegration={handleOpenIntegration}
+            onNewWorkflowClick={handleOpenWorkflowWizard}
+          />
+        );
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans flex overflow-hidden">
+    <div className="min-h-screen bg-black text-white font-sans flex overflow-x-clip relative">
       {/* 1. Sidebar component (Persistent on desktop, bottom navigation on mobile) */}
       <DashboardSidebar />
 
       {/* 2. Main Content Wrapper */}
       <div 
         className={cn(
-          "flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 pb-16 sm:pb-0",
+          "flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 pb-20 sm:pb-0 relative z-10",
           isSidebarCollapsed ? "sm:pl-[72px]" : "sm:pl-[260px]"
         )}
       >
         {/* 3. TopBar Component */}
         <DashboardTopBar onNewWorkflowClick={handleOpenWorkflowWizard} />
+        <NetworkStatusBanner onReconnectRetry={fetchInboxData} />
 
         {/* 4. Section Render Area with safe bottom-padding for mobile bottom navbar */}
-        <main className="flex-1 overflow-y-auto px-6 py-6 sm:px-8 sm:py-8 pb-24 sm:pb-12 console-scroll relative z-10">
+        <div role="region" aria-label="Dashboard workspace" className="flex-1 overflow-y-auto px-4 py-5 sm:px-8 sm:py-8 pb-28 sm:pb-12 console-scroll relative z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeSection}
-              initial={{ opacity: 0, scale: 0.98, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98, y: -15 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              initial={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.985, y: 12 }}
+              animate={prefersReduced ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+              exit={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.99, y: -10 }}
+              transition={{ duration: prefersReduced ? 0.05 : 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="h-full"
             >
-              <React.Suspense fallback={
-                <div className="h-full flex flex-col items-center justify-center text-zinc-500 text-xs gap-3 py-24 select-none">
-                  <div className="flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                  <span className="font-semibold tracking-wider uppercase text-[9px] text-zinc-500">Loading module...</span>
-                </div>
-              }>
+              <React.Suspense fallback={<GlassSkeleton variant="panel" />}>
                 {renderActiveSection()}
               </React.Suspense>
             </motion.div>
           </AnimatePresence>
-        </main>
+        </div>
       </div>
 
       {/* 5. Master Integration credentials modal */}

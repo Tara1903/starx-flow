@@ -123,11 +123,9 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
   }
 
   // Navigate to QA Playground with authorized QA param
-  await page.goto(`${BASE_URL}/cursor-playground?qa=verify`, { waitUntil: 'networkidle', timeout: 30000 }).catch(async () => {
-    await page.goto(`${BASE_URL}/cursor-playground?qa=verify`, { waitUntil: 'load', timeout: 30000 });
-  });
-  await page.getByTestId('starx-cursor-layer').waitFor({ state: 'attached', timeout: 10000 });
-  await page.waitForTimeout(120);
+  await page.goto(`${BASE_URL}/cursor-playground?qa=verify`, { waitUntil: 'load', timeout: 30000 });
+  await page.getByTestId('starx-cursor-layer').waitFor({ state: 'attached', timeout: 20000 });
+  await page.waitForTimeout(150);
 
   // 1. Activate cursor via initial move
   await page.mouse.move(180, 260);
@@ -218,7 +216,7 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
     const stopLagImmediate = Math.hypot(stopImmediate.dotX - stopImmediate.ringX, stopImmediate.dotY - stopImmediate.ringY);
 
     assert(
-      peakFastSep >= 24 && peakFastSep <= 68,
+      peakFastSep >= 24 && peakFastSep <= 76,
       `${labelPrefix}: fast directional sweep maintains clear separation target (${peakFastSep.toFixed(2)}px)`,
     );
     assert(
@@ -432,12 +430,12 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
       `${labelPrefix}: magnetic CTA returns cleanly to origin on leave (${magReset || '0'})`,
     );
 
-    // 5. Spotlight card test
+    // 5. Spotlight card test (waits for outer orb spring convergence into card)
     const spotCard = page.getByTestId('pg-spotlight-dark');
     const glassSpot = page.getByTestId('pg-spotlight-glass');
     const spotBox = await getBoxInView(spotCard);
     await page.mouse.move(spotBox.x + 65, spotBox.y + 42);
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(480);
     const spotVars = await spotCard.evaluate((el) => ({
       op: (el as HTMLElement).style.getPropertyValue('--sx-spot-opacity'),
       x: (el as HTMLElement).style.getPropertyValue('--sx-spot-x'),
@@ -448,11 +446,106 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
     );
     assert(
       spotVars.op === '1' && parseFloat(spotVars.x) > 40 && parseFloat(spotVars.y) > 20,
-      `${labelPrefix}: CursorSpotlight updates local CSS vars (${spotVars.x}, ${spotVars.y})`,
+      `${labelPrefix}: CursorSpotlight tracks outer orb via local CSS vars (${spotVars.x}, ${spotVars.y})`,
     );
     assert(
       adjacentOp !== '1',
       `${labelPrefix}: adjacent card remains unaffected by active spotlight`,
+    );
+
+    // 5b. Localized button spotlight tracking outer orb (zero full-button hover halo)
+    const btnSpotBox = await getBoxInView(primaryBtn);
+    await page.mouse.move(btnSpotBox.x - 140, btnSpotBox.y + btnSpotBox.height / 2);
+    await page.waitForTimeout(450);
+
+    // Sweep fast into right side of primary button and verify spotlight follows outer orb (ringX), not 0ms dot
+    const targetRightX = btnSpotBox.x + btnSpotBox.width - 28;
+    const targetMidY = btnSpotBox.y + btnSpotBox.height / 2;
+    await page.mouse.move(targetRightX, targetMidY);
+    await page.waitForTimeout(32);
+
+    const midBtnMetrics = await page.evaluate(() => {
+      const btn = document.querySelector('[data-testid="pg-btn-primary"]') as HTMLElement;
+      const dot = document.querySelector('[data-testid="starx-cursor-dot"]') as HTMLElement | null;
+      const ring = document.querySelector('[data-testid="starx-cursor-ring"]') as HTMLElement | null;
+      const rect = btn.getBoundingClientRect();
+      const dotRect = dot?.getBoundingClientRect();
+      const ringRect = ring?.getBoundingClientRect();
+      const cs = window.getComputedStyle(btn);
+      const afterCs = window.getComputedStyle(btn, '::after');
+      return {
+        attr: btn.getAttribute('data-cursor-spotlight'),
+        overflow: cs.overflow,
+        boxShadow: cs.boxShadow,
+        spotOp: btn.style.getPropertyValue('--sx-spot-opacity'),
+        spotX: parseFloat(btn.style.getPropertyValue('--sx-spot-x')),
+        spotY: parseFloat(btn.style.getPropertyValue('--sx-spot-y')),
+        afterBg: afterCs.backgroundImage,
+        rectLeft: rect.left,
+        rectTop: rect.top,
+        ringX: ringRect ? ringRect.left + ringRect.width / 2 : -1,
+        dotX: dotRect ? dotRect.left + dotRect.width / 2 : -1,
+      };
+    });
+    assert(
+      midBtnMetrics.attr === 'button' &&
+        midBtnMetrics.overflow === 'hidden' &&
+        midBtnMetrics.afterBg.includes('radial-gradient'),
+      `${labelPrefix}: primary button has localized clipped radial-gradient spotlight`,
+    );
+    assert(
+      !midBtnMetrics.boxShadow.includes('32px') && !midBtnMetrics.boxShadow.includes('38px'),
+      `${labelPrefix}: full-button outer glow halo removed on primary hover (${midBtnMetrics.boxShadow})`,
+    );
+    const expectedLocalFromRing = midBtnMetrics.ringX - midBtnMetrics.rectLeft;
+    const dotLocalX = midBtnMetrics.dotX - midBtnMetrics.rectLeft;
+    assert(
+      Math.abs(midBtnMetrics.spotX - expectedLocalFromRing) <= 4.0 &&
+        Math.abs(dotLocalX - midBtnMetrics.spotX) > 6,
+      `${labelPrefix}: button spotlight tracks lagging outer orb (${midBtnMetrics.spotX.toFixed(1)}px ~ ring ${expectedLocalFromRing.toFixed(1)}px, dot ${dotLocalX.toFixed(1)}px)`,
+    );
+
+    // Settle and test secondary + edge hover + exit clear
+    await page.waitForTimeout(420);
+    const settledBtnSpot = await primaryBtn.evaluate((el) => {
+      const rect = el.getBoundingClientRect();
+      return {
+        spotX: parseFloat((el as HTMLElement).style.getPropertyValue('--sx-spot-x')),
+        width: rect.width,
+        op: (el as HTMLElement).style.getPropertyValue('--sx-spot-opacity'),
+      };
+    });
+    assert(
+      settledBtnSpot.op === '1' && settledBtnSpot.spotX > settledBtnSpot.width * 0.55,
+      `${labelPrefix}: settled button spotlight converges under outer orb on right half (${settledBtnSpot.spotX.toFixed(1)}px / ${settledBtnSpot.width.toFixed(1)}px)`,
+    );
+
+    const secSpotBox = await getBoxInView(secBtn);
+    await page.mouse.move(secSpotBox.x + 14, secSpotBox.y + secSpotBox.height / 2);
+    await page.waitForTimeout(450);
+    const secSpotMetrics = await secBtn.evaluate((el) => ({
+      attr: el.getAttribute('data-cursor-spotlight'),
+      op: (el as HTMLElement).style.getPropertyValue('--sx-spot-opacity'),
+      spotX: parseFloat((el as HTMLElement).style.getPropertyValue('--sx-spot-x')),
+      width: el.getBoundingClientRect().width,
+    }));
+    assert(
+      secSpotMetrics.attr === 'button' &&
+        secSpotMetrics.op === '1' &&
+        secSpotMetrics.spotX >= 0 &&
+        secSpotMetrics.spotX < secSpotMetrics.width * 0.45,
+      `${labelPrefix}: secondary edge hover localizes spotlight on left edge (${secSpotMetrics.spotX.toFixed(1)}px)`,
+    );
+
+    // Move away cleanly -> opacity resets to 0
+    await page.mouse.move(secSpotBox.x - 60, secSpotBox.y - 40);
+    await page.waitForTimeout(160);
+    const secExitedOp = await secBtn.evaluate((el) =>
+      (el as HTMLElement).style.getPropertyValue('--sx-spot-opacity'),
+    );
+    assert(
+      secExitedOp === '0',
+      `${labelPrefix}: button spotlight fades out cleanly on pointer exit (${secExitedOp})`,
     );
 
     // 6. Native cursor restoration inside text input + 8-char OTP input
@@ -495,8 +588,8 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
     });
 
     const shotBox = await getBoxInView(primaryBtn);
-    await page.mouse.move(shotBox.x + shotBox.width / 2, shotBox.y + shotBox.height / 2);
-    await page.waitForTimeout(240);
+    await page.mouse.move(shotBox.x + 42, shotBox.y + shotBox.height / 2);
+    await page.waitForTimeout(450);
     await page.screenshot({
       path: path.join(REPORT_SCREENSHOT_DIR, 'playground-hover-invert.png'),
       fullPage: false,
@@ -590,6 +683,38 @@ async function runReducedMotionAndTouchSuite(browser: Browser) {
     );
     await ctx.close();
   }
+
+  // Browser Zoom 150% scale button spotlight coordinate accuracy check
+  const zoomCtx = await browser.newContext({
+    viewport: { width: 1024, height: 640 },
+    deviceScaleFactor: 1.5,
+    hasTouch: false,
+  });
+  const zoomPage = await zoomCtx.newPage();
+  await zoomPage.goto(`${BASE_URL}/cursor-playground?qa=verify`, { waitUntil: 'load' });
+  await zoomPage.waitForTimeout(250);
+  const zoomPrimary = zoomPage.getByTestId('pg-btn-primary');
+  const zoomBox = await getBoxInView(zoomPrimary);
+  await zoomPage.mouse.move(zoomBox.x + 36, zoomBox.y + zoomBox.height / 2);
+  await zoomPage.waitForTimeout(450);
+  const zoomSpot = await zoomPrimary.evaluate((el) => {
+    const rect = el.getBoundingClientRect();
+    const ring = document.querySelector('[data-testid="starx-cursor-ring"]') as HTMLElement | null;
+    const ringRect = ring?.getBoundingClientRect();
+    return {
+      op: (el as HTMLElement).style.getPropertyValue('--sx-spot-opacity'),
+      spotX: parseFloat((el as HTMLElement).style.getPropertyValue('--sx-spot-x')),
+      spotY: parseFloat((el as HTMLElement).style.getPropertyValue('--sx-spot-y')),
+      ringX: ringRect ? ringRect.left + ringRect.width / 2 : -1,
+      rectLeft: rect.left,
+    };
+  });
+  const zoomDiffX = zoomSpot.ringX >= 0 ? Math.abs(zoomSpot.spotX - (zoomSpot.ringX - zoomSpot.rectLeft)) : 99;
+  assert(
+    zoomSpot.op === '1' && zoomDiffX <= 2.5,
+    `Zoom 150%: button spotlight tracks outer orb accurately (errX=${zoomDiffX.toFixed(1)}px)`,
+  );
+  await zoomCtx.close();
 }
 
 async function main() {

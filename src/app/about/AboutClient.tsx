@@ -4,6 +4,8 @@ import React from "react";
 import { motion } from "motion/react";
 import { ArrowRight, Calendar, ShieldCheck, Zap } from "lucide-react";
 import { useUIStore } from "../../store/uiStore";
+import { GlassButton } from "../../components/ui/GlassButton";
+import { MOTION_DURATION, MOTION_EASE } from "../../lib/motionVariants";
 
 
 export function AboutClient() {
@@ -192,10 +194,10 @@ export function AboutClient() {
 
         {/* CTA Section */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: MOTION_DURATION.sectionReveal, ease: MOTION_EASE.premium }}
           className="glass-panel border border-emerald-500/20 rounded-[3rem] p-12 md:p-20 text-center shadow-[0_20px_80px_-20px_rgba(16,185,129,0.2)] bg-zinc-950/80 relative overflow-hidden"
         >
           <div className="absolute inset-0 atmo-glow atmo-glow-emerald opacity-30 mix-blend-screen" />
@@ -205,12 +207,17 @@ export function AboutClient() {
           <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-12 font-medium leading-relaxed relative z-10">
             Take minutes to set up, plug in your booking calendars, and let StarX Flow put your client bookings and WhatsApp customer care on autopilot.
           </p>
-          <button
-            onClick={openSignup}
-            className="bg-emerald-500 text-black px-10 py-5 rounded-full text-lg font-bold hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 mx-auto premium-glow premium-glow-hover relative z-10 group"
-          >
-            Start Automating Free <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-          </button>
+          <div className="relative z-10 flex justify-center">
+            <GlassButton
+              size="lg"
+              variant="primary"
+              magnetic
+              onClick={openSignup}
+              className="group"
+            >
+              Start Automating Free <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </GlassButton>
+          </div>
         </motion.div>
       </div>
       </div>

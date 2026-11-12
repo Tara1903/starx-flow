@@ -2,10 +2,13 @@ import { create } from 'zustand';
 import { useAuthStore } from './authStore';
 import { supabase } from '../lib/supabase';
 import { Order } from '../types/database';
+import { createIdempotencyKey } from '../lib/idempotency';
+import { sanitizeClientError } from '../lib/security/sanitizeClientError';
 
 interface OrderState {
   orders: Order[];
   isLoading: boolean;
+  hasFetched: boolean;
   error: string | null;
   fetchOrders: () => Promise<void>;
   createOrder: (orderData: {
@@ -16,102 +19,63 @@ interface OrderState {
     totalAmount: number;
     status?: Order['status'];
     paymentStatus?: Order['payment_status'];
-  }) => Promise<{ success: boolean; error?: string }>;
-  updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
-  updatePaymentStatus: (orderId: string, paymentStatus: Order['payment_status']) => Promise<void>;
+    idempotencyKey?: string;
+  }) => Promise<{ success: boolean; error?: string; deduplicated?: boolean }>;
+  updateOrderStatus: (orderId: string, status: Order['status']) => Promise<boolean>;
+  updatePaymentStatus: (orderId: string, paymentStatus: Order['payment_status']) => Promise<boolean>;
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.access_token) {
       return { Authorization: `Bearer ${session.access_token}` };
     }
   } catch {
-    // Ignore error in offline mode
+    // Offline fallback handled by fetch try/catch
   }
   return {};
 }
 
 export const useOrderStore = create<OrderState>((set, get) => ({
-  orders: [
-    {
-      id: 'ord-101',
-      user_id: 'default',
-      order_number: 'SX-892104',
-      customer_name: 'Elena Rostova',
-      customer_phone: '+49 152 4432190',
-      customer_email: 'elena.rostova@berlin-mail.de',
-      status: 'completed',
-      payment_status: 'paid',
-      total_amount: 145.0,
-      currency: 'EUR',
-      items: [
-        { name: 'Balayage Treatment & Color Lock', quantity: 1, price: 110.0 },
-        { name: 'Organic Argan Hair Mask (250ml)', quantity: 1, price: 35.0 }
-      ],
-      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-      updated_at: new Date(Date.now() - 3600000 * 2).toISOString()
-    },
-    {
-      id: 'ord-102',
-      user_id: 'default',
-      order_number: 'SX-892105',
-      customer_name: 'Marc Dubois',
-      customer_phone: '+33 6 12 34 56 78',
-      customer_email: 'marc.dubois@paris-tech.fr',
-      status: 'processing',
-      payment_status: 'paid',
-      total_amount: 65.0,
-      currency: 'EUR',
-      items: [
-        { name: 'Classic Beard Sculpt & Hot Towel Shave', quantity: 1, price: 45.0 },
-        { name: 'Matte Styling Clay', quantity: 1, price: 20.0 }
-      ],
-      created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-      updated_at: new Date(Date.now() - 3600000 * 18).toISOString()
-    },
-    {
-      id: 'ord-103',
-      user_id: 'default',
-      order_number: 'SX-892106',
-      customer_name: 'Sophia Van Dijk',
-      customer_phone: '+31 6 98765432',
-      customer_email: 'sophia.vandijk@amsterdam.nl',
-      status: 'pending',
-      payment_status: 'unpaid',
-      total_amount: 85.0,
-      currency: 'EUR',
-      items: [
-        { name: 'Deep Hydration Facial Treatment', quantity: 1, price: 85.0 }
-      ],
-      created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-      updated_at: new Date(Date.now() - 3600000 * 1).toISOString()
-    }
-  ],
+  orders: [],
   isLoading: false,
+  hasFetched: false,
   error: null,
 
   fetchOrders: async () => {
     const user = useAuthStore.getState().user;
-    if (!user) return;
+    if (!user) {
+      set({ orders: [], hasFetched: true, isLoading: false, error: null });
+      return;
+    }
 
     set({ isLoading: true, error: null });
     try {
       const authHeaders = await getAuthHeaders();
-      const res = await fetch(`/api/orders?userId=${user.id}`, {
+      const res = await fetch('/api/orders', {
         headers: authHeaders,
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.orders && data.orders.length > 0) {
-          set({ orders: data.orders });
-        }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Failed to load orders (${res.status})`);
       }
-    } catch (err: any) {
-      console.warn('Could not fetch orders:', err.message);
-    } finally {
-      set({ isLoading: false });
+
+      // Always reflect real backend state including empty array []
+      set({
+        orders: Array.isArray(data.orders) ? data.orders : [],
+        hasFetched: true,
+        isLoading: false,
+        error: null,
+      });
+    } catch (err: unknown) {
+      set({
+        error: sanitizeClientError(err, 'Unable to load workspace orders. Check connection and retry.'),
+        hasFetched: true,
+        isLoading: false,
+      });
     }
   },
 
@@ -119,78 +83,95 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     const user = useAuthStore.getState().user;
     if (!user) return { success: false, error: 'User not authenticated' };
 
-    set({ isLoading: true });
+    const idempotencyKey = orderData.idempotencyKey || createIdempotencyKey('ord');
+    set({ isLoading: true, error: null });
     try {
       const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyKey,
           ...authHeaders,
         },
         body: JSON.stringify({
           userId: user.id,
-          ...orderData
-        })
+          idempotencyKey,
+          ...orderData,
+        }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        set({ error: data.error, isLoading: false });
-        return { success: false, error: data.error };
+        const safeErr = sanitizeClientError(data.error, 'Could not create order.');
+        set({ error: safeErr, isLoading: false });
+        return { success: false, error: safeErr };
       }
 
-      set((state) => ({
-        orders: [data.order, ...state.orders],
-        isLoading: false
-      }));
+      set((state) => {
+        const exists = state.orders.some((o) => o.id === data.order?.id);
+        return {
+          orders: exists ? state.orders : [data.order, ...state.orders],
+          isLoading: false,
+          error: null,
+        };
+      });
 
-      return { success: true };
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
-      return { success: false, error: err.message };
+      return { success: true, deduplicated: Boolean(data.deduplicated) };
+    } catch (err: unknown) {
+      const safeErr = sanitizeClientError(err, 'Network error while creating order.');
+      set({ error: safeErr, isLoading: false });
+      return { success: false, error: safeErr };
     }
   },
 
   updateOrderStatus: async (orderId, status) => {
-    // Optimistic update
+    const prevOrders = get().orders;
     set((state) => ({
-      orders: state.orders.map((o) => (o.id === orderId ? { ...o, status } : o))
+      orders: state.orders.map((o) => (o.id === orderId ? { ...o, status } : o)),
     }));
 
     try {
       const authHeaders = await getAuthHeaders();
-      await fetch('/api/orders', {
+      const res = await fetch('/api/orders', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...authHeaders,
         },
-        body: JSON.stringify({ orderId, status })
+        body: JSON.stringify({ orderId, status }),
       });
-    } catch (err) {
-      console.warn('Failed to persist order status:', err);
+      if (!res.ok) throw new Error('Update failed');
+      return true;
+    } catch {
+      set({ orders: prevOrders });
+      return false;
     }
   },
 
   updatePaymentStatus: async (orderId, paymentStatus) => {
-    // Optimistic update
+    const prevOrders = get().orders;
     set((state) => ({
-      orders: state.orders.map((o) => (o.id === orderId ? { ...o, payment_status: paymentStatus } : o))
+      orders: state.orders.map((o) =>
+        o.id === orderId ? { ...o, payment_status: paymentStatus } : o
+      ),
     }));
 
     try {
       const authHeaders = await getAuthHeaders();
-      await fetch('/api/orders', {
+      const res = await fetch('/api/orders', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...authHeaders,
         },
-        body: JSON.stringify({ orderId, paymentStatus })
+        body: JSON.stringify({ orderId, paymentStatus }),
       });
-    } catch (err) {
-      console.warn('Failed to persist payment status:', err);
+      if (!res.ok) throw new Error('Payment update failed');
+      return true;
+    } catch {
+      set({ orders: prevOrders });
+      return false;
     }
-  }
+  },
 }));

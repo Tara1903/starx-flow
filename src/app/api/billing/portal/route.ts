@@ -1,23 +1,16 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { polar } from '@/lib/polar';
+import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
+import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
 
 export async function POST(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized: missing token' }, { status: 401 });
+    const auth = await authenticateStaffRequest(request, { requiredRole: 'admin' });
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const {
-      data: { user },
-      error: authErr,
-    } = await supabaseAdmin.auth.getUser(token);
-
-    if (authErr || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user } = auth.session;
 
     const appUrl = (
       process.env.APP_URL ||
@@ -26,7 +19,6 @@ export async function POST(request: Request) {
     ).replace(/\/+$/, '');
 
     try {
-      // Create authenticated Polar Customer Portal Session
       const session = await polar.customerSessions.create({
         external_customer_id: user.id,
         return_url: `${appUrl}/dashboard`,
@@ -34,14 +26,13 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ url: session.customer_portal_url });
     } catch (portalErr: any) {
-      console.warn('[Polar Customer Portal] Session creation notice:', portalErr.message);
+      console.warn('[Polar Customer Portal] Session creation notice:', portalErr?.message);
 
-      // If customer does not exist yet on Polar, inform user to select a plan first
       if (
-        portalErr.message?.includes('not found') ||
-        portalErr.message?.includes('does not exist') ||
-        portalErr.status === 404 ||
-        portalErr.status === 422
+        portalErr?.message?.includes('not found') ||
+        portalErr?.message?.includes('does not exist') ||
+        portalErr?.status === 404 ||
+        portalErr?.status === 422
       ) {
         return NextResponse.json(
           {
@@ -54,10 +45,10 @@ export async function POST(request: Request) {
 
       throw portalErr;
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Polar Customer Portal Error]:', err);
     return NextResponse.json(
-      { error: err.message || 'Failed to open customer billing portal' },
+      { error: sanitizeClientError(err, 'Failed to open customer billing portal') },
       { status: 500 }
     );
   }

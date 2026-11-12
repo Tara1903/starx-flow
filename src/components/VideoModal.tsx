@@ -28,7 +28,7 @@ export function VideoModal({ onClose }: { onClose: () => void }) {
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-5xl bg-[#050505] rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(16,185,129,0.15)] ring-1 ring-white/5"
+        className="relative w-full max-w-5xl glass-card-obsidian rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(16,185,129,0.15)] ring-1 ring-white/5"
       >
         <div className="absolute top-4 right-4 z-10 flex gap-4">
           <button
@@ -40,7 +40,7 @@ export function VideoModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.12)_0%,transparent_70%)] pointer-events-none" />
 
           <video
             autoPlay

@@ -132,7 +132,7 @@ export function CalendarSection() {
       </div>
 
       {/* Appointments List / Grid */}
-      <div className="flex-1 bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-xl">
+      <div className="flex-1 glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl overflow-hidden flex flex-col shadow-xl">
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
@@ -188,11 +188,11 @@ export function CalendarSection() {
                         onChange={(e) => updateAppointmentStatus(apt.id, e.target.value as any)}
                         className={`text-[11px] font-bold px-2.5 py-1 rounded-full border outline-none cursor-pointer bg-transparent capitalize ${badge.bg} ${badge.text}`}
                       >
-                        <option value="scheduled" className="bg-[#111] text-blue-400">Scheduled</option>
-                        <option value="confirmed" className="bg-[#111] text-emerald-400">Confirmed</option>
-                        <option value="completed" className="bg-[#111] text-purple-400">Completed</option>
-                        <option value="cancelled" className="bg-[#111] text-red-400">Cancelled</option>
-                        <option value="no_show" className="bg-[#111] text-zinc-400">No Show</option>
+                        <option value="scheduled" className="bg-[#07120e] text-blue-300">Scheduled</option>
+                        <option value="confirmed" className="bg-[#07120e] text-emerald-300">Confirmed</option>
+                        <option value="completed" className="bg-[#07120e] text-purple-300">Completed</option>
+                        <option value="cancelled" className="bg-[#07120e] text-red-300">Cancelled</option>
+                        <option value="no_show" className="bg-[#07120e] text-zinc-300">No Show</option>
                       </select>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -242,7 +242,7 @@ export function CalendarSection() {
       {/* New Appointment Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#101214] border border-white/10 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div className="glass-card-obsidian border border-white/10 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <h3 className="text-white font-bold text-base flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5 text-emerald-400" />

@@ -6,6 +6,9 @@ import {
   MessageSquare as ChatIcon
 } from "lucide-react";
 import { crossfadeSwap } from "../lib/motionVariants";
+import { useInViewport, useIsDocumentVisible } from "../hooks/useMotionVisibility";
+import { AnimatedTabs } from "./ui/AnimatedTabs";
+import { useRef } from "react";
 
 type IndustryKey = "gym" | "clinic" | "salon" | "spa" | "coaching";
 
@@ -178,12 +181,18 @@ const TypingIndicator = () => (
 );
 
 export function Demo() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const inView = useInViewport(sectionRef);
+  const isVisible = useIsDocumentVisible();
+  const shouldAnimate = inView && isVisible;
+
   const [activeTab, setActiveTab] = useState<IndustryKey>("gym");
   const [displayedChat, setDisplayedChat] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const current = industries[activeTab];
 
   useEffect(() => {
+    if (!shouldAnimate) return;
     setDisplayedChat([]);
     setIsTyping(false);
     
@@ -214,15 +223,15 @@ export function Demo() {
     return () => {
       isCancelled = true;
     };
-  }, [activeTab, current.chat]);
+  }, [activeTab, current.chat, shouldAnimate]);
 
   return (
-    <section id="solutions" className="py-24 lg:py-32 px-6 relative z-10 bg-black overflow-hidden">
+    <section ref={sectionRef} id="solutions" className="py-24 lg:py-32 px-6 relative z-10 bg-black overflow-hidden">
       <div className="max-w-7xl mx-auto flex flex-col items-center">
         
         {/* Ambient background glow shifting color */}
         <motion.div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[120px] pointer-events-none opacity-40 transition-colors duration-1000"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none opacity-40 transition-colors duration-1000"
           style={{ background: `radial-gradient(circle, ${current.themeColor} 0%, transparent 70%)` }}
         />
         
@@ -248,26 +257,18 @@ export function Demo() {
 
         {/* Premium Horizontal Pill Selector */}
         <div className="w-full flex justify-center mb-12 relative z-20">
-          <div className="flex gap-2 p-1.5 glass-panel rounded-full overflow-x-auto no-scrollbar">
-            {(Object.keys(industries) as IndustryKey[]).map((key) => {
-              const ind = industries[key];
-              const isActive = activeTab === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => setActiveTab(key)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold transition-all duration-300 tracking-wider uppercase shrink-0 ${
-                    isActive 
-                      ? "glass-panel text-white shadow-[0_0_20px_rgba(255,255,255,0.15)]" 
-                      : "text-zinc-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  {ind.icon}
-                  <span>{ind.name}</span>
-                </button>
-              );
-            })}
-          </div>
+          <AnimatedTabs<IndustryKey>
+            layoutId="demo-industry-pill"
+            ariaLabel="Select industry demo"
+            activeId={activeTab}
+            onChange={setActiveTab}
+            tabs={(Object.keys(industries) as IndustryKey[]).map((key) => ({
+              id: key,
+              label: industries[key].name,
+              icon: industries[key].icon,
+            }))}
+            className="p-1.5"
+          />
         </div>
 
         <motion.div

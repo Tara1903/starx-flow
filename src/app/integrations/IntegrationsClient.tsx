@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { 
   Calendar, 
   MessageSquare, 
@@ -16,11 +16,15 @@ import {
   ChevronDown
 } from "lucide-react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { GlassButton } from "@/components/ui/GlassButton";
+import { ScrollReveal } from "@/components/ui/ScrollReveal";
+import { MOTION_DURATION, MOTION_EASE } from "@/lib/motionVariants";
 import { useUIStore } from "@/store/uiStore";
 
 export function IntegrationsClient() {
   const openSignup = useUIStore((state) => state.openSignup);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const prefersReduced = useReducedMotion();
 
   const liveIntegrations = [
     {
@@ -174,7 +178,7 @@ export function IntegrationsClient() {
         </nav>
 
         {/* Hero Section */}
-        <div className="max-w-4xl mx-auto text-center mb-16 lg:mb-24">
+        <ScrollReveal direction="up" className="max-w-4xl mx-auto text-center mb-16 lg:mb-24">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6">
             <CheckCircle2 size={12} className="text-emerald-400" />
             Ecosystem & APIs
@@ -186,7 +190,7 @@ export function IntegrationsClient() {
           <p className="text-lg md:text-xl text-zinc-400 font-medium leading-relaxed max-w-3xl mx-auto">
             StarX-Flow integrates directly with enterprise calendar APIs, Meta messaging networks, and payment infrastructure through authorized OAuth2 protocols.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Direct Answer Block (AEO / GEO Extraction) */}
         <GlassPanel tier="panel" className="p-8 md:p-10 rounded-3xl mb-20 border border-emerald-500/20 bg-emerald-950/10">
@@ -271,7 +275,7 @@ export function IntegrationsClient() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {inDevelopment.map((item, i) => (
-              <div key={i} className="glass-panel p-6 rounded-3xl border border-white/5 bg-zinc-950/60 flex flex-col justify-between">
+              <div key={i} className="glass-subtle p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{item.category}</span>
@@ -316,11 +320,21 @@ export function IntegrationsClient() {
                       className={`text-emerald-400 shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
                     />
                   </button>
-                  {isOpen && (
-                    <div className="px-6 pb-6 text-sm md:text-base text-zinc-400 font-medium leading-relaxed border-t border-white/5 pt-4">
-                      {faq.a}
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={prefersReduced ? { opacity: 1 } : { height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={prefersReduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                        transition={{ duration: MOTION_DURATION.card, ease: MOTION_EASE.premium }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-6 pb-6 text-sm md:text-base text-zinc-400 font-medium leading-relaxed border-t border-white/5 pt-4">
+                          {faq.a}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
@@ -329,12 +343,14 @@ export function IntegrationsClient() {
 
         {/* Bottom CTA */}
         <div className="text-center max-w-2xl mx-auto">
-          <button
+          <GlassButton
+            size="lg"
+            variant="primary"
+            magnetic
             onClick={openSignup}
-            className="bg-emerald-500 text-black px-8 py-4 rounded-full text-base font-bold hover:bg-emerald-400 transition-all inline-flex items-center gap-2"
           >
             Connect Your Calendar in 5 Minutes <ArrowRight size={18} />
-          </button>
+          </GlassButton>
         </div>
 
       </div>

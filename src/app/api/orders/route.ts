@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabaseAdmin';
 import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
+import { extractIdempotencyKey, runWithIdempotency } from '@/lib/idempotency';
+import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,12 +20,18 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      return NextResponse.json({ orders: [] });
+      return NextResponse.json(
+        { error: sanitizeClientError(error, 'Failed to load workspace orders') },
+        { status: 503 }
+      );
     }
 
     return NextResponse.json({ orders: orders || [] });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json(
+      { error: sanitizeClientError(err, 'Unable to load orders right now') },
+      { status: 500 }
+    );
   }
 }
 
@@ -36,58 +44,66 @@ export async function POST(req: NextRequest) {
 
     const tenantId = auth.session.organizationId || auth.session.user.id;
     const body = await req.json();
-    const { customerName, customerPhone, customerEmail, items, totalAmount, status, paymentStatus } = body;
+    const {
+      customerName,
+      customerPhone,
+      customerEmail,
+      items,
+      totalAmount,
+      status,
+      paymentStatus,
+    } = body;
 
-    if (!customerName || !items || items.length === 0) {
+    if (!customerName || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         { error: 'Missing required parameters: customerName, items' },
         { status: 400 }
       );
     }
 
-    const orderNumber = `SX-${Date.now().toString().slice(-6)}`;
+    const rawIdempotencyKey = extractIdempotencyKey(req, body);
+    const scopedKey = rawIdempotencyKey ? `order:${tenantId}:${rawIdempotencyKey}` : null;
 
-    const { data: order, error } = await supabaseAdmin
-      .from('orders')
-      .insert({
-        user_id: tenantId,
-        order_number: orderNumber,
-        customer_name: customerName,
-        customer_phone: customerPhone || null,
-        customer_email: customerEmail || null,
-        items,
-        total_amount: totalAmount || items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0),
-        currency: 'EUR',
-        status: status || 'pending',
-        payment_status: paymentStatus || 'unpaid',
-      })
-      .select()
-      .single();
+    const { result, deduplicated } = await runWithIdempotency(scopedKey, async () => {
+      const orderNumber = `SX-${Date.now().toString().slice(-6)}`;
+      const computedTotal =
+        totalAmount ??
+        items.reduce(
+          (acc: number, item: { price: number; quantity: number }) =>
+            acc + Number(item.price || 0) * Number(item.quantity || 1),
+          0
+        );
 
-    if (error) {
-      // In offline mode, return synthetic order
-      return NextResponse.json({
-        order: {
-          id: `order-${Date.now()}`,
+      const { data: order, error } = await supabaseAdmin
+        .from('orders')
+        .insert({
           user_id: tenantId,
           order_number: orderNumber,
           customer_name: customerName,
-          customer_phone: customerPhone,
-          customer_email: customerEmail,
+          customer_phone: customerPhone || null,
+          customer_email: customerEmail || null,
           items,
-          total_amount: totalAmount,
+          total_amount: computedTotal,
           currency: 'EUR',
           status: status || 'pending',
           payment_status: paymentStatus || 'unpaid',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      });
-    }
+        })
+        .select()
+        .single();
 
-    return NextResponse.json({ order });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+      if (error || !order) {
+        throw new Error(sanitizeClientError(error, 'Database failed to persist order'));
+      }
+
+      return order;
+    });
+
+    return NextResponse.json({ order: result, deduplicated });
+  } catch (err: unknown) {
+    return NextResponse.json(
+      { error: sanitizeClientError(err, 'Failed to create order. Please retry.') },
+      { status: 500 }
+    );
   }
 }
 
@@ -107,7 +123,6 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (isSupabaseAdminConfigured) {
-      // Check that existing order belongs to the caller's tenant
       const { data: existingOrder } = await supabaseAdmin
         .from('orders')
         .select('id, user_id')
@@ -122,7 +137,7 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (status) updates.status = status;
     if (paymentStatus) updates.payment_status = paymentStatus;
 
@@ -134,18 +149,18 @@ export async function PATCH(req: NextRequest) {
       .select()
       .single();
 
-    if (error) {
-      return NextResponse.json({
-        order: {
-          id: orderId,
-          user_id: tenantId,
-          ...updates,
-        }
-      });
+    if (error || !updated) {
+      return NextResponse.json(
+        { error: sanitizeClientError(error, 'Failed to update order status') },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ order: updated });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json(
+      { error: sanitizeClientError(err, 'Failed to update order') },
+      { status: 500 }
+    );
   }
 }

@@ -132,7 +132,7 @@ export function TeamSection() {
         {members.map((m) => (
           <div
             key={m.id}
-            className="bg-[#0a0a0a] border border-white/10 hover:border-emerald-500/30 rounded-2xl p-6 relative group transition-all shadow-xl"
+            className="glass-card-obsidian glass-lift border border-emerald-500/[0.12] hover:border-emerald-500/35 rounded-2xl p-6 relative group transition-all shadow-xl"
           >
             <div className="absolute top-4 right-4 flex items-center gap-2">
               <span
@@ -192,7 +192,7 @@ export function TeamSection() {
         {/* Invite Member Prompt Card */}
         <button
           onClick={() => setIsInviteModalOpen(true)}
-          className="bg-[#050505] border-2 border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group min-h-[160px]"
+          className="glass-panel border-2 border-dashed border-white/15 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group min-h-[160px]"
         >
           <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-zinc-500 group-hover:text-emerald-400 transition-colors">
             <Plus className="w-6 h-6" />
@@ -206,7 +206,7 @@ export function TeamSection() {
       {/* Invite Modal */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#101214] border border-white/10 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+          <div className="glass-card-obsidian border border-white/15 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <h3 className="text-white font-bold text-base flex items-center gap-2">
                 <Contact className="w-5 h-5 text-emerald-400" />

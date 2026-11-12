@@ -108,7 +108,7 @@ export function CustomerProfile({ thread }: CustomerProfileProps) {
   };
 
   return (
-    <div className="w-[300px] border-l border-white/5 bg-[#0a0a0a] flex flex-col h-full flex-shrink-0 select-none">
+    <div className="w-[300px] border-l border-emerald-500/[0.08] bg-[#040a08]/75 flex flex-col h-full flex-shrink-0 select-none">
       <div className="p-5 border-b border-white/5 flex flex-col items-center justify-center text-center">
         <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 mb-3">
           <User className="w-8 h-8" />
@@ -207,7 +207,7 @@ export function CustomerProfile({ thread }: CustomerProfileProps) {
           <select
             value={lead.status || "new"}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="w-full bg-[#050505] border border-white/10 text-xs font-semibold text-zinc-300 rounded-lg px-3 py-2.5 outline-none focus:border-emerald-500/30 transition-all"
+            className="glass-input w-full text-xs font-semibold text-zinc-200 rounded-lg px-3 py-2.5"
           >
             <option value="new">New Lead</option>
             <option value="contacted">Contacted</option>

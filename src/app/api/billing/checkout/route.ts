@@ -1,32 +1,16 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { polar, POLAR_PLANS } from '@/lib/polar';
+import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
+import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
 
 export async function POST(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized: missing authorization header' }, { status: 401 });
+    const auth = await authenticateStaffRequest(request, { requiredRole: 'admin' });
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const {
-      data: { user },
-      error: authErr,
-    } = await supabaseAdmin.auth.getUser(token);
-
-    if (authErr || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Tenant / Organization ownership check
-    const { data: member } = await supabaseAdmin
-      .from('organization_members')
-      .select('organization_id, role')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    const organizationId = member?.organization_id || null;
+    const { user, organizationId } = auth.session;
 
     const body = await request.json();
     const { planId } = body;
@@ -50,7 +34,6 @@ export async function POST(request: Request) {
       request.headers.get('x-real-ip') ??
       undefined;
 
-    // Create Polar Checkout Session
     const checkout = await polar.checkouts.create({
       products: [planConfig.productId],
       external_customer_id: user.id,
@@ -70,10 +53,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ url: checkout.url, checkoutId: checkout.id });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Polar Checkout Error]:', err);
     return NextResponse.json(
-      { error: err.message || 'Failed to initiate Polar checkout' },
+      { error: sanitizeClientError(err, 'Failed to initiate Polar checkout') },
       { status: 500 }
     );
   }

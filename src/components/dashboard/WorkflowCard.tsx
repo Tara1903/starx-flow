@@ -51,7 +51,7 @@ export function WorkflowCard({ workflow, onToggle, onConfigure }: WorkflowCardPr
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
-        "glass-panel rounded-xl p-5 transition-all duration-300 select-none",
+        "glass-card-obsidian glass-lift rounded-2xl p-5 transition-all duration-300 select-none border border-emerald-500/[0.12]",
         !workflow.isActive && "opacity-60"
       )}
     >

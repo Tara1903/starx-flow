@@ -56,7 +56,8 @@ export function WorkflowsSection() {
               useAuthStore.setState({ selectedWorkflowId: null });
               setActiveSection("workflow_editor");
             }}
-            className="flex items-center gap-1 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black py-2.5 px-4 rounded-full transition-all shadow-[0_0_15px_rgba(16,185,129,0.25)] flex-shrink-0"
+            data-cursor-spotlight="button"
+            className="btn-emerald-glow flex items-center gap-1.5 text-xs font-bold py-2.5 px-4 rounded-full flex-shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>Create Flow</span>
@@ -66,7 +67,7 @@ export function WorkflowsSection() {
 
       {/* Grid containing workflows */}
       {filteredWorkflows.length === 0 ? (
-        <div className="glass-card rounded-xl p-8 text-center select-none py-12">
+        <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] p-8 text-center select-none py-12">
           <div className="w-12 h-12 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center mx-auto mb-4">
             <Layers className="w-5 h-5 text-zinc-600" />
           </div>

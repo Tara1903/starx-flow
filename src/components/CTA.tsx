@@ -47,10 +47,10 @@ export function CTA() {
               magnetic
               magneticStrength="high"
               onClick={openSignup}
-              className="px-9 py-4 text-base sm:text-lg"
+              className="px-9 py-4 text-base sm:text-lg group"
             >
               Claim Your Free AI Receptionist
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 transition-transform duration-150 group-hover:translate-x-1" />
             </GlassButton>
           </div>
         </ScrollReveal>

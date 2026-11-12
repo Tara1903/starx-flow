@@ -16,6 +16,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { useUIStore } from "../../store/uiStore";
+import { GlassButton } from "../../components/ui/GlassButton";
 
 
 export function FeaturesClient() {
@@ -229,13 +230,18 @@ export function FeaturesClient() {
           <p className="text-xl text-zinc-400 mb-12 max-w-2xl mx-auto relative z-10 leading-relaxed font-medium">
             Unlock all the tools you need to build direct client channels and accelerate your clinic, gym, or salon capacity.
           </p>
-          <button 
-            onClick={openSignup}
-            className="bg-emerald-500 text-black px-12 py-5 rounded-full text-lg font-bold hover:bg-emerald-400 transition-all shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] relative z-10 premium-glow premium-glow-hover flex items-center gap-2 mx-auto group"
-          >
-            Start Your Free Trial{" "}
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </button>
+          <div className="relative z-10 flex justify-center">
+            <GlassButton
+              size="lg"
+              variant="primary"
+              magnetic
+              onClick={openSignup}
+              className="group"
+            >
+              Start Your Free Trial{" "}
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </GlassButton>
+          </div>
         </div>
       </div>
       </div>

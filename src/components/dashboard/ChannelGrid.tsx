@@ -82,10 +82,10 @@ export function ChannelGrid({ onOpenIntegration }: ChannelGridProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05, duration: 0.4 }}
               className={cn(
-                "glass-card rounded-xl p-5 transition-all flex flex-col justify-between h-[210px] relative overflow-hidden group border",
+                "glass-card-obsidian glass-lift rounded-2xl p-5 transition-all flex flex-col justify-between min-h-[210px] relative overflow-hidden group border",
                 isConnected
-                  ? "border-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.02)]"
-                  : "border-white/5 opacity-70 hover:opacity-100"
+                  ? "border-emerald-500/25 shadow-[0_0_24px_rgba(16,185,129,0.08)]"
+                  : "border-white/[0.06] opacity-75 hover:opacity-100"
               )}
             >
               {/* Top Row: Icon and Status Control */}
@@ -143,7 +143,7 @@ export function ChannelGrid({ onOpenIntegration }: ChannelGridProps) {
                 )}
                 
                 {isConnected && connectedState?.lastSynced && (
-                  <span className="text-[9px] text-zinc-600 font-medium">
+                  <span suppressHydrationWarning className="text-[9px] text-zinc-600 font-medium">
                     Synced: {new Date(connectedState.lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 )}

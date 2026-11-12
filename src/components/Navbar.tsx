@@ -241,9 +241,7 @@ export function Navbar() {
           aria-label="Primary navigation"
           className={cn(
             "pointer-events-auto max-w-7xl mx-auto px-4 lg:px-5 h-14 md:h-16 rounded-full flex items-center justify-between transition-all duration-300",
-            "glass-navbar-floating",
-            scrolled &&
-              "bg-[#040a08]/92 border-emerald-500/20 shadow-[0_14px_45px_rgba(0,0,0,0.75),0_0_32px_rgba(16,185,129,0.1)]"
+            scrolled ? "glass-navbar-scrolled" : "glass-navbar-floating"
           )}
         >
           {/* Crisp Brand Mark + Native Typography Lockup */}
@@ -269,24 +267,28 @@ export function Navbar() {
               triggerLabel="Product"
               items={productItems}
               isActive={isProductActive}
+              activeLayoutId="navbar-active-pill"
               onNavigate={handleNavigate}
             />
             <GlassDropdown
               triggerLabel="Solutions"
               items={solutionsItems}
               isActive={isSolutionsActive}
+              activeLayoutId="navbar-active-pill"
               onNavigate={handleNavigate}
             />
             <GlassDropdown
               triggerLabel="Industries"
               items={industriesItems}
               isActive={isIndustriesActive}
+              activeLayoutId="navbar-active-pill"
               onNavigate={handleNavigate}
             />
             <GlassDropdown
               triggerLabel="Resources"
               items={resourcesItems}
               isActive={isResourcesActive}
+              activeLayoutId="navbar-active-pill"
               onNavigate={handleNavigate}
             />
             <Link

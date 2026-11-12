@@ -6,8 +6,8 @@ export function ConversationEmpty() {
   const setActiveSection = useDashboardStore((s) => s.setActiveSection);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#050505] h-full select-none animate-[fade-in-up_0.4s_ease-out]">
-      <div className="glass-panel w-full h-full rounded-2xl flex flex-col items-center justify-center">
+    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-transparent h-full select-none animate-[fade-in-up_0.4s_ease-out]">
+      <div className="glass-card-obsidian w-full h-full rounded-2xl border border-emerald-500/[0.12] flex flex-col items-center justify-center p-6">
         <div className="w-16 h-16 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center mb-4 relative">
           <MessageSquare className="w-7 h-7 text-zinc-600" />
           <span className="absolute -top-1 -right-1 flex h-3 w-3">

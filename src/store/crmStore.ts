@@ -2,10 +2,12 @@ import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Lead } from '../types/database';
 import { useAuthStore } from './authStore';
+import { sanitizeClientError } from '../lib/security/sanitizeClientError';
 
 interface CrmState {
   leads: Lead[];
   isLoading: boolean;
+  error: string | null;
   searchQuery: string;
   statusFilter: string;
   sourceFilter: string;
@@ -23,15 +25,19 @@ interface CrmState {
 export const useCrmStore = create<CrmState>((set, get) => ({
   leads: [],
   isLoading: false,
+  error: null,
   searchQuery: '',
   statusFilter: 'all',
   sourceFilter: 'all',
 
   fetchLeads: async () => {
     const user = useAuthStore.getState().user;
-    if (!user || !isSupabaseConfigured) return;
+    if (!user || !isSupabaseConfigured) {
+      set({ leads: [], isLoading: false, error: null });
+      return;
+    }
 
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
         .from('leads')
@@ -40,9 +46,11 @@ export const useCrmStore = create<CrmState>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      set({ leads: (data as Lead[]) || [] });
-    } catch (err: any) {
-      console.warn('[CrmStore] fetchLeads failed:', err.message);
+      set({ leads: (data as Lead[]) || [], error: null });
+    } catch (err: unknown) {
+      set({
+        error: sanitizeClientError(err, 'Unable to load customer directory.'),
+      });
     } finally {
       set({ isLoading: false });
     }

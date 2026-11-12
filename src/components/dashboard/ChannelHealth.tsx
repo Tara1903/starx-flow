@@ -50,7 +50,7 @@ export function ChannelHealth({ onOpenIntegration }: ChannelHealthProps) {
               transition={{ duration: 0.34, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
               whileHover={{ x: 3 }}
               className={cn(
-                "flex items-center justify-between p-3 rounded-xl border transition-all backdrop-blur-md",
+                "flex items-center justify-between p-3 rounded-xl border transition-colors",
                 isConnected
                   ? "bg-white/[0.05] border-white/[0.12] hover:border-emerald-400/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
                   : "bg-white/[0.025] border-white/[0.06] hover:border-white/[0.15] opacity-80 hover:opacity-100"

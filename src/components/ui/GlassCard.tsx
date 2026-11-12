@@ -6,7 +6,7 @@ import { cn } from "../../lib/utils";
 import { cardHoverGlow } from "../../lib/motionVariants";
 
 export interface GlassCardProps extends Omit<HTMLMotionProps<"div">, "children"> {
-  variant?: "default" | "obsidian" | "focus" | "hero" | "mist" | "liquid";
+  variant?: "default" | "obsidian" | "focus" | "hero" | "mist" | "liquid" | "subtle" | "premium" | "focal";
   hoverable?: boolean;
   hover?: boolean;
   glow?: boolean;
@@ -38,12 +38,15 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
     const enableSpotlight = spotlight ?? isHoverable;
 
     const variants = {
-      default: "glass-panel liquid-glass",
-      obsidian: "glass-card-obsidian liquid-glass",
-      focus: "glass-focus liquid-glass",
-      hero: "glass-hero liquid-glass",
+      default: "glass-panel",
+      obsidian: "glass-card-obsidian",
+      focus: "glass-focus",
+      hero: "glass-hero",
       mist: "glass-mist",
       liquid: "liquid-glass",
+      subtle: "glass-subtle",
+      premium: "glass-card-obsidian",
+      focal: "glass-hero",
     };
 
     const paddings = {

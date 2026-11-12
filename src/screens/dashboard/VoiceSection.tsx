@@ -8,6 +8,7 @@ import { type Call } from "../../store/authStore";
 import { useVoiceStore } from "../../store/voiceStore";
 import { useAgentStore } from "../../store/agentStore";
 import { cn } from "../../lib/utils";
+import { useIsDocumentVisible } from "../../hooks/useMotionVisibility";
 
 export function VoiceSection() {
   const { calls, addCall, fetchCalls } = useVoiceStore();
@@ -32,6 +33,8 @@ export function VoiceSection() {
   const simIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [simMemory, setSimMemory] = useState<{ key: string; value: string }[]>([]);
 
+  const isVisible = useIsDocumentVisible();
+
   // Fetch calls on load
   useEffect(() => {
     fetchCalls();
@@ -46,9 +49,9 @@ export function VoiceSection() {
     }
   }, [calls, selectedCallId]);
 
-  // Audio Playback Simulation Logic
+  // Audio Playback Simulation Logic - paused when tab is hidden
   useEffect(() => {
-    if (isPlaying && selectedCall) {
+    if (isPlaying && selectedCall && isVisible) {
       const duration = selectedCall.durationSeconds || 60;
       const step = 100 / duration; // % progress per second
       
@@ -79,7 +82,7 @@ export function VoiceSection() {
     return () => {
       if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
     };
-  }, [isPlaying, selectedCall]);
+  }, [isPlaying, selectedCall, isVisible]);
 
   // Reset progress when changing selected call
   useEffect(() => {
@@ -312,7 +315,7 @@ export function VoiceSection() {
 
       {/* Analytics widgets grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-4 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+        <div className="glass-card-obsidian glass-lift border border-emerald-500/[0.12] rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500" />
           <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Voice Traffic</span>
           <div className="flex items-end justify-between mt-3">
@@ -324,7 +327,7 @@ export function VoiceSection() {
           </div>
         </div>
 
-        <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-4 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+        <div className="glass-card-obsidian glass-lift border border-emerald-500/[0.12] rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all duration-500" />
           <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Avg Call Duration</span>
           <div className="flex items-end justify-between mt-3">
@@ -335,7 +338,7 @@ export function VoiceSection() {
           </div>
         </div>
 
-        <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-4 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+        <div className="glass-card-obsidian glass-lift border border-emerald-500/[0.12] rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-all duration-500" />
           <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">AI Agent Answer Rate</span>
           <div className="flex items-end justify-between mt-3">
@@ -346,7 +349,7 @@ export function VoiceSection() {
           </div>
         </div>
 
-        <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-4 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+        <div className="glass-card-obsidian glass-lift border border-emerald-500/[0.12] rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all duration-500" />
           <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Positive Call Sentiment</span>
           <div className="flex items-end justify-between mt-3">
@@ -365,7 +368,7 @@ export function VoiceSection() {
         <div className="xl:col-span-5 flex flex-col space-y-4">
           
           {/* Controls box */}
-          <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-4 space-y-3 shadow-2xl">
+          <div className="glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl p-4 space-y-3">
             <div className="relative">
               <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -415,7 +418,7 @@ export function VoiceSection() {
           {/* Calls List cards container */}
           <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 console-scroll">
             {filteredCalls.length === 0 ? (
-              <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-8 text-center text-zinc-500 shadow-2xl">
+              <div className="glass-card-obsidian border border-white/10 rounded-xl p-8 text-center text-zinc-400 shadow-2xl">
                 <AlertCircle className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
                 <span className="text-xs">No calls match your filter settings</span>
               </div>
@@ -430,7 +433,7 @@ export function VoiceSection() {
                       "p-4 rounded-xl border transition-all cursor-pointer select-none relative group",
                       isActive
                         ? "bg-emerald-500/[0.02] border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.02)]"
-                        : "bg-[#0c0c0c] border-white/5 hover:border-white/10 hover:bg-white/[0.01]"
+                        : "glass-panel border-white/10 hover:border-white/20 hover:bg-white/[0.04]"
                     )}
                   >
                     {/* Active highlight line */}
@@ -490,7 +493,7 @@ export function VoiceSection() {
         {/* Right column: Audio Playback, transcript and call summary details */}
         <div className="xl:col-span-7">
           {selectedCall ? (
-            <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-6 space-y-6 shadow-2xl relative overflow-hidden">
+            <div className="glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl p-6 space-y-6 relative overflow-hidden">
               
               {/* Header metadata */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
@@ -690,7 +693,7 @@ export function VoiceSection() {
 
             </div>
           ) : (
-            <div className="bg-[#0c0c0c] border border-white/5 rounded-xl p-12 text-center text-zinc-500 shadow-2xl h-96 flex flex-col items-center justify-center">
+            <div className="glass-card-obsidian border border-white/10 rounded-xl p-12 text-center text-zinc-400 shadow-2xl h-96 flex flex-col items-center justify-center">
               <Phone className="w-12 h-12 text-zinc-700 mb-3 animate-pulse" />
               <h3 className="text-sm font-bold text-white mb-1">No Call Selected</h3>
               <p className="text-xs max-w-xs mx-auto">Select a call log from the left sidebar panel to review details, audio timelines, and transcripts.</p>
@@ -705,7 +708,7 @@ export function VoiceSection() {
       {/* ──────────────────────────────────────────────────────── */}
       {isSimulating && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-[#090909] border border-white/10 rounded-2xl w-full max-w-xl shadow-[0_0_50px_rgba(16,185,129,0.15)] relative overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="glass-card-obsidian border border-emerald-500/20 rounded-2xl w-full max-w-xl shadow-[0_0_50px_rgba(16,185,129,0.18)] relative overflow-hidden flex flex-col max-h-[90vh]">
             
             {/* Glow gradient header */}
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-indigo-500 to-emerald-500" />

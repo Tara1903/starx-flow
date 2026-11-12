@@ -28,6 +28,7 @@ import {
   Presentation
 } from "lucide-react";
 import { GlassPanel } from "../../../components/ui/GlassPanel";
+import { useIsDocumentVisible } from "../../../hooks/useMotionVisibility";
 
 
 export function PresentationViewerClient() {
@@ -54,9 +55,11 @@ export function PresentationViewerClient() {
 
   // Chat simulator animation trigger state
   const [chatKey, setChatKey] = useState(0);
+  const [bookingConfirmed, setBookingConfirmed] = useState(false);
 
   const viewerRef = useRef<HTMLDivElement>(null);
   const playTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isVisible = useIsDocumentVisible();
 
   // Deck definitions
   const isReceptionistDeck = deckId === "ai-receptionist";
@@ -68,9 +71,9 @@ export function PresentationViewerClient() {
 
   const totalSlides = 4;
 
-  // Handle slide autoplay
+  // Handle slide autoplay - paused when tab is hidden
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && isVisible) {
       playTimerRef.current = setInterval(() => {
         setCurrentSlide((prev) => (prev + 1) % totalSlides);
       }, 6000);
@@ -80,7 +83,7 @@ export function PresentationViewerClient() {
     return () => {
       if (playTimerRef.current) clearInterval(playTimerRef.current);
     };
-  }, [isPlaying]);
+  }, [isPlaying, isVisible]);
 
   // Sync fullscreen change states
   useEffect(() => {
@@ -608,11 +611,15 @@ export function PresentationViewerClient() {
                           <span className="font-mono">12 / 29</span>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => alert("Secure payment form preview. Live transactions process via Stripe Connect API.")}
-                        className="bg-emerald-500 text-black font-black text-[11px] py-1.5 rounded hover:bg-emerald-400 transition-colors uppercase mt-1 w-full"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBookingConfirmed(true);
+                          setTimeout(() => setBookingConfirmed(false), 3000);
+                        }}
+                        className="bg-emerald-500 text-black font-black text-[11px] py-1.5 rounded hover:bg-emerald-400 transition-colors uppercase mt-1 w-full cursor-pointer"
                       >
-                        Submit Secure Booking
+                        {bookingConfirmed ? "Deposit Authorized (Preview)" : "Submit Secure Booking"}
                       </button>
                     </div>
                     <button
@@ -719,7 +726,7 @@ export function PresentationViewerClient() {
   return (
     <>
       
-      <div className="pt-32 lg:pt-36 pb-12 min-h-screen bg-black text-white flex flex-col justify-between" ref={viewerRef}>
+      <div className="pt-32 lg:pt-36 pb-12 min-h-screen bg-transparent text-white flex flex-col justify-between" ref={viewerRef}>
       {/* Dynamic Slide Background mesh */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] atmo-glow atmo-glow-emerald opacity-5" />

@@ -19,7 +19,7 @@ export function SetupHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-[#050505]/80 backdrop-filter backdrop-blur-lg">
+    <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] glass-panel">
       <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-4 sm:px-6 lg:px-8 gap-8">
         
         {/* Left: Branding */}

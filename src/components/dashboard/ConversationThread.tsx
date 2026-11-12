@@ -150,7 +150,7 @@ export function ConversationThread() {
 
   return (
     <div className="flex-1 flex h-full min-w-0">
-      <div className="flex-1 flex flex-col h-full bg-[#050505] relative select-none">
+      <div className="flex-1 flex flex-col h-full bg-transparent relative select-none min-w-0">
         {/* Thread Header Bar */}
         <div className="px-5 py-4 border-b border-white/5 bg-white/[0.005] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -190,7 +190,7 @@ export function ConversationThread() {
             <select
               value={activeThread.priority || 'medium'}
               onChange={(e) => handlePriorityChange(e.target.value as any)}
-              className="bg-[#0a0a0a] border border-white/10 text-[10px] font-semibold text-zinc-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-emerald-500/30 transition-all select-none"
+              className="glass-input text-[10px] font-semibold text-zinc-200 rounded-lg px-2.5 py-1.5 select-none"
             >
               <option value="low">Low Priority</option>
               <option value="medium">Medium Priority</option>
@@ -202,7 +202,7 @@ export function ConversationThread() {
             <select
               value={activeThread.status}
               onChange={(e) => handleStatusChange(e.target.value as ConversationThread["status"])}
-              className="bg-[#0a0a0a] border border-white/10 text-[10px] font-semibold text-zinc-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-emerald-500/30 transition-all select-none"
+              className="glass-input text-[10px] font-semibold text-zinc-200 rounded-lg px-2.5 py-1.5 select-none"
             >
               <option value="active">Active Triage</option>
               <option value="needs_attention">Needs Human</option>
@@ -357,7 +357,7 @@ export function ConversationThread() {
                   : "Type custom text to prompt AI reply..."
               }
               className={cn(
-                "flex-1 bg-[#0a0a0a] border rounded-xl px-4 py-3.5 text-xs text-white outline-none transition-colors",
+                "glass-input flex-1 rounded-xl px-4 py-3.5 text-xs text-white",
                 isInternalMode
                   ? "border-amber-500/30 focus:border-amber-500/60 placeholder-amber-400/40"
                   : "border-white/10 focus:border-emerald-500/30"

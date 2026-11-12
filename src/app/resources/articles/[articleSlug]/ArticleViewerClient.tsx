@@ -299,7 +299,7 @@ export function ArticleViewerClient() {
   return (
     <>
       
-      <div className="pt-32 lg:pt-40 pb-20 min-h-screen relative overflow-hidden bg-black text-white">
+      <div className="pt-32 lg:pt-40 pb-20 min-h-screen relative overflow-hidden bg-transparent text-white">
       {/* Scroll Reading Progress Bar */}
       <div 
         className="fixed top-0 left-0 h-1 bg-emerald-500 z-50 transition-all duration-75"

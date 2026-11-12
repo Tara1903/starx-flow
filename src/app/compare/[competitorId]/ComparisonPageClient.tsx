@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   Check,
   X,
@@ -17,15 +18,17 @@ import {
   Layers,
   AlertCircle
 } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
 import { comparisonData } from './comparisonData';
 import { useUIStore } from '@/store/uiStore';
+import { ScrollReveal } from '@/components/ui/ScrollReveal';
+import { GlassButton } from '@/components/ui/GlassButton';
+import { MOTION_DURATION, MOTION_EASE } from '@/lib/motionVariants';
 
 export function ComparisonPageClient() {
   const { competitorId } = useParams<{ competitorId: string }>();
   const openSignup = useUIStore((state) => state.openSignup);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const prefersReduced = useReducedMotion();
 
   if (!competitorId || !comparisonData[competitorId]) {
     if (typeof window !== "undefined") window.location.href = "/";
@@ -36,9 +39,7 @@ export function ComparisonPageClient() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans selection:bg-emerald-500/30">
-      <Navbar />
-
-      <main id="main-content" className="flex-1 pt-32 pb-24">
+      <div className="flex-1 pt-32 pb-24">
         <div className="max-w-7xl mx-auto px-6">
           
           {/* Breadcrumbs */}
@@ -59,7 +60,7 @@ export function ComparisonPageClient() {
           </nav>
 
           {/* Header */}
-          <div className="text-center max-w-4xl mx-auto mb-16">
+          <ScrollReveal direction="up" className="text-center max-w-4xl mx-auto mb-16">
             <div className="inline-flex flex-wrap items-center justify-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs md:text-sm font-semibold tracking-wide mb-6">
               <Sparkles className="w-4 h-4" />
               <span>Verified Competitor Analysis</span>
@@ -107,13 +108,16 @@ export function ComparisonPageClient() {
 
             {/* Action CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
+              <GlassButton
+                size="lg"
+                variant="primary"
+                magnetic
                 onClick={openSignup}
-                className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                className="w-full sm:w-auto"
               >
                 Start 14-Day Free Trial
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </GlassButton>
               <Link
                 href="/pricing"
                 className="w-full sm:w-auto px-8 py-4 rounded-full border border-zinc-700 hover:border-zinc-500 text-white font-medium transition-all text-center bg-white/5 hover:bg-white/10"
@@ -121,7 +125,7 @@ export function ComparisonPageClient() {
                 Explore Flat-Rate Plans ($29/mo)
               </Link>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Product Overview & Audience Profiles */}
           {data.productOverview && (
@@ -286,11 +290,21 @@ export function ComparisonPageClient() {
                         }`}
                       />
                     </button>
-                    {openFaq === idx && (
-                      <div className="px-6 pb-6 text-zinc-300 text-base leading-relaxed border-t border-white/5 pt-4">
-                        {faq.answer}
-                      </div>
-                    )}
+                    <AnimatePresence initial={false}>
+                      {openFaq === idx && (
+                        <motion.div
+                          initial={prefersReduced ? { opacity: 1 } : { height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={prefersReduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                          transition={{ duration: MOTION_DURATION.card, ease: MOTION_EASE.premium }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-6 pb-6 text-zinc-300 text-base leading-relaxed border-t border-white/5 pt-4">
+                            {faq.answer}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 ))}
               </div>
@@ -340,13 +354,16 @@ export function ComparisonPageClient() {
                 {data.verdict}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button
+                <GlassButton
+                  size="lg"
+                  variant="primary"
+                  magnetic
                   onClick={openSignup}
-                  className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                  className="w-full sm:w-auto"
                 >
                   Start 14-Day Free Trial
                   <ArrowRight className="w-4 h-4" />
-                </button>
+                </GlassButton>
                 <Link
                   href="/pricing"
                   className="w-full sm:w-auto px-8 py-4 rounded-full border border-zinc-700 hover:border-zinc-500 text-white font-medium transition-all text-center bg-white/5 hover:bg-white/10"
@@ -376,9 +393,7 @@ export function ComparisonPageClient() {
           </div>
 
         </div>
-      </main>
-
-      <Footer />
+      </div>
     </div>
   );
 }

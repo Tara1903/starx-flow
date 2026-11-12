@@ -34,7 +34,7 @@ export function ExecutionConsole({ logs, onClear }: ExecutionConsoleProps) {
   }, [logs.length]);
 
   return (
-    <div className="glass-card rounded-xl overflow-hidden select-none">
+    <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] overflow-hidden select-none">
       {/* Console Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/[0.01]">
         <div className="flex items-center gap-2">

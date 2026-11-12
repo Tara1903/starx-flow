@@ -157,7 +157,7 @@ export function AgentsSection() {
       case 'memory': return 'text-sky-400 border-sky-500/20 bg-sky-500/5';
       case 'response': return 'text-amber-400 border-amber-500/20 bg-amber-500/5';
       case 'success': return 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5';
-      default: return 'text-zinc-400 border-white/5 bg-[#0a0a0a]';
+      default: return 'text-zinc-400 border-white/10 bg-white/[0.03]';
     }
   };
 
@@ -165,7 +165,7 @@ export function AgentsSection() {
     <div className="space-y-6 animate-[fade-in_0.4s_ease-out] select-none pb-24">
       {/* Tab Navigation header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 select-none border-b border-white/5 pb-4">
-        <div className="flex items-center gap-1 bg-[#0c0c0c] border border-white/5 p-1 rounded-full w-full sm:w-auto">
+        <div className="flex items-center gap-1 glass-mist p-1 rounded-full w-full sm:w-auto">
           <button
             onClick={() => setActiveTab('agents')}
             className={cn(
@@ -204,7 +204,7 @@ export function AgentsSection() {
           </button>
         </div>
 
-        <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest flex items-center gap-1.5 bg-[#0a0a0a] border border-white/5 px-3 py-1.5 rounded-full self-start select-none">
+        <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest flex items-center gap-1.5 glass-mist px-3 py-1.5 rounded-full self-start select-none">
           <Brain className="w-3.5 h-3.5 text-emerald-400" />
           <span>Multi-Agent Cognitive System</span>
         </div>
@@ -303,7 +303,7 @@ export function AgentsSection() {
       {activeTab === 'memory' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* Add cognitive entry */}
-          <div className="glass-card rounded-2xl p-5 border border-white/5 bg-[#080808]/80 space-y-4">
+          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-4">
             <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-3.5">
               <Plus className="w-4 h-4 text-emerald-400" />
               Write Memory Entry
@@ -315,7 +315,7 @@ export function AgentsSection() {
                 <select
                   value={newLead}
                   onChange={(e) => setNewLead(e.target.value)}
-                  className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
+                  className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
                 >
                   <option value="lead-1">Sarah Jenkins (WhatsApp Lead)</option>
                   <option value="lead-2">Robert Miller (SMS Caller)</option>
@@ -330,7 +330,7 @@ export function AgentsSection() {
                   value={newKey}
                   onChange={(e) => setNewKey(e.target.value)}
                   placeholder="e.g. preferred_stylist"
-                  className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors"
+                  className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors"
                 />
               </div>
 
@@ -341,7 +341,7 @@ export function AgentsSection() {
                   value={newValue}
                   onChange={(e) => setNewValue(e.target.value)}
                   placeholder="e.g. Sarah (Likes warm tea)"
-                  className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors"
+                  className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors"
                 />
               </div>
 
@@ -357,7 +357,7 @@ export function AgentsSection() {
           </div>
 
           {/* Cognitive values database display */}
-          <div className="lg:col-span-2 glass-card rounded-2xl p-5 border border-white/5 bg-[#080808]/80 space-y-4 min-h-[400px]">
+          <div className="lg:col-span-2 glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-4 min-h-[400px]">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div>
                 <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -408,7 +408,7 @@ export function AgentsSection() {
                         <td className="py-3 text-sky-400 font-mono text-[10px]">{mem.key}</td>
                         <td className="py-3 text-zinc-200 select-all font-medium">{mem.value}</td>
                         <td className="py-3 text-right pr-2 select-none">
-                          <span className="text-[9px] font-bold text-zinc-500 border border-white/5 bg-[#0f0f0f] rounded-full px-2 py-0.5">
+                          <span className="text-[9px] font-bold text-zinc-400 border border-white/10 bg-white/[0.04] rounded-full px-2 py-0.5">
                             {mem.key.includes('time') || mem.key.includes('slot') ? 'Booking Agent' : 
                              mem.key.includes('billing') || mem.key.includes('price') ? 'Sales Agent' : 'Receptionist Agent'}
                           </span>
@@ -427,7 +427,7 @@ export function AgentsSection() {
       {activeTab === 'sandbox' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start select-none">
           {/* Query prompt input panel */}
-          <div className="glass-card rounded-2xl p-5 border border-white/5 bg-[#080808]/80 space-y-4">
+          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-4">
             <div>
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Multi-Agent Sandbox</h3>
               <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
@@ -447,7 +447,7 @@ export function AgentsSection() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setSandboxQuery("I want to schedule a booking tomorrow at 2:00 PM but I have a complaint about invoice #1204.")}
-                  className="bg-[#111] hover:bg-[#151515] border border-white/5 rounded-xl px-3 py-2 text-[10px] text-zinc-400 font-bold transition-all cursor-pointer"
+                  className="glass-mist hover:border-emerald-500/30 rounded-xl px-3 py-2 text-[10px] text-zinc-300 font-bold transition-all cursor-pointer"
                 >
                   Load Sample Query
                 </button>
@@ -474,7 +474,7 @@ export function AgentsSection() {
                   <MessageSquare className="w-3.5 h-3.5" />
                   Combined Response Output
                 </span>
-                <p className="bg-[#0c0c0c] border border-emerald-500/10 rounded-xl p-3.5 text-xs text-zinc-200 leading-relaxed select-text font-medium">
+                <p className="bg-white/[0.03] border border-emerald-500/15 rounded-xl p-3.5 text-xs text-zinc-200 leading-relaxed select-text font-medium">
                   {simFinalResponse}
                 </p>
               </motion.div>
@@ -482,7 +482,7 @@ export function AgentsSection() {
           </div>
 
           {/* Simulation tracing terminal */}
-          <div className="glass-card rounded-2xl p-5 border border-white/5 bg-[#080808]/80 flex flex-col min-h-[500px]">
+          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] flex flex-col min-h-[500px]">
             <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-3">
               <RefreshCw className={cn("w-4 h-4 text-purple-400", isSimulating && "animate-spin")} />
               Orchestration Execution Logs
@@ -538,7 +538,7 @@ export function AgentsSection() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col"
+              className="glass-card-obsidian border border-emerald-500/20 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col"
             >
               {/* Modal Header */}
               <div className="px-6 py-4.5 border-b border-white/5 flex items-center justify-between">
@@ -554,7 +554,7 @@ export function AgentsSection() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-[#111] border border-white/5 px-2.5 py-1 rounded-full select-none">
+                <div className="flex items-center gap-2 glass-mist px-2.5 py-1 rounded-full select-none">
                   <span className="text-[9px] font-bold text-zinc-500 uppercase">Agent Status</span>
                   <button
                     onClick={() => setEditIsActive(!editIsActive)}
@@ -569,7 +569,7 @@ export function AgentsSection() {
               <div className="p-6 space-y-4 max-h-[420px] overflow-y-auto console-scroll">
                 <div>
                   <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Description</label>
-                  <p className="text-xs text-zinc-500 leading-relaxed select-text bg-[#0c0c0c] border border-white/5 rounded-xl p-3.5 font-medium">
+                  <p className="text-xs text-zinc-400 leading-relaxed select-text bg-white/[0.03] border border-white/10 rounded-xl p-3.5 font-medium">
                     {editingAgent.description}
                   </p>
                 </div>
@@ -581,7 +581,7 @@ export function AgentsSection() {
                     onChange={(e) => setEditPrompt(e.target.value)}
                     rows={4}
                     placeholder="Tune the system prompt instructions for this agent..."
-                    className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors resize-none"
+                    className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors resize-none"
                   />
                 </div>
 
@@ -605,7 +605,7 @@ export function AgentsSection() {
                             "flex items-center justify-between px-3.5 py-3.5 rounded-xl border text-left text-xs font-bold transition-all",
                             hasPerm 
                               ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-300"
-                              : "bg-[#111] border-white/5 text-zinc-500 hover:text-zinc-300 hover:bg-[#151515]"
+                              : "bg-white/[0.03] border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06]"
                           )}
                         >
                           <span>{item.label}</span>
@@ -623,7 +623,7 @@ export function AgentsSection() {
               </div>
 
               {/* Modal Footer */}
-              <div className="px-6 py-4 bg-[#0a0a0a] border-t border-white/5 flex items-center justify-end gap-3.5">
+              <div className="px-6 py-4 bg-white/[0.02] border-t border-white/10 flex items-center justify-end gap-3.5">
                 <button
                   onClick={() => setEditingAgent(null)}
                   className="text-xs font-bold text-zinc-500 hover:text-zinc-300 transition-colors"

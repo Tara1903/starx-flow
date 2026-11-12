@@ -8,6 +8,8 @@ export interface CursorPointerState {
   x: number;
   y: number;
   hasMoved: boolean;
+  wake?: () => void;
+  onRingFrame?: (ringX: number, ringY: number) => void;
 }
 
 interface CustomCursorProps {
@@ -89,16 +91,34 @@ export function CustomCursor({ pointerRef }: CustomCursorProps) {
     if (!isActive) {
       physicsRef.current.initialized = false;
       physicsRef.current.lastFrameMs = 0;
+      pointerRef.current.wake = undefined;
       resetCursorTelemetry();
       return;
     }
 
     let rafId = 0;
+    let isRunning = false;
+    let lastDotTransform = '';
+    let lastRingTransform = '';
+    let lastReportedRingX = Number.NaN;
+    let lastReportedRingY = Number.NaN;
+    let settledTelemetrySent = false;
+
+    const scheduleTick = () => {
+      if (isRunning) return;
+      isRunning = true;
+      // Reset frame delta timestamp on wake from dormant state so the first step uses 1/60s cleanly
+      physicsRef.current.lastFrameMs = 0;
+      settledTelemetrySent = false;
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    pointerRef.current.wake = scheduleTick;
 
     const tick = (now: number) => {
+      isRunning = false;
       const state = physicsRef.current;
       const pointer = pointerRef.current;
-      const liveConfig = getActivePhysicsConfig();
       const rt = runtimeStateRef.current;
 
       const rawDt = state.lastFrameMs > 0 ? (now - state.lastFrameMs) / 1000 : 1 / 60;
@@ -107,75 +127,95 @@ export function CustomCursor({ pointerRef }: CustomCursorProps) {
       const instantFps = dt > 0 ? Math.min(240, 1 / dt) : 60;
       state.fpsEstimate = state.fpsEstimate * 0.9 + instantFps * 0.1;
 
-      if (pointer.hasMoved) {
-        // Layer 1: Inner dot tracks physical mouse coordinates immediately (0ms delay)
-        const dotX = pointer.x;
-        const dotY = pointer.y;
+      if (!pointer.hasMoved) {
+        return;
+      }
 
-        const responsiveness = Math.max(
-          0.15,
-          Math.min(2.0, liveConfig.followResponsiveness ?? 0.72),
-        );
+      const liveConfig = getActivePhysicsConfig();
+      // Layer 1: Inner dot tracks physical mouse coordinates immediately (0ms delay)
+      const dotX = pointer.x;
+      const dotY = pointer.y;
 
-        if (!state.initialized || rt.isReducedMotion) {
+      const responsiveness = Math.max(
+        0.15,
+        Math.min(2.0, liveConfig.followResponsiveness ?? 0.72),
+      );
+
+      let settled = false;
+      if (!state.initialized || rt.isReducedMotion) {
+        state.ringX = dotX;
+        state.ringY = dotY;
+        state.velX = 0;
+        state.velY = 0;
+        state.initialized = true;
+        settled = true;
+      } else {
+        // Layer 2: Outer ring chases ONLY inner dot coordinates via frame-rate-independent
+        // damped spring with responsiveness scaling & progressive soft separation tether.
+        let remaining = dt * responsiveness;
+        const stiffness = Math.max(30, liveConfig.outerStiffness);
+        const damping = Math.max(4, liveConfig.outerDamping);
+        const maxSep = Math.max(16, liveConfig.maxSeparationPx ?? 56);
+        const softStart = maxSep * 0.65;
+        const softBand = Math.max(8, maxSep - softStart);
+
+        while (remaining > 0) {
+          const step = Math.min(remaining, SUBSTEP_SEC);
+          const dx = dotX - state.ringX;
+          const dy = dotY - state.ringY;
+          const dist = Math.hypot(dx, dy);
+
+          let kMult = 1;
+          if (dist > softStart) {
+            const excessRatio = (dist - softStart) / softBand;
+            kMult = Math.min(4.5, 1 + 2.5 * excessRatio * excessRatio);
+          }
+          const cMult = Math.sqrt(kMult);
+
+          const ax = dx * (stiffness * kMult) - state.velX * (damping * cMult);
+          const ay = dy * (stiffness * kMult) - state.velY * (damping * cMult);
+
+          state.velX += ax * step;
+          state.velY += ay * step;
+          state.ringX += state.velX * step;
+          state.ringY += state.velY * step;
+          remaining -= step;
+        }
+
+        const residualDist = Math.hypot(dotX - state.ringX, dotY - state.ringY);
+        const residualSpeed = Math.hypot(state.velX, state.velY);
+        if (residualDist < SETTLE_EPSILON && residualSpeed < SETTLE_EPSILON) {
           state.ringX = dotX;
           state.ringY = dotY;
           state.velX = 0;
           state.velY = 0;
-          state.initialized = true;
-        } else {
-          // Layer 2: Outer ring chases ONLY inner dot coordinates via frame-rate-independent
-          // damped spring with responsiveness scaling & progressive soft separation tether.
-          let remaining = dt * responsiveness;
-          const stiffness = Math.max(30, liveConfig.outerStiffness);
-          const damping = Math.max(4, liveConfig.outerDamping);
-          const maxSep = Math.max(16, liveConfig.maxSeparationPx ?? 56);
-          const softStart = maxSep * 0.65;
-          const softBand = Math.max(8, maxSep - softStart);
-
-          while (remaining > 0) {
-            const step = Math.min(remaining, SUBSTEP_SEC);
-            const dx = dotX - state.ringX;
-            const dy = dotY - state.ringY;
-            const dist = Math.hypot(dx, dy);
-
-            let kMult = 1;
-            if (dist > softStart) {
-              const excessRatio = (dist - softStart) / softBand;
-              kMult = Math.min(4.5, 1 + 2.5 * excessRatio * excessRatio);
-            }
-            const cMult = Math.sqrt(kMult);
-
-            const ax = dx * (stiffness * kMult) - state.velX * (damping * cMult);
-            const ay = dy * (stiffness * kMult) - state.velY * (damping * cMult);
-
-            state.velX += ax * step;
-            state.velY += ay * step;
-            state.ringX += state.velX * step;
-            state.ringY += state.velY * step;
-            remaining -= step;
-          }
-
-          const residualDist = Math.hypot(dotX - state.ringX, dotY - state.ringY);
-          const residualSpeed = Math.hypot(state.velX, state.velY);
-          if (residualDist < SETTLE_EPSILON && residualSpeed < SETTLE_EPSILON) {
-            state.ringX = dotX;
-            state.ringY = dotY;
-            state.velX = 0;
-            state.velY = 0;
-          }
+          settled = true;
         }
+      }
 
-        const dotEl = dotRef.current;
-        if (dotEl) {
-          dotEl.style.transform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%) scale(${rt.dotScale})`;
-        }
+      const nextDotTransform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%) scale(${rt.dotScale})`;
+      const dotEl = dotRef.current;
+      if (dotEl && nextDotTransform !== lastDotTransform) {
+        dotEl.style.transform = nextDotTransform;
+        lastDotTransform = nextDotTransform;
+      }
 
-        const ringEl = ringRef.current;
-        if (ringEl) {
-          ringEl.style.transform = `translate3d(${state.ringX}px, ${state.ringY}px, 0) translate(-50%, -50%) scale(${rt.ringScale})`;
-        }
+      const rx = settled ? dotX : Math.round(state.ringX * 100) / 100;
+      const ry = settled ? dotY : Math.round(state.ringY * 100) / 100;
+      const nextRingTransform = `translate3d(${rx}px, ${ry}px, 0) translate(-50%, -50%) scale(${rt.ringScale})`;
+      const ringEl = ringRef.current;
+      if (ringEl && nextRingTransform !== lastRingTransform) {
+        ringEl.style.transform = nextRingTransform;
+        lastRingTransform = nextRingTransform;
+      }
 
+      if (rx !== lastReportedRingX || ry !== lastReportedRingY) {
+        lastReportedRingX = rx;
+        lastReportedRingY = ry;
+        pointer.onRingFrame?.(rx, ry);
+      }
+
+      if (!settled || !settledTelemetrySent) {
         writeCursorTelemetry({
           dotX,
           dotY,
@@ -183,22 +223,52 @@ export function CustomCursor({ pointerRef }: CustomCursorProps) {
           ringY: state.ringY,
           ringVelocityX: state.velX * responsiveness,
           ringVelocityY: state.velY * responsiveness,
-          lagDistancePx: Math.hypot(dotX - state.ringX, dotY - state.ringY),
+          lagDistancePx: settled ? 0 : Math.hypot(dotX - state.ringX, dotY - state.ringY),
           mode: rt.mode,
           label: rt.label,
           activeVariant: rt.activeVariant,
           fpsEstimate: Math.round(state.fpsEstimate),
         });
+        if (settled) {
+          settledTelemetrySent = true;
+        }
       }
 
-      rafId = window.requestAnimationFrame(tick);
+      if (!settled) {
+        isRunning = true;
+        rafId = window.requestAnimationFrame(tick);
+      }
     };
 
-    rafId = window.requestAnimationFrame(tick);
+    if (pointerRef.current.hasMoved) {
+      scheduleTick();
+    }
+
     return () => {
-      window.cancelAnimationFrame(rafId);
+      pointerRef.current.wake = undefined;
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
+      isRunning = false;
     };
   }, [isActive, pointerRef]);
+
+  useEffect(() => {
+    if (isActive && pointerRef.current.hasMoved) {
+      pointerRef.current.wake?.();
+    }
+  }, [
+    isActive,
+    pointerRef,
+    isVisible,
+    isPressed,
+    mode,
+    label,
+    activeVariant,
+    isNativeFallback,
+    isReducedMotion,
+    playgroundOverrides,
+  ]);
 
   if (!isActive) {
     return null;
@@ -212,8 +282,8 @@ export function CustomCursor({ pointerRef }: CustomCursorProps) {
       : mode === 'disabled'
         ? 'none'
         : mode === 'hover' || mode === 'label'
-          ? `0 0 ${Math.round(18 * glowScalar)}px rgba(16, 185, 129, ${0.22 * glowScalar})`
-          : `0 0 ${Math.round(14 * glowScalar)}px rgba(16, 185, 129, ${0.16 * glowScalar})`;
+          ? `0 0 ${Math.round(16 * glowScalar)}px rgba(16, 185, 129, ${0.18 * glowScalar})`
+          : `0 0 ${Math.round(12 * glowScalar)}px rgba(16, 185, 129, ${0.14 * glowScalar})`;
 
   return (
     <div

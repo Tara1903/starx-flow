@@ -220,21 +220,21 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
               <label className="text-xs font-medium text-zinc-400">Twilio Account SID</label>
               <input 
                 type="text" name="twilio_sid" value={formData.twilio_sid || ''} onChange={handleChange} required
-                placeholder="ACXXXXXXXXXXXXXXXXX" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500/50"
+                placeholder="ACXXXXXXXXXXXXXXXXX" className="w-full glass-input rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500/50"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">Twilio Auth Token</label>
               <input 
                 type="password" name="twilio_token" value={formData.twilio_token || ''} onChange={handleChange} required
-                placeholder="****************" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500/50"
+                placeholder="****************" className="w-full glass-input rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500/50"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">Twilio Phone Number</label>
               <input 
                 type="text" name="twilio_phone" value={formData.twilio_phone || ''} onChange={handleChange} required
-                placeholder="+1234567890" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500/50"
+                placeholder="+1234567890" className="w-full glass-input rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500/50"
               />
             </div>
           </>
@@ -253,7 +253,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
                 </div>
               </div>
               <div className="relative group">
-                <pre className="bg-[#050505] p-4 rounded-lg overflow-x-auto text-[11px] text-zinc-300 font-mono border border-white/10 leading-relaxed">
+                <pre className="bg-black/45 p-4 rounded-lg overflow-x-auto text-[11px] text-zinc-300 font-mono border border-white/10 leading-relaxed">
                   <code>{chatSnippet}</code>
                 </pre>
                 <button 
@@ -273,7 +273,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
             <label className="text-xs font-medium text-zinc-400">API Key / Token</label>
             <input 
               type="password" name="api_key" value={formData.api_key || ''} onChange={handleChange} required
-              placeholder="Enter API Key" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-emerald-500/50"
+              placeholder="Enter API Key" className="glass-input w-full rounded-xl px-4 py-2.5 text-sm text-white"
             />
           </div>
         );
@@ -291,7 +291,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
       >
         <motion.div
           initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-          className="w-full max-w-md glass-panel rounded-2xl overflow-hidden"
+          className="w-full max-w-md glass-card-obsidian rounded-2xl border border-emerald-500/20 overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-white/5 bg-white/[0.02]">

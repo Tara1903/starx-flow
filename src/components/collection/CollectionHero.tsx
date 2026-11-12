@@ -12,11 +12,11 @@ export function CollectionHero({ activeCategory }: { activeCategory: string }) {
     <section className="relative w-full overflow-hidden pt-32 pb-16">
       {/* ── Atmospheric glow orbs ── */}
       <div
-        className="atmo-glow-emerald pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full opacity-30 blur-[140px]"
+        className="atmo-glow-emerald pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full opacity-35"
         aria-hidden
       />
       <div
-        className="atmo-glow-soft pointer-events-none absolute -bottom-24 right-1/4 h-[320px] w-[320px] rounded-full opacity-20 blur-[120px]"
+        className="atmo-glow-soft pointer-events-none absolute -bottom-24 right-1/4 h-[320px] w-[320px] rounded-full opacity-25"
         aria-hidden
       />
 

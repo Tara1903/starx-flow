@@ -461,7 +461,7 @@ export function WorkflowEditor() {
 
         <div className="flex items-center gap-3">
           {/* Active toggle */}
-          <div className="flex items-center gap-2 bg-[#0c0c0c] border border-white/5 px-3 py-1.5 rounded-full">
+          <div className="flex items-center gap-2 glass-mist px-3 py-1.5 rounded-full">
             <span className="text-[10px] font-bold text-zinc-500 uppercase">Status</span>
             <button
               onClick={() => setIsActive(!isActive)}
@@ -487,7 +487,7 @@ export function WorkflowEditor() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Left column: Configuration Panel */}
-        <div className="glass-panel rounded-2xl p-5 space-y-5 lg:col-span-1 border border-white/5 bg-[#080808]/80">
+        <div className="glass-card-obsidian rounded-2xl p-5 space-y-5 lg:col-span-1 border border-emerald-500/[0.12]">
           <div className="border-b border-white/5 pb-3">
             <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-emerald-400" />
@@ -503,7 +503,7 @@ export function WorkflowEditor() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Off-Hours SMS Triage"
-                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors"
+                className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors"
               />
             </div>
 
@@ -514,7 +514,7 @@ export function WorkflowEditor() {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
                 placeholder="What operational problem does this flow solve?"
-                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors resize-none"
+                className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors resize-none"
               />
             </div>
 
@@ -523,7 +523,7 @@ export function WorkflowEditor() {
               <select
                 value={channel}
                 onChange={(e) => setChannel(e.target.value as Workflow['channel'])}
-                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
+                className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
               >
                 <option value="WhatsApp">WhatsApp</option>
                 <option value="SMS">SMS (Missed Calls)</option>
@@ -538,7 +538,7 @@ export function WorkflowEditor() {
               <select
                 value={aiTone}
                 onChange={(e) => setAiTone(e.target.value as Workflow['aiTone'])}
-                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
+                className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
               >
                 <option value="Friendly">Friendly & Enthusiastic</option>
                 <option value="Professional">Polished & Direct</option>
@@ -554,7 +554,7 @@ export function WorkflowEditor() {
                 onChange={(e) => setCustomPrompt(e.target.value)}
                 rows={4}
                 placeholder="Give the AI receptionist instructions for conversations handled by this workflow..."
-                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors resize-none"
+                className="w-full glass-input rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors resize-none"
               />
             </div>
           </div>
@@ -564,7 +564,7 @@ export function WorkflowEditor() {
             <div className="grid grid-cols-1 gap-2">
               <button 
                 onClick={() => applyPreset("off_hours")}
-                className="text-left w-full bg-[#111] hover:bg-[#151515] border border-white/5 rounded-xl p-3 transition-colors group"
+                className="text-left w-full glass-mist hover:border-emerald-500/30 rounded-xl p-3 transition-colors group cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-zinc-200 group-hover:text-emerald-400 transition-colors">Off-Hours SMS Recovery</span>
@@ -575,7 +575,7 @@ export function WorkflowEditor() {
 
               <button 
                 onClick={() => applyPreset("review_booster")}
-                className="text-left w-full bg-[#111] hover:bg-[#151515] border border-white/5 rounded-xl p-3 transition-colors group"
+                className="text-left w-full glass-mist hover:border-emerald-500/30 rounded-xl p-3 transition-colors group cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-zinc-200 group-hover:text-emerald-400 transition-colors">Review Booster Invite</span>
@@ -586,7 +586,7 @@ export function WorkflowEditor() {
 
               <button 
                 onClick={() => applyPreset("escalate_negatives")}
-                className="text-left w-full bg-[#111] hover:bg-[#151515] border border-white/5 rounded-xl p-3 transition-colors group"
+                className="text-left w-full glass-mist hover:border-emerald-500/30 rounded-xl p-3 transition-colors group cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-zinc-200 group-hover:text-emerald-400 transition-colors">Urgent Complaint Alert</span>
@@ -600,7 +600,7 @@ export function WorkflowEditor() {
 
         {/* Right Column: Visual Builder Canvas */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="glass-panel rounded-2xl p-6 border border-white/5 bg-[#080808]/80 min-h-[550px] flex flex-col items-center">
+          <div className="glass-card-obsidian rounded-2xl p-6 border border-emerald-500/[0.12] min-h-[550px] flex flex-col items-center">
             
             <div className="w-full flex items-center justify-between border-b border-white/5 pb-4 mb-6 select-none">
               <div>
@@ -643,7 +643,7 @@ export function WorkflowEditor() {
                     )}
 
                     {/* Step Card */}
-                    <div className={`w-full glass-panel focus-within:glass-focus rounded-xl border relative transition-all bg-[#0d0d0d]/90 p-4 ${
+                    <div className={`w-full glass-panel focus-within:glass-focus rounded-xl border relative transition-all p-4 ${
                       isTrigger ? 'border-emerald-500/20 focus-within:border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.02)]' :
                       isCondition ? 'border-purple-500/20 focus-within:border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.02)]' :
                       'border-sky-500/20 focus-within:border-sky-500/40 shadow-[0_0_15px_rgba(14,165,233,0.02)]'

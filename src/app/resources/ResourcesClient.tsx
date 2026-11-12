@@ -19,6 +19,7 @@ import {
   Play,
   Pause
 } from "lucide-react";
+import { useIsDocumentVisible } from "../../hooks/useMotionVisibility";
 
 
 export function ResourcesClient() {
@@ -32,6 +33,7 @@ export function ResourcesClient() {
   const [videoPlaying, setVideoPlaying] = useState(true);
   const [videoTime, setVideoTime] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const isVisible = useIsDocumentVisible();
 
   const articles = [
     {
@@ -78,16 +80,16 @@ export function ResourcesClient() {
     },
   ];
 
-  // Simulated video playback scrubber ticking
+  // Simulated video playback scrubber ticking - paused when backgrounded
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isPlayerOpen && videoPlaying) {
+    if (isPlayerOpen && videoPlaying && isVisible) {
       interval = setInterval(() => {
         setVideoTime((prev) => (prev >= 120 ? 0 : prev + 1));
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isPlayerOpen, videoPlaying]);
+  }, [isPlayerOpen, videoPlaying, isVisible]);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();

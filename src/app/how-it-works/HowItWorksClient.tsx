@@ -17,6 +17,7 @@ import {
   Layers
 } from "lucide-react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { GlassButton } from "@/components/ui/GlassButton";
 import { useUIStore } from "@/store/uiStore";
 
 export function HowItWorksClient() {
@@ -261,12 +262,14 @@ sharing feedback on Google helps our local staff immensely: [Review-Link]"`,
 
         {/* Bottom CTA */}
         <div className="text-center max-w-2xl mx-auto">
-          <button
+          <GlassButton
+            size="lg"
+            variant="primary"
+            magnetic
             onClick={openSignup}
-            className="bg-emerald-500 text-black px-8 py-4 rounded-full text-base font-bold hover:bg-emerald-400 transition-all inline-flex items-center gap-2"
           >
             Deploy Your AI Front Desk <ArrowRight size={18} />
-          </button>
+          </GlassButton>
         </div>
 
       </div>

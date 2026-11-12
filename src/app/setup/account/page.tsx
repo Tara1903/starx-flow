@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'motion/react';
 
 import { useAuthStore } from '../../../store/authStore';
 import { useOnboardingStore } from '../../../store/onboardingStore';
@@ -116,11 +117,18 @@ export default function AccountStep() {
       />
 
       <form onSubmit={handleSubmit} className="space-y-5 mt-6 max-w-xl">
-        {errorMsg && (
-          <div className="p-3 rounded-lg border border-red-500/20 bg-red-500/5 text-xs text-red-400 font-medium animate-shake">
-            {errorMsg}
-          </div>
-        )}
+        <AnimatePresence>
+          {errorMsg && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              className="p-3 rounded-lg border border-red-500/20 bg-red-500/5 text-xs text-red-400 font-medium"
+            >
+              {errorMsg}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           
@@ -138,7 +146,7 @@ export default function AccountStep() {
                 placeholder="e.g. Alex Johnson"
                 required
                 disabled={isLoading || isSaved}
-                className="w-full glass-panel border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
+                className="glass-input w-full rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500"
               />
             </div>
           </div>
@@ -157,7 +165,7 @@ export default function AccountStep() {
                 placeholder="e.g. Glow Aesthetics"
                 required
                 disabled={isLoading || isSaved}
-                className="w-full glass-panel border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
+                className="glass-input w-full rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500"
               />
             </div>
           </div>
@@ -177,10 +185,10 @@ export default function AccountStep() {
                 value={formData.businessType}
                 onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}
                 disabled={isLoading || isSaved}
-                className="w-full glass-panel border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white outline-none transition-all focus:ring-1 focus:ring-emerald-500/20 appearance-none"
+                className="glass-input w-full rounded-xl py-3 pl-10 pr-4 text-sm text-white appearance-none"
               >
                 {industries.map((ind) => (
-                  <option key={ind} value={ind} className="bg-black text-white">
+                  <option key={ind} value={ind} className="bg-[#070d0b] text-white">
                     {ind}
                   </option>
                 ))}
@@ -201,7 +209,7 @@ export default function AccountStep() {
                 onChange={(e) => setFormData({ ...formData, businessPhone: e.target.value })}
                 placeholder="e.g. +1 (555) 019-2834"
                 disabled={isLoading || isSaved}
-                className="w-full glass-panel border border-white/[0.08] focus:border-emerald-500/50 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:ring-1 focus:ring-emerald-500/20"
+                className="glass-input w-full rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500"
               />
             </div>
           </div>

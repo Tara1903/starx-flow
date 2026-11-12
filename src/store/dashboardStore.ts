@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from './authStore';
 
+// Tracks in-flight message sends to prevent duplicate DB inserts on accidental double-submits/retries
+const inFlightMessageSends = new Set<string>();
+
 export type DashboardSection =
   | 'overview'
   | 'conversations'
@@ -181,46 +184,56 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     const user = useAuthStore.getState().user;
     if (!user) return;
 
-    const timestamp = new Date().toISOString();
-    
-    // Insert into DB
-    const { data: insertedMsg } = await supabase.from('messages').insert({
-      conversation_id: threadId,
-      direction: sender === 'user' ? 'inbound' : 'outbound',
-      role: sender,
-      content: text,
-      status: 'sent',
-      is_internal: isInternal,
-      created_at: timestamp
-    }).select().single();
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const dedupKey = `${threadId}:${sender}:${isInternal ? '1' : '0'}:${trimmed}`;
+    if (inFlightMessageSends.has(dedupKey)) return;
+    inFlightMessageSends.add(dedupKey);
 
-    if (insertedMsg) {
-      const newMessage: Message = {
-        id: insertedMsg.id,
-        db_id: insertedMsg.id,
-        sender: insertedMsg.role as any,
-        text: insertedMsg.content,
-        timestamp: formatTime(insertedMsg.created_at),
+    try {
+      const timestamp = new Date().toISOString();
+
+      // Insert into DB
+      const { data: insertedMsg } = await supabase.from('messages').insert({
+        conversation_id: threadId,
+        direction: sender === 'user' ? 'inbound' : 'outbound',
+        role: sender,
+        content: trimmed,
+        status: 'sent',
         is_internal: isInternal,
-      };
+        created_at: timestamp
+      }).select().single();
 
-      set((state) => {
-        const updatedConversations = state.conversations.map((c) => {
-          if (c.id === threadId) {
-            // Avoid duplicates if realtime fired first
-            if (c.messages.some(m => m.id === newMessage.id)) return c;
-            return {
-              ...c,
-              messages: [...c.messages, newMessage],
-              lastMessage: isInternal ? c.lastMessage : text,
-              lastMessageAt: isInternal ? c.lastMessageAt : 'Just now',
-              unread: sender === 'user' ? true : c.unread
-            };
-          }
-          return c;
+      if (insertedMsg) {
+        const newMessage: Message = {
+          id: insertedMsg.id,
+          db_id: insertedMsg.id,
+          sender: insertedMsg.role as any,
+          text: insertedMsg.content,
+          timestamp: formatTime(insertedMsg.created_at),
+          is_internal: isInternal,
+        };
+
+        set((state) => {
+          const updatedConversations = state.conversations.map((c) => {
+            if (c.id === threadId) {
+              // Avoid duplicates if realtime fired first
+              if (c.messages.some(m => m.id === newMessage.id)) return c;
+              return {
+                ...c,
+                messages: [...c.messages, newMessage],
+                lastMessage: isInternal ? c.lastMessage : trimmed,
+                lastMessageAt: isInternal ? c.lastMessageAt : 'Just now',
+                unread: sender === 'user' ? true : c.unread
+              };
+            }
+            return c;
+          });
+          return { conversations: updatedConversations };
         });
-        return { conversations: updatedConversations };
-      });
+      }
+    } finally {
+      inFlightMessageSends.delete(dedupKey);
     }
   },
 

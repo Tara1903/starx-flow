@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   X, Check, ChevronRight, Loader2, Sparkles, MessageCircle, Phone, DollarSign, Instagram, Globe, Brain, MessageSquare, Zap
@@ -54,6 +54,18 @@ export function CreateWorkflowWizard({ open, onClose }: CreateWorkflowWizardProp
   const [tone, setTone] = useState<Workflow["aiTone"]>("Friendly");
   const [deploying, setDeploying] = useState(false);
 
+  useEffect(() => {
+    if (!open) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !deploying) {
+        onClose();
+        setWizStep(1);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [open, deploying, onClose]);
+
   const reset = () => { 
     setWizStep(1); 
     setName(""); 
@@ -97,7 +109,7 @@ export function CreateWorkflowWizard({ open, onClose }: CreateWorkflowWizardProp
         initial={{ scale: 0.95, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, y: 20 }}
-        className="w-full max-w-lg bg-[#0a0a0a] rounded-2xl border border-white/10 overflow-hidden shadow-[0_0_60px_rgba(16,185,129,0.1)]"
+        className="w-full max-w-lg glass-card-obsidian rounded-2xl border border-emerald-500/20 overflow-hidden shadow-[0_0_60px_rgba(16,185,129,0.14)]"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/5 bg-white/[0.005]">
@@ -128,11 +140,11 @@ export function CreateWorkflowWizard({ open, onClose }: CreateWorkflowWizardProp
               <motion.div key="wiz1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-zinc-400 mb-1.5 uppercase tracking-wider">Workflow Name</label>
-                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="E.g. Weekend Promotion Bot" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors" />
+                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="E.g. Weekend Promotion Bot" className="glass-input w-full rounded-xl px-4 py-3 text-xs text-white" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-zinc-400 mb-1.5 uppercase tracking-wider">Description</label>
-                  <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={3} placeholder="What does this workflow automate?" className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/50 transition-colors resize-none" />
+                  <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={3} placeholder="What does this workflow automate?" className="glass-input w-full rounded-xl px-4 py-3 text-xs text-white resize-none" />
                 </div>
               </motion.div>
             )}
@@ -212,7 +224,7 @@ export function CreateWorkflowWizard({ open, onClose }: CreateWorkflowWizardProp
                     onChange={(e) => setPrompt(e.target.value)}
                     rows={4}
                     placeholder="E.g. You are a warm receptionist for our beauty salon. Help answer price FAQs and direct customers to bookings."
-                    className="w-full bg-[#111] border border-white/10 rounded-lg px-4 py-3 text-xs text-zinc-300 outline-none focus:border-emerald-500/50 transition-colors resize-none leading-relaxed"
+                    className="glass-input w-full rounded-xl px-4 py-3 text-xs text-zinc-200 outline-none resize-none leading-relaxed"
                   />
                 </div>
               </motion.div>

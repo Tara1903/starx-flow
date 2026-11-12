@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { Shield, Mail, Lock, ArrowRight, Loader2, AlertTriangle, Key, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../../store/authStore";
@@ -141,7 +141,7 @@ export default function AdminLogin() {
                     setError(null);
                   }}
                   placeholder="admin@starxflow.com"
-                  className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-sm text-white outline-none focus:border-amber-500/50 transition-colors placeholder:text-zinc-700"
+                  className="glass-input w-full rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500/50"
                   autoFocus
                   required
                 />
@@ -162,7 +162,7 @@ export default function AdminLogin() {
                     setError(null);
                   }}
                   placeholder="••••••••••••"
-                  className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg pl-10 pr-10 py-3 text-sm text-white outline-none focus:border-amber-500/50 transition-colors placeholder:text-zinc-700"
+                  className="glass-input w-full rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500/50"
                   required
                 />
                 <button
@@ -175,12 +175,19 @@ export default function AdminLogin() {
               </div>
             </div>
 
-            {error && (
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-400 text-xs flex items-start gap-2 bg-red-500/10 p-2.5 rounded border border-red-500/20 leading-snug">
-                <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </motion.p>
-            )}
+            <AnimatePresence>
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="text-red-400 text-xs flex items-start gap-2 bg-red-500/10 p-2.5 rounded border border-red-500/20 leading-snug"
+                >
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </motion.p>
+              )}
+            </AnimatePresence>
 
             <button
               type="submit"

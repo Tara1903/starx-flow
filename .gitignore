@@ -45,3 +45,5 @@ supabase-*.sql
 
 *.zip
 tests/live-e2e/reports/screenshots/
+tests/__screenshots__/
+test-results/

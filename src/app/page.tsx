@@ -55,7 +55,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="bg-black min-h-screen flex flex-col gap-24 lg:gap-32 pb-32">
+    <div className="bg-black min-h-screen flex flex-col gap-16 lg:gap-24 pb-24">
       <AuthRedirect to="/dashboard" />
       {jsonLd.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
@@ -63,7 +63,7 @@ export default function Home() {
       <Hero />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
-        <div className="glass-panel rounded-[3rem] overflow-hidden [&_section]:!bg-transparent">
+        <div className="glass-card-obsidian rounded-[2.5rem] overflow-hidden border border-white/[0.08] [&_section]:!bg-transparent">
           <SocialProof />
           <Problem />
         </div>
@@ -77,7 +77,7 @@ export default function Home() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
-        <div className="glass-panel rounded-[3rem] overflow-hidden [&_section]:!bg-transparent">
+        <div className="glass-card-obsidian rounded-[2.5rem] overflow-hidden border border-white/[0.08] [&_section]:!bg-transparent">
           <DualSegmentValue />
         </div>
       </div>

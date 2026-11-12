@@ -15,6 +15,8 @@ import { cn } from "../../lib/utils";
 import { useAdminStore, type Client } from "../../store/adminStore";
 import { useAuthStore } from "../../store/authStore";
 import { GlassPanel } from "../../components/ui/GlassPanel";
+import { AnimatedTabs } from "../../components/ui/AnimatedTabs";
+import { springTransition } from "../../lib/motionVariants";
 
 /* ──────────────────────────────────────────────
    CONSTANTS
@@ -98,13 +100,14 @@ function ClientDetailModal({ client, onClose, onStatusChange, onPlanChange, onDe
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
     >
       <motion.div
-        initial={{ scale: 0.95, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.95, y: 20 }}
+        initial={{ scale: 0.95, y: 16, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.95, y: 16, opacity: 0 }}
+        transition={springTransition}
         className="w-full max-w-lg"
       >
         <GlassPanel
-          tier="panel"
+          tier="hero"
           className="w-full rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.5)]"
         >
         {/* Header */}
@@ -387,36 +390,25 @@ export default function AdminDashboard() {
 
 
         {/* Navigation Tabs: Clients vs Demo Leads */}
-        <div className="flex gap-2 border-b border-white/10 pb-4 mb-6">
-          <button
-            onClick={() => setActiveTab('clients')}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all",
-              activeTab === 'clients'
-                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-sm"
-                : "text-zinc-400 hover:text-white bg-white/[0.02] border border-white/5"
-            )}
-          >
-            <Users className="w-4 h-4" />
-            <span>Registered Clients ({clients.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('leads')}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all relative",
-              activeTab === 'leads'
-                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-sm"
-                : "text-zinc-400 hover:text-white bg-white/[0.02] border border-white/5"
-            )}
-          >
-            <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span>Demo Leads & Prospects ({demoLeads.length})</span>
-            {newLeadsCount > 0 && (
-              <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500 text-black ml-1">
-                {newLeadsCount} new
-              </span>
-            )}
-          </button>
+        <div className="border-b border-white/10 pb-4 mb-6">
+          <AnimatedTabs<"clients" | "leads">
+            layoutId="admin-nav-tabs"
+            activeId={activeTab}
+            onChange={setActiveTab}
+            tabs={[
+              {
+                id: "clients",
+                label: `Registered Clients (${clients.length})`,
+                icon: <Users className="w-4 h-4" />,
+              },
+              {
+                id: "leads",
+                label: `Demo Leads & Prospects (${demoLeads.length})`,
+                icon: <Sparkles className="w-4 h-4 text-emerald-400" />,
+                badge: newLeadsCount > 0 ? `${newLeadsCount} new` : undefined,
+              },
+            ]}
+          />
         </div>
 
         {/* Loading */}

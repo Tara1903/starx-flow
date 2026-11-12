@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Star, ShoppingBag, Heart, Shield, Truck } from "lucide-react";
+import { X, Star, ShoppingBag, Heart, Shield, Truck, Check } from "lucide-react";
 import { GlassButton } from "@/components/ui/GlassButton";
 import type { Product } from "@/lib/productData";
 
@@ -12,6 +12,13 @@ interface QuickViewModalProps {
 }
 
 export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
+  const [added, setAdded] = useState(false);
+  const [isWished, setIsWished] = useState(false);
+
+  useEffect(() => {
+    setAdded(false);
+    setIsWished(false);
+  }, [product?.id]);
   // Close on Escape
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -53,7 +60,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
-            className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto glass-scrollbar bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-10"
+            className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto glass-scrollbar glass-card-obsidian border border-white/10 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-10"
           >
             {/* Top glass gradient edge */}
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
@@ -204,12 +211,25 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                     variant="primary"
                     size="lg"
                     className="flex-1 gap-2"
+                    onClick={() => {
+                      setAdded(true);
+                      setTimeout(() => setAdded(false), 2000);
+                    }}
                   >
-                    <ShoppingBag size={18} />
-                    Add to Cart
+                    {added ? <Check size={18} /> : <ShoppingBag size={18} />}
+                    {added ? "Added to Cart" : "Add to Cart"}
                   </GlassButton>
-                  <button className="w-12 h-12 shrink-0 rounded-xl bg-white/5 border border-white/8 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors">
-                    <Heart size={20} />
+                  <button
+                    type="button"
+                    aria-label={isWished ? "Remove from wishlist" : "Add to wishlist"}
+                    onClick={() => setIsWished((prev) => !prev)}
+                    className={`w-12 h-12 shrink-0 rounded-xl border flex items-center justify-center transition-colors cursor-pointer ${
+                      isWished
+                        ? "bg-rose-500/20 border-rose-400/50 text-rose-400"
+                        : "bg-white/5 border-white/8 hover:bg-white/10 text-zinc-400 hover:text-rose-400"
+                    }`}
+                  >
+                    <Heart size={20} fill={isWished ? "currentColor" : "none"} />
                   </button>
                 </div>
 

@@ -91,7 +91,7 @@ export function AIChatTester() {
   };
 
   return (
-    <div className="glass-card rounded-xl overflow-hidden flex flex-col h-[400px] select-none">
+    <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] overflow-hidden flex flex-col h-[400px] select-none">
       {/* Header */}
       <div className="px-5 py-4 border-b border-white/5 bg-white/[0.01] flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
@@ -164,7 +164,7 @@ export function AIChatTester() {
             onChange={(e) => setChatInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSendChat(); }}
             placeholder="Type a test customer question..."
-            className="flex-1 bg-[#0a0a0a] border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald-500/30 transition-colors"
+            className="glass-input flex-1 rounded-xl px-4 py-3 text-xs text-white"
           />
           <button
             onClick={handleSendChat}

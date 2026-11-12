@@ -8,7 +8,7 @@ export function ConversationsSection() {
   const selectedConversationId = useDashboardStore((s) => s.selectedConversationId);
 
   return (
-    <div className="glass-card rounded-xl border border-white/5 overflow-hidden flex h-[600px] animate-[fade-in_0.4s_ease-out]">
+    <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] overflow-hidden flex h-[600px] animate-[fade-in_0.4s_ease-out]">
       {/* Search and List */}
       <ConversationList />
 
@@ -16,7 +16,9 @@ export function ConversationsSection() {
       {selectedConversationId ? (
         <ConversationThread />
       ) : (
-        <ConversationEmpty />
+        <div className="hidden md:flex flex-1 min-w-0">
+          <ConversationEmpty />
+        </div>
       )}
     </div>
   );

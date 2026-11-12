@@ -36,7 +36,7 @@ export function AIConfigPanel() {
 
   if (!selected) {
     return (
-      <div className="glass-card rounded-xl p-5 text-center text-xs text-zinc-500 select-none">
+      <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] p-5 text-center text-xs text-zinc-400 select-none">
         No active workflows found to tune. Create a workflow first.
       </div>
     );
@@ -45,7 +45,7 @@ export function AIConfigPanel() {
   return (
     <div className="space-y-4 select-none">
       {/* Active Node Selection */}
-      <div className="glass-card rounded-xl p-5">
+      <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] p-5">
         <h3 className="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
           <Settings className="w-4 h-4 text-zinc-500" />
           <span>Active Agent Config</span>
@@ -88,7 +88,7 @@ export function AIConfigPanel() {
       </div>
 
       {/* Prompts Instructions */}
-      <div className="glass-card rounded-xl p-5">
+      <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] p-5">
         <h3 className="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
           <PenTool className="w-4 h-4 text-zinc-500" />
           <span>System Instructions</span>
@@ -98,7 +98,7 @@ export function AIConfigPanel() {
           value={editPrompt}
           onChange={(e) => setEditPrompt(e.target.value)}
           rows={6}
-          className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-4 py-3 text-xs text-zinc-300 outline-none focus:border-emerald-500/30 transition-colors resize-none font-mono leading-relaxed select-text"
+          className="glass-input w-full rounded-xl px-4 py-3 text-xs text-zinc-200 outline-none resize-none font-mono leading-relaxed select-text"
           placeholder="E.g. You are a warm receptionist... Answer customer booking questions..."
         />
         

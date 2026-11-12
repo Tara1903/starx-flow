@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { X, CheckCircle, Loader2, Sparkles, Calendar, ArrowRight, ShieldCheck } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+import { X, Sparkles, Calendar, ArrowRight, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { GlassButton } from "../ui/GlassButton";
+import { SuccessState } from "../ui/SuccessState";
+import { smoothTransition } from "../../lib/motionVariants";
 
 const demoSchema = z.object({
   fullName: z.string().trim().min(2, "Name must be at least 2 characters"),
@@ -31,9 +34,13 @@ interface DemoModalProps {
 }
 
 export function DemoModal({ onClose }: DemoModalProps) {
+  const prefersReduced = useReducedMotion();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [successData, setSuccessData] = useState<{ referenceId: string; message: string } | null>(null);
+  const [successData, setSuccessData] = useState<{
+    referenceId: string;
+    message: string;
+  } | null>(null);
 
   const {
     register,
@@ -101,66 +108,67 @@ export function DemoModal({ onClose }: DemoModalProps) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="demo-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isSubmitting) onClose();
       }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        transition={{ duration: 0.3 }}
-        className="relative w-full max-w-xl my-8 bg-zinc-950 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl text-left overflow-hidden"
+        exit={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 12 }}
+        transition={smoothTransition}
+        className="relative w-full max-w-xl my-8 glass-card-obsidian border border-emerald-500/20 rounded-3xl p-6 sm:p-8 shadow-[0_28px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(16,185,129,0.1)] text-left overflow-hidden"
       >
-        {/* Atmosphere glow */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div
+          aria-hidden="true"
+          className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"
+        />
 
-        {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
           disabled={isSubmitting}
           aria-label="Close demo modal"
-          className="absolute top-5 right-5 p-2 rounded-full text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
         >
           <X size={18} />
         </button>
 
         {successData ? (
-          <div className="py-6 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto">
-              <CheckCircle size={32} />
-            </div>
-            <h3 id="demo-modal-title" className="text-2xl font-bold text-white">
-              Demonstration Confirmed
-            </h3>
-            <p className="text-sm text-zinc-300 leading-relaxed max-w-md mx-auto">
-              {successData.message}
-            </p>
-            <div className="inline-block px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-emerald-400">
-              Reference: {successData.referenceId}
-            </div>
-            <div className="pt-4">
-              <button
-                onClick={onClose}
-                className="w-full sm:w-auto px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-full transition-all"
-              >
-                Back to Site
-              </button>
-            </div>
+          <div className="py-4 space-y-5 text-center">
+            <SuccessState
+              title="Demonstration Confirmed"
+              description={successData.message}
+              action={
+                <div className="space-y-4">
+                  <div className="inline-block px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs font-mono text-emerald-300">
+                    Reference: {successData.referenceId}
+                  </div>
+                  <div>
+                    <GlassButton variant="primary" onClick={onClose}>
+                      Back to Site
+                    </GlassButton>
+                  </div>
+                </div>
+              }
+            />
           </div>
         ) : (
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs font-semibold mb-3">
               <Calendar size={13} />
               <span>Personalized Walkthrough</span>
             </div>
 
-            <h2 id="demo-modal-title" className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h2
+              id="demo-modal-title"
+              className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight"
+            >
               Request an Architecture Demo
             </h2>
             <p className="text-xs sm:text-sm text-zinc-400 mt-1 mb-6 leading-relaxed">
-              Explore how StarX-Flow automates your bookings, syncs with Google Calendar/Outlook, and handles customer care with zero double-booking risk.
+              Explore how StarX Flow automates bookings, syncs with Google Calendar &amp; Outlook, and handles customer care with zero double-booking risk.
             </p>
 
             {submitError && (
@@ -170,7 +178,6 @@ export function DemoModal({ onClose }: DemoModalProps) {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-xs">
-              {/* Honeypot field for bot trap */}
               <input
                 type="text"
                 {...register("honeypot")}
@@ -186,9 +193,11 @@ export function DemoModal({ onClose }: DemoModalProps) {
                     type="text"
                     {...register("fullName")}
                     placeholder="e.g. Dr. Sarah Jenkins"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs"
                   />
-                  {errors.fullName && <p className="text-red-400 text-[11px] mt-1">{errors.fullName.message}</p>}
+                  {errors.fullName && (
+                    <p className="text-red-400 text-[11px] mt-1">{errors.fullName.message}</p>
+                  )}
                 </div>
 
                 <div>
@@ -197,9 +206,11 @@ export function DemoModal({ onClose }: DemoModalProps) {
                     type="email"
                     {...register("workEmail")}
                     placeholder="sarah@yourpractice.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs"
                   />
-                  {errors.workEmail && <p className="text-red-400 text-[11px] mt-1">{errors.workEmail.message}</p>}
+                  {errors.workEmail && (
+                    <p className="text-red-400 text-[11px] mt-1">{errors.workEmail.message}</p>
+                  )}
                 </div>
               </div>
 
@@ -210,22 +221,24 @@ export function DemoModal({ onClose }: DemoModalProps) {
                     type="text"
                     {...register("businessName")}
                     placeholder="e.g. Apex Health & Aesthetics"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs"
                   />
-                  {errors.businessName && <p className="text-red-400 text-[11px] mt-1">{errors.businessName.message}</p>}
+                  {errors.businessName && (
+                    <p className="text-red-400 text-[11px] mt-1">{errors.businessName.message}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-zinc-300 font-medium mb-1">Industry Vertical *</label>
                   <select
                     {...register("businessType")}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-emerald-500 text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#07110d] border border-white/10 text-white focus:outline-none focus:border-emerald-500 text-xs"
                   >
-                    <option value="Gyms & Fitness Studios">Gyms & Fitness Studios</option>
-                    <option value="Medical & Dental Clinics">Medical & Dental Clinics</option>
-                    <option value="Hair & Beauty Salons">Hair & Beauty Salons</option>
-                    <option value="Spa & Wellness Centers">Spa & Wellness Centers</option>
-                    <option value="Hotels & Hospitality">Hotels & Hospitality</option>
+                    <option value="Gyms & Fitness Studios">Gyms &amp; Fitness Studios</option>
+                    <option value="Medical & Dental Clinics">Medical &amp; Dental Clinics</option>
+                    <option value="Hair & Beauty Salons">Hair &amp; Beauty Salons</option>
+                    <option value="Spa & Wellness Centers">Spa &amp; Wellness Centers</option>
+                    <option value="Hotels & Hospitality">Hotels &amp; Hospitality</option>
                     <option value="Professional Services">Professional Services</option>
                     <option value="Other Commercial Business">Other Commercial Business</option>
                   </select>
@@ -237,7 +250,7 @@ export function DemoModal({ onClose }: DemoModalProps) {
                   <label className="block text-zinc-300 font-medium mb-1">Team Size</label>
                   <select
                     {...register("businessSize")}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-emerald-500 text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#07110d] border border-white/10 text-white focus:outline-none focus:border-emerald-500 text-xs"
                   >
                     <option value="Solo Practitioner">Solo Practitioner (1 staff)</option>
                     <option value="2–10 staff">Boutique Team (2–10 staff)</option>
@@ -250,12 +263,12 @@ export function DemoModal({ onClose }: DemoModalProps) {
                   <label className="block text-zinc-300 font-medium mb-1">Primary Automation Goal</label>
                   <select
                     {...register("primaryNeed")}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-emerald-500 text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#07110d] border border-white/10 text-white focus:outline-none focus:border-emerald-500 text-xs"
                   >
                     <option value="WhatsApp AI Booking">WhatsApp AI Direct Booking</option>
                     <option value="Instagram DM Lead Qualification">Instagram DM Lead Qualification</option>
                     <option value="Google Calendar & Outlook Sync">Real-Time Calendar Sync</option>
-                    <option value="24/7 AI Receptionist & FAQ Care">24/7 AI Receptionist & Care</option>
+                    <option value="24/7 AI Receptionist & FAQ Care">24/7 AI Receptionist &amp; Care</option>
                     <option value="Full Automation Operating System">Full Automation Operating System</option>
                   </select>
                 </div>
@@ -266,7 +279,7 @@ export function DemoModal({ onClose }: DemoModalProps) {
                   <label className="block text-zinc-300 font-medium mb-1">Preferred Contact Channel</label>
                   <select
                     {...register("preferredContact")}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-emerald-500 text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#07110d] border border-white/10 text-white focus:outline-none focus:border-emerald-500 text-xs"
                   >
                     <option value="email">Email</option>
                     <option value="whatsapp">WhatsApp</option>
@@ -282,54 +295,51 @@ export function DemoModal({ onClose }: DemoModalProps) {
                     type="tel"
                     {...register("phone")}
                     placeholder="+44 7911 123456 or +353 87 123 4567"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-zinc-300 font-medium mb-1">Website or Instagram Handle (Optional)</label>
+                <label className="block text-zinc-300 font-medium mb-1">
+                  Website or Instagram Handle (Optional)
+                </label>
                 <input
                   type="text"
                   {...register("website")}
                   placeholder="https://yourbusiness.com or @yourbusiness"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs"
                 />
               </div>
 
-              <div className="pt-2">
+              <div className="pt-1">
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     {...register("consent")}
-                    className="mt-0.5 rounded bg-zinc-900 border-white/20 text-emerald-500 focus:ring-emerald-500"
+                    className="mt-0.5 rounded bg-[#07110d] border-white/20 text-emerald-500 focus:ring-emerald-500"
                   />
                   <span className="text-[11px] text-zinc-400 leading-tight">
-                    I agree to allow StarX-Flow to contact me regarding this demonstration request. We respect your privacy and never sell or distribute your data.
+                    I agree to allow StarX Flow to contact me regarding this demonstration request. We respect your privacy and never sell or distribute your data.
                   </span>
                 </label>
-                {errors.consent && <p className="text-red-400 text-[11px] mt-1">{errors.consent.message}</p>}
+                {errors.consent && (
+                  <p className="text-red-400 text-[11px] mt-1">{errors.consent.message}</p>
+                )}
               </div>
 
-              <div className="pt-3">
-                <button
+              <div className="pt-2">
+                <GlassButton
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                  variant="primary"
+                  size="lg"
+                  isLoading={isSubmitting}
+                  className="w-full"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>Submitting Request...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={16} />
-                      <span>Confirm Demo Request</span>
-                      <ArrowRight size={14} />
-                    </>
-                  )}
-                </button>
+                  <Sparkles size={16} />
+                  <span>Confirm Demo Request</span>
+                  <ArrowRight size={14} />
+                </GlassButton>
               </div>
 
               <div className="flex items-center justify-center gap-2 text-[10px] text-zinc-500 pt-1">

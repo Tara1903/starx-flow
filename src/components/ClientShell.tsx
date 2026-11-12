@@ -59,10 +59,6 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
   return (
     <MotionConfig reducedMotion="user">
       <CursorProvider>
@@ -72,12 +68,8 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
       >
         Skip to main content
       </a>
-      <AmbientEnvironment />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-[1] bg-noise-subtle opacity-60"
-      />
-      <CommandCenter />
+      {!isAppRoute && <AmbientEnvironment />}
+      {mounted && <CommandCenter />}
       {!isAppRoute && <Navbar />}
       <main
         id="main-content"
@@ -95,12 +87,16 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
       )}
       {!isAppRoute && <MobileFloatingNavigation />}
 
-      <AnimatePresence>
-        {isSignupOpen && <SignupModal onClose={closeSignup} />}
-        {isDemoOpen && <DemoModal onClose={closeDemo} />}
-      </AnimatePresence>
-      <ToastViewport />
-      <ConsentBanner />
+      {mounted && (
+        <>
+          <AnimatePresence>
+            {isSignupOpen && <SignupModal onClose={closeSignup} />}
+            {isDemoOpen && <DemoModal onClose={closeDemo} />}
+          </AnimatePresence>
+          <ToastViewport />
+          <ConsentBanner />
+        </>
+      )}
       </CursorProvider>
     </MotionConfig>
   );

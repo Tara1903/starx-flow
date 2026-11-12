@@ -9,6 +9,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from "../../store/authStore";
 import { useBillingStore } from "../../store/billingStore";
+import { useToastStore } from "../../store/toastStore";
+import { PermissionGate, GlassModal, GlassButton } from "../../components/ui";
 import { cn } from "../../lib/utils";
 
 export function SettingsSection() {
@@ -35,13 +37,26 @@ export function SettingsSection() {
   const [igInputPageId, setIgInputPageId] = useState("");
   const [igInputToken, setIgInputToken] = useState("");
   const [igConnecting, setIgConnecting] = useState(false);
+  const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const isBillingAdmin = !user?.role || user.role.toLowerCase() !== 'agent';
+
+  const notify = (type: 'success' | 'error' | 'info', message: string) => {
+    setActionNotice({ type, message });
+    useToastStore.getState().pushToast({
+      tone: type,
+      title: type === 'error' ? 'Action failed' : type === 'success' ? 'Saved' : 'Notice',
+      description: message,
+    });
+    setTimeout(() => setActionNotice(null), 5000);
+  };
 
     const handleOpenPortal = async () => {
     setPortalLoading(true);
     const res = await openCustomerPortal();
     setPortalLoading(false);
     if (res.error) {
-      alert(res.error);
+      notify('error', res.error);
     }
   };
 
@@ -50,7 +65,7 @@ export function SettingsSection() {
     const res = await createPolarCheckout(planId);
     setCheckoutLoading(null);
     if (res.error) {
-      alert(res.error);
+      notify('error', res.error);
     }
   };
 
@@ -90,10 +105,13 @@ export function SettingsSection() {
         const data = await res.json();
         if (data.authUrl) {
           window.location.href = data.authUrl;
+          return;
         }
       }
+      const errData = await res.json().catch(() => ({}));
+      notify('info', errData.error || `Sign in with your workspace account to authorize ${provider === 'google' ? 'Google' : 'Microsoft'} Calendar.`);
     } catch (err: any) {
-      alert("Failed to initiate OAuth: " + err.message);
+      notify('error', "Failed to initiate OAuth: " + err.message);
     } finally {
       setLoadingIntegrations(false);
     }
@@ -195,32 +213,46 @@ export function SettingsSection() {
   };
 
   const handleExportData = async () => {
-    if (!user) return;
     setIsExporting(true);
     try {
-      const res = await fetch(`/api/gdpr/export?userId=${user.id}`);
-      if (!res.ok) throw new Error("Export failed");
-      const data = await res.json();
+      let data: Record<string, any>;
+      if (!user) {
+        data = {
+          mode: "preview",
+          exportedAt: new Date().toISOString(),
+          profile: { name: name || "Partner", businessName: businessName || "My Business", businessType },
+          note: "Sign in with your account to export full authenticated organization records."
+        };
+      } else {
+        const res = await fetch(`/api/gdpr/export?userId=${user.id}`);
+        if (!res.ok) throw new Error("Export failed");
+        data = await res.json();
+      }
       
       // Trigger browser file download
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `starx-flow-gdpr-export-${user.id.slice(0, 8)}.json`;
+      a.download = `starx-flow-gdpr-export-${(user?.id || "preview").slice(0, 8)}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      notify('success', user ? "GDPR data export downloaded." : "Preview snapshot downloaded.");
     } catch (err: any) {
-      alert("Failed to export data: " + err.message);
+      notify('error', "Failed to export data: " + err.message);
     } finally {
       setIsExporting(false);
     }
   };
 
   const handleDeleteData = async () => {
-    if (!user) return;
+    if (!user) {
+      setDeleteConfirmOpen(false);
+      notify('info', "Preview mode active. Sign in as the organization owner to permanently erase tenant records.");
+      return;
+    }
     setIsDeleting(true);
     try {
       const res = await fetch(`/api/gdpr/delete?userId=${user.id}&confirmation=DELETE_ALL_MY_DATA`, {
@@ -228,11 +260,11 @@ export function SettingsSection() {
       });
       if (!res.ok) throw new Error("Deletion request failed");
       
-      alert("All tenant data and personal records have been permanently erased under GDPR Article 17.");
+      notify('success', "All tenant data and personal records have been permanently erased under GDPR Article 17.");
       logout();
       router.push("/");
     } catch (err: any) {
-      alert("Failed to complete erasure: " + err.message);
+      notify('error', "Failed to complete erasure: " + err.message);
       setIsDeleting(false);
     }
   };
@@ -249,10 +281,31 @@ export function SettingsSection() {
         </p>
       </div>
 
+      {actionNotice && (
+        <div
+          role="status"
+          className={cn(
+            "rounded-xl px-4 py-3 text-xs font-semibold flex items-center justify-between gap-3 border",
+            actionNotice.type === 'success' && "bg-emerald-500/12 border-emerald-500/35 text-emerald-300",
+            actionNotice.type === 'error' && "bg-red-500/12 border-red-500/35 text-red-300",
+            actionNotice.type === 'info' && "bg-amber-500/12 border-amber-500/35 text-amber-200"
+          )}
+        >
+          <span>{actionNotice.message}</span>
+          <button
+            type="button"
+            onClick={() => setActionNotice(null)}
+            className="text-current opacity-70 hover:opacity-100 cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column: Form Editor */}
         <div className="md:col-span-2 space-y-4">
-          <form onSubmit={handleSave} className="glass-card rounded-xl p-5 space-y-4">
+          <form onSubmit={handleSave} className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] p-5 space-y-4">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
               <User className="w-4 h-4 text-zinc-500" />
               <span>Business Profile</span>
@@ -305,7 +358,7 @@ export function SettingsSection() {
                 <select
                   value={businessType}
                   onChange={(e) => setBusinessType(e.target.value)}
-                  className="w-full bg-[#0a0a0a] border border-white/10 text-xs font-semibold text-white rounded-xl px-3.5 py-3.5 outline-none focus:border-emerald-500/30 transition-all select-none"
+                  className="w-full glass-input text-xs font-semibold text-white rounded-xl px-3.5 py-3.5 outline-none focus:border-emerald-500/30 transition-all select-none cursor-pointer"
                 >
                   <option value="Salon">Hair & Beauty Salon</option>
                   <option value="Spa">Wellness Spa & Massage</option>
@@ -339,7 +392,7 @@ export function SettingsSection() {
           </form>
 
           {/* External Integrations Management (WS-06, WS-07, WS-08) */}
-          <div className="glass-card rounded-xl p-5 border border-white/5 space-y-4">
+          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <Layers className="w-4 h-4 text-cyan-400" />
@@ -500,7 +553,7 @@ export function SettingsSection() {
           </div>
 
           {/* Subscription Plan & Commercial Limits (Workstream J) */}
-          <div className="glass-card rounded-xl p-5 border border-white/5 space-y-4">
+          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-emerald-400" />
@@ -540,32 +593,46 @@ export function SettingsSection() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleCheckout('pro')}
-                  disabled={checkoutLoading !== null}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-500 text-black hover:bg-emerald-400 font-bold text-xs transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            <PermissionGate
+              allowed={isBillingAdmin}
+              reason="Admin or Owner role required to modify plans or open the billing portal"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <GlassButton
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleCheckout('pro')}
+                    isLoading={checkoutLoading === 'pro'}
+                    loadingText="Redirecting..."
+                    disabled={!isBillingAdmin || checkoutLoading !== null}
+                  >
+                    Upgrade to Pro ($59/mo)
+                  </GlassButton>
+                  <GlassButton
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleCheckout('enterprise')}
+                    isLoading={checkoutLoading === 'enterprise'}
+                    loadingText="Redirecting..."
+                    disabled={!isBillingAdmin || checkoutLoading !== null}
+                  >
+                    Upgrade to Enterprise ($99/mo)
+                  </GlassButton>
+                </div>
+                <GlassButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleOpenPortal}
+                  isLoading={portalLoading}
+                  loadingText="Opening Portal..."
+                  disabled={!isBillingAdmin || portalLoading}
                 >
-                  {checkoutLoading === 'pro' ? 'Redirecting...' : 'Upgrade to Pro ($59/mo)'}
-                </button>
-                <button
-                  onClick={() => handleCheckout('enterprise')}
-                  disabled={checkoutLoading !== null}
-                  className="px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/15 font-semibold text-xs transition-colors disabled:opacity-50"
-                >
-                  {checkoutLoading === 'enterprise' ? 'Redirecting...' : 'Upgrade to Enterprise ($99/mo)'}
-                </button>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Manage Invoices & Billing</span>
+                </GlassButton>
               </div>
-              <button
-                onClick={handleOpenPortal}
-                disabled={portalLoading}
-                className="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 font-semibold text-xs transition-colors flex items-center gap-1.5 disabled:opacity-50"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>{portalLoading ? 'Opening Portal...' : 'Manage Invoices & Billing'}</span>
-              </button>
-            </div>
+            </PermissionGate>
 
             <div className="p-3 rounded-lg bg-zinc-900/60 border border-white/5 text-[11px] text-zinc-400 flex items-center justify-between">
               <span>Need custom multi-location SLAs or direct invoicing?</span>
@@ -579,7 +646,7 @@ export function SettingsSection() {
           </div>
 
           {/* GDPR Article 20 & Article 17 Management Card */}
-          <div className="glass-card rounded-xl p-5 border border-white/5 space-y-4">
+          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -619,7 +686,7 @@ export function SettingsSection() {
 
         {/* Right Column: Platform Security Cards */}
         <div className="space-y-4">
-          <div className="glass-card rounded-xl p-5 space-y-3">
+          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-3">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
               <Globe className="w-4 h-4 text-emerald-400" />
               <span>Data Localization</span>
@@ -643,7 +710,7 @@ export function SettingsSection() {
             </div>
           </div>
 
-          <div className="glass-card rounded-xl p-5 border border-white/5">
+          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12]">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
               <Key className="w-4 h-4 text-zinc-500" />
               <span>Tenant Isolation</span>
@@ -676,114 +743,124 @@ export function SettingsSection() {
       </div>
 
       {/* Confirmation Modal for GDPR Right to Erasure */}
-      {deleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-          <div className="bg-[#0f0f0f] border border-red-500/30 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3 text-red-400">
-              <AlertTriangle className="w-6 h-6 flex-shrink-0" />
-              <h3 className="text-sm font-bold uppercase tracking-wider">
-                Permanent Right to Erasure
-              </h3>
-            </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              Are you sure you want to permanently delete all leads, conversations, messages, appointments, orders, and knowledge base chunks? This action is irreversible.
-            </p>
-            <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
-              <button
-                type="button"
-                onClick={() => setDeleteConfirmOpen(false)}
-                className="px-4 py-2 rounded-xl border border-white/10 text-xs text-zinc-400 hover:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteData}
-                disabled={isDeleting}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs flex items-center gap-2"
-              >
-                {isDeleting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                <span>Permanently Delete All Data</span>
-              </button>
-            </div>
+      <GlassModal
+        open={deleteConfirmOpen}
+        onClose={() => !isDeleting && setDeleteConfirmOpen(false)}
+        disableClose={isDeleting}
+        maxWidth="md"
+        className="border-red-500/30"
+        title={
+          <span className="flex items-center gap-2.5 text-red-400 text-sm font-bold uppercase tracking-wider">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+            <span>Permanent Right to Erasure</span>
+          </span>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-zinc-300 leading-relaxed">
+            Are you sure you want to permanently delete all leads, conversations, messages, appointments, orders, and knowledge base chunks? This action is irreversible.
+          </p>
+          <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+            <GlassButton
+              variant="ghost"
+              size="sm"
+              type="button"
+              disabled={isDeleting}
+              onClick={() => setDeleteConfirmOpen(false)}
+            >
+              Cancel
+            </GlassButton>
+            <GlassButton
+              variant="danger"
+              size="sm"
+              type="button"
+              onClick={handleDeleteData}
+              isLoading={isDeleting}
+              loadingText="Deleting..."
+            >
+              Permanently Delete All Data
+            </GlassButton>
           </div>
         </div>
-      )}
+      </GlassModal>
+
       {/* Instagram Business Account Onboarding Modal (WS-08 / M2 Remediation) */}
-      {showIgModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-          <div className="bg-[#0f0f0f] border border-pink-500/30 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3 text-pink-400">
-              <Instagram className="w-6 h-6 flex-shrink-0" />
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white">
-                  Connect Instagram Business
-                </h3>
-                <p className="text-[11px] text-zinc-400">Meta Graph API Messaging Integration</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleConnectInstagram} className="space-y-3 pt-2">
-              <div>
-                <label className="block text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider">
-                  Instagram Page / Account ID
-                </label>
-                <input
-                  type="text"
-                  value={igInputPageId}
-                  onChange={(e) => setIgInputPageId(e.target.value)}
-                  placeholder="e.g. 17841400000000001 or zenith_salon"
-                  className="w-full bg-[#141414] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 outline-none focus:border-pink-500/50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider">
-                  Page Access Token (AES-256 Encrypted)
-                </label>
-                <input
-                  type="password"
-                  value={igInputToken}
-                  onChange={(e) => setIgInputToken(e.target.value)}
-                  placeholder="EAAG... (Leave empty for test token)"
-                  className="w-full bg-[#141414] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 outline-none focus:border-pink-500/50"
-                />
-              </div>
-
-              <div className="flex justify-between items-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIgInputPageId("17841400000000001");
-                    setIgInputToken("IGAA_simulated_sandbox_token");
-                  }}
-                  className="text-[10px] text-pink-400/80 hover:text-pink-300 underline underline-offset-2"
-                >
-                  Use Sandbox Test Account
-                </button>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t border-white/5">
-                <button
-                  type="button"
-                  onClick={() => setShowIgModal(false)}
-                  className="px-4 py-2 rounded-xl border border-white/10 text-xs text-zinc-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={igConnecting}
-                  className="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs flex items-center gap-2 transition-all"
-                >
-                  {igConnecting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{igConnecting ? "Connecting..." : "Connect Page"}</span>
-                </button>
-              </div>
-            </form>
+      <GlassModal
+        open={showIgModal}
+        onClose={() => !igConnecting && setShowIgModal(false)}
+        disableClose={igConnecting}
+        maxWidth="md"
+        className="border-pink-500/30"
+        title={
+          <span className="flex items-center gap-2.5 text-pink-400 text-sm font-bold uppercase tracking-wider">
+            <Instagram className="w-5 h-5 flex-shrink-0" />
+            <span className="text-white">Connect Instagram Business</span>
+          </span>
+        }
+        subtitle="Meta Graph API Messaging Integration"
+      >
+        <form onSubmit={handleConnectInstagram} className="space-y-3 pt-1">
+          <div>
+            <label className="block text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider">
+              Instagram Page / Account ID
+            </label>
+            <input
+              type="text"
+              value={igInputPageId}
+              onChange={(e) => setIgInputPageId(e.target.value)}
+              placeholder="e.g. 17841400000000001 or zenith_salon"
+              className="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 outline-none focus:border-pink-500/50"
+            />
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider">
+              Page Access Token (AES-256 Encrypted)
+            </label>
+            <input
+              type="password"
+              value={igInputToken}
+              onChange={(e) => setIgInputToken(e.target.value)}
+              placeholder="EAAG... (Leave empty for test token)"
+              className="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 outline-none focus:border-pink-500/50"
+            />
+          </div>
+
+          <div className="flex justify-between items-center pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setIgInputPageId("17841400000000001");
+                setIgInputToken("IGAA_simulated_sandbox_token");
+              }}
+              className="text-[10px] text-pink-400/80 hover:text-pink-300 underline underline-offset-2 cursor-pointer"
+            >
+              Use Sandbox Test Account
+            </button>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-white/10">
+            <GlassButton
+              variant="ghost"
+              size="sm"
+              type="button"
+              disabled={igConnecting}
+              onClick={() => setShowIgModal(false)}
+            >
+              Cancel
+            </GlassButton>
+            <GlassButton
+              type="submit"
+              size="sm"
+              isLoading={igConnecting}
+              loadingText="Connecting..."
+              className="bg-pink-600 hover:bg-pink-500 text-white border-pink-400/30"
+            >
+              Connect Page
+            </GlassButton>
+          </div>
+        </form>
+      </GlassModal>
     </div>
   );
 }

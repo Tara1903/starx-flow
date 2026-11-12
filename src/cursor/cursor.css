@@ -53,6 +53,12 @@
 
 /* Root fixed overlay (strictly pointer-events: none; GPU transform composited) */
 .starx-cursor-layer {
+  --sx-orb-fill: rgba(4, 120, 87, 0.38);
+  --sx-orb-fill-hover: rgba(4, 120, 87, 0.36);
+  --sx-orb-fill-primary: rgba(6, 95, 70, 0.40);
+  --sx-orb-fill-pressed: rgba(5, 150, 105, 0.46);
+  --sx-orb-edge: rgba(16, 185, 129, 0.14);
+  --sx-orb-edge-hover: rgba(52, 211, 153, 0.18);
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -109,9 +115,9 @@
   width: 46px;
   height: 46px;
   border-radius: 9999px;
-  border: 1px solid rgba(52, 211, 153, 0.16);
-  background-color: rgba(5, 150, 105, 0.34);
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.16);
+  border: 1px solid var(--sx-orb-edge, rgba(16, 185, 129, 0.14));
+  background-color: var(--sx-orb-fill, rgba(4, 120, 87, 0.38));
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,27 +133,27 @@
 }
 
 .starx-cursor-ring[data-mode="hover"] {
-  border-color: rgba(52, 211, 153, 0.22);
-  background-color: rgba(5, 150, 105, 0.30);
-  box-shadow: 0 0 18px rgba(16, 185, 129, 0.22);
+  border-color: var(--sx-orb-edge-hover, rgba(52, 211, 153, 0.18));
+  background-color: var(--sx-orb-fill-hover, rgba(4, 120, 87, 0.36));
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.18);
 }
 
 .starx-cursor-ring[data-mode="label"] {
-  border-color: rgba(52, 211, 153, 0.32);
+  border-color: rgba(52, 211, 153, 0.28);
   background-color: rgba(4, 57, 42, 0.86);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.24);
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.22);
 }
 
 .starx-cursor-ring[data-pressed="true"] {
-  border-color: rgba(110, 231, 183, 0.28);
-  background-color: rgba(5, 150, 105, 0.44);
-  box-shadow: 0 0 22px rgba(16, 185, 129, 0.26);
+  border-color: rgba(110, 231, 183, 0.24);
+  background-color: var(--sx-orb-fill-pressed, rgba(5, 150, 105, 0.46));
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.24);
 }
 
 .starx-cursor-ring[data-variant="primary"],
 .starx-cursor-ring[data-variant="white"] {
-  border-color: rgba(4, 120, 87, 0.28);
-  background-color: rgba(4, 120, 87, 0.36);
+  border-color: rgba(6, 95, 70, 0.26);
+  background-color: var(--sx-orb-fill-primary, rgba(6, 95, 70, 0.40));
 }
 
 .starx-cursor-ring[data-variant="danger"] {
@@ -180,9 +186,11 @@
    Uses local CSS variables (--sx-spot-x, --sx-spot-y, --sx-spot-active)
    with zero stacked backdrop filters.
    ============================================================================ */
-[data-cursor-spotlight="true"] {
+[data-cursor-spotlight="true"],
+[data-cursor-spotlight="button"] {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
   --sx-spot-x: 50%;
   --sx-spot-y: 50%;
   --sx-spot-opacity: 0;
@@ -206,11 +214,77 @@
   z-index: 1;
 }
 
+/* Localized outer-orb button spotlight (54px radius ~64px hover orb + soft radial falloff, under button text) */
+[data-cursor-spotlight="button"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--sx-spot-opacity, 0);
+  transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  background: radial-gradient(
+    54px circle at var(--sx-spot-x, 50%) var(--sx-spot-y, 50%),
+    rgba(167, 243, 208, 0.34),
+    rgba(16, 185, 129, 0.16) 44%,
+    transparent 76%
+  );
+  z-index: -1;
+}
+
+[data-cursor-spotlight="button"][data-cursor-invert="primary"]::after {
+  background: radial-gradient(
+    54px circle at var(--sx-spot-x, 50%) var(--sx-spot-y, 50%),
+    rgba(4, 120, 87, 0.24),
+    rgba(16, 185, 129, 0.14) 44%,
+    transparent 76%
+  );
+}
+
+[data-cursor-spotlight="button"][data-cursor-invert="secondary"]::after,
+[data-cursor-spotlight="button"][data-cursor-invert="outline"]::after,
+[data-cursor-spotlight="button"][data-cursor-invert="focus"]::after {
+  background: radial-gradient(
+    54px circle at var(--sx-spot-x, 50%) var(--sx-spot-y, 50%),
+    rgba(255, 255, 255, 0.42),
+    rgba(209, 250, 229, 0.2) 44%,
+    transparent 76%
+  );
+}
+
+[data-cursor-spotlight="button"][data-cursor-invert="white"]::after {
+  background: radial-gradient(
+    54px circle at var(--sx-spot-x, 50%) var(--sx-spot-y, 50%),
+    rgba(110, 231, 183, 0.34),
+    rgba(16, 185, 129, 0.16) 44%,
+    transparent 76%
+  );
+}
+
+[data-cursor-spotlight="button"][data-cursor-invert="danger"]::after {
+  background: radial-gradient(
+    54px circle at var(--sx-spot-x, 50%) var(--sx-spot-y, 50%),
+    rgba(255, 255, 255, 0.34),
+    rgba(254, 202, 202, 0.16) 44%,
+    transparent 76%
+  );
+}
+
+.btn-emerald-glow[data-cursor-spotlight="button"]::after {
+  background: radial-gradient(
+    54px circle at var(--sx-spot-x, 50%) var(--sx-spot-y, 50%),
+    rgba(236, 253, 245, 0.38),
+    rgba(110, 231, 183, 0.18) 44%,
+    transparent 76%
+  );
+}
+
 /* Respect reduced motion across all custom cursor & spotlight animations */
 @media (prefers-reduced-motion: reduce) {
   .starx-cursor-ring,
   .starx-cursor-dot,
-  [data-cursor-spotlight="true"]::after {
+  [data-cursor-spotlight="true"]::after,
+  [data-cursor-spotlight="button"]::after {
     transition-duration: 0.01ms !important;
   }
 }

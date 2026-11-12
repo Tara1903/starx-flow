@@ -2,9 +2,10 @@
 import React, { forwardRef } from 'react';
 import { cn } from '../../lib/utils';
 import { motion, HTMLMotionProps } from 'motion/react';
+import { useCursorStore } from '../../store/cursorStore';
 
 export interface GlassPanelProps extends HTMLMotionProps<"div"> {
-  tier?: 'mist' | 'panel' | 'focus' | 'hero';
+  tier?: 'mist' | 'panel' | 'focus' | 'hero' | 'subtle' | 'premium' | 'focal';
   interactive?: boolean;
   tilt?: boolean;
   spotlight?: boolean;
@@ -20,7 +21,7 @@ export const GlassPanel = forwardRef<HTMLDivElement, GlassPanelProps>(({
   onPointerMove,
   ...props
 }, ref) => {
-  const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+  const isTouch = useCursorStore((s) => !s.isFinePointer);
   const shouldTilt = tilt && !isTouch;
   const enableSpotlight = spotlight ?? interactive;
 
@@ -31,7 +32,6 @@ export const GlassPanel = forwardRef<HTMLDivElement, GlassPanelProps>(({
       onPointerMove={onPointerMove}
       className={cn(
         `glass-${tier}`,
-        tier !== 'mist' && 'liquid-glass',
         interactive && 'glass-interactive cursor-pointer',
         shouldTilt && 'glass-tilt',
         className

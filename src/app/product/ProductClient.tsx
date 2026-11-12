@@ -16,6 +16,8 @@ import {
   Lock
 } from "lucide-react";
 import { useUIStore } from "../../store/uiStore";
+import { GlassButton } from "../../components/ui/GlassButton";
+import { MOTION_DURATION, MOTION_EASE } from "../../lib/motionVariants";
 
 import { softwareApplicationSchema } from '../../components/seo/SchemaMarkup';
 
@@ -33,12 +35,13 @@ export function ProductClient() {
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center max-w-4xl mx-auto mb-12 lg:mb-20">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6 shadow-sm backdrop-blur-md">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse motion-reduce:animate-none"></span>
             The StarX Flow OS
           </div>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: MOTION_DURATION.sectionReveal, ease: MOTION_EASE.premium }}
             className="text-4xl sm:text-5xl md:text-[5.5rem] font-bold tracking-tight text-white mb-8 leading-[1.05]"
           >
             Your complete AI front desk <br className="hidden md:block" />
@@ -49,7 +52,7 @@ export function ProductClient() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.08, duration: MOTION_DURATION.sectionReveal, ease: MOTION_EASE.premium }}
             className="text-lg md:text-xl text-zinc-400 leading-relaxed max-w-3xl mx-auto mb-10 font-medium"
           >
             Stop losing bookings to busy phone lines. Deploy 24/7 WhatsApp AI receptionists, sync multi-staff calendars, and aggregate patient/client details into a high-converting customer CRM.
@@ -57,22 +60,27 @@ export function ProductClient() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.16, duration: MOTION_DURATION.sectionReveal, ease: MOTION_EASE.premium }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <button 
+            <GlassButton 
+              size="lg"
+              variant="primary"
+              magnetic
               onClick={openSignup}
-              className="w-full sm:w-auto bg-emerald-500 text-black px-8 py-4 rounded-full text-base font-bold hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 premium-glow premium-glow-hover"
+              className="w-full sm:w-auto"
             >
               Start Free Trial
               <ArrowRight className="w-4 h-4" />
-            </button>
-            <button 
+            </GlassButton>
+            <GlassButton 
+              size="lg"
+              variant="secondary"
               onClick={openDemo}
-              className="w-full sm:w-auto glass-panel px-8 py-4 rounded-full text-base font-bold text-white hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto"
             >
               Book a Demo
-            </button>
+            </GlassButton>
           </motion.div>
         </div>
 
@@ -380,12 +388,16 @@ export function ProductClient() {
           <p className="text-xl text-zinc-400 mb-12 max-w-2xl mx-auto relative z-10 leading-relaxed font-medium">
             Join thousands of service businesses who have automated their scheduling and front desk workflows.
           </p>
-          <button 
-            onClick={openSignup}
-            className="bg-emerald-500 text-black px-12 py-5 rounded-full text-lg font-bold hover:bg-emerald-400 transition-all shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] relative z-10 premium-glow premium-glow-hover flex items-center gap-2 mx-auto"
-          >
-            Start Your Free Trial <ArrowRight size={20}/>
-          </button>
+          <div className="relative z-10 flex justify-center">
+            <GlassButton
+              size="lg"
+              variant="primary"
+              magnetic
+              onClick={openSignup}
+            >
+              Start Your Free Trial <ArrowRight size={20} />
+            </GlassButton>
+          </div>
         </div>
       </div>
       </div>

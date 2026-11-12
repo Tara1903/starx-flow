@@ -59,7 +59,12 @@ export function ConversationList() {
   };
 
   return (
-    <div className="w-full md:w-[320px] lg:w-[360px] border-r border-white/5 bg-[#050505] flex flex-col h-full select-none flex-shrink-0">
+    <div
+      className={cn(
+        "w-full md:w-[320px] lg:w-[360px] border-r border-emerald-500/[0.08] bg-[#040a08]/75 flex-col h-full select-none flex-shrink-0",
+        selectedId ? "hidden md:flex" : "flex"
+      )}
+    >
       {/* Search and Filters Header */}
       <div className="p-4 border-b border-white/5 space-y-3">
         <div className="relative flex items-center bg-white/5 border border-white/5 rounded-xl px-3.5 py-2.5">

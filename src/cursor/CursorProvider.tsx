@@ -295,6 +295,92 @@ export function CursorProvider({ children }: CursorProviderProps) {
         activeSpotlightRef.current.style.setProperty('--sx-spot-opacity', '0');
         activeSpotlightRef.current = null;
       }
+      lastSpotX = Number.NaN;
+      lastSpotY = Number.NaN;
+    };
+
+    // Prevent spotlight CSS variables from cascading style invalidation to all card descendants
+    try {
+      const cssAny = window.CSS as unknown as {
+        registerProperty?: (def: {
+          name: string;
+          syntax: string;
+          inherits: boolean;
+          initialValue: string;
+        }) => void;
+      };
+      if (cssAny && typeof cssAny.registerProperty === 'function') {
+        const defs = [
+          { name: '--sx-spot-x', syntax: '<length-percentage>', inherits: false, initialValue: '50%' },
+          { name: '--sx-spot-y', syntax: '<length-percentage>', inherits: false, initialValue: '50%' },
+          { name: '--sx-spot-opacity', syntax: '<number>', inherits: false, initialValue: '0' },
+          { name: '--sx-spot-intensity', syntax: '<number>', inherits: false, initialValue: '0.16' },
+        ];
+        for (const def of defs) {
+          try {
+            cssAny.registerProperty(def);
+          } catch {
+            // Already registered across hot reloads / remounts
+          }
+        }
+      }
+    } catch {
+      // Unsupported browser fallback works via standard custom property inheritance
+    }
+
+    let rectEpoch = 0;
+    const spotRectCache = new WeakMap<
+      HTMLElement,
+      { left: number; top: number; epoch: number }
+    >();
+    let lastSpotX = Number.NaN;
+    let lastSpotY = Number.NaN;
+    let latestRingX = pointerRef.current.x;
+    let latestRingY = pointerRef.current.y;
+    let hasRingFrame = false;
+    let lastRawMoveEl: EventTarget | null = null;
+    let pendingTarget: EventTarget | null = null;
+    let pendingX = 0;
+    let pendingY = 0;
+    let moveRafId = 0;
+    let scrollRafId = 0;
+
+    const invalidateSpotlightRects = () => {
+      rectEpoch += 1;
+    };
+
+    const applySpotlightPosition = (spotlightHost: HTMLElement, ringX: number, ringY: number) => {
+      // Magnetic buttons shift slightly on hover; read live bounds only for the single hovered magnetic host
+      let left: number;
+      let top: number;
+      if (spotlightHost.hasAttribute('data-cursor-magnetic')) {
+        const rect = spotlightHost.getBoundingClientRect();
+        left = rect.left;
+        top = rect.top;
+      } else {
+        let cached = spotRectCache.get(spotlightHost);
+        if (!cached || cached.epoch !== rectEpoch) {
+          const rect = spotlightHost.getBoundingClientRect();
+          cached = { left: rect.left, top: rect.top, epoch: rectEpoch };
+          spotRectCache.set(spotlightHost, cached);
+        }
+        left = cached.left;
+        top = cached.top;
+      }
+
+      const localX = ringX - left;
+      const localY = ringY - top;
+
+      if (
+        Number.isNaN(lastSpotX) ||
+        Math.abs(localX - lastSpotX) >= 0.3 ||
+        Math.abs(localY - lastSpotY) >= 0.3
+      ) {
+        lastSpotX = localX;
+        lastSpotY = localY;
+        spotlightHost.style.setProperty('--sx-spot-x', `${localX.toFixed(1)}px`);
+        spotlightHost.style.setProperty('--sx-spot-y', `${localY.toFixed(1)}px`);
+      }
     };
 
     const applyResolved = (resolved: ResolvedTarget) => {
@@ -317,7 +403,7 @@ export function CursorProvider({ children }: CursorProviderProps) {
       });
     };
 
-    const updateSpotlightAt = (target: EventTarget | null, clientX: number, clientY: number) => {
+    const syncSpotlightHost = (target: EventTarget | null, fallbackX: number, fallbackY: number) => {
       const storeState = useCursorStore.getState();
       if (
         !storeState.isFinePointer ||
@@ -335,10 +421,14 @@ export function CursorProvider({ children }: CursorProviderProps) {
           : target instanceof Node
             ? target.parentElement
             : null;
-      const spotlightHost = el?.closest('[data-cursor-spotlight="true"]') as HTMLElement | null;
+      const spotlightHost = el?.closest(
+        '[data-cursor-spotlight="button"], [data-cursor-spotlight="true"]',
+      ) as HTMLElement | null;
 
       if (activeSpotlightRef.current && activeSpotlightRef.current !== spotlightHost) {
         activeSpotlightRef.current.style.setProperty('--sx-spot-opacity', '0');
+        lastSpotX = Number.NaN;
+        lastSpotY = Number.NaN;
       }
 
       if (!spotlightHost) {
@@ -346,19 +436,64 @@ export function CursorProvider({ children }: CursorProviderProps) {
         return;
       }
 
-      const rect = spotlightHost.getBoundingClientRect();
-      const localX = clientX - rect.left;
-      const localY = clientY - rect.top;
-      const cfg = getActivePhysicsConfig();
+      const ringX = hasRingFrame ? latestRingX : fallbackX;
+      const ringY = hasRingFrame ? latestRingY : fallbackY;
+      applySpotlightPosition(spotlightHost, ringX, ringY);
 
-      spotlightHost.style.setProperty('--sx-spot-x', `${localX.toFixed(1)}px`);
-      spotlightHost.style.setProperty('--sx-spot-y', `${localY.toFixed(1)}px`);
-      spotlightHost.style.setProperty('--sx-spot-opacity', '1');
-      spotlightHost.style.setProperty(
-        '--sx-spot-intensity',
-        String(Math.max(0, Math.min(0.45, cfg.spotlightIntensity))),
-      );
-      activeSpotlightRef.current = spotlightHost;
+      if (activeSpotlightRef.current !== spotlightHost) {
+        const cfg = getActivePhysicsConfig();
+        spotlightHost.style.setProperty(
+          '--sx-spot-intensity',
+          String(Math.max(0, Math.min(0.45, cfg.spotlightIntensity))),
+        );
+        spotlightHost.style.setProperty('--sx-spot-opacity', '1');
+        activeSpotlightRef.current = spotlightHost;
+      }
+    };
+
+    pointerRef.current.onRingFrame = (ringX: number, ringY: number) => {
+      latestRingX = ringX;
+      latestRingY = ringY;
+      hasRingFrame = true;
+
+      const host = activeSpotlightRef.current;
+      if (!host) return;
+      if (!host.isConnected) {
+        activeSpotlightRef.current = null;
+        return;
+      }
+
+      const storeState = useCursorStore.getState();
+      if (
+        !storeState.isFinePointer ||
+        storeState.isReducedMotion ||
+        storeState.isRouteExcluded ||
+        storeState.isDocumentHidden
+      ) {
+        clearSpotlight();
+        return;
+      }
+
+      applySpotlightPosition(host, ringX, ringY);
+    };
+
+    const flushPointerMove = () => {
+      moveRafId = 0;
+      const state = useCursorStore.getState();
+      if (!state.isFinePointer || state.isRouteExcluded || state.isDocumentHidden) {
+        return;
+      }
+
+      if (!state.isVisible) {
+        state.setVisible(true);
+      }
+
+      if (pendingTarget !== lastRawMoveEl) {
+        lastRawMoveEl = pendingTarget;
+        const resolved = resolveCursorTarget(pendingTarget);
+        applyResolved(resolved);
+      }
+      syncSpotlightHost(pendingTarget, pendingX, pendingY);
     };
 
     const onPointerMove = (e: PointerEvent) => {
@@ -384,17 +519,18 @@ export function CursorProvider({ children }: CursorProviderProps) {
         return;
       }
 
+      // Immediate 0ms dot update & spring wake
       pointerRef.current.x = e.clientX;
       pointerRef.current.y = e.clientY;
       pointerRef.current.hasMoved = true;
+      pointerRef.current.wake?.();
 
-      if (!state.isVisible) {
-        state.setVisible(true);
+      pendingTarget = e.target;
+      pendingX = e.clientX;
+      pendingY = e.clientY;
+      if (!moveRafId) {
+        moveRafId = window.requestAnimationFrame(flushPointerMove);
       }
-
-      const resolved = resolveCursorTarget(e.target);
-      applyResolved(resolved);
-      updateSpotlightAt(e.target, e.clientX, e.clientY);
     };
 
     const onPointerDown = (e: PointerEvent) => {
@@ -410,9 +546,11 @@ export function CursorProvider({ children }: CursorProviderProps) {
       const state = useCursorStore.getState();
       if (!state.isFinePointer || state.isRouteExcluded) return;
 
+      lastRawMoveEl = null;
       pointerRef.current.x = e.clientX;
       pointerRef.current.y = e.clientY;
       pointerRef.current.hasMoved = true;
+      pointerRef.current.wake?.();
       applyResolved(resolveCursorTarget(e.target));
       state.setPressed(true);
     };
@@ -422,6 +560,8 @@ export function CursorProvider({ children }: CursorProviderProps) {
       if (state.isPressed) {
         state.setPressed(false);
       }
+      pointerRef.current.wake?.();
+      lastRawMoveEl = null;
       if (pointerRef.current.hasMoved && state.isFinePointer && !state.isRouteExcluded) {
         const refreshUnderPointer = () => {
           const under = document.elementFromPoint(pointerRef.current.x, pointerRef.current.y);
@@ -436,6 +576,7 @@ export function CursorProvider({ children }: CursorProviderProps) {
 
     const onMouseLeaveDocument = (e: MouseEvent) => {
       if (e.relatedTarget === null) {
+        lastRawMoveEl = null;
         const store = useCursorStore.getState();
         store.setVisible(false);
         store.setPressed(false);
@@ -444,6 +585,7 @@ export function CursorProvider({ children }: CursorProviderProps) {
     };
 
     const onWindowBlur = () => {
+      lastRawMoveEl = null;
       const store = useCursorStore.getState();
       store.setVisible(false);
       store.setPressed(false);
@@ -454,12 +596,32 @@ export function CursorProvider({ children }: CursorProviderProps) {
     };
 
     const onScrollRefresh = () => {
-      if (!pointerRef.current.hasMoved) return;
+      invalidateSpotlightRects();
+      if (!pointerRef.current.hasMoved || scrollRafId) return;
       const state = useCursorStore.getState();
       if (!state.isVisible || !state.isFinePointer || state.isRouteExcluded) return;
-      if (lastTargetElRef.current && !lastTargetElRef.current.isConnected) {
-        const under = document.elementFromPoint(pointerRef.current.x, pointerRef.current.y);
-        applyResolved(resolveCursorTarget(under));
+      scrollRafId = window.requestAnimationFrame(() => {
+        scrollRafId = 0;
+        if (lastTargetElRef.current && !lastTargetElRef.current.isConnected) {
+          lastRawMoveEl = null;
+          const under = document.elementFromPoint(pointerRef.current.x, pointerRef.current.y);
+          applyResolved(resolveCursorTarget(under));
+        }
+        if (activeSpotlightRef.current?.isConnected && hasRingFrame) {
+          applySpotlightPosition(activeSpotlightRef.current, latestRingX, latestRingY);
+        } else if (activeSpotlightRef.current && !activeSpotlightRef.current.isConnected) {
+          activeSpotlightRef.current = null;
+        }
+      });
+    };
+
+    const onViewportResize = () => {
+      invalidateSpotlightRects();
+      lastRawMoveEl = null;
+      if (pointerRef.current.hasMoved) {
+        pointerRef.current.x = Math.min(window.innerWidth, Math.max(0, pointerRef.current.x));
+        pointerRef.current.y = Math.min(window.innerHeight, Math.max(0, pointerRef.current.y));
+        pointerRef.current.wake?.();
       }
     };
 
@@ -470,8 +632,12 @@ export function CursorProvider({ children }: CursorProviderProps) {
     document.addEventListener('mouseleave', onMouseLeaveDocument, { passive: true });
     window.addEventListener('blur', onWindowBlur);
     window.addEventListener('scroll', onScrollRefresh, { passive: true, capture: true });
+    window.addEventListener('resize', onViewportResize, { passive: true });
+    window.visualViewport?.addEventListener('resize', onViewportResize);
 
     return () => {
+      if (moveRafId) window.cancelAnimationFrame(moveRafId);
+      if (scrollRafId) window.cancelAnimationFrame(scrollRafId);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);
@@ -479,6 +645,9 @@ export function CursorProvider({ children }: CursorProviderProps) {
       document.removeEventListener('mouseleave', onMouseLeaveDocument);
       window.removeEventListener('blur', onWindowBlur);
       window.removeEventListener('scroll', onScrollRefresh, { capture: true });
+      window.removeEventListener('resize', onViewportResize);
+      window.visualViewport?.removeEventListener('resize', onViewportResize);
+      pointerRef.current.onRingFrame = undefined;
       clearSpotlight();
     };
   }, []);

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   ArrowRight,
   CheckCircle2,
@@ -16,16 +17,18 @@ import {
   Layers,
   ChevronRight
 } from 'lucide-react';
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
 import { industryData, IndustryPainPoint, IndustrySolution } from './industryData';
 import { useUIStore } from '@/store/uiStore';
 import { GlassPanel } from '@/components/ui/GlassPanel';
+import { GlassButton } from '@/components/ui/GlassButton';
+import { ScrollReveal } from '@/components/ui/ScrollReveal';
+import { MOTION_DURATION, MOTION_EASE } from '@/lib/motionVariants';
 
 export function IndustryPageClient() {
   const { industryId } = useParams<{ industryId: string }>();
   const openSignup = useUIStore((state) => state.openSignup);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const prefersReduced = useReducedMotion();
 
   if (!industryId || !industryData[industryId]) {
     if (typeof window !== "undefined") window.location.href = "/";
@@ -36,9 +39,7 @@ export function IndustryPageClient() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans selection:bg-emerald-500/30">
-      <Navbar />
-
-      <main id="main-content" className="flex-1 pt-32 pb-24">
+      <div className="flex-1 pt-32 pb-24">
         <div className="max-w-7xl mx-auto px-6">
           
           {/* Breadcrumbs */}
@@ -59,7 +60,7 @@ export function IndustryPageClient() {
           </nav>
 
           {/* Header */}
-          <div className="text-center max-w-4xl mx-auto mb-16">
+          <ScrollReveal direction="up" className="text-center max-w-4xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold tracking-wide mb-6">
               <Sparkles className="w-4 h-4" />
               Autonomous Front Desk for {data.name}
@@ -82,13 +83,16 @@ export function IndustryPageClient() {
 
             {/* Hero CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-              <button
+              <GlassButton
+                size="lg"
+                variant="primary"
+                magnetic
                 onClick={openSignup}
-                className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                className="w-full sm:w-auto"
               >
                 Start 14-Day Free Trial
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </GlassButton>
               <Link
                 href="/pricing"
                 className="w-full sm:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-medium rounded-full border border-white/10 transition-all text-center"
@@ -96,7 +100,7 @@ export function IndustryPageClient() {
                 View Transparent Pricing
               </Link>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Problems & Solutions Grid */}
           <div className="grid md:grid-cols-2 gap-8 mb-20 max-w-6xl mx-auto">
@@ -321,11 +325,21 @@ export function IndustryPageClient() {
                         }`}
                       />
                     </button>
-                    {openFaq === idx && (
-                      <div className="px-6 pb-6 text-zinc-300 text-base leading-relaxed border-t border-white/5 pt-4">
-                        {faq.answer}
-                      </div>
-                    )}
+                    <AnimatePresence initial={false}>
+                      {openFaq === idx && (
+                        <motion.div
+                          initial={prefersReduced ? { opacity: 1 } : { height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={prefersReduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                          transition={{ duration: MOTION_DURATION.card, ease: MOTION_EASE.premium }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-6 pb-6 text-zinc-300 text-base leading-relaxed border-t border-white/5 pt-4">
+                            {faq.answer}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 ))}
               </div>
@@ -378,13 +392,16 @@ export function IndustryPageClient() {
                   Experience autonomous appointment scheduling with real-time Google and Outlook calendar synchronization. Start your 14-day free trial.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <button
+                  <GlassButton
+                    size="lg"
+                    variant="primary"
+                    magnetic
                     onClick={openSignup}
-                    className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25"
+                    className="w-full sm:w-auto"
                   >
                     Start Free Trial
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </GlassButton>
                   <Link
                     href="/pricing"
                     className="w-full sm:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-medium rounded-full border border-white/10 transition-all text-center"
@@ -397,9 +414,7 @@ export function IndustryPageClient() {
           </div>
 
         </div>
-      </main>
-
-      <Footer />
+      </div>
     </div>
   );
 }

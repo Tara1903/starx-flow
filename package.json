@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "scan:secrets": "node scripts/scan-secrets.cjs",
     "test:seo": "tsx tests/test-seo-governance.ts",
+    "audit:design": "tsx scripts/audit-design-consistency.ts",
+    "test:security": "tsx tests/test-rbac-and-ui-security.ts",
+    "test:integrity": "tsx tests/test-real-data-integrity.ts",
+    "test:visual": "tsx tests/visual-regression.spec.ts",
     "indexnow:submit": "node scripts/submit-indexnow.cjs"
   },
   "allowScripts": {

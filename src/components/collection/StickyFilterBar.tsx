@@ -47,7 +47,7 @@ export function StickyFilterBar({
   }, [])
 
   return (
-    <div className="sticky top-[73px] z-40 bg-black/80 backdrop-blur-xl border-b border-white/5">
+    <div className="sticky top-[76px] z-30 bg-[#050a08]/82 backdrop-blur-xl border-y border-white/[0.08]">
       <div className="max-w-7xl mx-auto px-6 py-3">
         <div className="flex items-center justify-between gap-4">
           {/* Left — Search */}

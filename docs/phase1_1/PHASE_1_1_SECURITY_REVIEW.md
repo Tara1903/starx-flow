@@ -63,7 +63,7 @@ To maintain bank-grade security before public launch or marketing scaling:
 ### Action 3: Git History Purge Protocol (Prior to Public Open-Sourcing)
 If the repository is transitioned to a public open-source project in the future, run the following automated scrubbing command:
 ```bash
-git filter-repo --replace-text <(echo "nvapi-HISTORICAL_KEY==>nvapi-REDACTED_HISTORICAL_SAMPLE")
+git filter-repo --replace-text <(echo "nvapi-HISTORICAL_KEY==>nvapi-your-key-here")
 git push origin --force --all
 ```
 

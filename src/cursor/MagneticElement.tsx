@@ -12,6 +12,19 @@ interface UseMagneticPullOptions {
   disabled?: boolean;
 }
 
+let sharedRectEpoch = 0;
+let sharedListenersBound = false;
+function ensureSharedRectInvalidation() {
+  if (sharedListenersBound || typeof window === 'undefined') return;
+  sharedListenersBound = true;
+  const bump = () => {
+    sharedRectEpoch += 1;
+  };
+  window.addEventListener('scroll', bump, { passive: true, capture: true });
+  window.addEventListener('resize', bump, { passive: true });
+  window.visualViewport?.addEventListener('resize', bump);
+}
+
 /**
  * Bounded pointer-attraction spring applied via CSS `translate` (independent of
  * Framer Motion `transform`) that stops its RAF loop cleanly once settled.
@@ -43,14 +56,47 @@ export function useMagneticPull<T extends HTMLElement>(
       return;
     }
 
+    ensureSharedRectInvalidation();
     let targetX = 0;
     let targetY = 0;
     let currX = 0;
     let currY = 0;
     let rafId = 0;
     let lastMs = 0;
+    let cachedCenterX = 0;
+    let cachedCenterY = 0;
+    let cachedEpoch = -1;
+    let pendingPointerX = 0;
+    let pendingPointerY = 0;
+    let pointerDirty = false;
+    let isHovered = false;
 
     const step = (now: number) => {
+      if (isHovered && pointerDirty) {
+        pointerDirty = false;
+        if (cachedEpoch !== sharedRectEpoch) {
+          const rect = el.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            cachedCenterX = rect.left - currX + rect.width / 2;
+            cachedCenterY = rect.top - currY + rect.height / 2;
+            cachedEpoch = sharedRectEpoch;
+          }
+        }
+        if (cachedEpoch === sharedRectEpoch) {
+          const preset = MAGNETIC_STRENGTH_PRESETS[strength];
+          const liveCfg = getActivePhysicsConfig();
+          const baseStrength = Math.max(0.01, DEFAULT_CURSOR_PHYSICS.magneticStrength);
+          const scalar = Math.max(0, liveCfg.magneticStrength / baseStrength);
+          const maxDisp = preset.maxDisplacementPx * scalar;
+          const factor = preset.factor * scalar;
+
+          const dx = pendingPointerX - cachedCenterX;
+          const dy = pendingPointerY - cachedCenterY;
+          targetX = Math.max(-maxDisp, Math.min(maxDisp, dx * factor));
+          targetY = Math.max(-maxDisp, Math.min(maxDisp, dy * factor));
+        }
+      }
+
       const dt = lastMs > 0 ? Math.min(0.15, Math.max(0.001, (now - lastMs) / 1000)) : 1 / 60;
       lastMs = now;
       const alpha = 1 - Math.exp(-18 * dt);
@@ -69,7 +115,7 @@ export function useMagneticPull<T extends HTMLElement>(
         el.style.translate = `${currX.toFixed(2)}px ${currY.toFixed(2)}px`;
       }
 
-      if (currX !== targetX || currY !== targetY || targetX !== 0 || targetY !== 0) {
+      if (pointerDirty || currX !== targetX || currY !== targetY) {
         rafId = window.requestAnimationFrame(step);
       } else {
         rafId = 0;
@@ -79,41 +125,47 @@ export function useMagneticPull<T extends HTMLElement>(
 
     const ensureLoop = () => {
       if (!rafId) {
+        lastMs = 0;
         rafId = window.requestAnimationFrame(step);
       }
     };
 
+    const onPointerEnter = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
+      isHovered = true;
+      cachedEpoch = -1;
+      pendingPointerX = e.clientX;
+      pendingPointerY = e.clientY;
+      pointerDirty = true;
+      ensureLoop();
+    };
+
     const onPointerMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
-      const rect = el.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
-
-      const preset = MAGNETIC_STRENGTH_PRESETS[strength];
-      const liveCfg = getActivePhysicsConfig();
-      const baseStrength = Math.max(0.01, DEFAULT_CURSOR_PHYSICS.magneticStrength);
-      const scalar = Math.max(0, liveCfg.magneticStrength / baseStrength);
-
-      const maxDisp = preset.maxDisplacementPx * scalar;
-      const factor = preset.factor * scalar;
-
-      const dx = e.clientX - (rect.left + rect.width / 2);
-      const dy = e.clientY - (rect.top + rect.height / 2);
-
-      targetX = Math.max(-maxDisp, Math.min(maxDisp, dx * factor));
-      targetY = Math.max(-maxDisp, Math.min(maxDisp, dy * factor));
+      isHovered = true;
+      pendingPointerX = e.clientX;
+      pendingPointerY = e.clientY;
+      pointerDirty = true;
       ensureLoop();
     };
 
     const onPointerLeave = () => {
+      isHovered = false;
+      pointerDirty = false;
+      cachedEpoch = -1;
       targetX = 0;
       targetY = 0;
-      ensureLoop();
+      if (currX !== 0 || currY !== 0) {
+        ensureLoop();
+      }
     };
 
+    el.addEventListener('pointerenter', onPointerEnter, { passive: true });
     el.addEventListener('pointermove', onPointerMove, { passive: true });
     el.addEventListener('pointerleave', onPointerLeave, { passive: true });
 
     return () => {
+      el.removeEventListener('pointerenter', onPointerEnter);
       el.removeEventListener('pointermove', onPointerMove);
       el.removeEventListener('pointerleave', onPointerLeave);
       if (rafId) window.cancelAnimationFrame(rafId);

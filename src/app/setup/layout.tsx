@@ -59,17 +59,23 @@ export default function SetupLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-300 flex flex-col font-sans selection:bg-emerald-500/20 selection:text-emerald-400">
       
-      {/* Premium background mesh effect */}
+      {/* Premium background mesh effect (radial gradient, zero heavy filter blur) */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-500/[0.02] rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/[0.01] rounded-full blur-[120px]" />
+        <div
+          className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(16,185,129,0.03) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(59,130,246,0.02) 0%, transparent 70%)" }}
+        />
       </div>
 
       {/* Onboarding Header */}
       <SetupHeader />
 
       {/* Main Layout Area */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pb-32 lg:pb-12 z-10">
+      <div role="region" aria-label="Onboarding setup" className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pb-32 lg:pb-12 z-10">
         <div className="flex flex-col lg:flex-row gap-8 items-start h-full">
           
           {/* Step Contents */}
@@ -83,7 +89,7 @@ export default function SetupLayout({ children }: { children: React.ReactNode })
           </div>
 
         </div>
-      </main>
+      </div>
 
       {/* Mobile Progress & Checklist Overlay */}
       <div className="lg:hidden">

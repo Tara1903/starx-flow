@@ -41,12 +41,17 @@ export function CursorPlaygroundClient() {
   useEffect(() => {
     let rafId = 0;
     let lastUpdate = 0;
+    let prevKey = '';
 
     const sample = (now: number) => {
       if (now - lastUpdate > 48) {
         const snap = getCursorTelemetrySnapshot();
-        setTelemetry(snap);
-        setPeakLagPx((prev) => (snap.lagDistancePx > prev ? snap.lagDistancePx : prev));
+        const key = `${snap.dotX.toFixed(1)}|${snap.dotY.toFixed(1)}|${snap.ringX.toFixed(1)}|${snap.ringY.toFixed(1)}|${snap.mode}|${snap.label ?? ''}|${snap.activeVariant ?? ''}`;
+        if (key !== prevKey) {
+          prevKey = key;
+          setTelemetry(snap);
+          setPeakLagPx((prev) => (snap.lagDistancePx > prev ? snap.lagDistancePx : prev));
+        }
         lastUpdate = now;
       }
       rafId = window.requestAnimationFrame(sample);

@@ -35,7 +35,7 @@ const KPICard = memo(function KPICard({
   const [displayValue, setDisplayValue] = useState(prefersReduced ? numericValue : 0);
 
   useEffect(() => {
-    if (prefersReduced) {
+    if (prefersReduced || (typeof document !== "undefined" && document.hidden)) {
       setDisplayValue(numericValue);
       return;
     }
@@ -64,7 +64,7 @@ const KPICard = memo(function KPICard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       whileHover={prefersReduced ? undefined : liquidHoverLift}
       transition={{ duration: 0.36, delay: delayIndex * 0.06, ease: [0.16, 1, 0.3, 1] }}
-      className="liquid-glass glass-card-obsidian glass-interactive rounded-2xl p-5 flex flex-col justify-between min-h-[138px] border border-white/[0.14] hover:border-emerald-400/45 select-none group overflow-hidden tabular-nums"
+      className="glass-card-obsidian glass-interactive rounded-2xl p-5 flex flex-col justify-between min-h-[138px] border border-white/[0.14] hover:border-emerald-400/45 select-none group overflow-hidden tabular-nums"
     >
       <div className="flex items-center justify-between w-full relative z-10">
         <div className="w-10 h-10 rounded-xl bg-emerald-500/[0.14] border border-emerald-400/30 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2),inset_0_1px_0_rgba(255,255,255,0.25)] transition-transform duration-300 group-hover:scale-105">

@@ -2,6 +2,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
+import { OTPInput } from "./ui/OTPInput";
+import { GlassButton } from "./ui/GlassButton";
+import { SuccessState } from "./ui/SuccessState";
 import {
   X,
   ArrowRight,
@@ -322,6 +325,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
   // ── 8-CHARACTER OTP VERIFICATION SCREEN ──
   if (otpSent) {
     const isCodeComplete = otpChars.join("").length === 8;
+    const formattedCooldown = `00:${String(resendCooldown).padStart(2, "0")}`;
 
     return (
       <motion.div
@@ -331,181 +335,143 @@ export function SignupModal({ onClose }: SignupModalProps) {
         onMouseDown={(e) => {
           if (e.target === e.currentTarget && !isVerifying) onClose();
         }}
-        className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md"
+        className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md"
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          initial={{ scale: 0.96, opacity: 0, y: 18 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="relative w-full max-w-lg glass-panel rounded-2xl overflow-hidden ring-1 ring-emerald-500/20"
+          exit={{ scale: 0.96, opacity: 0, y: 18 }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="otp-modal-title"
+          className="relative w-full max-w-lg glass-card-obsidian rounded-3xl overflow-hidden border border-emerald-500/25 shadow-[0_30px_90px_rgba(0,0,0,0.88),0_0_55px_rgba(16,185,129,0.14)]"
         >
-          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400" />
+          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
 
-          {/* Close / Back button */}
+          {/* Header Actions */}
           <div className="flex items-center justify-between px-6 pt-5 pb-0">
             <button
+              type="button"
               onClick={() => {
                 setOtpSent(false);
                 setSubmitError(null);
                 setOtpChars(Array(8).fill(""));
               }}
-              className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer"
             >
               <ChevronLeft size={16} />
               <span>Change Email</span>
             </button>
             <button
+              type="button"
               onClick={onClose}
               disabled={isVerifying}
-              className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Close verification modal"
+              className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
             >
               <X size={18} />
             </button>
           </div>
 
           <div className="p-6 sm:p-8 text-center">
-            {/* Header Icon */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.1, damping: 15 }}
-              className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.2)]"
-            >
-              {isSuccess ? (
-                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-              ) : (
-                <ShieldCheck className="w-8 h-8 text-emerald-400" />
-              )}
-            </motion.div>
+            {isSuccess ? (
+              <SuccessState
+                title="Account Verified"
+                description="Authentication complete. Preparing your StarX Flow workspace..."
+              />
+            ) : (
+              <>
+                {/* Shield Emblem */}
+                <motion.div
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", delay: 0.05, damping: 16 }}
+                  className="relative w-16 h-16 mx-auto mb-5 flex items-center justify-center"
+                >
+                  <div className="absolute -inset-2 rounded-full bg-emerald-500/20 blur-lg" />
+                  <div className="relative w-16 h-16 rounded-2xl bg-emerald-500/12 border-2 border-emerald-400/60 flex items-center justify-center shadow-[0_0_28px_rgba(16,185,129,0.28)]">
+                    <ShieldCheck className="w-8 h-8 text-emerald-400" />
+                  </div>
+                </motion.div>
 
-            <h3 className="text-xl font-bold text-white mb-2">
-              {isSuccess ? "Identity Verified!" : "Enter 8-Character Code"}
-            </h3>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-1">
-              We dispatched a secure 8-character verification code to
-            </p>
-            <p className="text-sm font-semibold text-emerald-400 mb-6 font-mono">{sentEmail}</p>
+                <h3
+                  id="otp-modal-title"
+                  className="text-2xl font-bold text-white tracking-tight mb-2"
+                >
+                  Verify Your Account
+                </h3>
+                <p className="text-sm text-zinc-400 leading-relaxed mb-1">
+                  We&apos;ve sent an 8-character verification code to
+                </p>
+                <p className="text-sm font-semibold text-emerald-400 mb-6 font-mono break-all">
+                  {sentEmail}
+                </p>
 
-            {/* Error Banner */}
-            {submitError && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium text-center"
-              >
-                {submitError}
-              </motion.div>
-            )}
+                {/* Error Banner */}
+                {submitError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-5 p-3 rounded-xl bg-red-500/12 border border-red-500/35 text-red-300 text-xs font-medium text-center"
+                  >
+                    {submitError}
+                  </motion.div>
+                )}
 
-            {/* 8-Character OTP Input Cluster (4 + 4 layout) */}
-            <div className="mb-6">
-              <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                {/* First 4 characters */}
-                <div className="flex gap-1.5 sm:gap-2">
-                  {[0, 1, 2, 3].map((idx) => (
-                    <input
-                      key={idx}
-                      ref={(el) => { inputRefs.current[idx] = el; }}
-                      type="text"
-                      inputMode="text"
-                      maxLength={1}
-                      value={otpChars[idx]}
-                      onChange={(e) => handleCharChange(idx, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(idx, e)}
-                      onPaste={(e) => {
-                        e.preventDefault();
-                        const pasted = e.clipboardData.getData("text");
-                        handleCharChange(idx, pasted);
-                      }}
-                      className={cn(
-                        "w-9 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-mono font-bold rounded-xl outline-none transition-all",
-                        "bg-[#0d0d12] border text-white uppercase",
-                        otpChars[idx]
-                          ? "border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
-                          : "border-white/10 hover:border-white/20 focus:border-emerald-500/50"
-                      )}
-                    />
-                  ))}
+                {/* Reusable 8-Character OTP Input */}
+                <div className="mb-6">
+                  <OTPInput
+                    value={otpChars}
+                    onChange={(next) => {
+                      setSubmitError(null);
+                      setOtpChars(next);
+                    }}
+                    onComplete={(fullCode) => triggerVerification(fullCode)}
+                    disabled={isVerifying || isSuccess}
+                    error={Boolean(submitError)}
+                    success={isSuccess}
+                  />
+                  <p className="text-[11px] text-zinc-500 mt-3">
+                    Valid for 10 minutes &bull; Full code paste supported
+                  </p>
                 </div>
 
-                {/* Divider hyphen */}
-                <span className="text-zinc-600 font-bold text-lg select-none px-0.5">-</span>
-
-                {/* Second 4 characters */}
-                <div className="flex gap-1.5 sm:gap-2">
-                  {[4, 5, 6, 7].map((idx) => (
-                    <input
-                      key={idx}
-                      ref={(el) => { inputRefs.current[idx] = el; }}
-                      type="text"
-                      inputMode="text"
-                      maxLength={1}
-                      value={otpChars[idx]}
-                      onChange={(e) => handleCharChange(idx, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(idx, e)}
-                      onPaste={(e) => {
-                        e.preventDefault();
-                        const pasted = e.clipboardData.getData("text");
-                        handleCharChange(idx, pasted);
-                      }}
-                      className={cn(
-                        "w-9 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-mono font-bold rounded-xl outline-none transition-all",
-                        "bg-[#0d0d12] border text-white uppercase",
-                        otpChars[idx]
-                          ? "border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
-                          : "border-white/10 hover:border-white/20 focus:border-emerald-500/50"
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <p className="text-[11px] text-zinc-500 mt-3">
-                Valid for 10 minutes &bull; Paste supported (e.g. ABCD-EFGH)
-              </p>
-            </div>
-
-            {/* Verify Button */}
-            <button
-              onClick={() => triggerVerification()}
-              disabled={!isCodeComplete || isVerifying || isSuccess}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold rounded-full py-3.5 transition-all shadow-[0_0_25px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 text-sm mb-4"
-            >
-              {isVerifying ? (
-                <>
-                  <Loader2 className="animate-spin" size={18} />
-                  <span>Verifying Code...</span>
-                </>
-              ) : isSuccess ? (
-                <>
-                  <CheckCircle2 size={18} />
-                  <span>Verified! Redirecting...</span>
-                </>
-              ) : (
-                <>
+                {/* Verify CTA */}
+                <GlassButton
+                  type="button"
+                  size="lg"
+                  variant="primary"
+                  magnetic
+                  isLoading={isVerifying}
+                  disabled={!isCodeComplete || isVerifying || isSuccess}
+                  onClick={() => triggerVerification()}
+                  className="w-full mb-4"
+                >
                   <span>Verify &amp; Continue</span>
                   <ArrowRight size={16} />
-                </>
-              )}
-            </button>
+                </GlassButton>
 
-            {/* Resend Code Section */}
-            <div className="flex items-center justify-center gap-2 text-xs text-zinc-400">
-              <span>Didn&apos;t receive the code?</span>
-              {resendCooldown > 0 ? (
-                <span className="text-zinc-500 font-mono">Resend in {resendCooldown}s</span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={isSubmitting}
-                  className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors flex items-center gap-1"
-                >
-                  <RefreshCw size={12} className={cn(isSubmitting && "animate-spin")} />
-                  <span>Resend Code</span>
-                </button>
-              )}
-            </div>
+                {/* Resend Code */}
+                <div className="flex items-center justify-center gap-2 text-xs text-zinc-400">
+                  <span>Didn&apos;t receive the code?</span>
+                  {resendCooldown > 0 ? (
+                    <span className="text-zinc-400 font-mono">
+                      Resend code in <span className="text-emerald-400">{formattedCooldown}</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={isSubmitting}
+                      className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw size={12} className={cn(isSubmitting && "animate-spin")} />
+                      <span>Resend Code</span>
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </motion.div>
       </motion.div>
@@ -523,19 +489,19 @@ export function SignupModal({ onClose }: SignupModalProps) {
       className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md"
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        initial={{ scale: 0.96, opacity: 0, y: 18 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        exit={{ scale: 0.96, opacity: 0, y: 18 }}
+        transition={{ type: "spring", damping: 26, stiffness: 300 }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="signup-modal-title"
-        className="relative w-full max-w-md glass-panel rounded-2xl overflow-hidden ring-1 ring-emerald-500/10 flex flex-col"
+        className="relative w-full max-w-md glass-card-obsidian rounded-3xl overflow-hidden border border-emerald-500/20 shadow-[0_28px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(16,185,129,0.12)] flex flex-col"
       >
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+        <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/80 to-transparent" />
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/5 relative z-10">
+        <div className="flex items-center justify-between p-6 border-b border-white/[0.08] relative z-10">
           <div>
             <h2 id="signup-modal-title" className="text-xl font-bold text-white tracking-tight">
               {isLoginMode ? "Sign In to StarX Flow" : "Start Free Trial"}
@@ -548,9 +514,11 @@ export function SignupModal({ onClose }: SignupModalProps) {
             )}
           </div>
           <button
+            type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Close modal"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -558,7 +526,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
 
         {/* Progress Bar (signup only) */}
         {!isLoginMode && (
-          <div className="w-full h-1 bg-zinc-900">
+          <div className="w-full h-1 bg-white/[0.05]">
             <motion.div
               className="h-full bg-gradient-to-r from-emerald-500 to-teal-400"
               animate={{ width: `${(step / 2) * 100}%` }}
@@ -572,7 +540,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            className="mx-6 mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs"
+            className="mx-6 mt-4 p-3 rounded-xl bg-red-500/12 border border-red-500/30 text-red-300 text-xs font-medium"
           >
             {submitError}
           </motion.div>
@@ -596,14 +564,14 @@ export function SignupModal({ onClose }: SignupModalProps) {
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
                     <input
                       type="email"
                       {...loginForm.register("email")}
                       placeholder="you@company.com"
                       className={cn(
-                        "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg pl-11 pr-4 py-3 text-white transition-colors text-sm",
-                        loginForm.formState.errors.email ? "border-red-500/50" : "border-white/10"
+                        "w-full glass-input rounded-xl pl-11 pr-4 py-3 text-sm",
+                        loginForm.formState.errors.email ? "border-red-500/60" : ""
                       )}
                     />
                   </div>
@@ -612,28 +580,28 @@ export function SignupModal({ onClose }: SignupModalProps) {
                   )}
                 </div>
 
-                <button
+                <GlassButton
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-70 text-black font-bold rounded-full py-3.5 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 text-sm"
+                  size="lg"
+                  variant="primary"
+                  magnetic
+                  isLoading={isSubmitting}
+                  className="w-full"
                 >
-                  {isSubmitting ? (
-                    <Loader2 className="animate-spin" size={18} />
-                  ) : (
-                    <>
-                      Send 8-Character Code <ArrowRight size={16} />
-                    </>
-                  )}
-                </button>
+                  <span>Send 8-Character Code</span>
+                  <ArrowRight size={16} />
+                </GlassButton>
 
                 <div className="relative flex items-center">
-                  <div className="flex-grow border-t border-zinc-800"></div>
+                  <div className="flex-grow border-t border-white/10" />
                   <span className="flex-shrink-0 mx-4 text-zinc-500 text-xs">Or</span>
-                  <div className="flex-grow border-t border-zinc-800"></div>
+                  <div className="flex-grow border-t border-white/10" />
                 </div>
 
-                <button
+                <GlassButton
                   type="button"
+                  size="lg"
+                  variant="secondary"
                   onClick={async () => {
                     setIsSubmitting(true);
                     setSubmitError(null);
@@ -642,7 +610,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
                     if (error) setSubmitError(error);
                   }}
                   disabled={isSubmitting}
-                  className="w-full bg-[#111] hover:bg-[#1a1a1a] border border-white/10 disabled:opacity-70 text-white font-medium rounded-full py-3.5 transition-all flex items-center justify-center gap-3 text-sm"
+                  className="w-full"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -651,7 +619,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
                     <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                   </svg>
                   Continue with Google
-                </button>
+                </GlassButton>
 
                 <div className="text-center pt-2">
                   <button
@@ -692,8 +660,8 @@ export function SignupModal({ onClose }: SignupModalProps) {
                             {...signupForm.register("businessName")}
                             placeholder="e.g. Acme Dental Clinic"
                             className={cn(
-                              "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white transition-colors text-sm",
-                              signupForm.formState.errors.businessName ? "border-red-500/50" : "border-white/10"
+                              "glass-input w-full rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-500",
+                              signupForm.formState.errors.businessName ? "border-red-500/50 focus:border-red-400" : ""
                             )}
                           />
                           {signupForm.formState.errors.businessName && (
@@ -709,21 +677,21 @@ export function SignupModal({ onClose }: SignupModalProps) {
                             <select
                               {...signupForm.register("businessType")}
                               className={cn(
-                                "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white transition-colors text-sm appearance-none",
-                                signupForm.formState.errors.businessType ? "border-red-500/50" : "border-white/10"
+                                "glass-input w-full rounded-xl px-4 py-3 text-white text-sm appearance-none",
+                                signupForm.formState.errors.businessType ? "border-red-500/50 focus:border-red-400" : ""
                               )}
                             >
-                              <option value="" disabled>Select your industry</option>
-                              <option value="Beauty & Wellness">Beauty &amp; Wellness</option>
-                              <option value="Medical & Dental">Medical &amp; Dental</option>
-                              <option value="Consulting & Agency">Consulting &amp; Agency</option>
-                              <option value="Home Services">Home Services</option>
-                              <option value="Real Estate">Real Estate</option>
-                              <option value="Fitness & Personal Training">Fitness &amp; Personal Training</option>
-                              <option value="Hospitality & Dining">Hospitality &amp; Dining</option>
-                              <option value="Other">Other</option>
+                              <option value="" disabled className="bg-[#070d0b] text-zinc-400">Select your industry</option>
+                              <option value="Beauty & Wellness" className="bg-[#070d0b] text-white">Beauty &amp; Wellness</option>
+                              <option value="Medical & Dental" className="bg-[#070d0b] text-white">Medical &amp; Dental</option>
+                              <option value="Consulting & Agency" className="bg-[#070d0b] text-white">Consulting &amp; Agency</option>
+                              <option value="Home Services" className="bg-[#070d0b] text-white">Home Services</option>
+                              <option value="Real Estate" className="bg-[#070d0b] text-white">Real Estate</option>
+                              <option value="Fitness & Personal Training" className="bg-[#070d0b] text-white">Fitness &amp; Personal Training</option>
+                              <option value="Hospitality & Dining" className="bg-[#070d0b] text-white">Hospitality &amp; Dining</option>
+                              <option value="Other" className="bg-[#070d0b] text-white">Other</option>
                             </select>
-                            <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                            <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                           </div>
                           {signupForm.formState.errors.businessType && (
                             <p className="text-red-400 text-xs mt-1">{signupForm.formState.errors.businessType.message}</p>
@@ -747,8 +715,8 @@ export function SignupModal({ onClose }: SignupModalProps) {
                             {...signupForm.register("ownerName")}
                             placeholder="John Doe"
                             className={cn(
-                              "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white transition-colors text-sm",
-                              signupForm.formState.errors.ownerName ? "border-red-500/50" : "border-white/10"
+                              "glass-input w-full rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-500",
+                              signupForm.formState.errors.ownerName ? "border-red-500/50 focus:border-red-400" : ""
                             )}
                           />
                           {signupForm.formState.errors.ownerName && (
@@ -765,8 +733,8 @@ export function SignupModal({ onClose }: SignupModalProps) {
                             {...signupForm.register("email")}
                             placeholder="john@example.com"
                             className={cn(
-                              "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white transition-colors text-sm",
-                              signupForm.formState.errors.email ? "border-red-500/50" : "border-white/10"
+                              "glass-input w-full rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-500",
+                              signupForm.formState.errors.email ? "border-red-500/50 focus:border-red-400" : ""
                             )}
                           />
                           {signupForm.formState.errors.email && (
@@ -783,8 +751,8 @@ export function SignupModal({ onClose }: SignupModalProps) {
                             {...signupForm.register("phone")}
                             placeholder="+1 (555) 000-0000"
                             className={cn(
-                              "w-full bg-[#111] border focus:border-emerald-500/50 outline-none rounded-lg px-4 py-3 text-white transition-colors text-sm",
-                              signupForm.formState.errors.phone ? "border-red-500/50" : "border-white/10"
+                              "glass-input w-full rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-500",
+                              signupForm.formState.errors.phone ? "border-red-500/50 focus:border-red-400" : ""
                             )}
                           />
                           {signupForm.formState.errors.phone && (
@@ -796,51 +764,57 @@ export function SignupModal({ onClose }: SignupModalProps) {
                   </AnimatePresence>
                 </div>
 
-                <div className="p-6 pt-2 border-t border-white/5 flex flex-col gap-4 mt-2">
-                  <div className="flex gap-4">
+                <div className="p-6 pt-2 border-t border-white/[0.06] flex flex-col gap-4 mt-2">
+                  <div className="flex gap-3">
                     {step > 1 && (
-                      <button
+                      <GlassButton
                         type="button"
+                        variant="ghost"
+                        size="md"
                         onClick={() => setStep(1)}
-                        className="px-6 py-3 rounded-full text-zinc-400 hover:text-white font-medium hover:bg-white/5 transition-colors text-sm"
+                        className="px-6"
                       >
                         Back
-                      </button>
+                      </GlassButton>
                     )}
 
                     {step < 2 ? (
-                      <button
+                      <GlassButton
                         type="button"
+                        variant="primary"
+                        size="md"
                         onClick={nextStep}
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-full py-3 transition-colors shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 text-sm"
+                        className="flex-1"
                       >
-                        Continue <ArrowRight size={16} />
-                      </button>
+                        <span>Continue</span>
+                        <ArrowRight size={16} />
+                      </GlassButton>
                     ) : (
-                      <button
+                      <GlassButton
                         type="submit"
+                        variant="primary"
+                        size="md"
+                        isLoading={isSubmitting}
                         disabled={isSubmitting}
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-70 text-black font-bold rounded-full py-3 transition-colors shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 text-sm"
+                        className="flex-1"
                       >
-                        {isSubmitting ? (
-                          <Loader2 className="animate-spin" size={18} />
-                        ) : (
-                          "Send 8-Character Code"
-                        )}
-                      </button>
+                        Send 8-Character Code
+                      </GlassButton>
                     )}
                   </div>
 
                   {step === 2 && (
                     <>
                       <div className="relative flex items-center">
-                        <div className="flex-grow border-t border-zinc-800"></div>
+                        <div className="flex-grow border-t border-white/[0.08]"></div>
                         <span className="flex-shrink-0 mx-4 text-zinc-500 text-xs">Or</span>
-                        <div className="flex-grow border-t border-zinc-800"></div>
+                        <div className="flex-grow border-t border-white/[0.08]"></div>
                       </div>
 
-                      <button
+                      <GlassButton
                         type="button"
+                        variant="secondary"
+                        size="md"
                         onClick={async () => {
                           setIsSubmitting(true);
                           setSubmitError(null);
@@ -849,16 +823,16 @@ export function SignupModal({ onClose }: SignupModalProps) {
                           if (error) setSubmitError(error);
                         }}
                         disabled={isSubmitting}
-                        className="w-full bg-[#111] hover:bg-[#1a1a1a] border border-white/10 disabled:opacity-70 text-white font-medium rounded-full py-3 transition-all flex items-center justify-center gap-3 text-sm"
+                        className="w-full"
                       >
-                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24">
                           <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                           <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                           <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                           <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
                         Continue with Google
-                      </button>
+                      </GlassButton>
                     </>
                   )}
                 </div>
