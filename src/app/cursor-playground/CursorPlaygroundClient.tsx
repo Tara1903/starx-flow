@@ -128,7 +128,7 @@ export function CursorPlaygroundClient() {
                   Sweep quickly or reverse directions inside this trackpad
                 </p>
                 <p className="text-xs text-zinc-500">
-                  White inner dot snaps at 0ms; emerald outer ring converges smoothly toward dot
+                  Crisp white inner dot snaps at 0ms; filled translucent emerald orb follows smoothly toward dot
                 </p>
               </div>
               <div className="flex items-center justify-between text-xs font-mono text-zinc-400">

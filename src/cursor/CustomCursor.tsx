@@ -208,12 +208,12 @@ export function CustomCursor({ pointerRef }: CustomCursorProps) {
   const glowScalar = Math.max(0, Math.min(2, config.glowIntensity));
   const ringShadow =
     activeVariant === 'danger'
-      ? `0 0 ${Math.round(22 * glowScalar)}px rgba(248, 113, 113, ${0.38 * glowScalar})`
+      ? `0 0 ${Math.round(16 * glowScalar)}px rgba(248, 113, 113, ${0.20 * glowScalar})`
       : mode === 'disabled'
         ? 'none'
         : mode === 'hover' || mode === 'label'
-          ? `0 0 ${Math.round(26 * glowScalar)}px rgba(52, 211, 153, ${0.42 * glowScalar}), inset 0 0 14px rgba(16, 185, 129, 0.14)`
-          : `0 0 ${Math.round(18 * glowScalar)}px rgba(16, 185, 129, ${0.24 * glowScalar}), inset 0 0 10px rgba(16, 185, 129, 0.08)`;
+          ? `0 0 ${Math.round(18 * glowScalar)}px rgba(16, 185, 129, ${0.22 * glowScalar})`
+          : `0 0 ${Math.round(14 * glowScalar)}px rgba(16, 185, 129, ${0.16 * glowScalar})`;
 
   return (
     <div

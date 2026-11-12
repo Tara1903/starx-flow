@@ -18,17 +18,11 @@
     - Tuned damped-spring parameters in `DEFAULT_CURSOR_PHYSICS`: `followResponsiveness = 0.50`, `outerStiffness = 140` (was `300`), `outerDamping = 20` (was `29`), `maxSeparationPx = 56`, fixed `SUBSTEP_SEC = 1/240`, with invariant-damping progressive soft tether beyond `0.65 * maxSeparationPx`.
     - Live Playground (`/cursor-playground?qa=verify`): added `Follow Responsiveness`, `Spring Stiffness`, `Outer Damping`, and `Max Separation (px)` sliders alongside live `inner dot (x, y)`, `outer ring (x, y)`, `separation`, and `peak separation` telemetry.
 
-## Verification Summary (Post Tuning Edit)
-- `npx tsx tests/live-e2e/probe-cursor-physics.ts`:
-  - Resting state: `ringSize = 46px`, `sep = 0.00px`
-  - Slow sweep (`~180 px/s`): steady lag `avg = 27.56px`, `max = 29.53px`
-  - Fast directional sweep (`~1100 px/s`): steady separation `39.0–50.2px` (`max = 50.19px`)
-  - Abrupt stop: smooth deceleration (`34.21px -> 22.58px -> 14.07px -> 5.08px -> 1.14px -> 0.10px`), settled at `323ms` with `0.10px` max overshoot
-  - `180°` reversal momentum: ring carries prior trajectory forward (`327.79 -> 339.44 -> 345.80`) before curving back toward dot
-  - Circular orbit: `avg = 42.42px`, `max = 49.57px`
-  - Frame-rate invariance (`900 px/s` synthetic step benchmark): `60Hz peak=108.56px (end 0.95px)`, `120Hz peak=112.14px (end 0.37px)`, `144Hz peak=113.61px (end 0.52px)`
-- `npx tsx tests/test-cursor-2.spec.ts` -> **58 passed, 0 failed** (`Chromium Desktop 1440x900`, `/cursor-playground` production restriction check, `Firefox Desktop 1440x900`, `WebKit Desktop 1440x900`, `Reduced Motion`, `390x844`, `360x800`, `320x568`, `768x1024`)
-- `npm run test:visual` -> **92 passed, 0 failed**
+  - FILLED ORB VISUAL UPGRADE (`2026-11-12`):
+    - Replaced the hollow neon ring in `.starx-cursor-ring` / `CURSOR_VISUAL_TOKENS` / `CustomCursor.tsx` with a filled translucent emerald orb (`background-color: rgba(5, 150, 105, 0.34)`, hover `0.30`, primary/white CTA hover `rgba(4, 120, 87, 0.36)`, pressed `0.44`, subtle `1px` edge `rgba(52, 211, 153, 0.16)`, soft ambient glow `0 0 14px rgba(16, 185, 129, 0.16)`, zero backdrop blur, zero hollow center) while preserving the `6px` crisp white inner dot and established spring physics.
+
+## Verification Summary (Post Filled Orb Upgrade)
+- `npx tsx tests/test-cursor-2.spec.ts` -> **59 passed, 0 failed** (including filled translucent orb fill-alpha/border/no-blur assertions and screenshot inspection in `tests/__screenshots__/cursor2/playground-filled-orb-lag.png` & `playground-hover-invert.png`)
 - `npm run audit:design` -> **222 UI files audited, 0 violations**
 - `npm run typecheck` -> **0 errors**
 - `npm run build` -> **0 errors (114 routes compiled)**

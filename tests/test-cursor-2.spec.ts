@@ -73,6 +73,7 @@ async function getLayerCenters(page: Page) {
     const dotRect = dot?.getBoundingClientRect();
     const ringRect = ring?.getBoundingClientRect();
 
+    const ringCs = ring ? window.getComputedStyle(ring) : null;
     return {
       dotCount: document.querySelectorAll('[data-testid="starx-cursor-dot"]').length,
       ringCount: document.querySelectorAll('[data-testid="starx-cursor-ring"]').length,
@@ -88,7 +89,10 @@ async function getLayerCenters(page: Page) {
       ringX: ringRect ? ringRect.left + ringRect.width / 2 : -1,
       ringY: ringRect ? ringRect.top + ringRect.height / 2 : -1,
       ringWidth: ringRect ? ringRect.width : 0,
-      ringTransform: ring ? window.getComputedStyle(ring).transform : '',
+      ringTransform: ringCs?.transform ?? '',
+      ringBgColor: ringCs?.backgroundColor ?? '',
+      ringBorderWidth: ringCs?.borderTopWidth ?? '',
+      ringBackdropFilter: ringCs?.backdropFilter ?? 'none',
       bodyCursor: window.getComputedStyle(document.body).cursor,
       hasEnabledClass: document.documentElement.classList.contains('starx-cursor-enabled'),
       hasNativeClass: document.documentElement.classList.contains('starx-cursor-native'),
@@ -147,6 +151,15 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
     initial.ringWidth >= 44,
     `${labelPrefix}: enlarged resting outer circle diameter active (${initial.ringWidth.toFixed(1)}px)`,
   );
+  if (browserKind === 'chromium') {
+    const rgbaMatch = initial.ringBgColor.match(/rgba\([^,]+,\s*[^,]+,\s*[^,]+,\s*([\d.]+)\)/);
+    const fillAlpha = rgbaMatch ? Number(rgbaMatch[1]) : 0;
+    const borderPx = parseFloat(initial.ringBorderWidth || '99');
+    assert(
+      fillAlpha >= 0.24 && fillAlpha <= 0.45 && borderPx <= 1.25 && (initial.ringBackdropFilter === 'none' || !initial.ringBackdropFilter),
+      `${labelPrefix}: outer orb uses solid translucent emerald fill (bg=${initial.ringBgColor}, border=${initial.ringBorderWidth}, blur=${initial.ringBackdropFilter})`,
+    );
+  }
 
   // 2. Dual-layer physics test: immediate inner dot + noticeably delayed outer ring convergence
   const padBox = await getBoxInView(page.getByTestId('pg-tracking-pad'));
@@ -467,8 +480,20 @@ async function runCoreDesktopSuite(browser: Browser, labelPrefix: string, browse
       `${labelPrefix}: 8-char OTP box preserves native cursor & clean typing`,
     );
 
-    // 7. Capture QA screenshot on playground before verifying public home + excluded /collections
+    // 7. Capture QA screenshots on playground (mid-sweep filled orb + hover inversion)
     fs.mkdirSync(REPORT_SCREENSHOT_DIR, { recursive: true });
+    const lagBox = await getBoxInView(page.getByTestId('pg-tracking-pad'));
+    await page.mouse.move(lagBox.x + 80, lagBox.y + lagBox.height / 2);
+    await page.waitForTimeout(450);
+    for (let s = 1; s <= 10; s += 1) {
+      await page.mouse.move(lagBox.x + 80 + s * 28, lagBox.y + lagBox.height / 2);
+      await page.waitForTimeout(16);
+    }
+    await page.screenshot({
+      path: path.join(REPORT_SCREENSHOT_DIR, 'playground-filled-orb-lag.png'),
+      fullPage: false,
+    });
+
     const shotBox = await getBoxInView(primaryBtn);
     await page.mouse.move(shotBox.x + shotBox.width / 2, shotBox.y + shotBox.height / 2);
     await page.waitForTimeout(240);
