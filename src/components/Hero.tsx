@@ -1,11 +1,27 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, CheckCircle2, PhoneMissed, Star } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  PhoneMissed,
+  Star,
+  Mic,
+  MessageSquare,
+  CalendarCheck,
+  Send,
+  Sparkles,
+  Layers,
+  Clock,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
 import { useUIStore } from "../store/uiStore";
+import { GlassButton } from "./ui/GlassButton";
+import { GlassCard } from "./ui/GlassCard";
+import { MOTION_EASE, smoothTransition } from "../lib/motionVariants";
 
-// Type definitions for the chat simulation
 interface ChatMessage {
   id: string;
   sender: "ai" | "user";
@@ -13,304 +29,482 @@ interface ChatMessage {
 }
 
 const chatScript: ChatMessage[] = [
-  { id: "1", sender: "user", text: "Hi, do you have any slots for a deep tissue massage tomorrow?" },
-  { id: "2", sender: "ai", text: "Hi! We have openings at 10:30 AM and 2:00 PM with therapist Sarah. Want me to book one?" },
+  {
+    id: "1",
+    sender: "user",
+    text: "Hi, do you have any slots for a deep tissue massage tomorrow?",
+  },
+  {
+    id: "2",
+    sender: "ai",
+    text: "Hi! We have openings at 10:30 AM and 2:00 PM with Sarah. Want me to book one?",
+  },
   { id: "3", sender: "user", text: "2 PM please!" },
-  { id: "4", sender: "ai", text: "Done! Booked for 2:00 PM tomorrow. Calendar invite sent. See you then! ✓" },
+  {
+    id: "4",
+    sender: "ai",
+    text: "Done! Booked for 2:00 PM tomorrow. Calendar invite sent.",
+  },
 ];
 
 const floatingToasts = [
-  { icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" />, text: "Appointment confirmed — Sarah K., Deep Tissue, 2:00 PM" },
-  { icon: <PhoneMissed className="w-4 h-4 text-emerald-400" />, text: "Missed call recovered — Lead captured via WhatsApp" },
-  { icon: <Star className="w-4 h-4 text-emerald-400" />, text: "Google review request sent — 4.9 avg rating" },
+  {
+    icon: <MessageSquare className="w-4 h-4 text-emerald-400" />,
+    title: "New Lead",
+    sub: "WhatsApp inquiry captured",
+  },
+  {
+    icon: <CalendarCheck className="w-4 h-4 text-emerald-400" />,
+    title: "Booking Confirmed",
+    sub: "Sarah K. • Tomorrow 2:00 PM",
+  },
+  {
+    icon: <Send className="w-4 h-4 text-emerald-400" />,
+    title: "Follow-up Sent",
+    sub: "24h reminder & intake form",
+  },
 ];
 
+const waveHeights = [28, 56, 40, 84, 62, 95, 48, 76, 90, 52, 68, 36, 80, 44, 60, 32];
+
 const TypingIndicator = () => (
-  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1 items-center h-[44px]">
-    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-[typing-dot_1.4s_infinite_0s]" />
-    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-[typing-dot_1.4s_infinite_0.2s]" />
-    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-[typing-dot_1.4s_infinite_0.4s]" />
+  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1.5 items-center h-[42px] w-fit">
+    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:0ms]" />
+    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:150ms]" />
+    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:300ms]" />
   </div>
 );
 
-import { GlassButton } from "./ui/GlassButton";
-
 export function Hero() {
-  const openSignup = useUIStore((state) => state.openSignup);
-  
-  // Chat Simulation State
+  const { openSignup, openDemo } = useUIStore();
+  const prefersReduced = useReducedMotion();
+
+  const [previewMode, setPreviewMode] = useState<"stage" | "chat">("stage");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [activeToastIndex, setActiveToastIndex] = useState<number>(0);
 
-  // Toast Simulation State
-  const [activeToastIndex, setActiveToastIndex] = useState<number | null>(null);
-
-  // Loop Chat Simulation infinitely without getting stuck
   useEffect(() => {
     let active = true;
     let timer: NodeJS.Timeout;
 
     const runScript = async () => {
       if (!active) return;
-      
-      // Reset state for new loop iteration
       setMessages([]);
       setIsTyping(false);
 
       const step = async (index: number) => {
         if (!active) return;
-        
         if (index >= chatScript.length) {
-          // Completed all messages, wait 6 seconds and restart simulation loop
           timer = setTimeout(() => {
             if (active) runScript();
-          }, 6000);
+          }, 5500);
           return;
         }
 
         const msg = chatScript[index];
-        
         if (msg.sender === "ai") {
-          // Show typing loader
           setIsTyping(true);
-          // Let the AI "type" for 1600ms
           await new Promise((resolve) => {
-            timer = setTimeout(resolve, 1600);
+            timer = setTimeout(resolve, 1400);
           });
           if (!active) return;
           setIsTyping(false);
           setMessages((prev) => [...prev, msg]);
         } else {
-          // User pause before typing
           await new Promise((resolve) => {
-            timer = setTimeout(resolve, 1000);
+            timer = setTimeout(resolve, 900);
           });
           if (!active) return;
           setMessages((prev) => [...prev, msg]);
         }
 
-        // Wait brief moment before starting next turn
         await new Promise((resolve) => {
-          timer = setTimeout(resolve, 1200);
+          timer = setTimeout(resolve, 1000);
         });
         if (!active) return;
         step(index + 1);
       };
 
-      // Start from first message (index 0)
       step(0);
     };
 
     runScript();
-
     return () => {
       active = false;
       clearTimeout(timer);
     };
   }, []);
 
-  // Loop Floating Toast Simulation endlessly
   useEffect(() => {
-    let active = true;
-    let timer: NodeJS.Timeout;
-
-    const cycleToasts = () => {
-      if (!active) return;
-      
-      const showToast = (index: number) => {
-        if (!active) return;
-        setActiveToastIndex(index);
-
-        // Hide current toast after 3500ms
-        timer = setTimeout(() => {
-          if (!active) return;
-          setActiveToastIndex(null);
-
-          // Delay before presenting the next toast
-          timer = setTimeout(() => {
-            if (!active) return;
-            showToast((index + 1) % floatingToasts.length);
-          }, 3000);
-        }, 3500);
-      };
-
-      // Initial toast offset when landing on page
-      timer = setTimeout(() => {
-        if (active) showToast(0);
-      }, 4000);
-    };
-
-    cycleToasts();
-
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
+    const interval = setInterval(() => {
+      setActiveToastIndex((prev) => (prev + 1) % floatingToasts.length);
+    }, 3200);
+    return () => clearInterval(interval);
   }, []);
+
+  const heroMetrics = [
+    {
+      value: "24/7",
+      label: "AI Availability",
+      icon: <Clock className="w-5 h-5 text-emerald-400" />,
+    },
+    {
+      value: "< 2s",
+      label: "Instant Replies",
+      icon: <Zap className="w-5 h-5 text-emerald-400" />,
+    },
+    {
+      value: "0%",
+      label: "Booking Commissions",
+      icon: <ShieldCheck className="w-5 h-5 text-emerald-400" />,
+    },
+    {
+      value: "13+",
+      label: "Industry Verticals",
+      icon: <Layers className="w-5 h-5 text-emerald-400" />,
+    },
+  ];
 
   return (
-    <section className="relative min-h-[100svh] pt-32 pb-20 flex items-center justify-center overflow-hidden">
-      
-      {/* ATMOSPHERIC BACKGROUND LAYER */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
-        <div className="atmo-glow atmo-glow-emerald w-[900px] h-[900px] opacity-35 translate-x-[25%] translate-y-[15%]" />
-        <div className="atmo-glow atmo-glow-soft w-[700px] h-[700px] opacity-15 -translate-x-[35%] -translate-y-[20%]" />
-      </div>
+    <section className="relative pt-28 pb-16 lg:pt-36 lg:pb-24 px-4 sm:px-6 overflow-hidden">
+      {/* Emerald Atmospheric Stage Glows */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-10 right-[8%] w-[560px] h-[560px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.14)_0%,transparent_70%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(5,150,105,0.1)_0%,transparent_70%)]"
+      />
 
-      <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-12">
-          
-          {/* LEFT CONTENT (50%) */}
-          <motion.div 
-            className="w-full lg:w-[50%] flex flex-col items-start text-left"
-            initial={{ opacity: 0, y: 30 }}
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+          {/* LEFT CONTENT (7 cols on lg) */}
+          <motion.div
+            className="lg:col-span-6 xl:col-span-6 flex flex-col items-start text-left"
+            initial={prefersReduced ? false : { opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.65, ease: MOTION_EASE.premium }}
           >
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full surface-primary text-[11px] font-bold tracking-widest text-zinc-300 uppercase mb-8 shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Autonomous Front Desk
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-xs font-semibold text-emerald-300 mb-6 shadow-[0_0_20px_rgba(16,185,129,0.12)]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              AI Receptionist &amp; Business OS
             </div>
-            
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-white leading-[1.05] mb-6">
-              Your front desk, <br />
-              <span className="text-zinc-500">now on autopilot.</span>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[64px] font-bold tracking-tight text-white leading-[1.06] mb-6">
+              Your AI Receptionist{" "}
+              <span className="block text-gradient-green">
+                for Service Businesses
+              </span>
             </h1>
-            
-            <p className="text-lg sm:text-xl text-zinc-400 font-medium leading-relaxed max-w-lg mb-10">
-              Automate bookings, capture leads, and reply to every customer instantly — 24/7 on WhatsApp.
+
+            <p className="text-base sm:text-lg lg:text-xl text-zinc-300 font-normal leading-relaxed max-w-xl mb-8">
+              WhatsApp, Instagram, Bookings, Leads, and Follow-ups — all
+              automated by AI, 24/7 with zero commission fees.
             </p>
-            
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-              <button
+
+            {/* Primary & Secondary CTAs */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto mb-8">
+              <GlassButton
+                size="lg"
+                variant="primary"
+                magnetic
+                magneticStrength="medium"
                 onClick={openSignup}
-                data-magnetic
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold rounded-full transition-all premium-glow-hover shadow-[0_0_40px_-10px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2 group"
+                className="w-full sm:w-auto"
               >
                 Start Free Trial
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+                <ArrowRight className="w-4 h-4" />
+              </GlassButton>
+              <GlassButton
+                size="lg"
+                variant="secondary"
+                magneticStrength="low"
+                onClick={openDemo}
+                className="w-full sm:w-auto"
+              >
+                Book a Demo
+              </GlassButton>
             </div>
-            
-            <div className="mt-12 flex items-center gap-4">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-zinc-800 border-2 border-black flex items-center justify-center overflow-hidden">
-                    <img src={`https://i.pravatar.cc/100?img=${10 + i}`} alt="Customer avatar" className="w-full h-full object-cover opacity-80" />
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm font-semibold text-zinc-500">
-                Trusted by <span className="text-white">3,000+</span> service businesses
-              </p>
+
+            {/* Capability Checkmarks Row */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-xs sm:text-sm text-zinc-300 font-medium">
+              {[
+                "AI Voice & Chat",
+                "Lead Management",
+                "Automations",
+                "Business OS",
+              ].map((item) => (
+                <span key={item} className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  {item}
+                </span>
+              ))}
             </div>
           </motion.div>
 
-          {/* RIGHT CONTENT (50%) - SYMMETRICAL & ALIGNED GLASS PANEL CARD */}
-          <div className="w-full lg:w-[50%] relative flex justify-center lg:justify-end">
-            
-            {/* Ambient background glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[85%] bg-emerald-500/15 blur-[100px] rounded-full pointer-events-none" />
-            
-            <motion.div 
-              className="glass-hero w-full max-w-[420px] rounded-[32px] overflow-hidden shadow-2xl relative z-10 border-t border-white/20"
-              initial={{ opacity: 0, scale: 0.95, rotateY: 5 }}
-              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-              style={{ transformPerspective: 1000 }}
-            >
-              {/* Header */}
-              <div className="px-5 py-4 bg-white/5 border-b border-white/10 flex items-center gap-3 backdrop-blur-md">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-inner">
-                  <span className="text-white font-bold text-sm">AI</span>
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    AI Receptionist
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                  </h3>
-                  <p className="text-[11px] font-medium text-zinc-400">Online • Operating normally</p>
-                </div>
-              </div>
+          {/* RIGHT INTERACTIVE GLASS STAGE (6 cols on lg) */}
+          <motion.div
+            className="lg:col-span-6 xl:col-span-6 relative flex flex-col items-center lg:items-end"
+            initial={prefersReduced ? false : { opacity: 0, scale: 0.96, y: 18 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.75, delay: 0.15, ease: MOTION_EASE.premium }}
+          >
+            {/* Radial Emerald Ring Glow Behind Showcase */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 m-auto w-[85%] h-[85%] rounded-full bg-emerald-500/18 blur-[95px] pointer-events-none"
+            />
 
-              {/* Chat Thread */}
-              <div className="p-5 h-[380px] overflow-y-auto no-scrollbar flex flex-col gap-4 bg-black/20">
-                <AnimatePresence mode="popLayout">
-                  {messages.map((msg) => (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                      className={`flex w-full ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div 
-                        className={`max-w-[85%] px-4 py-3 text-sm font-medium leading-relaxed shadow-sm ${
-                          msg.sender === "user" 
-                            ? "bg-zinc-800 text-white rounded-2xl rounded-tr-sm" 
-                            : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-50 rounded-2xl rounded-tl-sm"
-                        }`}
-                      >
-                        {msg.text}
-                      </div>
-                    </motion.div>
-                  ))}
-                  
-                  {isTyping && (
-                    <motion.div
-                      key="typing-indicator"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
-                      className="flex justify-start"
-                    >
-                      <TypingIndicator />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                
-                {/* Auto scroll anchor */}
-                <div className="h-4" />
-              </div>
-
-              {/* Input Area (Visual Only) */}
-              <div className="px-5 py-4 bg-black/40 border-t border-white/5 backdrop-blur-md">
-                <div className="h-10 rounded-full bg-white/5 border border-white/10 flex items-center px-4">
-                  <span className="text-xs text-zinc-500 font-medium">Message AI Receptionist...</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* FLOATING TOAST SYSTEM - Positioned beautifully and symmetrically under the card */}
-            <div className="absolute -bottom-8 right-0 z-20 pointer-events-none w-full max-w-[420px]">
-              <AnimatePresence>
-                {activeToastIndex !== null && (
-                  <motion.div
-                    key={activeToastIndex}
-                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="glass-panel px-4 py-3 rounded-2xl flex items-center gap-3 shadow-xl border border-white/10 bg-black/60 backdrop-blur-md"
+            <div className="w-full max-w-[540px] relative">
+              {/* Interactive Preview Mode Switcher */}
+              <div className="flex items-center justify-end gap-2 mb-3">
+                <div className="inline-flex p-1 rounded-full bg-[#08120e]/90 border border-white/10 backdrop-blur-md">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode("stage")}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                      previewMode === "stage"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/35"
+                        : "text-zinc-400 hover:text-white"
+                    }`}
                   >
-                    <div className="bg-emerald-500/20 p-1.5 rounded-full shrink-0 border border-emerald-500/30">
-                      {floatingToasts[activeToastIndex].icon}
+                    Live OS View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode("chat")}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                      previewMode === "chat"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/35"
+                        : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    WhatsApp Thread
+                  </button>
+                </div>
+              </div>
+
+              <AnimatePresence mode="wait">
+                {previewMode === "stage" ? (
+                  <motion.div
+                    key="stage-view"
+                    initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: -8 }}
+                    transition={smoothTransition}
+                    className="relative"
+                  >
+                    {/* Tilted Glass Dashboard Backdrop Card */}
+                    <div
+                      data-cursor-spotlight="true"
+                      className="glass-card-obsidian rounded-[28px] p-5 sm:p-6 border border-emerald-500/25 shadow-[0_30px_80px_rgba(0,0,0,0.85),0_0_45px_rgba(16,185,129,0.14)] overflow-hidden"
+                    >
+                      {/* Window Chrome */}
+                      <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/[0.08]">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-emerald-300/90 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25">
+                          Operating Live 24/7
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                        {/* Left: AI Voice / Receptionist Waveform Card */}
+                        <div className="sm:col-span-6 rounded-2xl bg-[#040a08]/95 border border-emerald-500/30 p-4 shadow-[0_0_28px_rgba(16,185,129,0.12)]">
+                          <div className="flex items-center gap-2.5 mb-3">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center">
+                              <Mic className="w-4 h-4 text-emerald-400" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-white leading-tight">
+                                AI Receptionist
+                              </p>
+                              <p className="text-[11px] text-emerald-400 font-medium">
+                                Listening...
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Equalizer Waveform Bars */}
+                          <div
+                            aria-hidden="true"
+                            className="h-20 flex items-center justify-center gap-1 px-1"
+                          >
+                            {waveHeights.map((h, idx) => (
+                              <span
+                                key={idx}
+                                className="w-1.5 rounded-full bg-gradient-to-t from-emerald-600 via-emerald-400 to-emerald-200 voice-wave-bar"
+                                style={{
+                                  height: `${Math.max(18, Math.round(h * 0.72))}%`,
+                                  animationDelay: `${idx * 90}ms`,
+                                }}
+                              />
+                            ))}
+                          </div>
+
+                          <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-400">
+                            <span>Calendar Sync</span>
+                            <span className="text-emerald-400 font-semibold">
+                              Locked &amp; Active
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right: Live Event Cards */}
+                        <div className="sm:col-span-6 space-y-2.5">
+                          {floatingToasts.map((toast, idx) => {
+                            const highlighted = idx === activeToastIndex;
+                            return (
+                              <motion.div
+                                key={toast.title}
+                                animate={
+                                  prefersReduced
+                                    ? undefined
+                                    : {
+                                        scale: highlighted ? 1.02 : 1,
+                                        borderColor: highlighted
+                                          ? "rgba(52,211,153,0.48)"
+                                          : "rgba(255,255,255,0.08)",
+                                      }
+                                }
+                                transition={{ duration: 0.25 }}
+                                className={`rounded-2xl px-3.5 py-3 border flex items-center justify-between gap-2.5 transition-colors ${
+                                  highlighted
+                                    ? "bg-emerald-500/12 shadow-[0_0_24px_rgba(16,185,129,0.16)]"
+                                    : "bg-white/[0.03]"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                                    {toast.icon}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-bold text-white truncate">
+                                      {toast.title}
+                                    </p>
+                                    <p className="text-[11px] text-zinc-400 truncate">
+                                      {toast.sub}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span
+                                  className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                    highlighted
+                                      ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"
+                                      : "bg-emerald-500/40"
+                                  }`}
+                                />
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-[11px] font-bold text-white leading-tight">
-                      {floatingToasts[activeToastIndex].text}
-                    </p>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="chat-view"
+                    initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: -8 }}
+                    transition={smoothTransition}
+                    className="glass-card-obsidian w-full rounded-[28px] overflow-hidden border border-emerald-500/25 shadow-[0_30px_80px_rgba(0,0,0,0.85)]"
+                  >
+                    <div className="px-5 py-3.5 bg-white/[0.04] border-b border-white/10 flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-[#02120c] font-bold text-xs">
+                        AI
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          AI Receptionist
+                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                        </h3>
+                        <p className="text-[11px] text-zinc-400">
+                          WhatsApp Cloud API • Active
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 h-[250px] overflow-y-auto no-scrollbar flex flex-col gap-3 bg-black/25">
+                      <AnimatePresence mode="popLayout">
+                        {messages.map((msg) => (
+                          <motion.div
+                            key={msg.id}
+                            initial={
+                              prefersReduced
+                                ? { opacity: 1 }
+                                : { opacity: 0, y: 8, scale: 0.96 }
+                            }
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ duration: 0.25 }}
+                            className={`flex w-full ${
+                              msg.sender === "user" ? "justify-end" : "justify-start"
+                            }`}
+                          >
+                            <div
+                              className={`max-w-[85%] px-3.5 py-2.5 text-xs sm:text-sm font-medium leading-relaxed ${
+                                msg.sender === "user"
+                                  ? "bg-white/[0.08] border border-white/10 text-white rounded-2xl rounded-tr-sm"
+                                  : "bg-emerald-500/12 border border-emerald-500/25 text-emerald-50 rounded-2xl rounded-tl-sm"
+                              }`}
+                            >
+                              {msg.text}
+                            </div>
+                          </motion.div>
+                        ))}
+                        {isTyping && (
+                          <motion.div
+                            key="typing"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                          >
+                            <TypingIndicator />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-            
-          </div>
+          </motion.div>
         </div>
+
+        {/* Bottom 4 Glass Metric Cards Row */}
+        <motion.div
+          initial={prefersReduced ? false : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.25, ease: MOTION_EASE.premium }}
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mt-14 lg:mt-16"
+        >
+          {heroMetrics.map((metric) => (
+            <GlassCard
+              key={metric.label}
+              variant="obsidian"
+              hover
+              className="p-4 sm:p-5 flex items-center gap-3.5"
+            >
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-500/12 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
+                {metric.icon}
+              </div>
+              <div className="min-w-0">
+                <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                  {metric.value}
+                </div>
+                <div className="text-xs text-zinc-400 font-medium truncate">
+                  {metric.label}
+                </div>
+              </div>
+            </GlassCard>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
 }
-

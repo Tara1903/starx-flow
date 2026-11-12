@@ -12,7 +12,7 @@ export function AboutClient() {
   return (
     <>
       
-      <div className="pt-32 lg:pt-40 pb-16 lg:pb-24 min-h-screen relative overflow-hidden bg-black">
+      <div className="pt-32 lg:pt-40 pb-16 lg:pb-24 min-h-screen relative overflow-hidden bg-transparent">
       {/* Background Gradients */}
       <div className="absolute top-[20%] right-[10%] w-[600px] h-[600px] atmo-glow atmo-glow-emerald opacity-20 pointer-events-none" />
       <div className="absolute bottom-[10%] left-[10%] w-[500px] h-[500px] atmo-glow atmo-glow-soft opacity-10 pointer-events-none" />
@@ -207,7 +207,6 @@ export function AboutClient() {
           </p>
           <button
             onClick={openSignup}
-            data-magnetic
             className="bg-emerald-500 text-black px-10 py-5 rounded-full text-lg font-bold hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 mx-auto premium-glow premium-glow-hover relative z-10 group"
           >
             Start Automating Free <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />

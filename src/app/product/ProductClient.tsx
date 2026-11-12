@@ -26,7 +26,7 @@ export function ProductClient() {
   return (
     <>
       
-      <div className="pt-32 lg:pt-40 pb-16 lg:pb-24 min-h-screen relative overflow-hidden bg-black">
+      <div className="pt-32 lg:pt-40 pb-16 lg:pb-24 min-h-screen relative overflow-hidden bg-transparent">
       {/* Background glow */}
       <div className="absolute top-[10%] left-[50%] -translate-x-1/2 w-[800px] h-[800px] atmo-glow atmo-glow-emerald opacity-20 z-0" />
 
@@ -62,7 +62,6 @@ export function ProductClient() {
           >
             <button 
               onClick={openSignup}
-              data-magnetic
               className="w-full sm:w-auto bg-emerald-500 text-black px-8 py-4 rounded-full text-base font-bold hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 premium-glow premium-glow-hover"
             >
               Start Free Trial
@@ -70,7 +69,6 @@ export function ProductClient() {
             </button>
             <button 
               onClick={openDemo}
-              data-magnetic
               className="w-full sm:w-auto glass-panel px-8 py-4 rounded-full text-base font-bold text-white hover:bg-white/10 transition-all flex items-center justify-center gap-2"
             >
               Book a Demo
@@ -384,7 +382,6 @@ export function ProductClient() {
           </p>
           <button 
             onClick={openSignup}
-            data-magnetic
             className="bg-emerald-500 text-black px-12 py-5 rounded-full text-lg font-bold hover:bg-emerald-400 transition-all shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] relative z-10 premium-glow premium-glow-hover flex items-center gap-2 mx-auto"
           >
             Start Your Free Trial <ArrowRight size={20}/>

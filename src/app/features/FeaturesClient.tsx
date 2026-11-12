@@ -93,7 +93,7 @@ export function FeaturesClient() {
   return (
     <>
       
-      <div className="pt-32 lg:pt-40 pb-16 lg:pb-24 min-h-screen relative overflow-hidden bg-black">
+      <div className="pt-32 lg:pt-40 pb-16 lg:pb-24 min-h-screen relative overflow-hidden bg-transparent">
       {/* Background glow */}
       <div className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[1000px] h-[1000px] atmo-glow atmo-glow-emerald opacity-10 pointer-events-none" />
 
@@ -231,7 +231,6 @@ export function FeaturesClient() {
           </p>
           <button 
             onClick={openSignup}
-            data-magnetic
             className="bg-emerald-500 text-black px-12 py-5 rounded-full text-lg font-bold hover:bg-emerald-400 transition-all shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] relative z-10 premium-glow premium-glow-hover flex items-center gap-2 mx-auto group"
           >
             Start Your Free Trial{" "}

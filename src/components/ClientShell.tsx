@@ -1,23 +1,40 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, MotionConfig } from 'motion/react';
 import { useUIStore } from '../store/uiStore';
 import { useAuthStore, setupAuthListener } from '../store/authStore';
-import { SignupModal } from './SignupModal';
-import { DemoModal } from './modals/DemoModal';
-import { CustomCursor } from './CustomCursor';
 import { ConsentBanner } from './ConsentBanner';
 import { Navbar } from './Navbar';
+import { MobileFloatingNavigation } from './MobileFloatingNavigation';
 import { Footer } from './Footer';
 import { AmbientEnvironment } from './AmbientEnvironment';
-import { CommandCenter } from './CommandCenter';
+import { PageTransition } from './ui/PageTransition';
+import { ToastViewport } from './ui/ToastViewport';
+import { CursorProvider } from '../cursor/CursorProvider';
+
+const CommandCenter = dynamic(
+  () => import('./CommandCenter').then((m) => m.CommandCenter),
+  { ssr: false }
+);
+const SignupModal = dynamic(
+  () => import('./SignupModal').then((m) => m.SignupModal),
+  { ssr: false }
+);
+const DemoModal = dynamic(
+  () => import('./modals/DemoModal').then((m) => m.DemoModal),
+  { ssr: false }
+);
 
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAppRoute = pathname?.startsWith('/setup') || pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin');
-  
+  const isAppRoute =
+    pathname?.startsWith('/setup') ||
+    pathname?.startsWith('/dashboard') ||
+    pathname?.startsWith('/admin');
+
   const isSignupOpen = useUIStore((state) => state.isSignupOpen);
   const closeSignup = useUIStore((state) => state.closeSignup);
   const isDemoOpen = useUIStore((state) => state.isDemoOpen);
@@ -42,34 +59,49 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
-  // Prevent hydration mismatch on initial render for portals/modals
   if (!mounted) {
     return <>{children}</>;
   }
 
   return (
-    <>
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:bg-emerald-500 focus:text-black focus:px-4 focus:py-2 focus:rounded-lg focus:font-bold">
+    <MotionConfig reducedMotion="user">
+      <CursorProvider>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-emerald-500 focus:text-black focus:px-4 focus:py-2 focus:rounded-lg focus:font-bold"
+      >
         Skip to main content
       </a>
       <AmbientEnvironment />
-      <CustomCursor />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-[1] bg-noise-subtle opacity-60"
+      />
       <CommandCenter />
       {!isAppRoute && <Navbar />}
-      <main id="main-content" aria-label="Main content" className="relative z-10 flex-1 flex flex-col">
-        {children}
+      <main
+        id="main-content"
+        aria-label="Main content"
+        className="relative z-10 flex-1 flex flex-col"
+      >
+        <PageTransition className="flex-1 flex flex-col">
+          {children}
+        </PageTransition>
       </main>
-      {!isAppRoute && <Footer />}
-      
+      {!isAppRoute && (
+        <div className="pb-20 md:pb-0">
+          <Footer />
+        </div>
+      )}
+      {!isAppRoute && <MobileFloatingNavigation />}
+
       <AnimatePresence>
-        {isSignupOpen && (
-          <SignupModal onClose={closeSignup} />
-        )}
-        {isDemoOpen && (
-          <DemoModal onClose={closeDemo} />
-        )}
+        {isSignupOpen && <SignupModal onClose={closeSignup} />}
+        {isDemoOpen && <DemoModal onClose={closeDemo} />}
       </AnimatePresence>
+      <ToastViewport />
       <ConsentBanner />
-    </>
+      </CursorProvider>
+    </MotionConfig>
   );
 }

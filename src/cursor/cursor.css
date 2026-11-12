@@ -1,0 +1,216 @@
+/* ============================================================================
+   STARX FLOW — CUSTOM CURSOR 2.0 STYLESHEET
+   Strict scope: Desktop fine-pointer hover devices only, with instant native
+   pointer restoration on inputs, text selection, disabled nodes & touch devices.
+   ============================================================================ */
+
+@media (hover: hover) and (pointer: fine) {
+  html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native),
+  html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) body,
+  html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) a,
+  html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) button,
+  html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) [role="button"],
+  html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) [data-cursor-hover="true"] {
+    cursor: none !important;
+  }
+
+  /* Native pointer restoration guarantees usability inside editing & specialized surfaces */
+  html.starx-cursor-enabled input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+  html.starx-cursor-enabled textarea,
+  html.starx-cursor-enabled [contenteditable="true"],
+  html.starx-cursor-enabled [contenteditable=""] {
+    cursor: text !important;
+  }
+
+  html.starx-cursor-enabled select,
+  html.starx-cursor-enabled iframe,
+  html.starx-cursor-enabled video[controls],
+  html.starx-cursor-enabled [data-cursor-mode="native"],
+  html.starx-cursor-enabled .cursor-native {
+    cursor: auto !important;
+  }
+
+  /* Disabled buttons render custom subdued ring; disabled form inputs restore native not-allowed */
+  html.starx-cursor-enabled input[disabled],
+  html.starx-cursor-enabled textarea[disabled],
+  html.starx-cursor-enabled select[disabled] {
+    cursor: not-allowed !important;
+  }
+
+  html.starx-cursor-enabled button[disabled],
+  html.starx-cursor-enabled [role="button"][aria-disabled="true"],
+  html.starx-cursor-enabled [data-cursor-disabled="true"] {
+    cursor: none !important;
+  }
+}
+
+/* Force native OS cursor unconditionally when touch or reduced-motion prefers native fallback */
+@media (hover: none), (pointer: coarse) {
+  .starx-cursor-layer {
+    display: none !important;
+  }
+}
+
+/* Root fixed overlay (strictly pointer-events: none; GPU transform composited) */
+.starx-cursor-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99998;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 140ms ease-out;
+}
+
+.starx-cursor-layer[data-visible="true"] {
+  opacity: 1;
+}
+
+.starx-cursor-layer[data-native="true"] {
+  opacity: 0;
+}
+
+/* Layer 1: Inner dot — 0ms physical pointer tracker */
+.starx-cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: var(--sx-cursor-dot, #fafafa);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.55);
+  will-change: transform, opacity;
+  pointer-events: none;
+  transition:
+    background-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 150ms ease;
+}
+
+.starx-cursor-dot[data-mode="label"] {
+  opacity: 0.18;
+}
+
+.starx-cursor-dot[data-mode="disabled"] {
+  background-color: #71717a;
+  box-shadow: none;
+}
+
+.starx-cursor-dot[data-variant="danger"] {
+  background-color: #fee2e2;
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.6);
+}
+
+/* Layer 2: Outer circle — strictly follows Inner Dot via spring solver */
+.starx-cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--sx-cursor-ring, #10b981);
+  background: rgba(16, 185, 129, 0.03);
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.24), inset 0 0 10px rgba(16, 185, 129, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+  pointer-events: none;
+  transition:
+    width 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    height 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 160ms ease;
+}
+
+.starx-cursor-ring[data-mode="hover"] {
+  border-color: var(--sx-cursor-ring-active, #34d399);
+  border-width: 1.75px;
+  background: rgba(16, 185, 129, 0.08);
+  box-shadow: 0 0 26px rgba(52, 211, 153, 0.42), inset 0 0 14px rgba(16, 185, 129, 0.14);
+}
+
+.starx-cursor-ring[data-mode="label"] {
+  border-color: var(--sx-cursor-ring-active, #34d399);
+  border-width: 1.5px;
+  background: rgba(3, 12, 9, 0.88);
+  box-shadow: 0 0 28px rgba(16, 185, 129, 0.36), inset 0 0 16px rgba(16, 185, 129, 0.12);
+}
+
+.starx-cursor-ring[data-pressed="true"] {
+  border-color: #6ee7b7;
+  box-shadow: 0 0 28px rgba(52, 211, 153, 0.55), inset 0 0 14px rgba(52, 211, 153, 0.22);
+}
+
+.starx-cursor-ring[data-variant="white"] {
+  border-color: rgba(250, 250, 250, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.starx-cursor-ring[data-variant="danger"] {
+  border-color: var(--sx-cursor-danger, #f87171);
+  background: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 22px rgba(248, 113, 113, 0.38);
+}
+
+.starx-cursor-ring[data-mode="disabled"] {
+  border-color: rgba(161, 161, 170, 0.45);
+  border-style: dashed;
+  background: rgba(24, 24, 27, 0.2);
+  box-shadow: none;
+}
+
+.starx-cursor-label-text {
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ecfdf5;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   SURFACE SPOTLIGHT SYSTEM (Phase 6 integration CSS)
+   Uses local CSS variables (--sx-spot-x, --sx-spot-y, --sx-spot-active)
+   with zero stacked backdrop filters.
+   ============================================================================ */
+[data-cursor-spotlight="true"] {
+  position: relative;
+  overflow: hidden;
+  --sx-spot-x: 50%;
+  --sx-spot-y: 50%;
+  --sx-spot-opacity: 0;
+  --sx-spot-intensity: 0.16;
+}
+
+[data-cursor-spotlight="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--sx-spot-opacity, 0);
+  transition: opacity 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  background: radial-gradient(
+    320px circle at var(--sx-spot-x, 50%) var(--sx-spot-y, 50%),
+    rgba(52, 211, 153, var(--sx-spot-intensity, 0.16)),
+    rgba(16, 185, 129, 0.05) 38%,
+    transparent 70%
+  );
+  z-index: 1;
+}
+
+/* Respect reduced motion across all custom cursor & spotlight animations */
+@media (prefers-reduced-motion: reduce) {
+  .starx-cursor-ring,
+  .starx-cursor-dot,
+  [data-cursor-spotlight="true"]::after {
+    transition-duration: 0.01ms !important;
+  }
+}

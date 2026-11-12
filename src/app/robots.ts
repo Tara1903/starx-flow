@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/dashboard/', '/admin/', '/setup/', '/api/'],
+        disallow: ['/dashboard/', '/admin/', '/setup/', '/api/', '/cursor-playground/'],
       },
       // 2. Commercial AI Search Retrieval & Answer Engines (Real-time citation indexers)
       {
@@ -18,7 +18,7 @@ export default function robots(): MetadataRoute.Robots {
           'Claude-SearchBot',
         ],
         allow: ['/', '/llms.txt'],
-        disallow: ['/dashboard/', '/admin/', '/setup/', '/api/'],
+        disallow: ['/dashboard/', '/admin/', '/setup/', '/api/', '/cursor-playground/'],
       },
       // 3. User-Triggered Interactive Fetching (On-demand URL retrieval by end users)
       {
@@ -26,7 +26,7 @@ export default function robots(): MetadataRoute.Robots {
           'ChatGPT-User',
         ],
         allow: ['/', '/llms.txt'],
-        disallow: ['/dashboard/', '/admin/', '/setup/', '/api/'],
+        disallow: ['/dashboard/', '/admin/', '/setup/', '/api/', '/cursor-playground/'],
       },
       // 4. Foundation Model Training & Data Mining (Authorized for StarX-Flow AI discovery)
       {
@@ -37,7 +37,7 @@ export default function robots(): MetadataRoute.Robots {
           'Applebot-Extended',
         ],
         allow: ['/', '/llms.txt'],
-        disallow: ['/dashboard/', '/admin/', '/setup/', '/api/'],
+        disallow: ['/dashboard/', '/admin/', '/setup/', '/api/', '/cursor-playground/'],
       },
       // 5. Aggressive Bulk Scrapers & Low-Attribution Harvesters
       {

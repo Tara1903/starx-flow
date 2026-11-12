@@ -122,7 +122,7 @@ export function ResourcesClient() {
   return (
     <>
       
-      <div className="pt-32 lg:pt-40 pb-16 lg:pb-24 min-h-screen relative overflow-hidden bg-black text-white">
+      <div className="pt-32 lg:pt-40 pb-16 lg:pb-24 min-h-screen relative overflow-hidden bg-transparent text-white">
       {/* Background Gradients */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] atmo-glow atmo-glow-emerald opacity-10 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[800px] h-[400px] atmo-glow atmo-glow-soft opacity-10 pointer-events-none" />
@@ -197,7 +197,6 @@ export function ResourcesClient() {
                 <button 
                   type="submit"
                   disabled={submitting}
-                  data-magnetic 
                   className="bg-emerald-500 text-black font-black py-3 text-sm rounded-lg hover:bg-emerald-400 transition-colors premium-glow premium-glow-hover flex items-center justify-center gap-2 select-none disabled:opacity-50"
                 >
                   {submitting ? "Signing up..." : "Subscribe"}
