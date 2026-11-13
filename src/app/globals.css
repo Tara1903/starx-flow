@@ -1174,6 +1174,33 @@ input[type=range]::-moz-range-thumb {
   position: relative;
 }
 
+/* Ensure absolute/fixed glass surfaces maintain intended stacking context */
+.glass-card-obsidian.absolute,
+.glass-card-obsidian.\!absolute,
+.glass-panel.absolute,
+.glass-panel.\!absolute,
+.glass-focal.absolute,
+.glass-focal.\!absolute,
+.glass-premium.absolute,
+.glass-premium.\!absolute,
+.glass-subtle.absolute,
+.glass-subtle.\!absolute,
+.glass-hero.absolute,
+.glass-hero.\!absolute {
+  position: absolute !important;
+}
+
+.glass-card-obsidian.fixed,
+.glass-card-obsidian.\!fixed,
+.glass-panel.fixed,
+.glass-panel.\!fixed,
+.glass-focal.fixed,
+.glass-focal.\!fixed,
+.glass-premium.fixed,
+.glass-premium.\!fixed {
+  position: fixed !important;
+}
+
 .glass-card-obsidian::before {
   content: "";
   position: absolute;

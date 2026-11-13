@@ -139,8 +139,9 @@ export function GlassDropdown({
             initial={prefersReduced ? undefined : "hidden"}
             animate={prefersReduced ? undefined : "visible"}
             exit={prefersReduced ? undefined : "exit"}
+            style={{ position: "absolute" }}
             className={cn(
-              "absolute top-full mt-2.5 min-w-[270px] rounded-2xl glass-card-obsidian border border-emerald-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.75),0_0_36px_rgba(16,185,129,0.14)] p-2.5 z-50",
+              "!absolute top-full mt-2.5 min-w-[270px] rounded-2xl glass-card-obsidian border border-emerald-500/25 shadow-[0_24px_60px_rgba(0,0,0,0.75),0_0_36px_rgba(16,185,129,0.14)] p-2.5 z-50 origin-top max-h-[calc(100vh-5rem)] overflow-y-auto console-scroll",
               alignClasses[align],
               menuClassName
             )}

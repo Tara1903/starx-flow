@@ -69,7 +69,7 @@ export function GlassSheet({
             animate="visible"
             exit="exit"
             className={cn(
-              "absolute glass-card-obsidian border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden",
+              "!absolute glass-card-obsidian border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden",
               side === 'left' && "border-r",
               side === 'right' && "border-l",
               side === 'bottom' && "border-t",
