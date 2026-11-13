@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { CANONICAL_PLANS, normalizePlanId, PlanTier } from '../lib/plans';
 
 /* ──────────────────────────────────────────────
-   PLAN DEFINITIONS
+   PLAN DEFINITIONS (Synchronized with Canonical Plans)
    ────────────────────────────────────────────── */
 
 export interface PlanLimits {
@@ -23,55 +24,69 @@ export interface PlanDefinition {
 
 export const PLANS: Record<string, PlanDefinition> = {
   free: {
-    name: 'Free',
-    price: 0,
+    name: CANONICAL_PLANS.free.name,
+    price: CANONICAL_PLANS.free.price,
     limits: {
-      ai_conversations: 50,
-      contacts: 100,
-      team_members: 1,
-      calendars: 1,
-      workflows: 2,
-      sms_messages: 10,
-      voice_minutes: 5,
+      ai_conversations: CANONICAL_PLANS.free.limits.ai_conversations,
+      contacts: CANONICAL_PLANS.free.limits.contacts,
+      team_members: CANONICAL_PLANS.free.limits.team_members,
+      calendars: CANONICAL_PLANS.free.limits.calendars,
+      workflows: CANONICAL_PLANS.free.limits.workflows,
+      sms_messages: CANONICAL_PLANS.free.limits.sms_messages,
+      voice_minutes: CANONICAL_PLANS.free.limits.voice_minutes,
     },
   },
   starter: {
-    name: 'Starter',
-    price: 47,
+    name: CANONICAL_PLANS.starter.name,
+    price: CANONICAL_PLANS.starter.price,
     limits: {
-      ai_conversations: 500,
-      contacts: 1000,
-      team_members: 3,
-      calendars: 3,
-      workflows: 10,
-      sms_messages: 200,
-      voice_minutes: 60,
+      ai_conversations: CANONICAL_PLANS.starter.limits.ai_conversations,
+      contacts: CANONICAL_PLANS.starter.limits.contacts,
+      team_members: CANONICAL_PLANS.starter.limits.team_members,
+      calendars: CANONICAL_PLANS.starter.limits.calendars,
+      workflows: CANONICAL_PLANS.starter.limits.workflows,
+      sms_messages: CANONICAL_PLANS.starter.limits.sms_messages,
+      voice_minutes: CANONICAL_PLANS.starter.limits.voice_minutes,
+    },
+  },
+  growth: {
+    name: CANONICAL_PLANS.growth.name,
+    price: CANONICAL_PLANS.growth.price,
+    limits: {
+      ai_conversations: CANONICAL_PLANS.growth.limits.ai_conversations,
+      contacts: CANONICAL_PLANS.growth.limits.contacts,
+      team_members: CANONICAL_PLANS.growth.limits.team_members,
+      calendars: CANONICAL_PLANS.growth.limits.calendars,
+      workflows: CANONICAL_PLANS.growth.limits.workflows,
+      sms_messages: CANONICAL_PLANS.growth.limits.sms_messages,
+      voice_minutes: CANONICAL_PLANS.growth.limits.voice_minutes,
     },
   },
   pro: {
-    name: 'Pro',
-    price: 97,
+    name: CANONICAL_PLANS.pro.name,
+    price: CANONICAL_PLANS.pro.price,
     limits: {
-      ai_conversations: 5000,
-      contacts: 10000,
-      team_members: 10,
-      calendars: 10,
-      workflows: 50,
-      sms_messages: 1000,
-      voice_minutes: 300,
+      ai_conversations: CANONICAL_PLANS.pro.limits.ai_conversations,
+      contacts: CANONICAL_PLANS.pro.limits.contacts,
+      team_members: CANONICAL_PLANS.pro.limits.team_members,
+      calendars: CANONICAL_PLANS.pro.limits.calendars,
+      workflows: CANONICAL_PLANS.pro.limits.workflows,
+      sms_messages: CANONICAL_PLANS.pro.limits.sms_messages,
+      voice_minutes: CANONICAL_PLANS.pro.limits.voice_minutes,
     },
   },
+  // Backwards-compatible legacy alias
   enterprise: {
-    name: 'Enterprise',
-    price: 297,
+    name: CANONICAL_PLANS.pro.name,
+    price: CANONICAL_PLANS.pro.price,
     limits: {
-      ai_conversations: -1,   // unlimited
-      contacts: -1,
-      team_members: -1,
-      calendars: -1,
-      workflows: -1,
-      sms_messages: 5000,
-      voice_minutes: 1000,
+      ai_conversations: CANONICAL_PLANS.pro.limits.ai_conversations,
+      contacts: CANONICAL_PLANS.pro.limits.contacts,
+      team_members: CANONICAL_PLANS.pro.limits.team_members,
+      calendars: CANONICAL_PLANS.pro.limits.calendars,
+      workflows: CANONICAL_PLANS.pro.limits.workflows,
+      sms_messages: CANONICAL_PLANS.pro.limits.sms_messages,
+      voice_minutes: CANONICAL_PLANS.pro.limits.voice_minutes,
     },
   },
 } as const;
@@ -167,7 +182,7 @@ function dbRowToSubscription(row: Record<string, unknown>): Subscription {
     polarPriceId: (row.polar_price_id as string) || null,
     stripeCustomerId: (row.stripe_customer_id as string) || null,
     stripeSubscriptionId: (row.stripe_subscription_id as string) || null,
-    planId: (row.plan_id as string) || 'free',
+    planId: normalizePlanId(row.plan_id as string),
     status: (row.status as Subscription['status']) || 'trialing',
     billingCycle: (row.billing_cycle as string) || 'monthly',
     currentPeriodStart: (row.current_period_start as string) || null,

@@ -7,6 +7,7 @@ import { SetupBanner } from "../../components/setup/SetupBanner";
 import { SmartNudges } from "../../components/dashboard/SmartNudge";
 import { QuickActions } from "../../components/dashboard/QuickActions";
 import { KPIGrid } from "../../components/dashboard/KPIGrid";
+import { GlassyDashboardV30Showcase } from "../../components/dashboard/GlassyDashboardV30Showcase";
 import { ActivityFeed } from "../../components/dashboard/ActivityFeed";
 import { ChannelHealth } from "../../components/dashboard/ChannelHealth";
 import { liquidStaggerGrid, liquidCardEntrance } from "../../lib/motionVariants";
@@ -50,6 +51,11 @@ export function OverviewSection({
       {/* KPI Performance Gauges */}
       <motion.div variants={liquidCardEntrance}>
         <KPIGrid />
+      </motion.div>
+
+      {/* Glassy Dashboard V30 Telemetry & Interaction Showcase */}
+      <motion.div variants={liquidCardEntrance}>
+        <GlassyDashboardV30Showcase />
       </motion.div>
 
       {/* Two-Column Activity & Health Grid */}

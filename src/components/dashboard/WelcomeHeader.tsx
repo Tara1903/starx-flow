@@ -52,9 +52,9 @@ export function WelcomeHeader() {
         </p>
       </div>
 
-      {/* Security Status Pill (avoids nested backdrop-filter inside glass-hero) */}
+      {/* Security Status Pill */}
       <motion.div
-        whileHover={{ y: -2, scale: 1.02 }}
+        whileHover={{ y: -4 }}
         transition={liquidSpring}
         className="relative z-10 bg-emerald-950/55 rounded-2xl flex items-center gap-3.5 px-4 py-3.5 border border-emerald-400/30 max-w-xs md:self-center shadow-[0_12px_32px_rgba(0,0,0,0.45),0_0_24px_rgba(16,185,129,0.15)]"
       >

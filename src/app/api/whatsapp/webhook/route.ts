@@ -38,17 +38,30 @@ export async function POST(request: Request) {
     const rawBody = await request.text();
     const adapter = IngestionGateway.getAdapter('whatsapp');
 
-    // Authenticate HMAC signature
-    if (adapter) {
-      const auth = await adapter.authenticate(request, rawBody);
-      if (!auth.authorized) {
-        console.error('[WhatsApp Webhook] Authentication failed:', auth.reason);
-        return new NextResponse('Forbidden', { status: 403 });
-      }
+    if (!adapter) {
+      console.error('[WhatsApp Webhook] Critical: WhatsApp adapter unavailable in IngestionGateway');
+      return new NextResponse('Service Unavailable', { status: 503, headers: corsHeaders });
     }
 
-    const body = JSON.parse(rawBody);
-    const canonicalEvent = await adapter?.normalize(body);
+    // Authenticate HMAC signature with strict fail-closed enforcement
+    const auth = await adapter.authenticate(request, rawBody);
+    if (!auth.authorized) {
+      console.warn('[WhatsApp Webhook Security] Authentication rejected:', auth.reason);
+      return new NextResponse('Forbidden: Invalid signature or missing configuration', {
+        status: 403,
+        headers: corsHeaders,
+      });
+    }
+
+    let body: any;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      console.warn('[WhatsApp Webhook] Malformed non-JSON payload received');
+      return new NextResponse('Bad Request: Malformed JSON', { status: 400, headers: corsHeaders });
+    }
+
+    const canonicalEvent = await adapter.normalize(body);
 
     if (!canonicalEvent) {
       // Event may be a delivery receipt or status update, acknowledge with 200 OK

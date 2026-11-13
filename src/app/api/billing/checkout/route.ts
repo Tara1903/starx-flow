@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { polar, POLAR_PLANS } from '@/lib/polar';
+import { normalizePlanId, CANONICAL_PLANS, isPaidPlan } from '@/lib/plans';
 import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
 import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
 
@@ -15,14 +16,15 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { planId } = body;
 
-    if (!planId || !(planId in POLAR_PLANS)) {
+    const normalizedPlan = normalizePlanId(planId);
+    if (!isPaidPlan(normalizedPlan) || !(normalizedPlan in POLAR_PLANS)) {
       return NextResponse.json(
-        { error: 'Invalid plan selected. Must be one of: starter, pro, enterprise' },
+        { error: 'Invalid plan selected. Must be one of: starter, growth, pro' },
         { status: 400 }
       );
     }
 
-    const planConfig = POLAR_PLANS[planId as keyof typeof POLAR_PLANS];
+    const planConfig = POLAR_PLANS[normalizedPlan as keyof typeof POLAR_PLANS];
     const appUrl = (
       process.env.APP_URL ||
       process.env.NEXT_PUBLIC_APP_URL ||
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
       customer_ip_address: ipAddress,
       metadata: {
         user_id: user.id,
-        plan_id: planId,
+        plan_id: normalizedPlan,
         tenant_id: organizationId || '',
       },
       return_url: `${appUrl}/dashboard?billing=cancelled`,

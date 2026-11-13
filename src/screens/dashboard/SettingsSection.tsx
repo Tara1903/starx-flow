@@ -568,8 +568,10 @@ export function SettingsSection() {
               <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02]">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Current Tier</span>
                 <div className="text-sm font-bold text-white mt-0.5 flex items-center gap-2">
-                  <span>{user?.plan || subscription?.planId?.toUpperCase() || "Starter Plan"}</span>
-                  <span className="text-[10px] text-zinc-400 font-normal">($29 / €47/mo)</span>
+                  <span>{user?.plan ? (user.plan.charAt(0).toUpperCase() + user.plan.slice(1)) : (subscription?.planId ? (subscription.planId.charAt(0).toUpperCase() + subscription.planId.slice(1)) : "Starter")} Plan</span>
+                  <span className="text-[10px] text-zinc-400 font-normal">
+                    {subscription?.planId === 'pro' ? '($99/mo)' : subscription?.planId === 'growth' ? '($59/mo)' : '($29/mo)'}
+                  </span>
                 </div>
                 <p className="text-[10px] text-zinc-400 mt-1">Zero booking commissions. Flat monthly billing model.</p>
               </div>
@@ -579,7 +581,9 @@ export function SettingsSection() {
                 <ul className="text-[10px] text-zinc-300 mt-1 space-y-1">
                   <li className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                    <span>500 AI conversations / month</span>
+                    <span>
+                      {subscription?.planId === 'pro' ? '25,000' : subscription?.planId === 'growth' ? '5,000' : '500'} AI conversations / month
+                    </span>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-emerald-400" />
@@ -602,22 +606,22 @@ export function SettingsSection() {
                   <GlassButton
                     variant="primary"
                     size="sm"
+                    onClick={() => handleCheckout('growth')}
+                    isLoading={checkoutLoading === 'growth'}
+                    loadingText="Redirecting..."
+                    disabled={!isBillingAdmin || checkoutLoading !== null}
+                  >
+                    Upgrade to Growth ($59/mo)
+                  </GlassButton>
+                  <GlassButton
+                    variant="secondary"
+                    size="sm"
                     onClick={() => handleCheckout('pro')}
                     isLoading={checkoutLoading === 'pro'}
                     loadingText="Redirecting..."
                     disabled={!isBillingAdmin || checkoutLoading !== null}
                   >
-                    Upgrade to Pro ($59/mo)
-                  </GlassButton>
-                  <GlassButton
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleCheckout('enterprise')}
-                    isLoading={checkoutLoading === 'enterprise'}
-                    loadingText="Redirecting..."
-                    disabled={!isBillingAdmin || checkoutLoading !== null}
-                  >
-                    Upgrade to Enterprise ($99/mo)
+                    Upgrade to Pro ($99/mo)
                   </GlassButton>
                 </div>
                 <GlassButton

@@ -368,8 +368,7 @@ export const liquidCardEntrance: Variants = {
 };
 
 export const liquidHoverLift = {
-  y: -4,
-  scale: 1.015,
+  y: -5,
   transition: liquidSpring,
 };
 

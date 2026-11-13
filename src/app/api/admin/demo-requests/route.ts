@@ -27,7 +27,7 @@ async function authenticateAdmin(request: Request) {
     .eq('id', user.id)
     .maybeSingle();
 
-  if (profileErr || !profile || profile.role !== 'admin') {
+  if (profileErr || !profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
     return { error: 'Forbidden: platform administrator privileges required', status: 403, user: null };
   }
 

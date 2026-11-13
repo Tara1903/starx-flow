@@ -47,22 +47,22 @@ async function runTests() {
   console.log('--- Domain A: Plan & Product Mappings ---');
   assert(
     POLAR_PLANS.starter.productId.length > 20 &&
-    POLAR_PLANS.pro.productId.length > 20 &&
-    POLAR_PLANS.enterprise.productId.length > 20,
+    POLAR_PLANS.growth.productId.length > 20 &&
+    POLAR_PLANS.pro.productId.length > 20,
     'All three subscription tiers map to valid Polar product UUIDs'
   );
 
   assert(
     POLAR_PRODUCT_TO_PLAN[POLAR_PLANS.starter.productId] === 'starter' &&
-    POLAR_PRODUCT_TO_PLAN[POLAR_PLANS.pro.productId] === 'pro' &&
-    POLAR_PRODUCT_TO_PLAN[POLAR_PLANS.enterprise.productId] === 'enterprise',
+    POLAR_PRODUCT_TO_PLAN[POLAR_PLANS.growth.productId] === 'growth' &&
+    POLAR_PRODUCT_TO_PLAN[POLAR_PLANS.pro.productId] === 'pro',
     'Reverse product-to-plan lookup accurately resolves internal plan keys'
   );
 
   assert(
     CONFIGURABLE_PLANS.starter.limits.ai_requests === 1000 &&
-    CONFIGURABLE_PLANS.pro.limits.ai_requests === 5000 &&
-    CONFIGURABLE_PLANS.enterprise.limits.ai_requests === 25000,
+    CONFIGURABLE_PLANS.growth.limits.ai_requests === 5000 &&
+    CONFIGURABLE_PLANS.pro.limits.ai_requests === 25000,
     'Backend entitlement quotas match commercial tier specifications'
   );
 

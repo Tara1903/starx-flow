@@ -3,6 +3,7 @@
  * Authenticates Meta Webhook HMAC-SHA256 signatures and normalizes WhatsApp payloads.
  */
 
+import crypto from 'crypto';
 import { ChannelAdapter, CanonicalInboundEvent, CanonicalAttachment } from '../types';
 
 export class WhatsAppAdapter implements ChannelAdapter {
@@ -10,47 +11,72 @@ export class WhatsAppAdapter implements ChannelAdapter {
 
   /**
    * Authenticates incoming request using Meta's HMAC-SHA256 signature header.
+   * Strictly enforces cryptographic integrity with fail-closed behavior across all environments.
    */
   async authenticate(request: Request, rawBody: string): Promise<{ authorized: boolean; reason?: string }> {
     const signature = request.headers.get('x-hub-signature-256');
-    const appSecret = process.env.META_APP_SECRET;
+    const appSecret = process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET;
 
-    if (!appSecret) {
-      // In development or sandbox mode without appSecret configured, allow for testing
-      return { authorized: true };
+    // 1. Mandatory Application Secret check (Fail Closed)
+    if (!appSecret || typeof appSecret !== 'string' || appSecret.trim() === '') {
+      console.error('[WhatsApp Webhook Security] Fail-closed: WHATSAPP_APP_SECRET is not configured on server.');
+      return {
+        authorized: false,
+        reason: 'Webhook verification secret not configured (fail closed)',
+      };
     }
 
-    if (!signature) {
-      return { authorized: false, reason: 'Missing x-hub-signature-256 header' };
+    // 2. Mandatory Signature Header check
+    if (!signature || typeof signature !== 'string') {
+      return {
+        authorized: false,
+        reason: 'Missing x-hub-signature-256 header',
+      };
     }
 
+    // 3. Signature Format Validation (Meta format: "sha256=<64-char-hex>")
+    const trimmedSig = signature.trim();
+    if (!trimmedSig.startsWith('sha256=')) {
+      return {
+        authorized: false,
+        reason: 'Malformed signature header: missing sha256= prefix',
+      };
+    }
+
+    const providedHex = trimmedSig.slice(7).trim();
+    if (providedHex.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(providedHex)) {
+      return {
+        authorized: false,
+        reason: 'Malformed signature header: invalid hex digest length or characters',
+      };
+    }
+
+    // 4. Constant-Time HMAC-SHA256 Signature Verification
     try {
-      const encoder = new TextEncoder();
-      const key = await crypto.subtle.importKey(
-        'raw',
-        encoder.encode(appSecret),
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['verify']
-      );
+      const expectedHex = crypto
+        .createHmac('sha256', appSecret)
+        .update(rawBody, 'utf8')
+        .digest('hex');
 
-      const sigHex = signature.replace('sha256=', '');
-      const sigBytes = new Uint8Array(sigHex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || []);
+      const providedBuffer = Buffer.from(providedHex.toLowerCase(), 'hex');
+      const expectedBuffer = Buffer.from(expectedHex.toLowerCase(), 'hex');
 
-      const isValid = await crypto.subtle.verify(
-        'HMAC',
-        key,
-        sigBytes,
-        encoder.encode(rawBody)
-      );
-
-      if (!isValid) {
-        return { authorized: false, reason: 'Invalid HMAC signature' };
+      if (
+        providedBuffer.length !== expectedBuffer.length ||
+        !crypto.timingSafeEqual(providedBuffer, expectedBuffer)
+      ) {
+        return {
+          authorized: false,
+          reason: 'Invalid HMAC signature',
+        };
       }
 
       return { authorized: true };
     } catch (err: any) {
-      return { authorized: false, reason: `Signature verification error: ${err.message}` };
+      return {
+        authorized: false,
+        reason: `Signature verification exception: ${err.message}`,
+      };
     }
   }
 

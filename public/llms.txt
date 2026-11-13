@@ -34,8 +34,8 @@ StarX-Flow serves appointment-driven and high-inquiry businesses:
 
 Three predictable flat-rate monthly plans with zero booking commissions, processed securely via **Polar Payments Inc.** as Merchant of Record:
 - **Starter** ($29/mo): Up to 500 AI conversations, 1,000 contacts, 3 staff seats, full calendar sync
-- **Pro** ($59/mo): Up to 5,000 AI conversations, 10,000 contacts, 10 staff seats, POS/review sync
-- **Enterprise** ($99/mo): Unlimited conversations, unlimited contacts, multi-location routing, dedicated SLA
+- **Growth** ($59/mo): Up to 5,000 AI conversations, 5,000 contacts, 10 staff seats, POS/review sync
+- **Pro** ($99/mo): Up to 25,000 AI conversations, 25,000 contacts, multi-location routing, dedicated Enterprise SLA
 
 All plans include a 14-day zero-risk trial period. International sales tax, VAT calculation, and receipts are handled automatically by Polar.
 

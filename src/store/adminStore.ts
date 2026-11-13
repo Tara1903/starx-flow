@@ -83,7 +83,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         .eq('id', session.user.id)
         .single();
 
-      if (profile?.role === 'admin') {
+      if (profile?.role === 'admin' || profile?.role === 'super_admin') {
         set({ isAdmin: true });
         await Promise.all([get().fetchClients(), get().fetchDemoLeads()]);
         return true;
@@ -123,17 +123,35 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }
   },
 
-  /* ─── FETCH ALL CLIENTS (admin only via RPC) ─── */
+  /* ─── FETCH ALL CLIENTS (admin only via API with RPC fallback) ─── */
   fetchClients: async () => {
     if (!isSupabaseConfigured) return;
 
     set({ isLoading: true });
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        const res = await fetch('/api/admin/clients', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json && Array.isArray(json.clients)) {
+            set({ clients: json.clients, isLoading: false });
+            return;
+          }
+        }
+      }
+
+      // Fallback to RPC if configured
       const { data, error } = await supabase.rpc('get_all_clients');
 
       if (error) {
-        console.error('[Admin] Fetch clients error:', error);
+        console.warn('[Admin] Fetch clients RPC fallback skipped:', error.message);
         set({ isLoading: false });
         return;
       }
@@ -160,6 +178,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         }));
 
         set({ clients, isLoading: false });
+      } else {
+        set({ isLoading: false });
       }
     } catch (e) {
       console.error('[Admin] Fetch clients exception:', e);
@@ -177,10 +197,27 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }));
 
     if (isSupabaseConfigured) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          const res = await fetch('/api/admin/clients', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ id, status }),
+          });
+          if (res.ok) return;
+        }
+      } catch (err) {
+        console.warn('[Admin] API update status fallback:', err);
+      }
+
       const { error } = await supabase
-        .from('profiles')
-        .update({ status })
-        .eq('id', id);
+        .from('subscriptions')
+        .update({ status: status.toLowerCase() })
+        .eq('user_id', id);
 
       if (error) console.error('[Admin] Update status error:', error);
     }
@@ -195,10 +232,26 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }));
 
     if (isSupabaseConfigured) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          const res = await fetch('/api/admin/clients', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ id, plan }),
+          });
+          if (res.ok) return;
+        }
+      } catch (err) {
+        console.warn('[Admin] API update plan fallback:', err);
+      }
+
       const { error } = await supabase
-        .from('profiles')
-        .update({ plan })
-        .eq('id', id);
+        .from('subscriptions')
+        .upsert({ user_id: id, plan_id: plan.toLowerCase(), status: 'active' }, { onConflict: 'user_id' });
 
       if (error) console.error('[Admin] Update plan error:', error);
     }
@@ -292,7 +345,22 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }));
 
     if (isSupabaseConfigured) {
-      // Delete profile (cascades to workflows, logs, channels)
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          const res = await fetch(`/api/admin/clients?id=${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
+          if (res.ok) return;
+        }
+      } catch (err) {
+        console.warn('[Admin] API delete client fallback:', err);
+      }
+
+      // Delete profile fallback (cascades to workflows, logs, channels)
       const { error } = await supabase
         .from('profiles')
         .delete()

@@ -27,8 +27,8 @@ export default function AdminLogin() {
   const [lockoutEnd, setLockoutEnd] = useState(0);
   const [honeypot, setHoneypot] = useState("");
 
-  // If already logged in as admin, show a state to proceed to dashboard
-  if (isLoggedIn && user?.email === 'admin@starxflow.com') {
+  // If already logged in as admin or super admin, show a state to proceed to dashboard
+  if (isLoggedIn && (user?.email === 'admin@starxflow.com' || user?.role === 'admin' || user?.role === 'super_admin')) {
     return (
       <section className="min-h-screen flex items-center justify-center bg-black p-4 dash-mesh">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm">

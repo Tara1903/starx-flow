@@ -15,6 +15,7 @@ import { useUIStore } from "../../store/uiStore";
 import { GlassCard } from "../../components/ui/GlassCard";
 import { GlassButton } from "../../components/ui/GlassButton";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
+import { CANONICAL_PLANS } from "@/lib/plans";
 
 export function PricingClient() {
   const openSignup = useUIStore((state) => state.openSignup);
@@ -30,44 +31,23 @@ export function PricingClient() {
 
   const plans = [
     {
-      name: "Starter",
-      price: "$29",
-      desc: "Ideal for solo wellness, coaching, or beauty practitioners.",
-      features: [
-        "1 WhatsApp AI Receptionist",
-        "Up to 150 bookings/month",
-        "Google Calendar & Outlook Sync",
-        "Standard WhatsApp intake forms",
-        "Basic CRM dashboards",
-        "Email support",
-      ],
+      name: CANONICAL_PLANS.starter.name,
+      price: `$${CANONICAL_PLANS.starter.price}`,
+      desc: CANONICAL_PLANS.starter.description,
+      features: CANONICAL_PLANS.starter.features,
     },
     {
-      name: "Growth",
-      price: "$59",
-      desc: "Best for established gyms, clinics, and multi-staff salons/spas.",
-      features: [
-        "3 WhatsApp AI Receptionists",
-        "Unlimited bookings/month",
-        "Square & Clover POS syncs",
-        "Google Review Booster automation",
-        "Staff calendar utilization logs",
-        "Priority email support",
-      ],
+      name: CANONICAL_PLANS.growth.name,
+      price: `$${CANONICAL_PLANS.growth.price}`,
+      desc: CANONICAL_PLANS.growth.description,
+      features: CANONICAL_PLANS.growth.features,
       popular: true,
     },
     {
-      name: "Pro",
-      price: "$99",
-      desc: "Best for local franchises and multi-location service groups.",
-      features: [
-        "Unlimited AI Receptionists",
-        "Multi-location routing rules",
-        "Dedicated WhatsApp numbers",
-        "Custom database CRM integrations",
-        "White-label calendar widgets",
-        "24/7 dedicated manager support",
-      ],
+      name: CANONICAL_PLANS.pro.name,
+      price: `$${CANONICAL_PLANS.pro.price}`,
+      desc: CANONICAL_PLANS.pro.description,
+      features: CANONICAL_PLANS.pro.features,
     },
   ];
 

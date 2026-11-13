@@ -150,7 +150,7 @@ export function DashboardLayout() {
       <div 
         className={cn(
           "flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 pb-20 sm:pb-0 relative z-10",
-          isSidebarCollapsed ? "sm:pl-[72px]" : "sm:pl-[260px]"
+          isSidebarCollapsed ? "sm:pl-[96px]" : "sm:pl-[304px]"
         )}
       >
         {/* 3. TopBar Component */}
@@ -162,10 +162,10 @@ export function DashboardLayout() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeSection}
-              initial={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.985, y: 12 }}
-              animate={prefersReduced ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
-              exit={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.99, y: -10 }}
-              transition={{ duration: prefersReduced ? 0.05 : 0.28, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, scale: 0.985, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.99, y: -8 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="h-full"
             >
               <React.Suspense fallback={<GlassSkeleton variant="panel" />}>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { webhooks } from '@polar-sh/sdk/2026-10';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { POLAR_PRODUCT_TO_PLAN } from '@/lib/polar';
+import { normalizePlanId } from '@/lib/plans';
 
 export async function processPolarWebhook(request: Request): Promise<Response> {
   const webhookSecret = process.env.POLAR_WEBHOOK_SECRET;
@@ -94,10 +95,10 @@ export async function processPolarWebhook(request: Request): Promise<Response> {
         const customerEmail = dataObj.customer?.email || dataObj.customer_email;
         const resolvedUserId = userId || (await resolveUserByEmail(customerEmail));
 
-        const planId =
+        const rawPlanId =
           POLAR_PRODUCT_TO_PLAN[dataObj.product_id] ||
-          dataObj.metadata?.plan_id ||
-          'starter';
+          dataObj.metadata?.plan_id;
+        const planId = rawPlanId ? normalizePlanId(rawPlanId) : 'starter';
 
         const customerId = dataObj.customer_id || dataObj.customer?.id;
         const subscriptionId = dataObj.subscription_id;
@@ -152,10 +153,10 @@ export async function processPolarWebhook(request: Request): Promise<Response> {
         const customerEmail = dataObj.customer?.email;
         const resolvedUserId = userId || (await resolveUserByEmail(customerEmail));
 
-        const planId =
+        const rawPlanId =
           POLAR_PRODUCT_TO_PLAN[dataObj.product_id] ||
-          dataObj.metadata?.plan_id ||
-          'starter';
+          dataObj.metadata?.plan_id;
+        const planId = rawPlanId ? normalizePlanId(rawPlanId) : 'starter';
 
         if (resolvedUserId) {
           const status = dataObj.status === 'active' ? 'active' : dataObj.status;
