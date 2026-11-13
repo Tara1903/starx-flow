@@ -55,7 +55,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="bg-black min-h-screen flex flex-col pb-24">
+    <div className="bg-black min-h-screen flex flex-col gap-12 lg:gap-16 pb-24">
       <AuthRedirect to="/dashboard" />
       {jsonLd.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
@@ -64,28 +64,40 @@ export default function Home() {
       {/* 1. Flagship Animated Hero */}
       <Hero />
       
-      {/* 2. Verified Ecosystem Social Proof */}
-      <SocialProof />
+      {/* 2. Verified Ecosystem Social Proof & Lost Revenue Analysis */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
+        <div className="glass-panel rounded-[2.5rem] overflow-hidden border border-white/[0.08] shadow-[0_20px_80px_rgba(0,0,0,0.6)] [&_section]:!bg-transparent">
+          <SocialProof />
+          <Problem />
+        </div>
+      </div>
 
-      {/* 3. The Front Desk Problem & Lost Revenue Analysis */}
-      <Problem />
+      {/* 3. Deterministic 3-Step Setup Progression & Core Capabilities */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
+        <div className="glass-hero rounded-[2.5rem] overflow-hidden border border-emerald-500/20 shadow-[0_24px_90px_rgba(0,0,0,0.7),0_0_50px_rgba(16,185,129,0.08)] [&_section]:!bg-transparent border-t-0">
+          <HowItWorks />
+          <Benefits />
+        </div>
+      </div>
 
-      {/* 4. Deterministic 3-Step Setup Progression */}
-      <HowItWorks />
+      {/* 4. Dual-Segment Value Proposition (Solo & Growing Practices) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
+        <div className="glass-panel rounded-[2.5rem] overflow-hidden border border-white/[0.08] shadow-[0_20px_80px_rgba(0,0,0,0.6)] [&_section]:!bg-transparent">
+          <DualSegmentValue />
+        </div>
+      </div>
 
-      {/* 5. Comprehensive Bento Platform Benefits */}
-      <Benefits />
+      {/* 5. Authority Proof & Customer Case Testimonials */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
+        <div className="glass-hero rounded-[2.5rem] overflow-hidden border border-emerald-500/20 shadow-[0_24px_90px_rgba(0,0,0,0.7),0_0_50px_rgba(16,185,129,0.08)] [&_section]:!bg-transparent">
+          <Testimonials />
+        </div>
+      </div>
 
-      {/* 6. Dual-Segment Value Proposition (Solo & Growing Practices) */}
-      <DualSegmentValue />
-
-      {/* 7. Authority Proof & Customer Case Testimonials */}
-      <Testimonials />
-
-      {/* 8. Conversion Call to Action */}
+      {/* 6. Conversion Call to Action */}
       <CTA />
 
-      {/* 9. AI Discovery Engine & Semantic Structured Content */}
+      {/* 7. AI Discovery Engine & Semantic Structured Content */}
       <AIContent />
     </div>
   );

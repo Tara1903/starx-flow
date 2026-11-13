@@ -35,7 +35,7 @@ export function AnimatedText({
   useEffect(() => {
     const timer = setTimeout(() => {
       setFailsafeVisible(true);
-    }, 1400);
+    }, 200);
     return () => clearTimeout(timer);
   }, []);
 

@@ -23,7 +23,8 @@ export const MOTION_EASE = {
 
 export const VIEWPORT_CONFIG = {
   once: true,
-  amount: 0.15,
+  amount: "some" as const,
+  margin: "150px 0px 150px 0px",
 } as const;
 
 // ── Reusable Spring & Transition Presets ──

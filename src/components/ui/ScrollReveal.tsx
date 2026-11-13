@@ -38,7 +38,7 @@ export function ScrollReveal({
     // Fail-safe guarantee: Content must NEVER stay stuck at opacity: 0 if an observer or trigger delays
     const timer = setTimeout(() => {
       setFailsafeVisible(true);
-    }, 1400);
+    }, 200);
     return () => clearTimeout(timer);
   }, []);
 
