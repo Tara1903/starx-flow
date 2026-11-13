@@ -239,12 +239,7 @@ export function Hero() {
           <div className="lg:col-span-6 xl:col-span-6 flex flex-col items-start text-left">
             
             {/* 1. Announcement Pill Badge */}
-            <motion.div
-              initial={prefersReduced ? false : { opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: MOTION_EASE.premium }}
-              className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-300 mb-6 shadow-[0_0_24px_rgba(16,185,129,0.16)] backdrop-blur-md"
-            >
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-300 mb-6 shadow-[0_0_24px_rgba(16,185,129,0.16)] backdrop-blur-md">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-reduce:hidden" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -252,39 +247,24 @@ export function Hero() {
               <span>AI Receptionist &amp; Business OS</span>
               <span className="text-zinc-500 text-[10px]">|</span>
               <span className="text-zinc-400 font-normal">v2.4 Live Autopilot</span>
-            </motion.div>
+            </div>
 
             {/* 2. Flagship Title Typography */}
-            <motion.h1
-              initial={prefersReduced ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: MOTION_DURATION.heroChoreography, delay: 0.08, ease: MOTION_EASE.premium }}
-              className="text-4xl sm:text-5xl lg:text-6xl xl:text-[64px] font-bold tracking-tight text-white leading-[1.06] mb-6"
-            >
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[64px] font-bold tracking-tight text-white leading-[1.06] mb-6">
               Your AI Receptionist{" "}
               <span className="block text-gradient-green">
                 for Service Businesses
               </span>
-            </motion.h1>
+            </h1>
 
             {/* 3. Supporting Subtitle */}
-            <motion.p
-              initial={prefersReduced ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.48, delay: 0.16, ease: MOTION_EASE.premium }}
-              className="text-base sm:text-lg lg:text-xl text-zinc-300 font-normal leading-relaxed max-w-xl mb-8"
-            >
+            <p className="text-base sm:text-lg lg:text-xl text-zinc-300 font-normal leading-relaxed max-w-xl mb-8">
               WhatsApp, Instagram, Bookings, Leads, and Follow-ups — all
               automated by AI, 24/7 with zero commission fees.
-            </motion.p>
+            </p>
 
             {/* 4. Primary & Secondary CTA Buttons */}
-            <motion.div
-              initial={prefersReduced ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.44, delay: 0.24, ease: MOTION_EASE.premium }}
-              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto mb-8"
-            >
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto mb-8">
               <GlassButton
                 size="lg"
                 variant="primary"
@@ -305,15 +285,10 @@ export function Hero() {
               >
                 Book a Demo
               </GlassButton>
-            </motion.div>
+            </div>
 
             {/* 5. Capability Checkmarks */}
-            <motion.div
-              initial={prefersReduced ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.32, ease: MOTION_EASE.premium }}
-              className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-xs sm:text-sm text-zinc-300 font-medium"
-            >
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-xs sm:text-sm text-zinc-300 font-medium">
               {[
                 "AI Voice & Chat",
                 "Lead Management",
@@ -325,7 +300,7 @@ export function Hero() {
                   {item}
                 </span>
               ))}
-            </motion.div>
+            </div>
           </div>
 
           {/* RIGHT INTERACTIVE PRODUCT SHOWCASE (6 cols on lg) */}
@@ -557,16 +532,10 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* Bottom 4 Glass Metric Cards Row — Liquid Glass Stagger Entrance */}
-        <motion.div
-          variants={prefersReduced ? undefined : liquidStaggerGrid}
-          initial={prefersReduced ? false : "hidden"}
-          whileInView="visible"
-          viewport={VIEWPORT_CONFIG}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mt-14 lg:mt-18"
-        >
+        {/* Bottom 4 Glass Metric Cards Row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mt-14 lg:mt-18">
           {heroMetrics.map((metric) => (
-            <motion.div key={metric.label} variants={prefersReduced ? undefined : liquidCardEntrance}>
+            <div key={metric.label}>
               <GlassCard
                 variant="obsidian"
                 hover
@@ -584,9 +553,9 @@ export function Hero() {
                   </div>
                 </div>
               </GlassCard>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

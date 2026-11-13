@@ -102,31 +102,18 @@ export function FeaturesClient() {
         
         {/* Header Section */}
         <div className="text-center max-w-4xl mx-auto mb-24">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6 shadow-sm backdrop-blur-md"
-          >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6 shadow-sm backdrop-blur-md">
             Capabilities
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl sm:text-5xl md:text-[5.5rem] font-bold tracking-tight text-white mb-6 leading-[1.05]"
-          >
+          </div>
+          <h1 className="text-4xl sm:text-5xl md:text-[5.5rem] font-bold tracking-tight text-white mb-6 leading-[1.05]">
             Everything you need to <br className="hidden md:block" />
             <span className="text-gradient-silver">
               automate & scale.
             </span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto font-medium"
-          >
+          </h1>
+          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto font-medium">
             From WhatsApp AI intake assistants to advanced calendar configurations, StarX Flow gives you enterprise-grade merchant infrastructure out of the box.
-          </motion.p>
+          </p>
         </div>
 
         {/* Hero Feature Showcase */}

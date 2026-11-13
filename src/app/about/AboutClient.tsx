@@ -22,25 +22,16 @@ export function AboutClient() {
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Intro Section */}
         <div className="max-w-4xl mx-auto text-center mb-16 md:mb-28 pt-8 md:pt-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
+          <div>
             <h1 className="text-[2.5rem] sm:text-[3.5rem] md:text-[4.5rem] lg:text-[5.5rem] font-bold tracking-tight text-white mb-8 md:mb-10 leading-[1.05]">
               Built for modern <br />
               <span className="text-gradient-silver">
                 service businesses.
               </span>
             </h1>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.8 }}
-            className="glass-panel p-8 md:p-16 rounded-[2.5rem] shadow-2xl relative"
-          >
+          <div className="glass-panel p-8 md:p-16 rounded-[2.5rem] shadow-2xl relative">
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
             <div className="space-y-6 text-lg md:text-xl text-zinc-300 leading-relaxed font-light text-left">
               <p className="font-bold text-white text-xl md:text-2xl text-center mb-6">
@@ -55,7 +46,7 @@ export function AboutClient() {
                 that integrates directly with your existing calendar, answers customer FAQs instantly, and helps you win back your day.
               </p>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Platform Operating Standards Grid */}
@@ -193,11 +184,7 @@ export function AboutClient() {
         </div>
 
         {/* CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEWPORT_CONFIG}
-          transition={{ duration: MOTION_DURATION.sectionReveal, ease: MOTION_EASE.premium }}
+        <div
           className="glass-panel border border-emerald-500/20 rounded-[3rem] p-12 md:p-20 text-center shadow-[0_20px_80px_-20px_rgba(16,185,129,0.2)] bg-zinc-950/80 relative overflow-hidden"
         >
           <div className="absolute inset-0 atmo-glow atmo-glow-emerald opacity-30 mix-blend-screen" />
@@ -218,7 +205,7 @@ export function AboutClient() {
               Start Automating Free <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </GlassButton>
           </div>
-        </motion.div>
+        </div>
       </div>
       </div>
     </>

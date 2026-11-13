@@ -91,13 +91,7 @@ export function SocialProof() {
 
       {/* Architectural Guarantee Strip */}
       <div className="max-w-5xl mx-auto px-6 relative z-10">
-        <motion.div
-          initial={prefersReduced ? false : { opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEWPORT_CONFIG}
-          transition={{ duration: 0.42, ease: MOTION_EASE.premium }}
-          className="flex flex-wrap justify-center gap-3"
-        >
+        <div className="flex flex-wrap justify-center gap-3">
           {architecturalPillars.map((pillar, i) => (
             <div
               key={i}
@@ -109,7 +103,7 @@ export function SocialProof() {
               </span>
             </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

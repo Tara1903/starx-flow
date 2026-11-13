@@ -255,3 +255,38 @@ All phases of the Flagship Motion & Interaction System 1.0 have been implemented
    - Enforced solid `#020a06` obsidian background with `border border-emerald-500/35 shadow-[0_32px_80px_rgba(0,0,0,0.98),0_0_40px_rgba(16,185,129,0.22)]`. Zero text bleeding, 100% legibility, opens downwards reliably.
 4. **Observer Failsafe Guarantees (`ScrollReveal.tsx`, `AnimatedSection.tsx`, `AnimatedText.tsx`):**
    - Added a 1400ms timeout fallback to force visibility if an observer or trigger has not fired, guaranteeing that content is NEVER stuck at `opacity: 0`.
+
+---
+
+## EMERGENCY CONTENT VISIBILITY RESTORATION & DEFAULT-VISIBLE ARCHITECTURE (2026-11-13)
+
+### 1. Problem Statement & Root Cause Diagnosis
+- **Critical Symptom:** Website headlines, paragraphs, and sections disappeared across the homepage and inner routes, leaving large empty dark emerald containers.
+- **Root Cause 1 (`AnimatedText.tsx`):** Word-by-word animation wrapped `<motion.span>` inside a plain HTML `<span>` with `aria-hidden="true"`. A standard HTML element between a Framer Motion parent container and child `motion.span` breaks Framer Motion's variant propagation. Consequently, the children remained permanently frozen at `hidden: { opacity: 0, y: "32%" }`. Because `aria-hidden="true"` was set on the wrapper, the text was both visually invisible and omitted from assistive technologies.
+- **Root Cause 2 (`ScrollReveal.tsx` & `AnimatedSection.tsx`):** Used `initial="hidden"` (`opacity: 0`) and relied on `whileInView="visible"`. Rapid scrolling, viewport calculation latency, or hydration delays caused elements to remain stuck at `opacity: 0`.
+- **Root Cause 3 (`PageTransition.tsx`):** Initial opacity 0 on route mount caused momentary blank flashes.
+
+### 2. Progressive Enhancement Fixes Applied
+1. **Immediate Text Visibility (`AnimatedText.tsx`):**
+   - Stripped nested motion spans. Replaced with direct, semantic `<Tag className={cn("inline-block", className)}>{text}</Tag>`. Default opacity is strictly `1`. Text renders immediately on initial paint.
+2. **Immediate Container Visibility (`ScrollReveal.tsx` & `AnimatedSection.tsx`):**
+   - Converted to immediate visible wrappers (`<div className={cn(className)} {...props}>{children}</div>` and `<section className={cn(className)} {...props}>{children}</section>`). Default opacity is strictly `1`.
+3. **Flicker-Free Page Transitions (`PageTransition.tsx`):**
+   - Converted to direct `<div className={className}>{children}</div>`.
+4. **Section Component Sanitization:**
+   - Removed all `initial={{ opacity: 0 }}` motion declarations from `Hero.tsx` (announcement badge, headline, subtitle, CTAs, metrics grid), `SocialProof.tsx`, `Problem.tsx`, `HowItWorks.tsx`, and `Demo.tsx`.
+   - Sanitized all inner client routes: `AboutClient.tsx`, `FeaturesClient.tsx`, `ProductClient.tsx`, `HowItWorksClient.tsx`, `IntegrationsClient.tsx`, `SecurityClient.tsx`, `PrivacyClient.tsx`, `TermsClient.tsx`, `ResourcesClient.tsx`.
+5. **Dropdown Positioning & Solid Obsidian Backing (`GlassDropdown.tsx`):**
+   - Enforced `style={{ position: "absolute" }}` and `!absolute top-full mt-2.5 z-50` with `#020a06` solid obsidian background.
+   - Eliminates upward overflow and background bleed-through. Verified positioning at `top: 72px` directly beneath navbar (`navRect.bottom = 76px`).
+
+### 3. Verification & Quality Gates Passed
+- `npm run typecheck`: **0 errors**
+- `npm run build`: **114/114 routes compiled successfully**
+- Headless visual audit of 22 routes: **0 stuck invisible elements, status 200 on all routes**
+- `npm run test:security`: **20/20 tests passed**
+- `npm run test:integrity`: **8/8 tests passed**
+- `npm run test:seo`: **22/22 tests passed**
+- `npm run scan:secrets`: **637 files checked, 0 unredacted secrets**
+
+**Deployment Status:** Staged and verified locally. Awaiting explicit user approval before production deploy.

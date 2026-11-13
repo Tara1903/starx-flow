@@ -38,31 +38,16 @@ export function ProductClient() {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse motion-reduce:animate-none"></span>
             The StarX Flow OS
           </div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: MOTION_DURATION.sectionReveal, ease: MOTION_EASE.premium }}
-            className="text-4xl sm:text-5xl md:text-[5.5rem] font-bold tracking-tight text-white mb-8 leading-[1.05]"
-          >
+          <h1 className="text-4xl sm:text-5xl md:text-[5.5rem] font-bold tracking-tight text-white mb-8 leading-[1.05]">
             Your complete AI front desk <br className="hidden md:block" />
             <span className="text-gradient-silver">
               operating system.
             </span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08, duration: MOTION_DURATION.sectionReveal, ease: MOTION_EASE.premium }}
-            className="text-lg md:text-xl text-zinc-400 leading-relaxed max-w-3xl mx-auto mb-10 font-medium"
-          >
+          </h1>
+          <p className="text-lg md:text-xl text-zinc-400 leading-relaxed max-w-3xl mx-auto mb-10 font-medium">
             Stop losing bookings to busy phone lines. Deploy 24/7 WhatsApp AI receptionists, sync multi-staff calendars, and aggregate patient/client details into a high-converting customer CRM.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.16, duration: MOTION_DURATION.sectionReveal, ease: MOTION_EASE.premium }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <GlassButton 
               size="lg"
               variant="primary"
@@ -81,16 +66,11 @@ export function ProductClient() {
             >
               Book a Demo
             </GlassButton>
-          </motion.div>
+          </div>
         </div>
 
         {/* Dashboard Preview UI */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="w-full max-w-5xl mx-auto glass-hero glass-inner-sheen glass-edge-light rounded-[2rem] overflow-hidden mb-32 relative shadow-2xl"
-        >
+        <div className="w-full max-w-5xl mx-auto glass-hero glass-inner-sheen glass-edge-light rounded-[2rem] overflow-hidden mb-32 relative shadow-2xl">
           {/* Mac window header */}
           <div className="bg-black/40 px-4 py-3 border-b border-white/5 flex items-center gap-2">
             <div className="flex gap-1.5">
@@ -153,7 +133,7 @@ export function ProductClient() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Features Grid */}
         <div className="mb-32">

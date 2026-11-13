@@ -235,13 +235,7 @@ export function Demo() {
           style={{ background: `radial-gradient(circle, ${current.themeColor} 0%, transparent 70%)` }}
         />
         
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          viewport={VIEWPORT_CONFIG}
-          className="text-center mb-12 lg:mb-16 max-w-3xl relative z-10"
-        >
+        <div className="text-center mb-12 lg:mb-16 max-w-3xl relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] font-bold tracking-widest text-zinc-300 uppercase mb-6 backdrop-blur-md">
             <Sparkles size={10} className="text-zinc-300" />
             Interactive Simulation
@@ -253,7 +247,7 @@ export function Demo() {
           <p className="text-lg md:text-xl text-zinc-400 leading-relaxed font-medium">
             Experience how our 24/7 WhatsApp AI receptionist handles client inquiries, schedules bookings, and syncs your dashboard instantly.
           </p>
-        </motion.div>
+        </div>
 
         {/* Premium Horizontal Pill Selector */}
         <div className="w-full flex justify-center mb-12 relative z-20">
@@ -271,13 +265,7 @@ export function Demo() {
           />
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          viewport={VIEWPORT_CONFIG}
-          className="w-full h-auto min-h-[600px] relative z-10"
-        >
+        <div className="w-full h-auto min-h-[600px] relative z-10">
           <div className="w-full h-full glass-panel rounded-[40px] p-6 md:p-10 relative shadow-2xl">
             <div className="relative z-10 w-full h-full flex flex-col lg:flex-row gap-10 items-stretch">
               
@@ -445,7 +433,7 @@ export function Demo() {
 
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

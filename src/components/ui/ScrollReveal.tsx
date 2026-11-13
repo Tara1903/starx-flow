@@ -1,20 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { motion, useReducedMotion, HTMLMotionProps } from "motion/react";
-import {
-  fadeIn,
-  clipRevealUp,
-  scrollRevealUp,
-  scrollRevealDown,
-  scrollRevealLeft,
-  scrollRevealRight,
-  scrollRevealScale,
-  VIEWPORT_CONFIG,
-  MOTION_EASE,
-} from "../../lib/motionVariants";
+import React from "react";
+import { cn } from "../../lib/utils";
 
-export interface ScrollRevealProps extends Omit<HTMLMotionProps<"div">, "children"> {
+export interface ScrollRevealProps extends React.HTMLAttributes<HTMLDivElement> {
   direction?: "fade" | "up" | "down" | "left" | "right" | "scale" | "clip";
   delay?: number;
   duration?: number;
@@ -22,6 +11,12 @@ export interface ScrollRevealProps extends Omit<HTMLMotionProps<"div">, "childre
   children?: React.ReactNode;
 }
 
+/**
+ * StarX Flow ScrollReveal wrapper.
+ * Guaranteed 100% immediate content visibility:
+ * Renders children immediately visible by default (opacity: 1) without hiding
+ * or depending on IntersectionObserver triggers.
+ */
 export function ScrollReveal({
   direction = "up",
   delay = 0,
@@ -31,47 +26,9 @@ export function ScrollReveal({
   children,
   ...props
 }: ScrollRevealProps) {
-  const prefersReduced = useReducedMotion();
-  const [failsafeVisible, setFailsafeVisible] = useState(false);
-
-  useEffect(() => {
-    // Fail-safe guarantee: Content must NEVER stay stuck at opacity: 0 if an observer or trigger delays
-    const timer = setTimeout(() => {
-      setFailsafeVisible(true);
-    }, 200);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (prefersReduced) {
-    return (
-      <div className={className} {...(props as React.HTMLAttributes<HTMLDivElement>)}>
-        {children}
-      </div>
-    );
-  }
-
-  const variantMap = {
-    fade: fadeIn,
-    up: scrollRevealUp,
-    down: scrollRevealDown,
-    left: scrollRevealLeft,
-    right: scrollRevealRight,
-    scale: scrollRevealScale,
-    clip: clipRevealUp,
-  };
-
   return (
-    <motion.div
-      variants={variantMap[direction]}
-      initial="hidden"
-      whileInView="visible"
-      animate={failsafeVisible ? "visible" : undefined}
-      viewport={{ ...VIEWPORT_CONFIG, once }}
-      transition={{ duration, delay, ease: MOTION_EASE.premium }}
-      className={className}
-      {...props}
-    >
+    <div className={cn(className)} {...props}>
       {children}
-    </motion.div>
+    </div>
   );
 }

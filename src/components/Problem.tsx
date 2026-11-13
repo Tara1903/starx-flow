@@ -55,12 +55,8 @@ export function Problem() {
 
             <div className="space-y-8">
               {painPoints.map((item, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={prefersReduced ? false : { opacity: 0, x: -16 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={VIEWPORT_CONFIG}
-                  transition={{ duration: 0.42, delay: i * 0.08, ease: MOTION_EASE.premium }}
                   className="flex gap-6 items-start group"
                 >
                   <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 group-hover:border-emerald-500/35 group-hover:bg-emerald-500/10 group-hover:scale-105 flex items-center justify-center text-sm font-bold text-emerald-400 transition-all duration-200 flex-shrink-0">
@@ -74,7 +70,7 @@ export function Problem() {
                       {item.desc}
                     </p>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </ScrollReveal>
@@ -92,13 +88,7 @@ export function Problem() {
               <h3 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white tracking-tighter mb-5 tabular-nums">
                 $48,590
               </h3>
-              <motion.div
-                initial={prefersReduced ? false : { scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={VIEWPORT_CONFIG}
-                transition={{ duration: 0.5, delay: 0.2, ease: MOTION_EASE.premium }}
-                className="w-12 h-1 bg-gradient-to-r from-emerald-500/80 to-teal-400/60 mx-auto mb-6 rounded-full origin-center"
-              />
+              <div className="w-12 h-1 bg-gradient-to-r from-emerald-500/80 to-teal-400/60 mx-auto mb-6 rounded-full" />
               <p className="text-zinc-300 text-base sm:text-lg font-medium leading-relaxed max-w-[280px] mx-auto">
                 Average annual revenue lost to missed calls and unfollowed
                 no-shows

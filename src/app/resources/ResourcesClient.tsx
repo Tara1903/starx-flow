@@ -134,40 +134,22 @@ export function ResourcesClient() {
         {/* Header Grid */}
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-20 border-b border-white/10 pb-16">
           <div className="max-w-2xl text-left">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6 shadow-sm backdrop-blur-md"
-            >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6 shadow-sm backdrop-blur-md">
               Knowledge Base
-            </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-[3.5rem] md:text-[5.5rem] font-bold tracking-tight text-white mb-6 leading-[1.05]"
-            >
+            </div>
+            <h1 className="text-[3.5rem] md:text-[5.5rem] font-bold tracking-tight text-white mb-6 leading-[1.05]">
               Resources to scale <br />
               <span className="text-gradient-silver">
                 your operations.
               </span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-lg md:text-xl text-zinc-400 leading-relaxed font-medium"
-            >
+            </h1>
+            <p className="text-lg md:text-xl text-zinc-400 leading-relaxed font-medium">
               Insights, operational checklists, and automation templates to help you run a high-margin, automated local service business.
-            </motion.p>
+            </p>
           </div>
 
           {/* Newsletter Signup (Fully functional) */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="w-full sm:w-auto glass-panel p-6 rounded-2xl shadow-2xl flex flex-col gap-4 text-left"
-          >
+          <div className="w-full sm:w-auto glass-panel p-6 rounded-2xl shadow-2xl flex flex-col gap-4 text-left">
             <div className="flex flex-col gap-1">
               <h3 className="text-white font-bold text-lg">Weekly Operations Digest</h3>
               <p className="text-zinc-400 text-sm font-medium">
@@ -205,7 +187,7 @@ export function ResourcesClient() {
                 </button>
               </form>
             )}
-          </motion.div>
+          </div>
         </div>
 
         {/* Featured Video Card */}
@@ -295,11 +277,8 @@ export function ResourcesClient() {
         <h2 className="text-2xl font-bold text-white mb-8 text-left">Operational Guides</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {articles.map((article, idx) => (
-            <motion.div
+            <div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.08 }}
               className="group cursor-pointer flex flex-col glass-card rounded-[2rem] p-6 text-left relative overflow-hidden"
             >
               <Link href={"/resources/articles/" + article.slug} className="flex flex-col h-full w-full">
@@ -331,7 +310,7 @@ export function ResourcesClient() {
                   Read article <ArrowRight size={14} />
                 </div>
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

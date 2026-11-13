@@ -52,13 +52,9 @@ export function HowItWorks() {
         </ScrollReveal>
 
         <div className="relative grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-          <motion.div
+          <div
             aria-hidden="true"
-            initial={prefersReduced ? false : { scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={VIEWPORT_CONFIG}
-            transition={{ duration: 0.6, delay: 0.15, ease: MOTION_EASE.premium }}
-            className="hidden md:block absolute top-14 left-[16%] right-[16%] h-px bg-gradient-to-r from-emerald-500/15 via-emerald-400/45 to-emerald-500/15 origin-left pointer-events-none"
+            className="hidden md:block absolute top-14 left-[16%] right-[16%] h-px bg-gradient-to-r from-emerald-500/15 via-emerald-400/45 to-emerald-500/15 pointer-events-none"
           />
           {steps.map((step, i) => (
             <ScrollReveal key={step.number} direction="up" delay={i * 0.1}>

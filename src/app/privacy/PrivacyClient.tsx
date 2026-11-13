@@ -12,12 +12,7 @@ export function PrivacyClient() {
       </div>
 
       <div className="max-w-4xl mx-auto relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-16"
-        >
+        <div className="mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full surface-primary text-[10px] font-bold tracking-widest text-zinc-400 uppercase mb-6">
             Legal Document
           </div>
@@ -25,14 +20,9 @@ export function PrivacyClient() {
             Privacy <span className="text-gradient-silver">Policy</span>
           </h1>
           <p className="text-zinc-400 font-medium">Last updated: November 4, 2026</p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="glass-mist p-8 md:p-16 rounded-[2.5rem] max-w-none"
-        >
+        <div className="glass-mist p-8 md:p-16 rounded-[2.5rem] max-w-none">
           <div className="space-y-12">
             <section>
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">1. Information We Collect</h2>
@@ -69,7 +59,7 @@ export function PrivacyClient() {
               </p>
             </section>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

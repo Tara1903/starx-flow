@@ -160,12 +160,8 @@ sharing feedback on Google helps our local staff immensely: [Review-Link]"`,
         {/* Step-by-Step Workflow Runbook */}
         <div className="space-y-12 mb-24">
           {workflowSteps.map((step, idx) => (
-            <motion.div
+            <div
               key={idx}
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={VIEWPORT_CONFIG}
-              transition={{ duration: 0.6, delay: idx * 0.1 }}
               className="glass-panel p-8 md:p-12 rounded-3xl border border-white/10"
             >
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -209,7 +205,7 @@ sharing feedback on Google helps our local staff immensely: [Review-Link]"`,
                 </div>
 
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 

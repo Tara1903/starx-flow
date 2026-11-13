@@ -152,12 +152,8 @@ export function SecurityClient() {
         {/* Security Controls Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
           {securityControls.map((ctrl, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={VIEWPORT_CONFIG}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
               className="glass-card p-8 rounded-3xl flex flex-col justify-between border border-white/10"
             >
               <div>
@@ -185,7 +181,7 @@ export function SecurityClient() {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
           ))}
         </div>
 
