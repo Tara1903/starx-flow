@@ -5,7 +5,7 @@ import {
   Sparkles, Dumbbell, Activity, Scissors, Heart, GraduationCap,
   MessageSquare as ChatIcon
 } from "lucide-react";
-import { crossfadeSwap } from "../lib/motionVariants";
+import { crossfadeSwap, VIEWPORT_CONFIG } from "../lib/motionVariants";
 import { useInViewport, useIsDocumentVisible } from "../hooks/useMotionVisibility";
 import { AnimatedTabs } from "./ui/AnimatedTabs";
 import { useRef } from "react";
@@ -239,7 +239,7 @@ export function Demo() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={VIEWPORT_CONFIG}
           className="text-center mb-12 lg:mb-16 max-w-3xl relative z-10"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] font-bold tracking-widest text-zinc-300 uppercase mb-6 backdrop-blur-md">
@@ -275,7 +275,7 @@ export function Demo() {
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={VIEWPORT_CONFIG}
           className="w-full h-auto min-h-[600px] relative z-10"
         >
           <div className="w-full h-full glass-panel rounded-[40px] p-6 md:p-10 relative shadow-2xl">

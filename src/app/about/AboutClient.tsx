@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { ArrowRight, Calendar, ShieldCheck, Zap } from "lucide-react";
 import { useUIStore } from "../../store/uiStore";
 import { GlassButton } from "../../components/ui/GlassButton";
-import { MOTION_DURATION, MOTION_EASE } from "../../lib/motionVariants";
+import { MOTION_DURATION, MOTION_EASE, VIEWPORT_CONFIG } from "../../lib/motionVariants";
 
 
 export function AboutClient() {
@@ -196,7 +196,7 @@ export function AboutClient() {
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
+          viewport={VIEWPORT_CONFIG}
           transition={{ duration: MOTION_DURATION.sectionReveal, ease: MOTION_EASE.premium }}
           className="glass-panel border border-emerald-500/20 rounded-[3rem] p-12 md:p-20 text-center shadow-[0_20px_80px_-20px_rgba(16,185,129,0.2)] bg-zinc-950/80 relative overflow-hidden"
         >

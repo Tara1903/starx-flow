@@ -19,6 +19,7 @@ import {
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { useUIStore } from "@/store/uiStore";
+import { VIEWPORT_CONFIG } from "@/lib/motionVariants";
 
 export function HowItWorksClient() {
   const openSignup = useUIStore((state) => state.openSignup);
@@ -163,7 +164,7 @@ sharing feedback on Google helps our local staff immensely: [Review-Link]"`,
               key={idx}
               initial={{ opacity: 0, y: 25 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={VIEWPORT_CONFIG}
               transition={{ duration: 0.6, delay: idx * 0.1 }}
               className="glass-panel p-8 md:p-12 rounded-3xl border border-white/10"
             >

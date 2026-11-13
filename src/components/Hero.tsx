@@ -25,6 +25,7 @@ import {
   MOTION_DURATION,
   liquidStaggerGrid,
   liquidCardEntrance,
+  VIEWPORT_CONFIG,
 } from "../lib/motionVariants";
 
 interface ChatMessage {
@@ -561,7 +562,7 @@ export function Hero() {
           variants={prefersReduced ? undefined : liquidStaggerGrid}
           initial={prefersReduced ? false : "hidden"}
           whileInView="visible"
-          viewport={{ once: true, amount: 0.1 }}
+          viewport={VIEWPORT_CONFIG}
           className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mt-14 lg:mt-18"
         >
           {heroMetrics.map((metric) => (

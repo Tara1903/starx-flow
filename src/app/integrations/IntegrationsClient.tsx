@@ -18,7 +18,7 @@ import {
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { MOTION_DURATION, MOTION_EASE } from "@/lib/motionVariants";
+import { MOTION_DURATION, MOTION_EASE, VIEWPORT_CONFIG } from "@/lib/motionVariants";
 import { useUIStore } from "@/store/uiStore";
 
 export function IntegrationsClient() {
@@ -220,7 +220,7 @@ export function IntegrationsClient() {
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={VIEWPORT_CONFIG}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 className="glass-card p-8 rounded-3xl flex flex-col justify-between border border-white/10"
               >

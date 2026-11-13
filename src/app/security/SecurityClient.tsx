@@ -17,6 +17,7 @@ import {
   Mail
 } from "lucide-react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { VIEWPORT_CONFIG } from "@/lib/motionVariants";
 
 export function SecurityClient() {
   const securityControls = [
@@ -155,7 +156,7 @@ export function SecurityClient() {
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={VIEWPORT_CONFIG}
               transition={{ duration: 0.5, delay: i * 0.1 }}
               className="glass-card p-8 rounded-3xl flex flex-col justify-between border border-white/10"
             >
