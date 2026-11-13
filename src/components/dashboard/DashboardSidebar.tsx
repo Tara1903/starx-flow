@@ -98,13 +98,48 @@ export function DashboardSidebar() {
   const connectedChannelsCount = connectedChannels.filter((c) => c.isConnected).length;
   const unreadConversationsCount = conversations.filter((c) => c.unread).length;
 
-  const [hoveredFlyoutId, setHoveredFlyoutId] = useState<string | null>(null);
-  const [hoveredTooltipId, setHoveredTooltipId] = useState<string | null>(null);
+  const [flyoutState, setFlyoutState] = useState<{ item: SidebarItem; top: number } | null>(null);
+  const [tooltipState, setTooltipState] = useState<{ label: string; badge?: string | number; top: number } | null>(null);
   const [isAutoPilotActive, setIsAutoPilotActive] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(true);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
   const [isQuickHubOpen, setIsQuickHubOpen] = useState(false);
   const desktopNavRef = useRef<HTMLElement>(null);
+  const asideContainerRef = useRef<HTMLDivElement>(null);
+  const flyoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!isCollapsed) {
+      setFlyoutState(null);
+      setTooltipState(null);
+    }
+  }, [isCollapsed]);
+
+  const handleItemMouseEnter = (item: SidebarItem, e: React.MouseEvent<HTMLButtonElement>) => {
+    if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
+    if (!isCollapsed) return;
+
+    const asideRect = asideContainerRef.current?.getBoundingClientRect();
+    const btnRect = e.currentTarget.getBoundingClientRect();
+    if (!asideRect) return;
+
+    const top = btnRect.top - asideRect.top;
+
+    if (item.subItems && item.subItems.length > 0) {
+      setTooltipState(null);
+      setFlyoutState({ item, top });
+    } else {
+      setFlyoutState(null);
+      setTooltipState({ label: item.label, badge: item.badge, top: top + btnRect.height / 2 });
+    }
+  };
+
+  const handleItemMouseLeave = () => {
+    setTooltipState(null);
+    flyoutTimeoutRef.current = setTimeout(() => {
+      setFlyoutState(null);
+    }, 200);
+  };
 
   // Dynamic calendar date
   const today = new Date();
@@ -288,7 +323,10 @@ export function DashboardSidebar() {
         transition={sidebarSpring}
         className="hidden sm:flex flex-col h-[calc(100vh-24px)] fixed left-3 top-3 z-40 select-none"
       >
-        <div className="glass-card-obsidian rounded-[32px] flex flex-col h-full border border-white/[0.14] shadow-[0_20px_60px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] relative overflow-visible">
+        <div
+          ref={asideContainerRef}
+          className="glass-card-obsidian rounded-[32px] flex flex-col h-full border border-white/[0.14] shadow-[0_20px_60px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] relative overflow-visible"
+        >
           
           {/* 1. Header with Brand & Floating Chevron Trigger Button */}
           <div
@@ -360,37 +398,29 @@ export function DashboardSidebar() {
           {/* 2. Search Component (Squircle in Collapsed, Full Glass Bar in Expanded) */}
           <div className="px-3 pt-3 pb-1 relative z-10">
             {isCollapsed ? (
-              <div
-                className="relative flex justify-center"
-                onMouseEnter={() => setHoveredTooltipId("search")}
-                onMouseLeave={() => setHoveredTooltipId(null)}
-              >
+              <div className="relative flex justify-center">
                 <button
                   type="button"
                   onClick={openCommandCenter}
+                  onMouseEnter={(e) => {
+                    if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
+                    setFlyoutState(null);
+                    const asideRect = asideContainerRef.current?.getBoundingClientRect();
+                    const btnRect = e.currentTarget.getBoundingClientRect();
+                    if (asideRect) {
+                      setTooltipState({
+                        label: "Search",
+                        badge: "⌘K",
+                        top: btnRect.top - asideRect.top + btnRect.height / 2,
+                      });
+                    }
+                  }}
+                  onMouseLeave={() => setTooltipState(null)}
                   aria-label="Search and command center (Press ⌘K)"
                   className="w-11 h-11 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-emerald-300 transition-all cursor-pointer shadow-sm group"
                 >
                   <Search className="w-4.5 h-4.5 group-hover:scale-110 transition-transform" />
                 </button>
-
-                {/* Floating Glass Tooltip */}
-                <AnimatePresence>
-                  {hoveredTooltipId === "search" && (
-                    <motion.div
-                      initial={{ opacity: 0, x: 6, scale: 0.95 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: 6, scale: 0.95 }}
-                      transition={{ duration: 0.15, ease: MOTION_EASE.premium }}
-                      className="absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50 px-3 py-1.5 rounded-xl bg-[#08120e]/95 backdrop-blur-2xl border border-emerald-500/30 text-xs font-semibold text-white whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7),0_0_15px_rgba(16,185,129,0.15)] flex items-center gap-2 pointer-events-none"
-                    >
-                      <span>Search</span>
-                      <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-zinc-300 border border-white/15">
-                        ⌘K
-                      </kbd>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
             ) : (
               <button
@@ -572,6 +602,76 @@ export function DashboardSidebar() {
               </button>
             </div>
           </div>
+
+          {/* ─────────────────────────────────────────────────────────────
+              V7 FLOATING GLASS TOOLTIP (COLLAPSED DOCK, ROOT LEVEL)
+              ───────────────────────────────────────────────────────────── */}
+          <AnimatePresence>
+            {isCollapsed && tooltipState && !flyoutState && (
+              <motion.div
+                initial={{ opacity: 0, x: 6, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 6, scale: 0.95 }}
+                transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
+                style={{ top: tooltipState.top }}
+                className="absolute left-full ml-3 -translate-y-1/2 z-50 px-3 py-1.5 rounded-xl bg-[#08120e]/95 backdrop-blur-2xl border border-emerald-500/30 text-xs font-semibold text-white whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7),0_0_15px_rgba(16,185,129,0.15)] flex items-center gap-2 pointer-events-none select-none"
+              >
+                <span>{tooltipState.label}</span>
+                {tooltipState.badge !== undefined && (
+                  <span
+                    className={cn(
+                      "text-[9px] px-1.5 py-0.5 rounded-full font-bold",
+                      tooltipState.badge === "⌘K"
+                        ? "font-mono bg-white/10 text-zinc-300 border border-white/15"
+                        : "bg-red-500 text-white"
+                    )}
+                  >
+                    {tooltipState.badge}
+                  </span>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ─────────────────────────────────────────────────────────────
+              V7 CASCADING FLYOUT SUBMENU (COLLAPSED DOCK, ROOT LEVEL)
+              ───────────────────────────────────────────────────────────── */}
+          <AnimatePresence>
+            {isCollapsed && flyoutState && (
+              <motion.div
+                initial={{ opacity: 0, x: 8, scale: 0.94 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 8, scale: 0.94 }}
+                transition={{ duration: 0.16, ease: MOTION_EASE.premium }}
+                style={{ top: flyoutState.top }}
+                onMouseEnter={() => {
+                  if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
+                }}
+                onMouseLeave={() => {
+                  setFlyoutState(null);
+                }}
+                className="absolute left-full ml-3 z-50 p-2 rounded-2xl bg-[#07100c]/95 backdrop-blur-2xl border border-emerald-400/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_20px_rgba(16,185,129,0.18)] min-w-[200px] space-y-1 select-none"
+              >
+                <p className="text-[10px] font-bold text-emerald-300/80 uppercase tracking-wider px-2.5 py-1 border-b border-white/[0.08]">
+                  {flyoutState.item.label} Quick Access
+                </p>
+                {flyoutState.item.subItems?.map((sub, sIdx) => (
+                  <button
+                    key={sIdx}
+                    type="button"
+                    onClick={() => {
+                      sub.action();
+                      setFlyoutState(null);
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-emerald-500/18 transition-all flex items-center justify-between group/sub cursor-pointer"
+                  >
+                    <span className="truncate">{sub.label}</span>
+                    <ArrowRight className="w-3 h-3 text-zinc-500 group-hover/sub:text-emerald-300 group-hover/sub:translate-x-0.5 transition-all" />
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.aside>
 
@@ -716,32 +816,23 @@ export function DashboardSidebar() {
   );
 
   /* ─────────────────────────────────────────────────────────────
-     RENDER NAVIGATION ITEM (COLLAPSED & EXPANDED WITH V7 FLYOUT)
+     RENDER NAVIGATION ITEM (COLLAPSED & EXPANDED)
      ───────────────────────────────────────────────────────────── */
   function renderNavItem(item: SidebarItem) {
     const isActive = activeSection === item.id;
-    const isHovered = hoveredTooltipId === item.id;
-    const hasSubItems = item.subItems && item.subItems.length > 0;
-    const showFlyout = isCollapsed && hasSubItems && hoveredFlyoutId === item.id;
 
     return (
-      <div
-        key={item.id}
-        className="relative"
-        onMouseEnter={() => {
-          setHoveredTooltipId(item.id);
-          if (hasSubItems) setHoveredFlyoutId(item.id);
-        }}
-        onMouseLeave={() => {
-          setHoveredTooltipId(null);
-          if (hasSubItems) setHoveredFlyoutId(null);
-        }}
-      >
+      <div key={item.id} className="relative">
         <button
           type="button"
           data-nav-item="true"
           aria-current={isActive ? "page" : undefined}
-          onClick={() => setActiveSection(item.id)}
+          onClick={() => {
+            setActiveSection(item.id);
+            setFlyoutState(null);
+          }}
+          onMouseEnter={(e) => handleItemMouseEnter(item, e)}
+          onMouseLeave={handleItemMouseLeave}
           className={cn(
             "w-full flex items-center gap-3 rounded-2xl text-sm font-medium transition-all duration-200 relative group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 select-none",
             isCollapsed ? "justify-center p-1.5" : "px-3 py-2",
@@ -817,61 +908,6 @@ export function DashboardSidebar() {
             )}
           </AnimatePresence>
         </button>
-
-        {/* ─────────────────────────────────────────────────────────────
-            V7 FLOATING GLASS TOOLTIP (COLLAPSED STATE)
-            ───────────────────────────────────────────────────────────── */}
-        <AnimatePresence>
-          {isCollapsed && isHovered && !showFlyout && (
-            <motion.div
-              initial={{ opacity: 0, x: 6, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 6, scale: 0.95 }}
-              transition={{ duration: 0.15, ease: MOTION_EASE.premium }}
-              className="absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50 px-3 py-1.5 rounded-xl bg-[#08120e]/95 backdrop-blur-2xl border border-emerald-500/30 text-xs font-semibold text-white whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7),0_0_15px_rgba(16,185,129,0.15)] flex items-center gap-2 pointer-events-none"
-            >
-              <span>{item.label}</span>
-              {item.badge !== undefined && (
-                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-red-500 text-white font-bold">
-                  {item.badge}
-                </span>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ─────────────────────────────────────────────────────────────
-            V7 CASCADING FLYOUT SUBMENU (COLLAPSED STATE, FRAME 10)
-            ───────────────────────────────────────────────────────────── */}
-        <AnimatePresence>
-          {showFlyout && (
-            <motion.div
-              initial={{ opacity: 0, x: 8, scale: 0.94 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 8, scale: 0.94 }}
-              transition={{ duration: 0.18, ease: MOTION_EASE.premium }}
-              className="absolute left-full ml-3 top-0 z-50 p-2 rounded-2xl bg-[#07100c]/95 backdrop-blur-2xl border border-emerald-400/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_20px_rgba(16,185,129,0.18)] min-w-[190px] space-y-1"
-            >
-              <p className="text-[10px] font-bold text-emerald-300/80 uppercase tracking-wider px-2.5 py-1 border-b border-white/[0.08]">
-                {item.label} Quick Access
-              </p>
-              {item.subItems?.map((sub, sIdx) => (
-                <button
-                  key={sIdx}
-                  type="button"
-                  onClick={() => {
-                    sub.action();
-                    setHoveredFlyoutId(null);
-                  }}
-                  className="w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-emerald-500/18 transition-all flex items-center justify-between group/sub cursor-pointer"
-                >
-                  <span className="truncate">{sub.label}</span>
-                  <ArrowRight className="w-3 h-3 text-zinc-500 group-hover/sub:text-emerald-300 group-hover/sub:translate-x-0.5 transition-all" />
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     );
   }
