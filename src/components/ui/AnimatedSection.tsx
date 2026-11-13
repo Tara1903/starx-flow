@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, HTMLMotionProps, useReducedMotion } from "motion/react";
 import { cn } from "../../lib/utils";
 import {
@@ -23,6 +23,15 @@ export function AnimatedSection({
   ...props
 }: AnimatedSectionProps) {
   const prefersReduced = useReducedMotion();
+  const [failsafeVisible, setFailsafeVisible] = useState(false);
+
+  useEffect(() => {
+    // Fail-safe guarantee: Content must NEVER stay stuck at opacity: 0 if an observer or trigger delays
+    const timer = setTimeout(() => {
+      setFailsafeVisible(true);
+    }, 1400);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (prefersReduced) {
     return (
@@ -37,6 +46,7 @@ export function AnimatedSection({
       variants={stagger ? staggerContainer : scrollRevealUp}
       initial="hidden"
       whileInView="visible"
+      animate={failsafeVisible ? "visible" : undefined}
       viewport={VIEWPORT_CONFIG}
       transition={delay ? { delay } : undefined}
       className={cn(className)}

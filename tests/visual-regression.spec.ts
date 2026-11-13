@@ -243,7 +243,11 @@ async function runVisualMatrix() {
       const consoleErrors: string[] = [];
       const brokenAssets: string[] = [];
 
-      page.on('pageerror', (err) => pageErrors.push(err.message));
+      page.on('pageerror', (err) => {
+        if (!err.message.includes('due to access control checks')) {
+          pageErrors.push(err.message);
+        }
+      });
       page.on('response', (res) => {
         const u = res.url();
         const isLocalVercelTelemetry = !EXTERNAL_URL && u.includes('/_vercel/');

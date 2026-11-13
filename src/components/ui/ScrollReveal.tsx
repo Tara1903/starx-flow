@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, useReducedMotion, HTMLMotionProps } from "motion/react";
 import {
   fadeIn,
@@ -32,6 +32,15 @@ export function ScrollReveal({
   ...props
 }: ScrollRevealProps) {
   const prefersReduced = useReducedMotion();
+  const [failsafeVisible, setFailsafeVisible] = useState(false);
+
+  useEffect(() => {
+    // Fail-safe guarantee: Content must NEVER stay stuck at opacity: 0 if an observer or trigger delays
+    const timer = setTimeout(() => {
+      setFailsafeVisible(true);
+    }, 1400);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (prefersReduced) {
     return (
@@ -56,6 +65,7 @@ export function ScrollReveal({
       variants={variantMap[direction]}
       initial="hidden"
       whileInView="visible"
+      animate={failsafeVisible ? "visible" : undefined}
       viewport={{ ...VIEWPORT_CONFIG, once }}
       transition={{ duration, delay, ease: MOTION_EASE.premium }}
       className={className}

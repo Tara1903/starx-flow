@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { cn } from "../../lib/utils";
 import { MOTION_EASE, VIEWPORT_CONFIG } from "../../lib/motionVariants";
@@ -18,6 +18,7 @@ export interface AnimatedTextProps {
 /**
  * Tasteful StarX Flow text choreography primitive (word stagger or smooth line rise).
  * Renders clean semantic text immediately under reduced motion with zero per-character DOM bloat.
+ * Guaranteed failsafe ensures text is never permanently hidden if an observer delays.
  */
 export function AnimatedText({
   text,
@@ -29,6 +30,15 @@ export function AnimatedText({
   className,
 }: AnimatedTextProps) {
   const prefersReduced = useReducedMotion();
+  const [failsafeVisible, setFailsafeVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFailsafeVisible(true);
+    }, 1400);
+    return () => clearTimeout(timer);
+  }, []);
+
   const Tag = as;
 
   if (prefersReduced) {
@@ -40,7 +50,7 @@ export function AnimatedText({
     return (
       <MotionTag
         initial={{ opacity: 0, y: 12 }}
-        animate={priority ? { opacity: 1, y: 0 } : undefined}
+        animate={priority || failsafeVisible ? { opacity: 1, y: 0 } : undefined}
         whileInView={priority ? undefined : { opacity: 1, y: 0 }}
         viewport={priority ? undefined : VIEWPORT_CONFIG}
         transition={{ duration: 0.44, delay, ease: MOTION_EASE.premium }}
@@ -58,7 +68,7 @@ export function AnimatedText({
     <MotionContainer
       aria-label={text}
       initial="hidden"
-      animate={priority ? "visible" : undefined}
+      animate={priority || failsafeVisible ? "visible" : undefined}
       whileInView={priority ? undefined : "visible"}
       viewport={priority ? undefined : VIEWPORT_CONFIG}
       variants={{

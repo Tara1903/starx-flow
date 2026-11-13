@@ -160,3 +160,17 @@ Visual regression snapshots were captured and verified under `tests/__screenshot
 - `dashboard-chromium-android.png`
 
 All screenshots confirm pixel-perfect visual hierarchy, zero text clipping, zero horizontal overflow, and authentic StarX Flow green-and-black branding.
+
+
+---
+
+## 8. Visual Acceptance & Motion Choreography Correction (2026-11-13)
+
+### Visual Evidence & Acceptance Checklist
+- [x] **Sequential Announcement & Hero Typography:** Badge slides down and pulses; headline and subtitle enter with choreographed stagger; CTAs exhibit magnetic attraction and emerald button illumination.
+- [x] **Active Product Demonstration:** The right-hand glass showcase is fully populated with active product capabilities (live audio waveform visualizer, WhatsApp conversational loop with typing bubbles, and live operations event stream). Zero empty glass areas.
+- [x] **No Blocked Tabs / Blank States:** Switching between "Live OS View" and "WhatsApp Thread" transitions cleanly and instantly without exit hang.
+- [x] **Clean Section Architecture:** De-nested `page.tsx` wrapper boxes. Each section (`SocialProof`, `Problem`, `HowItWorks`, `Benefits`, `DualSegmentValue`, `Testimonials`, `CTA`, `AIContent`) flows naturally with responsive padding and individual glass card treatments.
+- [x] **Dropdown Menus Downward & Opaque:** Navbar dropdown menus open downwards with solid `#020a06` obsidian glass backing and crisp typography. Zero text bleeding from background elements.
+- [x] **Fail-safe Reveal Guarantees:** 1400ms timeout fallbacks guarantee all content reveals to `opacity: 1` even under rapid scrolling or delayed observer triggers.
+- [x] **Zoom & Responsiveness Matrix:** Tested and verified across 100%, 125%, 150%, and 200% zoom with 0px horizontal overflow.

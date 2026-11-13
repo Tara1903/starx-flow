@@ -222,3 +222,36 @@ Measured via Chromium CDP against local production build (`next start -p 3099`):
 
 ## Status: ALL 9 PHASES COMPLETED AND VERIFIED
 All phases of the Flagship Motion & Interaction System 1.0 have been implemented, verified, and documented across the entire StarX Flow application.
+
+
+---
+
+## CRITICAL VISUAL CORRECTION & FLAGSHIP HERO EXPERIENCE (2026-11-13)
+
+### 1. Root Cause Identification
+1. **Hero Right Stage Emptiness & Hidden Storytelling:**
+   - The interactive product showcase previously partitioned the AI Voice visualizer and the Live WhatsApp conversation into mutually exclusive tabs (`"stage"` and `"chat"`), defaulting to `"stage"`.
+   - In `"stage"`, only a small static waveform card and 3 toast rows were rendered, leaving ~60% of the showcase card completely empty and giving the impression of an unfinished container.
+   - The primary product value proposition—the AI Receptionist holding live WhatsApp conversations and booking appointments in real time—was tucked behind the secondary tab and never executed unless manually clicked.
+2. **Artificial Giant Outer Glass Wrappers:**
+   - In `src/app/page.tsx`, `SocialProof` and `Problem` were wrapped in `<div className="glass-panel rounded-[3rem] [&_section]:!bg-transparent">`, and `HowItWorks` and `Benefits` were wrapped in `<div className="glass-hero rounded-[3rem] [&_section]:!bg-transparent border-t-0">`.
+   - These outer boxes squished the sections together, creating awkward double borders, enormous empty padding gaps, and breaking natural section rhythm.
+3. **Dropdown Menu Backdrop Bleed-Through & Upward Displacement:**
+   - `GlassDropdown` used `glass-card-obsidian` with high translucency (`~72%` opacity), causing bright hero heading text behind it to bleed through and overlap confusingly with menu items.
+   - Initial layout positioning was refined with `!absolute top-full mt-2.5 z-50` and pure `#020a06` solid obsidian backing to eliminate bleed-through and ensure downward positioning.
+4. **Permanent Invisibility Risk on Reveal Primitives:**
+   - If an IntersectionObserver delayed or failed during fast scrolling or server hydration, elements using `initial="hidden"` risked remaining permanently at `opacity: 0`.
+
+### 2. Comprehensive Remediation Applied
+1. **Re-engineered Hero Showcase (`src/components/Hero.tsx`):**
+   - **Unified Multi-Tier Console:** The right interactive showcase now combines an active AI Voice Inbound radar strip (with dynamic audio wave visualizer bars, `< 1.4s Latency` badge, and listening indicator) with the live simulated WhatsApp conversation running directly beneath it.
+   - **Active Product Storytelling:** Customer inquiry bubbles, simulated typing indicators with bouncing dots, instant AI slot reservations, and live calendar sync status run smoothly in an infinite, non-blocking simulation loop.
+   - **Operations Stream:** Real-time event ticker cycling through live appointment confirmations, 0% commission logs, and automated intake dispatch.
+   - **Interactive Switcher:** Seamless instantaneous tab switching between "Live OS View" and "WhatsApp Thread" without blocking exit locks.
+   - **Symmetrical Balance:** Showcase card height is balanced with the left hero column (~460px), eliminating all dead space.
+2. **De-nested Section Architecture (`src/app/page.tsx`):**
+   - Removed the artificial outer `glass-panel` wrappers. Every section (`SocialProof`, `Problem`, `HowItWorks`, `Benefits`, `DualSegmentValue`, `Testimonials`, `CTA`, `AIContent`) now renders as an independent, beautifully spaced section with its own natural background and liquid glass cards.
+3. **Pristine Dropdown Backing (`src/components/ui/GlassDropdown.tsx`):**
+   - Enforced solid `#020a06` obsidian background with `border border-emerald-500/35 shadow-[0_32px_80px_rgba(0,0,0,0.98),0_0_40px_rgba(16,185,129,0.22)]`. Zero text bleeding, 100% legibility, opens downwards reliably.
+4. **Observer Failsafe Guarantees (`ScrollReveal.tsx`, `AnimatedSection.tsx`, `AnimatedText.tsx`):**
+   - Added a 1400ms timeout fallback to force visibility if an observer or trigger has not fired, guaranteeing that content is NEVER stuck at `opacity: 0`.

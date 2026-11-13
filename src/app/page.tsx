@@ -55,35 +55,37 @@ export default function Home() {
   ];
 
   return (
-    <div className="bg-black min-h-screen flex flex-col gap-16 lg:gap-24 pb-24">
+    <div className="bg-black min-h-screen flex flex-col pb-24">
       <AuthRedirect to="/dashboard" />
       {jsonLd.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       ))}
+      
+      {/* 1. Flagship Animated Hero */}
       <Hero />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
-        <div className="glass-card-obsidian rounded-[2.5rem] overflow-hidden border border-white/[0.08] [&_section]:!bg-transparent">
-          <SocialProof />
-          <Problem />
-        </div>
-      </div>
+      {/* 2. Verified Ecosystem Social Proof */}
+      <SocialProof />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
-        <div className="glass-hero rounded-[3rem] overflow-hidden [&_section]:!bg-transparent border-t-0">
-          <HowItWorks />
-          <Benefits />
-        </div>
-      </div>
+      {/* 3. The Front Desk Problem & Lost Revenue Analysis */}
+      <Problem />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
-        <div className="glass-card-obsidian rounded-[2.5rem] overflow-hidden border border-white/[0.08] [&_section]:!bg-transparent">
-          <DualSegmentValue />
-        </div>
-      </div>
+      {/* 4. Deterministic 3-Step Setup Progression */}
+      <HowItWorks />
 
+      {/* 5. Comprehensive Bento Platform Benefits */}
+      <Benefits />
+
+      {/* 6. Dual-Segment Value Proposition (Solo & Growing Practices) */}
+      <DualSegmentValue />
+
+      {/* 7. Authority Proof & Customer Case Testimonials */}
       <Testimonials />
+
+      {/* 8. Conversion Call to Action */}
       <CTA />
+
+      {/* 9. AI Discovery Engine & Semantic Structured Content */}
       <AIContent />
     </div>
   );
