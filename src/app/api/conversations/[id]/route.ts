@@ -36,7 +36,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const body = await req.json();
-    const { status, assignedTo, priority, tags, controlMode, handoffReason } = body;
+    const status = body.status;
+    const assignedTo = body.assignedTo ?? body.assigned_to;
+    const priority = body.priority;
+    const tags = body.tags;
+    const controlMode = body.controlMode ?? body.control_mode;
+    const handoffReason = body.handoffReason ?? body.handoff_reason;
 
     const success = await InboxService.updateConversation({
       conversationId: id,

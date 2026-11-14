@@ -10,7 +10,9 @@
   html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) a,
   html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) button,
   html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) [role="button"],
-  html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) [data-cursor-hover="true"] {
+  html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) [data-cursor-hover="true"],
+  html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) .clickable,
+  html.starx-cursor-enabled.starx-cursor-active:not(.starx-cursor-native) [data-magnetic] {
     cursor: none !important;
   }
 

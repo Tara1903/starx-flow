@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'An 8-character verification code has been sent to your email.',
+      message: 'An 8-digit verification code has been sent to your email.',
       expiresAt: result.expiresAt,
     });
   } catch (err: any) {

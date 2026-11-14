@@ -10,7 +10,6 @@ import { Benefits } from '@/components/Benefits';
 import { DualSegmentValue } from '@/components/DualSegmentValue';
 import { Testimonials } from '@/components/Testimonials';
 import { CTA } from '@/components/CTA';
-import { AuthRedirect } from '@/components/AuthRedirect';
 
 export async function generateMetadata(): Promise<Metadata> {
   const pageMeta = getPageMeta('/');
@@ -56,7 +55,6 @@ export default function Home() {
 
   return (
     <div className="bg-black min-h-screen flex flex-col gap-12 lg:gap-16 pb-24">
-      <AuthRedirect to="/dashboard" />
       {jsonLd.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       ))}

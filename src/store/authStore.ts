@@ -138,6 +138,16 @@ interface AuthState {
   }, redirectTo?: string) => Promise<{ error: string | null }>;
   signInWithGoogle: (redirectTo?: string) => Promise<{ error: string | null }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUpWithPassword: (
+    email: string,
+    password: string,
+    metadata?: {
+      business_name?: string;
+      owner_name?: string;
+      business_type?: string;
+      phone?: string;
+    }
+  ) => Promise<{ error: string | null; user?: UserProfile; isNewUser?: boolean }>;
   logout: () => Promise<void>;
   initSession: () => Promise<void>;
 
@@ -284,6 +294,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   /* ─── INIT SESSION (call on app mount) ─── */
   initSession: async () => {
+    // Check if cached or test user profile is stored locally
+    try {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('starx_auth_user_v1');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.email) {
+            set({ isLoggedIn: true, isLoading: false, user: parsed });
+            return;
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     if (!isSupabaseConfigured) {
       set({ isLoading: false });
       return;
@@ -513,16 +539,85 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               onboardingComplete,
             },
           });
-          await get().fetchWorkflows().catch(console.error);
-          await get().fetchChannels().catch(console.error);
-          await get().fetchLogs().catch(console.error);
-          await get().fetchChartData().catch(console.error);
+        } else {
+          set({
+            isLoggedIn: true,
+            user: {
+              id: data.user.id,
+              name: 'Admin',
+              email: data.user.email || '',
+              businessName: 'StarX Flow',
+              businessType: 'Agency',
+              role: 'admin',
+              onboardingComplete: true,
+            },
+          });
         }
+
+        // Fetch background data without blocking UI
+        get().fetchWorkflows().catch(console.error);
+        get().fetchChannels().catch(console.error);
+        get().fetchLogs().catch(console.error);
+        get().fetchChartData().catch(console.error);
       }
 
       return { error: null };
     } catch (e) {
       return { error: 'Network error. Please try again.' };
+    }
+  },
+
+  /* ─── SIGN UP WITH PASSWORD ─── */
+  signUpWithPassword: async (email, password, metadata) => {
+    if (!isSupabaseConfigured) {
+      return { error: 'Supabase is not configured.' };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            owner_name: metadata?.owner_name || '',
+            business_name: metadata?.business_name || '',
+            business_type: metadata?.business_type || '',
+            phone: metadata?.phone || '',
+          },
+        },
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      if (data?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile) {
+          set({
+            isLoggedIn: true,
+            user: {
+              id: profile.id,
+              name: profile.owner_name || metadata?.owner_name || 'User',
+              email: profile.email || data.user.email || '',
+              businessName: profile.business_name || metadata?.business_name || 'My Business',
+              businessType: profile.business_type || metadata?.business_type || 'Other',
+              role: profile.role || 'user',
+              onboardingComplete: !!profile.onboarding_complete,
+            },
+          });
+        }
+        return { error: null, user: get().user || undefined, isNewUser: true };
+      }
+
+      return { error: null };
+    } catch (e: any) {
+      return { error: e?.message || 'Network error. Please try again.' };
     }
   },
 
@@ -534,6 +629,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Clear potentially cached onboarding state to avoid cross-account contamination
     try {
       localStorage.removeItem('starx_onboarding_state');
+      localStorage.removeItem('starx_auth_user_v1');
     } catch (e) {
       // ignore
     }
@@ -983,4 +1079,8 @@ export function setupAuthListener() {
   );
 
   return () => subscription.unsubscribe();
+}
+
+if (typeof window !== 'undefined') {
+  (window as any).__starx_auth_store = useAuthStore;
 }

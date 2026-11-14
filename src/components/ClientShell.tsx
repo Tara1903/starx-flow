@@ -13,7 +13,7 @@ import { Footer } from './Footer';
 import { AmbientEnvironment } from './AmbientEnvironment';
 import { PageTransition } from './ui/PageTransition';
 import { ToastViewport } from './ui/ToastViewport';
-import { CursorProvider } from '../cursor/CursorProvider';
+import { CustomCursor } from './CustomCursor';
 
 const CommandCenter = dynamic(
   () => import('./CommandCenter').then((m) => m.CommandCenter),
@@ -37,10 +37,12 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
 
   const isSignupOpen = useUIStore((state) => state.isSignupOpen);
   const closeSignup = useUIStore((state) => state.closeSignup);
+  const openFirstVisitPrompt = useUIStore((state) => state.openFirstVisitPrompt);
   const isDemoOpen = useUIStore((state) => state.isDemoOpen);
   const closeDemo = useUIStore((state) => state.closeDemo);
   const theme = useUIStore((state) => state.theme);
   const initSession = useAuthStore((state) => state.initSession);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   const [mounted, setMounted] = useState(false);
 
@@ -50,6 +52,25 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     const cleanup = setupAuthListener();
     return cleanup;
   }, [initSession]);
+
+  // First-visit optional authentication invitation
+  useEffect(() => {
+    if (!mounted || isAppRoute || isLoggedIn) return;
+    try {
+      const dismissed = localStorage.getItem('starx_auth_prompt_dismissed_v1');
+      if (!dismissed) {
+        const timer = setTimeout(() => {
+          const checkAgain = localStorage.getItem('starx_auth_prompt_dismissed_v1');
+          if (!checkAgain && !useAuthStore.getState().isLoggedIn) {
+            openFirstVisitPrompt();
+          }
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    } catch {
+      // LocalStorage unavailable
+    }
+  }, [mounted, isAppRoute, isLoggedIn, openFirstVisitPrompt]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -61,7 +82,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
 
   return (
     <MotionConfig reducedMotion="user">
-      <CursorProvider>
+      <CustomCursor />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-emerald-500 focus:text-black focus:px-4 focus:py-2 focus:rounded-lg focus:font-bold"
@@ -97,7 +118,6 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
           <ConsentBanner />
         </>
       )}
-      </CursorProvider>
     </MotionConfig>
   );
 }

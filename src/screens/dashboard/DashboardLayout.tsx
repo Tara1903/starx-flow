@@ -159,13 +159,13 @@ export function DashboardLayout() {
 
         {/* 4. Section Render Area with safe bottom-padding for mobile bottom navbar */}
         <div role="region" aria-label="Dashboard workspace" className="flex-1 overflow-y-auto px-4 py-5 sm:px-8 sm:py-8 pb-28 sm:pb-12 console-scroll relative z-10">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={activeSection}
-              initial={{ opacity: 0, scale: 0.985, y: 12 }}
+              initial={false}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.99, y: -8 }}
-              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0.94, scale: 0.99, y: -4 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               className="h-full"
             >
               <React.Suspense fallback={<GlassSkeleton variant="panel" />}>

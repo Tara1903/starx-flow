@@ -38,7 +38,6 @@ export function MobileFloatingNavigation() {
     "/features",
     "/how-it-works",
     "/integrations",
-    "/collections",
   ].some((p) => pathname.startsWith(p));
 
   const isSolutions = [
@@ -67,7 +66,6 @@ export function MobileFloatingNavigation() {
   ] as const;
 
   const moreLinks = [
-    { label: "160+ Business Demos", href: "/collections", icon: Sparkles },
     { label: "Pricing & Plans", href: "/pricing", icon: DollarSign },
     { label: "Interactive Live Demo", href: "/demo", icon: Compass },
     { label: "Platform Comparisons", href: "/compare/manychat", icon: GitCompare },

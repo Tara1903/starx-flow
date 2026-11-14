@@ -55,8 +55,8 @@ export const MAGNETIC_STRENGTH_PRESETS: Record<
   high: { factor: 0.46, maxDisplacementPx: 14 },
 };
 
-/** Routes excluded from Custom Cursor 2.0 (StarX Alpha Labs / 160 business demos scope lock) */
-export const CURSOR_EXCLUDED_ROUTE_PREFIXES = ['/collections'] as const;
+/** Routes excluded from Custom Cursor 2.0 */
+export const CURSOR_EXCLUDED_ROUTE_PREFIXES = [] as const;
 
 /**
  * Native selector restore list: ensures OS pointer I-beam, resize handles,

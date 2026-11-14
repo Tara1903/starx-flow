@@ -1,0 +1,21 @@
+# Tests and test artifacts
+tests/
+test-results/
+scratch/
+*.zip
+
+# Documentation and planning artifacts
+*.md
+!README.md
+docs/
+
+# Local agents and config
+.agents/
+.gemini/
+
+# Mobile and Gradle build artifacts
+mobile/
+.gradle/
+*.apk
+*.aab
+

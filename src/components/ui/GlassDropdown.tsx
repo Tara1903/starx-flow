@@ -17,6 +17,7 @@ export interface GlassDropdownItem {
 
 export interface GlassDropdownProps {
   triggerLabel: string;
+  triggerIcon?: React.ReactNode;
   items?: GlassDropdownItem[];
   children?: React.ReactNode;
   isActive?: boolean;
@@ -29,6 +30,7 @@ export interface GlassDropdownProps {
 
 export function GlassDropdown({
   triggerLabel,
+  triggerIcon,
   items,
   children,
   isActive = false,
@@ -104,11 +106,11 @@ export function GlassDropdown({
           setOpen((prev) => !prev);
         }}
         className={cn(
-          "relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 cursor-pointer",
+          "relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 cursor-pointer select-none group",
           isActive
-            ? "text-emerald-300"
+            ? "text-white font-bold"
             : open
-              ? "text-emerald-300 bg-emerald-500/10"
+              ? "text-emerald-300 bg-white/[0.06]"
               : "text-zinc-300 hover:text-white hover:bg-white/[0.05]"
         )}
       >
@@ -116,11 +118,16 @@ export function GlassDropdown({
           <motion.span
             layoutId={prefersReduced ? undefined : activeLayoutId}
             transition={navPillSpring}
-            className="absolute inset-0 rounded-full bg-emerald-500/12 border border-emerald-500/30 -z-10"
+            className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10"
           />
         )}
         {isActive && !activeLayoutId && (
-          <span className="absolute inset-0 rounded-full bg-emerald-500/12 border border-emerald-500/30 -z-10" />
+          <span className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10" />
+        )}
+        {triggerIcon && (
+          <span className={cn("transition-colors", isActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")}>
+            {triggerIcon}
+          </span>
         )}
         <span>{triggerLabel}</span>
         <ChevronDown

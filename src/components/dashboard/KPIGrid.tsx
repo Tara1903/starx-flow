@@ -60,7 +60,8 @@ const KPICard = memo(function KPICard({
   return (
     <motion.div
       data-cursor-spotlight="true"
-      initial={prefersReduced ? false : { opacity: 0, y: 14, scale: 0.98 }}
+      suppressHydrationWarning
+      initial={false}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       whileHover={prefersReduced ? undefined : liquidHoverLift}
       transition={{ duration: 0.36, delay: delayIndex * 0.06, ease: [0.16, 1, 0.3, 1] }}
@@ -92,6 +93,7 @@ const KPICard = memo(function KPICard({
 
         <svg
           viewBox="0 0 80 28"
+          suppressHydrationWarning
           className="w-16 h-7 opacity-75 group-hover:opacity-100 transition-opacity flex-shrink-0"
           aria-hidden="true"
         >
@@ -101,15 +103,13 @@ const KPICard = memo(function KPICard({
               <stop offset="100%" stopColor="#4ade80" stopOpacity="1" />
             </linearGradient>
           </defs>
-          <motion.path
+          <path
             d={sparkPoints}
             fill="none"
             stroke={`url(#${sparkId})`}
             strokeWidth="2.2"
             strokeLinecap="round"
-            initial={prefersReduced ? false : { pathLength: 0, opacity: 0.3 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: prefersReduced ? 0.01 : 0.9, delay: 0.1 + delayIndex * 0.08, ease: "easeOut" }}
+            opacity={1}
           />
         </svg>
       </div>

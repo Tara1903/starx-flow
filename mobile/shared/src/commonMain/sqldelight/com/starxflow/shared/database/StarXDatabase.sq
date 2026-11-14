@@ -1,0 +1,197 @@
+CREATE TABLE CachedLead (
+    id TEXT NOT NULL PRIMARY KEY,
+    userId TEXT NOT NULL,
+    organizationId TEXT,
+    name TEXT NOT NULL,
+    phone TEXT,
+    email TEXT,
+    status TEXT NOT NULL,
+    source TEXT NOT NULL,
+    score INTEGER NOT NULL,
+    tags TEXT NOT NULL, -- comma separated
+    notes TEXT,
+    lastContactAt TEXT,
+    createdAt TEXT
+);
+
+CREATE TABLE CachedConversation (
+    id TEXT NOT NULL PRIMARY KEY,
+    userId TEXT NOT NULL,
+    organizationId TEXT,
+    leadId TEXT,
+    customerName TEXT NOT NULL,
+    customerPhone TEXT,
+    customerEmail TEXT,
+    channel TEXT NOT NULL,
+    status TEXT NOT NULL,
+    controlMode TEXT NOT NULL,
+    handoffReason TEXT,
+    unreadCount INTEGER NOT NULL,
+    assignedTo TEXT,
+    lastMessage TEXT,
+    lastMessageAt TEXT
+);
+
+CREATE TABLE CachedMessage (
+    id TEXT NOT NULL PRIMARY KEY,
+    conversationId TEXT NOT NULL,
+    direction TEXT NOT NULL,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    status TEXT NOT NULL,
+    isInternal INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL
+);
+
+CREATE TABLE CachedAppointment (
+    id TEXT NOT NULL PRIMARY KEY,
+    userId TEXT NOT NULL,
+    organizationId TEXT,
+    leadId TEXT,
+    customerName TEXT NOT NULL,
+    customerPhone TEXT,
+    customerEmail TEXT,
+    serviceName TEXT NOT NULL,
+    startTime TEXT NOT NULL,
+    endTime TEXT NOT NULL,
+    timezone TEXT NOT NULL,
+    status TEXT NOT NULL,
+    notes TEXT
+);
+
+CREATE TABLE CachedOrder (
+    id TEXT NOT NULL PRIMARY KEY,
+    userId TEXT NOT NULL,
+    organizationId TEXT,
+    orderNumber TEXT NOT NULL,
+    customerName TEXT NOT NULL,
+    customerPhone TEXT,
+    customerEmail TEXT,
+    status TEXT NOT NULL,
+    paymentStatus TEXT NOT NULL,
+    totalAmount REAL NOT NULL,
+    currency TEXT NOT NULL,
+    itemsJson TEXT NOT NULL,
+    createdAt TEXT
+);
+
+CREATE TABLE CachedAgent (
+    id TEXT NOT NULL PRIMARY KEY,
+    userId TEXT NOT NULL,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    description TEXT,
+    isActive INTEGER NOT NULL DEFAULT 1,
+    systemPrompt TEXT,
+    permissionsJson TEXT
+);
+
+CREATE TABLE CachedWorkflow (
+    id TEXT NOT NULL PRIMARY KEY,
+    userId TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    triggerEvent TEXT,
+    actionEvent TEXT,
+    isActive INTEGER NOT NULL DEFAULT 0,
+    channel TEXT NOT NULL,
+    aiTone TEXT NOT NULL,
+    executionsCount INTEGER NOT NULL DEFAULT 0,
+    successRate REAL NOT NULL DEFAULT 100.0,
+    savedHours REAL NOT NULL DEFAULT 0.0
+);
+
+CREATE TABLE CachedDashboardMetrics (
+    userId TEXT NOT NULL PRIMARY KEY,
+    totalRevenue REAL NOT NULL DEFAULT 0.0,
+    activeLeadsCount INTEGER NOT NULL DEFAULT 0,
+    upcomingBookingsCount INTEGER NOT NULL DEFAULT 0,
+    activeAgentsCount INTEGER NOT NULL DEFAULT 0,
+    updatedAt TEXT NOT NULL
+);
+
+-- Queries for CachedLead
+selectAllLeads:
+SELECT * FROM CachedLead WHERE userId = ? ORDER BY createdAt DESC;
+
+insertOrReplaceLead:
+INSERT OR REPLACE INTO CachedLead (id, userId, organizationId, name, phone, email, status, source, score, tags, notes, lastContactAt, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteLead:
+DELETE FROM CachedLead WHERE id = ?;
+
+-- Queries for CachedConversation
+selectAllConversations:
+SELECT * FROM CachedConversation WHERE userId = ? ORDER BY lastMessageAt DESC;
+
+insertOrReplaceConversation:
+INSERT OR REPLACE INTO CachedConversation (id, userId, organizationId, leadId, customerName, customerPhone, customerEmail, channel, status, controlMode, handoffReason, unreadCount, assignedTo, lastMessage, lastMessageAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateConversationMode:
+UPDATE CachedConversation SET controlMode = ?, handoffReason = ? WHERE id = ?;
+
+-- Queries for CachedMessage
+selectMessagesForConversation:
+SELECT * FROM CachedMessage WHERE conversationId = ? ORDER BY createdAt ASC;
+
+insertOrReplaceMessage:
+INSERT OR REPLACE INTO CachedMessage (id, conversationId, direction, role, content, status, isInternal, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Queries for CachedAppointment
+selectAllAppointments:
+SELECT * FROM CachedAppointment WHERE userId = ? ORDER BY startTime ASC;
+
+insertOrReplaceAppointment:
+INSERT OR REPLACE INTO CachedAppointment (id, userId, organizationId, leadId, customerName, customerPhone, customerEmail, serviceName, startTime, endTime, timezone, status, notes)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Queries for CachedOrder
+selectAllOrders:
+SELECT * FROM CachedOrder WHERE userId = ? ORDER BY createdAt DESC;
+
+insertOrReplaceOrder:
+INSERT OR REPLACE INTO CachedOrder (id, userId, organizationId, orderNumber, customerName, customerPhone, customerEmail, status, paymentStatus, totalAmount, currency, itemsJson, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Queries for CachedAgent
+selectAllAgents:
+SELECT * FROM CachedAgent WHERE userId = ?;
+
+insertOrReplaceAgent:
+INSERT OR REPLACE INTO CachedAgent (id, userId, name, role, description, isActive, systemPrompt, permissionsJson)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+updateAgentStatus:
+UPDATE CachedAgent SET isActive = ? WHERE id = ?;
+
+-- Queries for CachedWorkflow
+selectAllWorkflows:
+SELECT * FROM CachedWorkflow WHERE userId = ?;
+
+insertOrReplaceWorkflow:
+INSERT OR REPLACE INTO CachedWorkflow (id, userId, name, description, triggerEvent, actionEvent, isActive, channel, aiTone, executionsCount, successRate, savedHours)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateWorkflowStatus:
+UPDATE CachedWorkflow SET isActive = ? WHERE id = ?;
+
+-- Queries for CachedDashboardMetrics
+getDashboardMetrics:
+SELECT * FROM CachedDashboardMetrics WHERE userId = ?;
+
+insertOrReplaceDashboardMetrics:
+INSERT OR REPLACE INTO CachedDashboardMetrics (userId, totalRevenue, activeLeadsCount, upcomingBookingsCount, activeAgentsCount, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?);
+
+-- Multi-tenant isolation: Clear all tables on logout or tenant change
+clearAllTenantData:
+DELETE FROM CachedLead WHERE userId = ?;
+DELETE FROM CachedConversation WHERE userId = ?;
+DELETE FROM CachedAppointment WHERE userId = ?;
+DELETE FROM CachedOrder WHERE userId = ?;
+DELETE FROM CachedAgent WHERE userId = ?;
+DELETE FROM CachedWorkflow WHERE userId = ?;
+DELETE FROM CachedDashboardMetrics WHERE userId = ?;

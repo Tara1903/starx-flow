@@ -181,7 +181,7 @@ function resolveCursorTarget(rawTarget: EventTarget | null): ResolvedTarget {
 /**
  * Authoritative Cursor 2.0 host mounted once in ClientShell.
  * Manages environment capabilities, pointer/hover/press tracking via passive
- * listeners, route exclusions (/collections), surface spotlights, and CustomCursor.
+ * listeners, route exclusions, surface spotlights, and CustomCursor.
  */
 export function CursorProvider({ children }: CursorProviderProps) {
   const pathname = usePathname() ?? '/';

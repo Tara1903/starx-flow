@@ -64,7 +64,6 @@ export function CommandCenter() {
     { id: "channels", icon: Wifi, label: "Manage Integrations", path: "/dashboard?section=channels" },
     { id: "inbox", icon: MessageSquare, label: "View Inbox", path: "/dashboard?section=conversations" },
     { id: "calendar", icon: Calendar, label: "View Calendar", path: "/dashboard?section=calendar" },
-    { id: "collections", icon: LayoutGrid, label: "Browse 160+ Business Demos", path: "/collections" },
     { id: "pricing", icon: DollarSign, label: "View Pricing Plans", path: "/pricing" },
     { id: "settings", icon: Settings, label: "OS Settings", path: "/dashboard?section=settings" },
   ];

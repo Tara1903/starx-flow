@@ -1,13 +1,19 @@
 import { create } from 'zustand';
 
 type Theme = 'dark' | 'light';
+export type AuthMode = 'login' | 'signup';
 
 interface UIState {
   isSignupOpen: boolean;
+  authMode: AuthMode;
+  isFirstVisitPrompt: boolean;
   isDemoOpen: boolean;
   isCommandCenterOpen: boolean;
   theme: Theme;
   openSignup: () => void;
+  openLogin: () => void;
+  openFirstVisitPrompt: () => void;
+  setAuthMode: (mode: AuthMode) => void;
   closeSignup: () => void;
   toggleSignup: () => void;
   openDemo: () => void;
@@ -22,11 +28,16 @@ interface UIState {
 
 export const useUIStore = create<UIState>((set) => ({
   isSignupOpen: false,
+  authMode: 'signup',
+  isFirstVisitPrompt: false,
   isDemoOpen: false,
   isCommandCenterOpen: false,
   theme: 'dark',
-  openSignup: () => set({ isSignupOpen: true }),
-  closeSignup: () => set({ isSignupOpen: false }),
+  openSignup: () => set({ isSignupOpen: true, authMode: 'signup', isFirstVisitPrompt: false }),
+  openLogin: () => set({ isSignupOpen: true, authMode: 'login', isFirstVisitPrompt: false }),
+  openFirstVisitPrompt: () => set({ isSignupOpen: true, authMode: 'signup', isFirstVisitPrompt: true }),
+  setAuthMode: (authMode) => set({ authMode }),
+  closeSignup: () => set({ isSignupOpen: false, isFirstVisitPrompt: false }),
   toggleSignup: () => set((state) => ({ isSignupOpen: !state.isSignupOpen })),
   openDemo: () => set({ isDemoOpen: true }),
   closeDemo: () => set({ isDemoOpen: false }),

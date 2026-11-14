@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     if (!code || typeof code !== 'string') {
       return NextResponse.json(
-        { success: false, error: '8-character verification code is required.' },
+        { success: false, error: '8-digit verification code is required.' },
         { status: 400 }
       );
     }

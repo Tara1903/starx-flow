@@ -40,11 +40,17 @@ import { cn } from "../lib/utils";
 import { navPillSpring } from "../lib/motionVariants";
 
 export function Navbar() {
-  const { openSignup, openCommandCenter } = useUIStore();
-  const { isLoggedIn, logout } = useAuthStore();
+  const { openSignup, openLogin, openCommandCenter } = useUIStore();
+  const { isLoggedIn, isLoading, user, logout } = useAuthStore();
   const pathname = usePathname();
   const router = useRouter();
   const prefersReduced = useReducedMotion();
+
+  // Role-aware authenticated dashboard destination
+  const dashboardHref =
+    user?.role === "admin" || user?.role === "super_admin" || user?.email === "admin@starxflow.com"
+      ? "/dashboard"
+      : "/dashboard";
 
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -80,13 +86,6 @@ export function Navbar() {
       description: "WhatsApp, Instagram, Calendar & Webhooks",
       icon: <LayoutGrid className="w-4 h-4" />,
       href: "/integrations",
-    },
-    {
-      label: "160+ Demo Collections",
-      description: "Explore live industry agent previews",
-      icon: <Sparkles className="w-4 h-4" />,
-      href: "/collections",
-      badge: "New",
     },
     {
       label: "Security & Privacy",
@@ -211,7 +210,6 @@ export function Navbar() {
     "/features",
     "/how-it-works",
     "/integrations",
-    "/collections",
     "/security",
   ].some((p) => pathname.startsWith(p));
 
@@ -233,6 +231,7 @@ export function Navbar() {
     pathname === "/about" ||
     pathname === "/demo";
   const isPricingActive = pathname === "/pricing";
+  const isHomeActive = pathname === "/";
 
   return (
     <>
@@ -261,10 +260,30 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Center Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1">
+          {/* Center Desktop Navigation: Video 04 Topmost Horizontal Glass Capsule */}
+          <div className="hidden lg:flex items-center p-1.5 rounded-full bg-[#07120c]/75 backdrop-blur-2xl border border-white/[0.14] shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.2)] gap-1 select-none">
+            <Link
+              href="/"
+              className={cn(
+                "relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium transition-colors duration-200 select-none group",
+                isHomeActive
+                  ? "text-white font-bold"
+                  : "text-zinc-300 hover:text-white hover:bg-white/[0.05]"
+              )}
+            >
+              {isHomeActive && (
+                <motion.span
+                  layoutId={prefersReduced ? undefined : "navbar-active-pill"}
+                  transition={navPillSpring}
+                  className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10"
+                />
+              )}
+              <Home className={cn("w-4 h-4 transition-colors", isHomeActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")} />
+              <span>Home</span>
+            </Link>
             <GlassDropdown
               triggerLabel="Product"
+              triggerIcon={<Cpu className="w-4 h-4" />}
               items={productItems}
               isActive={isProductActive}
               activeLayoutId="navbar-active-pill"
@@ -272,6 +291,7 @@ export function Navbar() {
             />
             <GlassDropdown
               triggerLabel="Solutions"
+              triggerIcon={<Bot className="w-4 h-4" />}
               items={solutionsItems}
               isActive={isSolutionsActive}
               activeLayoutId="navbar-active-pill"
@@ -279,6 +299,7 @@ export function Navbar() {
             />
             <GlassDropdown
               triggerLabel="Industries"
+              triggerIcon={<Building2 className="w-4 h-4" />}
               items={industriesItems}
               isActive={isIndustriesActive}
               activeLayoutId="navbar-active-pill"
@@ -286,6 +307,7 @@ export function Navbar() {
             />
             <GlassDropdown
               triggerLabel="Resources"
+              triggerIcon={<BookOpen className="w-4 h-4" />}
               items={resourcesItems}
               isActive={isResourcesActive}
               activeLayoutId="navbar-active-pill"
@@ -294,20 +316,21 @@ export function Navbar() {
             <Link
               href="/pricing"
               className={cn(
-                "relative px-3.5 py-2 rounded-full text-sm font-medium transition-colors",
+                "relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium transition-colors duration-200 select-none group",
                 isPricingActive
-                  ? "text-emerald-300"
-                  : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
+                  ? "text-white font-bold"
+                  : "text-zinc-300 hover:text-white hover:bg-white/[0.05]"
               )}
             >
               {isPricingActive && (
                 <motion.span
                   layoutId={prefersReduced ? undefined : "navbar-active-pill"}
                   transition={navPillSpring}
-                  className="absolute inset-0 rounded-full bg-emerald-500/12 border border-emerald-500/30 -z-10"
+                  className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10"
                 />
               )}
-              Pricing
+              <Sparkles className={cn("w-4 h-4 transition-colors", isPricingActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")} />
+              <span>Pricing</span>
             </Link>
           </div>
 
@@ -325,29 +348,38 @@ export function Navbar() {
                 ⌘K
               </kbd>
             </button>
-            {isLoggedIn ? (
+            {isLoading ? (
+              /* Stable subtle skeleton while session resolves — prevents CTA flicker */
+              <div className="w-[124px] h-[38px] rounded-full bg-white/[0.04] border border-white/10 animate-pulse" />
+            ) : isLoggedIn ? (
               <>
-                <Link
-                  href="/dashboard"
-                  className="px-4 py-2 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/35 hover:bg-emerald-500/25 hover:border-emerald-400/50 transition-all shadow-[0_0_16px_rgba(16,185,129,0.2)]"
-                >
-                  Dashboard
-                </Link>
                 <button
+                  type="button"
                   onClick={() => {
                     logout();
                     router.push("/");
                   }}
+                  data-cursor-invert="secondary"
                   className="px-3.5 py-2 rounded-full text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer"
                 >
                   Logout
                 </button>
+                <GlassButton
+                  size="sm"
+                  variant="primary"
+                  magneticStrength="low"
+                  onClick={() => router.push(dashboardHref)}
+                  className="px-4 py-2 text-sm"
+                >
+                  Go to Dashboard
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </GlassButton>
               </>
             ) : (
               <>
                 <button
                   type="button"
-                  onClick={openSignup}
+                  onClick={openLogin}
                   data-cursor-invert="secondary"
                   className="px-4 py-2 rounded-full text-sm font-medium text-zinc-200 bg-white/[0.03] border border-white/10 hover:border-emerald-300 hover:text-[#02120c] hover:bg-emerald-400 focus-visible:bg-emerald-400 focus-visible:text-[#02120c] transition-all cursor-pointer"
                 >
@@ -369,13 +401,17 @@ export function Navbar() {
 
           {/* Mobile Right Quick Action + Menu */}
           <div className="flex md:hidden items-center gap-2">
-            {isLoggedIn ? (
-              <Link
-                href="/dashboard"
-                className="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/18 text-emerald-300 border border-emerald-500/35"
+            {isLoading ? (
+              <div className="w-[84px] h-[30px] rounded-full bg-white/[0.04] border border-white/10 animate-pulse" />
+            ) : isLoggedIn ? (
+              <GlassButton
+                size="sm"
+                variant="primary"
+                onClick={() => router.push(dashboardHref)}
+                className="px-3 py-1.5 text-xs min-h-[30px]"
               >
                 Dashboard
-              </Link>
+              </GlassButton>
             ) : (
               <GlassButton
                 size="sm"
@@ -383,7 +419,7 @@ export function Navbar() {
                 onClick={openSignup}
                 className="px-3 py-1.5 text-xs min-h-[30px]"
               >
-                Start Free
+                Get Started
               </GlassButton>
             )}
             <button
@@ -415,7 +451,6 @@ export function Navbar() {
                 { label: "Features Directory", href: "/features" },
                 { label: "How It Works", href: "/how-it-works" },
                 { label: "Integrations", href: "/integrations" },
-                { label: "160+ Business Demos", href: "/collections" },
                 { label: "Pricing Plans", href: "/pricing" },
               ].map((link) => (
                 <Link
@@ -474,10 +509,10 @@ export function Navbar() {
             <div className="flex flex-col gap-2">
               <GlassButton
                 variant="primary"
-                onClick={() => handleNavigate("/dashboard")}
+                onClick={() => handleNavigate(dashboardHref)}
                 className="w-full"
               >
-                Open Dashboard
+                Go to Dashboard
                 <ArrowRight className="w-4 h-4" />
               </GlassButton>
               <GlassButton
@@ -502,14 +537,14 @@ export function Navbar() {
                 }}
                 className="w-full"
               >
-                Start Free Trial
+                Get Started
                 <ArrowRight className="w-4 h-4" />
               </GlassButton>
               <GlassButton
                 variant="secondary"
                 onClick={() => {
                   setIsMobileMenuOpen(false);
-                  openSignup();
+                  openLogin();
                 }}
                 className="w-full"
               >

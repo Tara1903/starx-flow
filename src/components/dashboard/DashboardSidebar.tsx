@@ -311,6 +311,34 @@ export function DashboardSidebar() {
   const coreItems = menuItems.filter((i) => i.group === "core");
   const opsItems = menuItems.filter((i) => i.group !== "core");
 
+  const mobileCoreTabs = [
+    {
+      id: "overview" as DashboardSection,
+      label: "Home",
+      icon: <Home className="w-4.5 h-4.5" />,
+    },
+    {
+      id: "crm" as DashboardSection,
+      label: "Leads",
+      icon: <Users className="w-4.5 h-4.5" />,
+    },
+    {
+      id: "conversations" as DashboardSection,
+      label: "Inbox",
+      icon: <MessageSquare className="w-4.5 h-4.5" />,
+      badge: unreadConversationsCount > 0 ? unreadConversationsCount : undefined,
+    },
+    {
+      id: "workflows" as DashboardSection,
+      label: "Flows",
+      icon: <Layers className="w-4.5 h-4.5" />,
+      badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : undefined,
+    },
+  ];
+
+  const isCoreActive = mobileCoreTabs.some((t) => t.id === activeSection);
+  const isSecondaryActive = !isCoreActive;
+
   return (
     <>
       {/* ─────────────────────────────────────────────────────────────
@@ -350,9 +378,9 @@ export function DashboardSidebar() {
                 {!isCollapsed && (
                   <motion.div
                     key="sidebar-brand-expanded"
-                    initial={{ opacity: 0, x: -8 }}
+                    initial={false}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -8 }}
+                    exit={{ opacity: 0.92, x: -6 }}
                     transition={{ duration: 0.16, ease: MOTION_EASE.premium }}
                     className="flex flex-col min-w-0"
                   >
@@ -470,9 +498,9 @@ export function DashboardSidebar() {
           <AnimatePresence initial={false}>
             {!isCollapsed && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
+                initial={false}
                 animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
+                exit={{ opacity: 0.92, height: 0 }}
                 transition={{ duration: 0.2, ease: MOTION_EASE.premium }}
                 className="px-3 py-2 space-y-2 border-t border-white/[0.06] overflow-hidden"
               >
@@ -609,9 +637,9 @@ export function DashboardSidebar() {
           <AnimatePresence>
             {isCollapsed && tooltipState && !flyoutState && (
               <motion.div
-                initial={{ opacity: 0, x: 6, scale: 0.95 }}
+                initial={{ opacity: 0.92, x: 6, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: 6, scale: 0.95 }}
+                exit={{ opacity: 0.92, x: 6, scale: 0.95 }}
                 transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
                 style={{ top: tooltipState.top }}
                 className="absolute left-full ml-3 -translate-y-1/2 z-50 px-3 py-1.5 rounded-xl bg-[#08120e]/95 backdrop-blur-2xl border border-emerald-500/30 text-xs font-semibold text-white whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7),0_0_15px_rgba(16,185,129,0.15)] flex items-center gap-2 pointer-events-none select-none"
@@ -639,9 +667,9 @@ export function DashboardSidebar() {
           <AnimatePresence>
             {isCollapsed && flyoutState && (
               <motion.div
-                initial={{ opacity: 0, x: 8, scale: 0.94 }}
+                initial={{ opacity: 0.92, x: 8, scale: 0.94 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: 8, scale: 0.94 }}
+                exit={{ opacity: 0.92, x: 8, scale: 0.94 }}
                 transition={{ duration: 0.16, ease: MOTION_EASE.premium }}
                 style={{ top: flyoutState.top }}
                 onMouseEnter={() => {
@@ -676,108 +704,104 @@ export function DashboardSidebar() {
       </motion.aside>
 
       {/* ─────────────────────────────────────────────────────────────
-          MOBILE NAVIGATION TABS V10 FLOATING CAPSULE (PRESERVED)
+          MOBILE NAVIGATION TABS V10 FLOATING CAPSULE (REFERENCE 03)
+          Features:
+          1. Floating Liquid Glass capsule dock (rounded-full, obsidian blur)
+          2. Active tab expands horizontally with icon + text label
+          3. Sliding emerald highlight pill via Framer Motion layoutId="v10ActiveTabPill"
+          4. Inactive tabs display clean, minimal outline icons
+          5. Companion floating circular glass button for Quick Hub / More Navigation
+          6. Red notification badges and live unread indicators
+          7. Safe-area padding and responsive viewport adaptation (320px-768px)
           ───────────────────────────────────────────────────────────── */}
       <nav
         aria-label="Mobile dashboard navigation"
-        className="sm:hidden fixed bottom-3 inset-x-0 z-40 px-3 flex justify-center pointer-events-none pb-[env(safe-area-inset-bottom)]"
+        className="sm:hidden fixed bottom-3 inset-x-0 z-40 px-3 flex justify-center items-center pointer-events-none pb-[env(safe-area-inset-bottom)]"
       >
-        <div className="pointer-events-auto glass-capsule-nav rounded-full px-2 py-1.5 flex items-center justify-between gap-1 w-full max-w-[390px]">
-          {/* Home / Overview */}
-          <button
-            type="button"
-            onClick={() => setActiveSection("overview")}
-            className={cn(
-              "flex flex-col items-center justify-center py-1.5 px-3 rounded-full text-xs font-semibold transition-colors relative cursor-pointer",
-              activeSection === "overview" ? "text-emerald-300" : "text-zinc-400 hover:text-zinc-200"
-            )}
-          >
-            {activeSection === "overview" && (
-              <motion.span
-                layoutId="mobile-capsule-active"
-                transition={navPillSpring}
-                className="absolute inset-0 rounded-full bg-emerald-500/20 border border-emerald-400/40 -z-10 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-              />
-            )}
-            <Home className="w-4 h-4" />
-            <span className="text-[9px] mt-0.5">Home</span>
-          </button>
+        <div className="flex items-center gap-2.5 max-w-[420px] w-full justify-center">
+          {/* 1. Primary V10 Floating Liquid Glass Navigation Capsule */}
+          <div className="pointer-events-auto flex-1 min-w-0 glass-capsule-nav rounded-full p-1.5 flex items-center justify-around relative shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(16,185,129,0.12)] border border-white/[0.14] select-none">
+            {mobileCoreTabs.map((tab) => {
+              const isActive = activeSection === tab.id;
+              return (
+                <motion.button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-label={tab.label}
+                  onClick={() => setActiveSection(tab.id)}
+                  whileTap={prefersReduced ? undefined : { scale: 0.92 }}
+                  className={cn(
+                    "relative flex items-center justify-center rounded-full transition-colors cursor-pointer select-none py-2",
+                    isActive
+                      ? "px-3.5 text-white font-semibold"
+                      : "px-2.5 text-zinc-400 hover:text-zinc-200"
+                  )}
+                >
+                  {/* V10 Active Sliding Pill (layoutId) */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="v10ActiveTabPill"
+                      transition={prefersReduced ? { duration: 0 } : navPillSpring}
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/30 via-emerald-500/20 to-emerald-400/10 border border-emerald-400/50 shadow-[0_0_18px_rgba(16,185,129,0.32),inset_0_1px_0_rgba(255,255,255,0.22)] -z-10"
+                    />
+                  )}
 
-          {/* CRM / Customers */}
-          <button
-            type="button"
-            onClick={() => setActiveSection("crm")}
-            className={cn(
-              "flex flex-col items-center justify-center py-1.5 px-3 rounded-full text-xs font-semibold transition-colors relative cursor-pointer",
-              activeSection === "crm" ? "text-emerald-300" : "text-zinc-400 hover:text-zinc-200"
-            )}
-          >
-            {activeSection === "crm" && (
-              <motion.span
-                layoutId="mobile-capsule-active"
-                transition={navPillSpring}
-                className="absolute inset-0 rounded-full bg-emerald-500/20 border border-emerald-400/40 -z-10 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-              />
-            )}
-            <Users className="w-4 h-4" />
-            <span className="text-[9px] mt-0.5">Leads</span>
-          </button>
+                  {/* Icon */}
+                  <div className="relative flex items-center justify-center flex-shrink-0">
+                    <span className={cn("transition-colors", isActive ? "text-emerald-300" : "text-zinc-400")}>
+                      {tab.icon}
+                    </span>
 
-          {/* Inbox / Conversations */}
-          <button
-            type="button"
-            onClick={() => setActiveSection("conversations")}
-            className={cn(
-              "flex flex-col items-center justify-center py-1.5 px-3 rounded-full text-xs font-semibold transition-colors relative cursor-pointer",
-              activeSection === "conversations" ? "text-emerald-300" : "text-zinc-400 hover:text-zinc-200"
-            )}
-          >
-            {activeSection === "conversations" && (
-              <motion.span
-                layoutId="mobile-capsule-active"
-                transition={navPillSpring}
-                className="absolute inset-0 rounded-full bg-emerald-500/20 border border-emerald-400/40 -z-10 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-              />
-            )}
-            <div className="relative">
-              <MessageSquare className="w-4 h-4" />
-              {unreadConversationsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              )}
-            </div>
-            <span className="text-[9px] mt-0.5">Inbox</span>
-          </button>
+                    {/* Notification ping on inactive icon */}
+                    {!isActive && tab.badge !== undefined && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    )}
+                  </div>
 
-          {/* Workflows */}
-          <button
-            type="button"
-            onClick={() => setActiveSection("workflows")}
-            className={cn(
-              "flex flex-col items-center justify-center py-1.5 px-3 rounded-full text-xs font-semibold transition-colors relative cursor-pointer",
-              activeSection === "workflows" ? "text-emerald-300" : "text-zinc-400 hover:text-zinc-200"
-            )}
-          >
-            {activeSection === "workflows" && (
-              <motion.span
-                layoutId="mobile-capsule-active"
-                transition={navPillSpring}
-                className="absolute inset-0 rounded-full bg-emerald-500/20 border border-emerald-400/40 -z-10 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-              />
-            )}
-            <Layers className="w-4 h-4" />
-            <span className="text-[9px] mt-0.5">Flows</span>
-          </button>
+                  {/* Label expands when active */}
+                  <AnimatePresence initial={false}>
+                    {isActive && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0, x: -4 }}
+                        animate={{ opacity: 1, width: "auto", x: 0 }}
+                        exit={{ opacity: 0, width: 0, x: -4 }}
+                        transition={prefersReduced ? { duration: 0 } : { duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                        className="text-xs font-bold text-white tracking-tight overflow-hidden whitespace-nowrap ml-1.5"
+                      >
+                        {tab.label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              );
+            })}
+          </div>
 
-          {/* More Sheet Trigger */}
-          <button
+          {/* 2. V10 Floating Companion Circular Glass Button */}
+          <motion.button
             type="button"
             onClick={() => setIsMobileMoreOpen(true)}
-            aria-label="Open full dashboard navigation"
-            className="flex flex-col items-center justify-center py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+            whileHover={prefersReduced ? undefined : { scale: 1.08 }}
+            whileTap={prefersReduced ? undefined : { scale: 0.92 }}
+            aria-label="Open full dashboard navigation and quick hub"
+            className={cn(
+              "pointer-events-auto w-12 h-12 rounded-full glass-capsule-nav border flex items-center justify-center relative cursor-pointer flex-shrink-0 shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_20px_rgba(16,185,129,0.1)] transition-colors select-none",
+              isSecondaryActive
+                ? "bg-emerald-500/25 border-emerald-400/50 text-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+                : "border-white/[0.14] text-zinc-300 hover:text-white"
+            )}
           >
-            <Menu className="w-4 h-4" />
-            <span className="text-[9px] mt-0.5">More</span>
-          </button>
+            <Menu className="w-5 h-5" />
+
+            {/* Red notification count badge pill matching reference */}
+            {(unreadConversationsCount > 0 || activeWorkflowsCount > 0) && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white border-2 border-[#09120f] text-[9px] font-extrabold rounded-full flex items-center justify-center shadow-md leading-none">
+                {unreadConversationsCount || activeWorkflowsCount}
+              </span>
+            )}
+          </motion.button>
         </div>
       </nav>
 
@@ -882,9 +906,9 @@ export function DashboardSidebar() {
           <AnimatePresence initial={false}>
             {!isCollapsed && (
               <motion.div
-                initial={{ opacity: 0, x: -6 }}
+                initial={false}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -6 }}
+                exit={{ opacity: 0.92, x: -6 }}
                 transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
                 className="flex items-center justify-between flex-1 min-w-0"
               >
