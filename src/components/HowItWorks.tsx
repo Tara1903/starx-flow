@@ -1,14 +1,11 @@
 "use client";
 
 import React from "react";
-import { motion, useReducedMotion } from "motion/react";
 import { Sparkles, Calendar, Settings, Zap } from "lucide-react";
 import { ScrollReveal } from "./ui/ScrollReveal";
-import { GlassCard } from "./ui/GlassCard";
-import { MOTION_EASE, VIEWPORT_CONFIG } from "../lib/motionVariants";
+import { SpatialGlassCard } from "./spatial/SpatialGlassCard";
 
 export function HowItWorks() {
-  const prefersReduced = useReducedMotion();
   const steps = [
     {
       number: "01",
@@ -31,13 +28,13 @@ export function HowItWorks() {
   ];
 
   return (
-    <section className="py-24 lg:py-32 px-6 relative z-10 border-y border-white/5 bg-black overflow-hidden">
+    <section className="py-24 lg:py-32 px-6 relative z-10 border-y border-white/5 bg-transparent overflow-hidden">
       <div className="max-w-7xl mx-auto relative">
         <ScrollReveal
           direction="up"
-          className="flex flex-col items-center text-center mb-16 lg:mb-20"
+          className="flex flex-col items-center text-center mb-16 lg:mb-20 spatial-content-protected"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 text-xs font-bold tracking-widest text-emerald-300 uppercase mb-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full spatial-glass-crystal text-xs font-bold tracking-widest text-emerald-300 uppercase mb-6 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
             <Sparkles size={12} className="text-emerald-400" />
             Onboarding Setup
           </div>
@@ -56,12 +53,13 @@ export function HowItWorks() {
             aria-hidden="true"
             className="hidden md:block absolute top-14 left-[16%] right-[16%] h-px bg-gradient-to-r from-emerald-500/15 via-emerald-400/45 to-emerald-500/15 pointer-events-none"
           />
-          {steps.map((step, i) => (
-            <ScrollReveal key={step.number} direction="up" delay={i * 0.1}>
-              <GlassCard
-                variant="obsidian"
-                hover
-                className="p-8 h-full flex flex-col items-start text-left relative overflow-hidden"
+          {steps.map((step) => (
+            <div key={step.number}>
+              <SpatialGlassCard
+                variant="secondary"
+                hoverTilt={true}
+                glow={true}
+                className="p-8 h-full flex flex-col items-start text-left relative overflow-hidden border-emerald-500/20 hover:border-emerald-400/40"
               >
                 <span
                   aria-hidden="true"
@@ -70,7 +68,7 @@ export function HowItWorks() {
                   {step.number}
                 </span>
 
-                <div className="w-14 h-14 rounded-2xl bg-emerald-500/12 border border-emerald-500/30 flex items-center justify-center mb-6 shadow-[0_0_24px_rgba(16,185,129,0.14)]">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/12 border border-emerald-500/30 flex items-center justify-center mb-6 shadow-[0_0_24px_rgba(16,185,129,0.18)]">
                   {step.icon}
                 </div>
 
@@ -80,8 +78,8 @@ export function HowItWorks() {
                 <p className="text-zinc-400 leading-relaxed font-medium text-sm sm:text-base">
                   {step.desc}
                 </p>
-              </GlassCard>
-            </ScrollReveal>
+              </SpatialGlassCard>
+            </div>
           ))}
         </div>
       </div>

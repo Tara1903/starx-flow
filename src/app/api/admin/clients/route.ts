@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     // 2. Fetch all subscriptions to get live plans
     const { data: subscriptions } = await supabaseAdmin
       .from('subscriptions')
-      .select('user_id, plan_id, status');
+      .select('user_id, plan_id, status, created_at, updated_at');
 
     const subMap = new Map<string, { plan_id: string; status: string }>();
     if (subscriptions) {
@@ -66,16 +66,72 @@ export async function GET(request: Request) {
       }
     }
 
-    // 3. Assemble complete client objects
+    // 3. Fetch real workflows per user
+    const { data: workflows } = await supabaseAdmin
+      .from('workflows')
+      .select('user_id, is_active');
+
+    const workflowCountMap = new Map<string, number>();
+    if (workflows) {
+      for (const w of workflows) {
+        if (w.user_id) {
+          workflowCountMap.set(w.user_id, (workflowCountMap.get(w.user_id) || 0) + 1);
+        }
+      }
+    }
+
+    // 4. Fetch real conversations & executions per user
+    const { data: conversations } = await supabaseAdmin
+      .from('conversations')
+      .select('user_id, last_message_at, status');
+
+    const executionMap = new Map<string, { count: number; lastActive: string | null }>();
+    if (conversations) {
+      for (const c of conversations) {
+        if (c.user_id) {
+          const entry = executionMap.get(c.user_id) || { count: 0, lastActive: null };
+          entry.count += 1;
+          if (c.last_message_at && (!entry.lastActive || c.last_message_at > entry.lastActive)) {
+            entry.lastActive = c.last_message_at;
+          }
+          executionMap.set(c.user_id, entry);
+        }
+      }
+    }
+
+    // 5. Assemble complete client objects with real metrics
     const clients = (profiles || []).map((row) => {
       const sub = subMap.get(row.id);
-      const planName = sub?.plan_id
-        ? sub.plan_id.charAt(0).toUpperCase() + sub.plan_id.slice(1)
-        : 'Free Trial';
+      const rawPlan = (sub?.plan_id || '').toLowerCase().trim();
+      let planName = 'Free Trial';
+      if (rawPlan === 'starter') planName = 'Starter';
+      else if (rawPlan === 'growth') planName = 'Growth';
+      else if (rawPlan === 'pro' || rawPlan === 'professional') planName = 'Pro';
+      else if (rawPlan === 'enterprise') planName = 'Enterprise';
+      else if (rawPlan === 'free' || rawPlan === 'trial' || rawPlan === 'trialing') planName = 'Free Trial';
+      else if (rawPlan) planName = rawPlan.charAt(0).toUpperCase() + rawPlan.slice(1);
 
-      const statusName = sub?.status
-        ? sub.status.charAt(0).toUpperCase() + sub.status.slice(1)
-        : 'Active';
+      const rawStatus = (sub?.status || 'active').toLowerCase().trim();
+      let statusName = 'Active';
+      if (rawStatus === 'active') statusName = 'Active';
+      else if (rawStatus === 'trial' || rawStatus === 'trialing') statusName = 'Trial';
+      else if (rawStatus === 'inactive' || rawStatus === 'paused') statusName = 'Inactive';
+      else if (rawStatus === 'canceled' || rawStatus === 'churned') statusName = 'Churned';
+
+      const execInfo = executionMap.get(row.id);
+      const userWorkflows = workflowCountMap.get(row.id) || 0;
+      const userExecutions = execInfo?.count || 0;
+
+      let lastActiveFormatted = 'Active recently';
+      const lastActiveTime = execInfo?.lastActive || row.updated_at || row.created_at;
+      if (lastActiveTime) {
+        const diffMs = Date.now() - new Date(lastActiveTime).getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 5) lastActiveFormatted = 'Just now';
+        else if (diffMins < 60) lastActiveFormatted = `${diffMins}m ago`;
+        else if (diffMins < 1440) lastActiveFormatted = `${Math.floor(diffMins / 60)}h ago`;
+        else lastActiveFormatted = `${Math.floor(diffMins / 1440)}d ago`;
+      }
 
       return {
         id: row.id,
@@ -83,14 +139,14 @@ export async function GET(request: Request) {
         businessType: row.business_type || 'General Service',
         ownerName: row.owner_name || 'Owner',
         email: row.email || '',
-        phone: '',
+        phone: row.phone || '',
         plan: planName,
         status: statusName,
         role: row.role || 'user',
         signupDate: row.created_at ? new Date(row.created_at).toISOString().slice(0, 10) : '',
-        lastActive: 'Active recently',
-        totalWorkflows: 3,
-        totalExecutions: 45,
+        lastActive: lastActiveFormatted,
+        totalWorkflows: userWorkflows,
+        totalExecutions: userExecutions,
       };
     });
 
@@ -120,10 +176,32 @@ export async function PATCH(request: Request) {
     }
 
     if (plan) {
-      const normalizedPlan = plan.toLowerCase();
+      let normalizedPlan = plan.toLowerCase().trim();
+      let subStatus = 'active';
+      if (normalizedPlan.includes('trial') || normalizedPlan.includes('free')) {
+        normalizedPlan = 'free';
+        subStatus = 'trial';
+      } else if (normalizedPlan === 'starter') {
+        normalizedPlan = 'starter';
+      } else if (normalizedPlan === 'growth') {
+        normalizedPlan = 'growth';
+      } else if (normalizedPlan === 'pro' || normalizedPlan === 'professional') {
+        normalizedPlan = 'pro';
+      } else if (normalizedPlan === 'enterprise') {
+        normalizedPlan = 'enterprise';
+      }
+
       await supabaseAdmin
         .from('subscriptions')
-        .upsert({ user_id: id, plan_id: normalizedPlan, status: 'active' }, { onConflict: 'user_id' });
+        .upsert(
+          {
+            user_id: id,
+            plan_id: normalizedPlan,
+            status: subStatus,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        );
     }
 
     if (status) {

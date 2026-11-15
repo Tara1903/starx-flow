@@ -65,7 +65,9 @@ export default function AdminLogin() {
     if (!email || !password) return;
 
     const score = shield.getScore();
-    if (score < 20) {
+    // Humans always score ≥ 10 from browser baseline alone (non-headless browser = +15)
+    // Threshold lowered so legitimate users aren't blocked on fast form submit
+    if (score < 10) {
       setError("Access denied.");
       return;
     }

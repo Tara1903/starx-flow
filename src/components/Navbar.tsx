@@ -261,7 +261,7 @@ export function Navbar() {
           </Link>
 
           {/* Center Desktop Navigation: Video 04 Topmost Horizontal Glass Capsule */}
-          <div className="hidden lg:flex items-center p-1.5 rounded-full bg-[#07120c]/75 backdrop-blur-2xl border border-white/[0.14] shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.2)] gap-1 select-none">
+          <div className="hidden lg:flex items-center p-1.5 rounded-full bg-[#07120c]/75 backdrop-blur-2xl border border-white/[0.14] shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.2)] gap-1 select-none flex-shrink-0">
             <Link
               href="/"
               className={cn(
@@ -335,12 +335,12 @@ export function Navbar() {
           </div>
 
           {/* Right Auth & CTA */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2.5 flex-shrink-0">
             <button
               type="button"
               onClick={openCommandCenter}
               aria-label="Open command center search (Ctrl+K)"
-              className="hidden xl:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs text-zinc-400 hover:text-white bg-white/[0.03] border border-white/10 hover:border-emerald-400/35 transition-all cursor-pointer"
+              className="hidden xl:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs text-zinc-400 hover:text-white bg-white/[0.03] border border-white/10 hover:border-emerald-400/35 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
             >
               <Search className="w-3.5 h-3.5 text-emerald-400" />
               <span>Quick jump</span>
@@ -350,7 +350,7 @@ export function Navbar() {
             </button>
             {isLoading ? (
               /* Stable subtle skeleton while session resolves — prevents CTA flicker */
-              <div className="w-[124px] h-[38px] rounded-full bg-white/[0.04] border border-white/10 animate-pulse" />
+              <div className="w-[124px] h-[38px] rounded-full bg-white/[0.04] border border-white/10 animate-pulse flex-shrink-0" />
             ) : isLoggedIn ? (
               <>
                 <button
@@ -360,7 +360,7 @@ export function Navbar() {
                     router.push("/");
                   }}
                   data-cursor-invert="secondary"
-                  className="px-3.5 py-2 rounded-full text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer"
+                  className="px-3.5 py-2 rounded-full text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
                 >
                   Logout
                 </button>
@@ -369,7 +369,7 @@ export function Navbar() {
                   variant="primary"
                   magneticStrength="low"
                   onClick={() => router.push(dashboardHref)}
-                  className="px-4 py-2 text-sm"
+                  className="px-4.5 py-2 text-sm whitespace-nowrap flex-shrink-0"
                 >
                   Go to Dashboard
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -381,7 +381,7 @@ export function Navbar() {
                   type="button"
                   onClick={openLogin}
                   data-cursor-invert="secondary"
-                  className="px-4 py-2 rounded-full text-sm font-medium text-zinc-200 bg-white/[0.03] border border-white/10 hover:border-emerald-300 hover:text-[#02120c] hover:bg-emerald-400 focus-visible:bg-emerald-400 focus-visible:text-[#02120c] transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-full text-sm font-medium text-zinc-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-emerald-400/40 hover:text-white transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
                 >
                   Log in
                 </button>
@@ -390,7 +390,7 @@ export function Navbar() {
                   variant="primary"
                   magneticStrength="low"
                   onClick={openSignup}
-                  className="px-4 py-2 text-sm"
+                  className="px-5 py-2 text-sm font-bold whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(40,223,160,0.35)]"
                 >
                   Get Started
                   <ArrowRight className="w-3.5 h-3.5" />

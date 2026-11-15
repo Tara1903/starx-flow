@@ -17,10 +17,12 @@ export default function AdminPage() {
   const router = useRouter();
   const isAdmin = useAdminStore((s) => s.isAdmin);
   const isLoading = useAdminStore((s) => s.isLoading);
+  const isRealtimeConnected = useAdminStore((s) => s.isRealtimeConnected);
   const clients = useAdminStore((s) => s.clients);
   const demoLeads = useAdminStore((s) => s.demoLeads);
   const loginAdmin = useAdminStore((s) => s.loginAdmin);
   const logoutAdmin = useAdminStore((s) => s.logoutAdmin);
+  const subscribeToAdminRealtime = useAdminStore((s) => s.subscribeToAdminRealtime);
   const fetchClients = useAdminStore((s) => s.fetchClients);
   const fetchDemoLeads = useAdminStore((s) => s.fetchDemoLeads);
   const updateClientStatus = useAdminStore((s) => s.updateClientStatus);
@@ -48,13 +50,17 @@ export default function AdminPage() {
     checkAdmin();
   }, [isAdmin, loginAdmin, router]);
 
-  // Initial data fetch
+  // Initial data fetch & Live Supabase Realtime synchronization
   useEffect(() => {
     if (isAdmin) {
       fetchClients();
       fetchDemoLeads();
+      const unsubscribe = subscribeToAdminRealtime();
+      return () => {
+        unsubscribe();
+      };
     }
-  }, [isAdmin, fetchClients, fetchDemoLeads]);
+  }, [isAdmin, fetchClients, fetchDemoLeads, subscribeToAdminRealtime]);
 
   const handleRefresh = useCallback(() => {
     fetchClients();
@@ -102,6 +108,7 @@ export default function AdminPage() {
       onRefresh={handleRefresh}
       onLogout={logoutAdmin}
       adminEmail="admin@starxflow.com"
+      isRealtimeConnected={isRealtimeConnected}
     >
       {activeSection === "overview" && (
         <AdminOverviewView
@@ -138,6 +145,8 @@ export default function AdminPage() {
         <AdminAnalyticsView
           totalClients={clients.length}
           totalExecutions={clients.reduce((acc, c) => acc + (c.totalExecutions || 0), 0)}
+          clients={clients}
+          demoLeads={demoLeads}
         />
       )}
 

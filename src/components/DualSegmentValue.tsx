@@ -15,20 +15,20 @@ import {
 } from "lucide-react";
 import { useUIStore } from "@/store/uiStore";
 import { ScrollReveal } from "./ui/ScrollReveal";
-import { GlassCard } from "./ui/GlassCard";
+import { SpatialGlassCard } from "./spatial/SpatialGlassCard";
 import { GlassButton } from "./ui/GlassButton";
 
 export function DualSegmentValue() {
   const openSignup = useUIStore((state) => state.openSignup);
 
   return (
-    <section className="py-20 lg:py-28 px-6 relative z-10 bg-black/40">
+    <section className="py-20 lg:py-28 px-6 relative z-10 bg-transparent">
       <div className="max-w-7xl mx-auto">
         <ScrollReveal
           direction="up"
-          className="text-center max-w-3xl mx-auto mb-14 lg:mb-16"
+          className="text-center max-w-3xl mx-auto mb-14 lg:mb-16 spatial-content-protected"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 text-xs font-bold tracking-widest text-emerald-300 uppercase mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full spatial-glass-crystal text-xs font-bold tracking-widest text-emerald-300 uppercase mb-4 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
             <Sparkles size={12} className="text-emerald-400" />
             Purpose-Built For Your Scale
           </div>
@@ -47,14 +47,15 @@ export function DualSegmentValue() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Small Business Segment Card */}
           <ScrollReveal direction="left">
-            <GlassCard
-              variant="obsidian"
-              hover
-              className="p-8 md:p-10 h-full flex flex-col justify-between"
+            <SpatialGlassCard
+              variant="primary"
+              hoverTilt={true}
+              glow={true}
+              className="p-8 md:p-10 h-full flex flex-col justify-between border-emerald-500/25 hover:border-emerald-400/45 shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_36px_rgba(16,185,129,0.12)]"
             >
               <div>
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0 shadow-[0_0_16px_rgba(16,185,129,0.2)]">
                     <UserCheck className="w-6 h-6 text-emerald-400" />
                   </div>
                   <div>
@@ -128,11 +129,13 @@ export function DualSegmentValue() {
 
               <div className="pt-6 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4">
                 <span className="text-xs text-zinc-400 font-medium">
-                  Starter plan from €29/mo • 14-day free trial
+                  Starter plan from $29/mo • 14-day free trial
                 </span>
                 <GlassButton
                   size="sm"
                   variant="primary"
+                  magnetic
+                  magneticStrength="medium"
                   onClick={openSignup}
                   className="w-full sm:w-auto"
                 >
@@ -140,19 +143,20 @@ export function DualSegmentValue() {
                   <ArrowRight size={14} />
                 </GlassButton>
               </div>
-            </GlassCard>
+            </SpatialGlassCard>
           </ScrollReveal>
 
           {/* Multi-Provider Segment Card */}
           <ScrollReveal direction="right">
-            <GlassCard
-              variant="obsidian"
-              hover
-              className="p-8 md:p-10 h-full flex flex-col justify-between border-teal-500/20"
+            <SpatialGlassCard
+              variant="primary"
+              hoverTilt={true}
+              glow={true}
+              className="p-8 md:p-10 h-full flex flex-col justify-between border-teal-500/25 hover:border-teal-400/45 shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_36px_rgba(20,184,166,0.12)]"
             >
               <div>
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center flex-shrink-0 shadow-[0_0_16px_rgba(20,184,166,0.2)]">
                     <Building2 className="w-6 h-6 text-teal-400" />
                   </div>
                   <div>
@@ -227,17 +231,17 @@ export function DualSegmentValue() {
 
               <div className="pt-6 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4">
                 <span className="text-xs text-zinc-400 font-medium">
-                  Pro plan from €97/mo • Enterprise RLS security
+                  Pro plan from $99/mo • Enterprise RLS security
                 </span>
                 <Link
                   href="/security"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.06] hover:bg-emerald-500/15 text-white hover:text-emerald-300 font-semibold text-xs uppercase tracking-wider transition-all border border-white/15 hover:border-emerald-500/35"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full spatial-glass-crystal hover:bg-emerald-500/20 text-white hover:text-emerald-300 font-semibold text-xs uppercase tracking-wider transition-all border border-emerald-500/30"
                 >
                   Inspect Architecture
                   <ArrowRight size={14} />
                 </Link>
               </div>
-            </GlassCard>
+            </SpatialGlassCard>
           </ScrollReveal>
         </div>
       </div>

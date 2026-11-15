@@ -1,0 +1,112 @@
+/* ==========================================================================
+   STARX FLOW — SPATIAL LIQUID GLASS DESIGN SYSTEM (STAGE 1 MEASURED SPEC)
+   Pixel-Perfect Static Visual Reconstruction Scoped Tokens
+   ========================================================================== */
+
+:root {
+  /* Exact Reference Color Tokens (Sampled from media_1794672819673_73fe657e.jpg) */
+  --void: #000904;
+  --near-black: #0B1A12;
+  --forest: #246340;
+  --emerald-vibrant: #28DFA0;
+  --mint: #8FFFD0;
+  --orb-core: #4CAB75;
+  --whatsapp-slot: #1C8350;
+  --booking-badge: #3A9363;
+  --shelf-rail: #19643D;
+  --text-pure: #F0F5EF;
+  --text-muted: #B8C9BD;
+
+  /* Atmospheric Depth */
+  --spatial-void: #000904;
+  --spatial-emerald-glow: rgba(40, 223, 160, 0.16);
+  --spatial-emerald-specular: rgba(143, 255, 208, 0.65);
+  --spatial-emerald-beam: rgba(40, 223, 160, 0.32);
+
+  /* Glass Tier 1: Architectural Glass (Backdrop / Arch / Podiums) */
+  --glass-arch-bg: linear-gradient(135deg, rgba(8, 32, 20, 0.45) 0%, rgba(2, 12, 8, 0.75) 100%);
+  --glass-arch-border: 1px solid rgba(40, 223, 160, 0.15);
+  --glass-arch-blur: 24px;
+
+  /* Glass Tier 2: Primary Interface Glass (Calendar Slab, Pricing Cards) */
+  --glass-primary-bg: linear-gradient(145deg, rgba(12, 40, 25, 0.65) 0%, rgba(4, 16, 10, 0.82) 100%);
+  --glass-primary-border: 1px solid rgba(40, 223, 160, 0.22);
+  --glass-primary-blur: 16px;
+  --glass-primary-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(143, 255, 208, 0.25);
+
+  /* Glass Tier 3: Secondary Contextual Glass (Capability Cards, Problem Shards) */
+  --glass-secondary-bg: linear-gradient(160deg, rgba(10, 28, 18, 0.50) 0%, rgba(4, 14, 9, 0.75) 100%);
+  --glass-secondary-border: 1px solid rgba(40, 223, 160, 0.14);
+  --glass-secondary-blur: 12px;
+  --glass-secondary-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(143, 255, 208, 0.15);
+
+  /* Glass Tier 4: Crystal Glass (Badges, WhatsApp Card, Floating Capsules) */
+  --glass-crystal-bg: linear-gradient(135deg, rgba(16, 50, 32, 0.60) 0%, rgba(8, 26, 16, 0.75) 100%);
+  --glass-crystal-border: 1px solid rgba(143, 255, 208, 0.32);
+  --glass-crystal-blur: 20px;
+  --glass-crystal-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 16px rgba(40, 223, 160, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+
+  /* Tier 5: Reflective Platform Sheen */
+  --glass-platform-bg: linear-gradient(180deg, rgba(40, 223, 160, 0.15) 0%, rgba(8, 122, 81, 0.05) 60%, transparent 100%);
+}
+
+/* Material Utility Classes */
+.mat-arch-glass {
+  background: var(--glass-arch-bg);
+  border: var(--glass-arch-border);
+  backdrop-filter: blur(var(--glass-arch-blur));
+  -webkit-backdrop-filter: blur(var(--glass-arch-blur));
+}
+
+.mat-primary-glass {
+  background: var(--glass-primary-bg);
+  border: var(--glass-primary-border);
+  backdrop-filter: blur(var(--glass-primary-blur));
+  -webkit-backdrop-filter: blur(var(--glass-primary-blur));
+  box-shadow: var(--glass-primary-shadow);
+}
+
+.mat-secondary-glass {
+  background: var(--glass-secondary-bg);
+  border: var(--glass-secondary-border);
+  backdrop-filter: blur(var(--glass-secondary-blur));
+  -webkit-backdrop-filter: blur(var(--glass-secondary-blur));
+  box-shadow: var(--glass-secondary-shadow);
+}
+
+.mat-crystal-glass {
+  background: var(--glass-crystal-bg);
+  border: var(--glass-crystal-border);
+  backdrop-filter: blur(var(--glass-crystal-blur));
+  -webkit-backdrop-filter: blur(var(--glass-crystal-blur));
+  box-shadow: var(--glass-crystal-shadow);
+}
+
+.mat-reflective-shelf {
+  background: var(--glass-platform-bg);
+  border-top: 1px solid rgba(40, 223, 160, 0.3);
+  box-shadow: 0 0 20px rgba(40, 223, 160, 0.2);
+}
+
+/* Typography Helpers */
+.font-editorial {
+  font-family: var(--font-serif), 'Playfair Display', Georgia, serif;
+}
+
+.text-gradient-reference {
+  background: linear-gradient(180deg, #FFFFFF 20%, #A2E2C6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-emerald {
+  background: linear-gradient(180deg, #8FFFD0 0%, #28DFA0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Safe protection class */
+.spatial-content-protected {
+  position: relative;
+  z-index: 10;
+}

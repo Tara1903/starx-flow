@@ -17,19 +17,41 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import type { Client, DemoLead } from "../../store/adminStore";
+import { CANONICAL_PLANS, normalizePlanId } from "@/lib/plans";
 
 interface AdminAnalyticsViewProps {
   totalClients: number;
   totalExecutions: number;
+  clients?: Client[];
+  demoLeads?: DemoLead[];
 }
 
 export function AdminAnalyticsView({
   totalClients,
   totalExecutions,
+  clients = [],
+  demoLeads = [],
 }: AdminAnalyticsViewProps) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("30d");
   const [activeTab, setActiveTab] = useState<"overview" | "revenue" | "executions" | "clients">("overview");
   const prefersReduced = useReducedMotion();
+
+  // Compute live real metrics from Customer Centre state
+  const realMRR = clients.reduce((acc, c) => {
+    if (c.status?.toLowerCase() === "churned" || c.status?.toLowerCase() === "inactive") return acc;
+    const norm = normalizePlanId(c.plan);
+    if (norm === "starter") return acc + CANONICAL_PLANS.starter.price;
+    if (norm === "growth") return acc + CANONICAL_PLANS.growth.price;
+    if (norm === "pro") return acc + CANONICAL_PLANS.pro.price;
+    if (c.plan?.toLowerCase() === "enterprise") return acc + 299;
+    return acc;
+  }, 0);
+
+  const realWorkflows = clients.reduce((acc, c) => acc + (c.totalWorkflows || 0), 0);
+  const convertedLeads = demoLeads.filter((l) => l.status === "converted").length;
+  const conversionRate =
+    demoLeads.length > 0 ? ((convertedLeads / demoLeads.length) * 100).toFixed(1) : "0.0";
 
   // Mini sparkline bar chart generator
   const renderSparklineBars = (heights: number[]) => (
@@ -103,13 +125,13 @@ export function AdminAnalyticsView({
         {/* Metric 1 */}
         <div className="p-5 rounded-2xl bg-[#08150f]/85 backdrop-blur-2xl border border-emerald-500/20 shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-400">Total Revenue</span>
+            <span className="text-xs font-semibold text-zinc-400">Total Monthly MRR</span>
             <span className="text-[11px] font-mono text-emerald-300 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-0.5">
-              <ArrowUpRight size={11} /> +18.4%
+              <ArrowUpRight size={11} /> Live
             </span>
           </div>
           <p className="text-2xl sm:text-3xl font-extrabold font-mono text-white mt-1">
-            $59,553
+            ${realMRR.toLocaleString()}
           </p>
           {renderSparklineBars([35, 42, 48, 60, 55, 68, 74, 82, 95])}
         </div>
@@ -123,7 +145,7 @@ export function AdminAnalyticsView({
             </span>
           </div>
           <p className="text-2xl sm:text-3xl font-extrabold font-mono text-white mt-1">
-            {(totalExecutions > 0 ? totalExecutions : 48290).toLocaleString()}
+            {totalExecutions.toLocaleString()}
           </p>
           {renderSparklineBars([40, 50, 45, 62, 58, 70, 78, 85, 92])}
         </div>
@@ -133,11 +155,11 @@ export function AdminAnalyticsView({
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-zinc-400">Active Workflows</span>
             <span className="text-[11px] font-mono text-emerald-300 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-0.5">
-              <ArrowUpRight size={11} /> +22.0%
+              <ArrowUpRight size={11} /> Real
             </span>
           </div>
           <p className="text-2xl sm:text-3xl font-extrabold font-mono text-white mt-1">
-            142
+            {realWorkflows}
           </p>
           {renderSparklineBars([30, 38, 44, 52, 60, 65, 72, 80, 88])}
         </div>
@@ -147,11 +169,11 @@ export function AdminAnalyticsView({
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-zinc-400">Demo Conversion</span>
             <span className="text-[11px] font-mono text-emerald-300 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-0.5">
-              <ArrowUpRight size={11} /> +4.5%
+              <ArrowUpRight size={11} /> {convertedLeads} Deals
             </span>
           </div>
           <p className="text-2xl sm:text-3xl font-extrabold font-mono text-white mt-1">
-            14.2%
+            {conversionRate}%
           </p>
           {renderSparklineBars([25, 32, 40, 38, 45, 52, 60, 70, 82])}
         </div>

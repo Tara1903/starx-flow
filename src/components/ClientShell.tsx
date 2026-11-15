@@ -34,6 +34,8 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     pathname?.startsWith('/setup') ||
     pathname?.startsWith('/dashboard') ||
     pathname?.startsWith('/admin');
+  const isHomePage = pathname === '/';
+  const showGlobalChrome = !isAppRoute && !isHomePage;
 
   const isSignupOpen = useUIStore((state) => state.isSignupOpen);
   const closeSignup = useUIStore((state) => state.closeSignup);
@@ -53,9 +55,9 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     return cleanup;
   }, [initSession]);
 
-  // First-visit optional authentication invitation
+  // First-visit optional authentication invitation (disabled on homepage to preserve spatial composition)
   useEffect(() => {
-    if (!mounted || isAppRoute || isLoggedIn) return;
+    if (!mounted || isAppRoute || isHomePage || isLoggedIn) return;
     try {
       const dismissed = localStorage.getItem('starx_auth_prompt_dismissed_v1');
       if (!dismissed) {
@@ -89,9 +91,9 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
       >
         Skip to main content
       </a>
-      {!isAppRoute && <AmbientEnvironment />}
+      {showGlobalChrome && <AmbientEnvironment />}
       {mounted && <CommandCenter />}
-      {!isAppRoute && <Navbar />}
+      {showGlobalChrome && <Navbar />}
       <main
         id="main-content"
         aria-label="Main content"
@@ -101,7 +103,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
           {children}
         </PageTransition>
       </main>
-      {!isAppRoute && (
+      {showGlobalChrome && (
         <div className="pb-20 md:pb-0">
           <Footer />
         </div>
@@ -115,7 +117,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
             {isDemoOpen && <DemoModal onClose={closeDemo} />}
           </AnimatePresence>
           <ToastViewport />
-          <ConsentBanner />
+          {!isHomePage && <ConsentBanner />}
         </>
       )}
     </MotionConfig>

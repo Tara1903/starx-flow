@@ -18,6 +18,7 @@ import { AdminKPIsRow } from "./AdminKPIs";
 import { RevenueVelocityChart, MonthlyGoalGauge } from "./AdminCharts";
 import { type Client, type DemoLead } from "../../store/adminStore";
 import { cn } from "../../lib/utils";
+import { CANONICAL_PLANS, normalizePlanId } from "@/lib/plans";
 
 interface AdminOverviewViewProps {
   clients: Client[];
@@ -36,12 +37,26 @@ export function AdminOverviewView({
 }: AdminOverviewViewProps) {
   const prefersReduced = useReducedMotion();
 
-  // Compute metrics
+  // Compute live metrics from Customer Centre data
   const totalClients = clients.length;
   const activeClients = clients.filter((c) => c.status === "Active").length;
   const totalLeads = demoLeads.length;
   const totalExecutions = clients.reduce((acc, c) => acc + (c.totalExecutions || 0), 0);
   const totalWorkflows = clients.reduce((acc, c) => acc + (c.totalWorkflows || 0), 0);
+
+  // Compute live MRR directly from active customer subscriptions
+  const realMRR = clients.reduce((acc, c) => {
+    if (c.status?.toLowerCase() === "churned" || c.status?.toLowerCase() === "inactive") return acc;
+    const norm = normalizePlanId(c.plan);
+    if (norm === "starter") return acc + CANONICAL_PLANS.starter.price;
+    if (norm === "growth") return acc + CANONICAL_PLANS.growth.price;
+    if (norm === "pro") return acc + CANONICAL_PLANS.pro.price;
+    if (c.plan?.toLowerCase() === "enterprise") return acc + 299;
+    return acc;
+  }, 0);
+
+  const targetMonthlyGoal = 5000;
+  const goalProgress = Math.min(100, Math.round((realMRR / targetMonthlyGoal) * 100));
 
   // Dynamic time greeting
   const hour = new Date().getHours();
@@ -99,17 +114,17 @@ export function AdminOverviewView({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
         <div className="lg:col-span-8 flex">
           <RevenueVelocityChart
-            totalRevenue={59553}
-            totalExecutions={totalExecutions > 0 ? totalExecutions : 48290}
-            activeWorkflows={totalWorkflows > 0 ? totalWorkflows : 142}
+            totalRevenue={realMRR}
+            totalExecutions={totalExecutions}
+            activeWorkflows={totalWorkflows}
           />
         </div>
 
         <div className="lg:col-span-4 flex">
           <MonthlyGoalGauge
-            progress={78}
-            targetAmount="$75,000"
-            currentAmount="$59,553"
+            progress={goalProgress}
+            targetAmount={`$${targetMonthlyGoal.toLocaleString()}`}
+            currentAmount={`$${realMRR.toLocaleString()}`}
           />
         </div>
       </div>

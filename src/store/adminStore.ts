@@ -36,10 +36,13 @@ export interface DemoLead {
 interface AdminState {
   isAdmin: boolean;
   isLoading: boolean;
+  isRealtimeConnected: boolean;
   clients: Client[];
   demoLeads: DemoLead[];
   loginAdmin: () => Promise<boolean>;
   logoutAdmin: () => void;
+  subscribeToAdminRealtime: () => () => void;
+  unsubscribeFromAdminRealtime: () => void;
   fetchClients: () => Promise<void>;
   fetchDemoLeads: () => Promise<void>;
   updateClientStatus: (id: string, status: string) => Promise<void>;
@@ -63,11 +66,96 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString();
 }
 
+let adminRealtimeChannel: any = null;
+
 export const useAdminStore = create<AdminState>((set, get) => ({
   isAdmin: false,
   isLoading: false,
+  isRealtimeConnected: false,
   clients: [],
   demoLeads: [],
+
+  /* ─── REAL-TIME SUBSCRIPTION TO SUPABASE BACKEND ─── */
+  subscribeToAdminRealtime: () => {
+    if (!isSupabaseConfigured) return () => {};
+
+    if (adminRealtimeChannel) {
+      return () => get().unsubscribeFromAdminRealtime();
+    }
+
+    try {
+      const channel = supabase.channel('starx-admin-live-telemetry')
+        // 1. Listen for new client registrations and updates
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'profiles' },
+          (payload) => {
+            console.log('⚡ [Admin Realtime] Profile update received:', payload.eventType);
+            get().fetchClients();
+          }
+        )
+        // 2. Listen for plan changes and subscription modifications
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'subscriptions' },
+          (payload) => {
+            console.log('⚡ [Admin Realtime] Subscription change received:', payload.eventType);
+            get().fetchClients();
+          }
+        )
+        // 3. Listen for inbound website demo inquiries
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'demo_requests' },
+          (payload) => {
+            console.log('⚡ [Admin Realtime] Inbound demo request received:', payload.eventType);
+            get().fetchDemoLeads();
+          }
+        )
+        // 4. Listen for CRM leads
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'leads' },
+          (payload) => {
+            console.log('⚡ [Admin Realtime] CRM lead updated:', payload.eventType);
+            get().fetchDemoLeads();
+            get().fetchClients();
+          }
+        )
+        // 5. Listen for live message activity
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'messages' },
+          () => {
+            get().fetchClients();
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            set({ isRealtimeConnected: true });
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            set({ isRealtimeConnected: false });
+          }
+        });
+
+      adminRealtimeChannel = channel;
+
+      return () => {
+        get().unsubscribeFromAdminRealtime();
+      };
+    } catch (err) {
+      console.error('[Admin Realtime] Setup error:', err);
+      return () => {};
+    }
+  },
+
+  unsubscribeFromAdminRealtime: () => {
+    if (adminRealtimeChannel) {
+      supabase.removeChannel(adminRealtimeChannel);
+      adminRealtimeChannel = null;
+      set({ isRealtimeConnected: false });
+    }
+  },
 
   /* ─── LOGIN ADMIN (verify current user is admin) ─── */
   loginAdmin: async () => {
@@ -82,6 +170,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           if (parsed && (parsed.role === 'admin' || parsed.role === 'super_admin' || parsed.email === 'admin@starxflow.com')) {
             set({ isAdmin: true });
             await Promise.all([get().fetchClients(), get().fetchDemoLeads()]).catch(() => {});
+            get().subscribeToAdminRealtime();
             return true;
           }
         }
@@ -105,6 +194,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       if (profile?.role === 'admin' || profile?.role === 'super_admin') {
         set({ isAdmin: true });
         await Promise.all([get().fetchClients(), get().fetchDemoLeads()]);
+        get().subscribeToAdminRealtime();
         return true;
       }
 
@@ -114,7 +204,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }
   },
 
-  logoutAdmin: () => set({ isAdmin: false, clients: [], demoLeads: [] }),
+  logoutAdmin: () => {
+    get().unsubscribeFromAdminRealtime();
+    set({ isAdmin: false, isRealtimeConnected: false, clients: [], demoLeads: [] });
+  },
 
   /* ─── CLAIM ADMIN ROLE (one-time setup) ─── */
   claimAdminRole: async (secret: string) => {

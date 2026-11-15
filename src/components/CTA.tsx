@@ -5,26 +5,30 @@ import { Sparkles, ArrowRight } from "lucide-react";
 import { useUIStore } from "../store/uiStore";
 import { ScrollReveal } from "./ui/ScrollReveal";
 import { GlassButton } from "./ui/GlassButton";
+import { SpatialGlassCard } from "./spatial/SpatialGlassCard";
 
 export function CTA() {
   const openSignup = useUIStore((state) => state.openSignup);
 
   return (
     <section className="py-24 lg:py-36 px-6 relative z-20 overflow-hidden">
+      {/* Background Emerald Spatial Glow */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 flex items-center justify-center"
       >
-        <div className="w-[900px] h-[440px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.14)_0%,transparent_70%)]" />
+        <div className="w-[960px] h-[500px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.18)_0%,transparent_70%)] blur-2xl" />
       </div>
 
       <div className="max-w-4xl mx-auto text-center relative z-10">
         <ScrollReveal direction="scale">
-          <div
-            data-cursor-spotlight="true"
-            className="glass-card-obsidian rounded-[2.5rem] p-10 sm:p-14 md:p-20 border border-emerald-500/25 shadow-[0_30px_100px_rgba(0,0,0,0.85),0_0_60px_rgba(16,185,129,0.12)] flex flex-col items-center"
+          <SpatialGlassCard
+            variant="primary"
+            hoverTilt={true}
+            glow={true}
+            className="rounded-[2.5rem] p-10 sm:p-14 md:p-20 border border-emerald-500/30 shadow-[0_32px_100px_rgba(0,0,0,0.9),0_0_60px_rgba(16,185,129,0.2)] flex flex-col items-center spatial-content-protected"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-xs font-bold tracking-widest text-emerald-300 uppercase mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full spatial-glass-crystal text-xs font-bold tracking-widest text-emerald-300 uppercase mb-8 shadow-[0_0_24px_rgba(16,185,129,0.25)]">
               <Sparkles size={14} className="text-emerald-400" />
               Ready To Automate
             </div>
@@ -47,12 +51,12 @@ export function CTA() {
               magnetic
               magneticStrength="high"
               onClick={openSignup}
-              className="px-9 py-4 text-base sm:text-lg group"
+              className="px-9 py-4 text-base sm:text-lg group shadow-[0_0_36px_rgba(16,185,129,0.35)]"
             >
               Claim Your Free AI Receptionist
               <ArrowRight className="w-5 h-5 transition-transform duration-150 group-hover:translate-x-1" />
             </GlassButton>
-          </div>
+          </SpatialGlassCard>
         </ScrollReveal>
       </div>
     </section>

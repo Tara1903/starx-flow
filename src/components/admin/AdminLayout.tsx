@@ -15,6 +15,7 @@ interface AdminLayoutProps {
   onRefresh: () => void;
   onLogout: () => void;
   adminEmail?: string;
+  isRealtimeConnected?: boolean;
   children: React.ReactNode;
 }
 
@@ -28,6 +29,7 @@ export function AdminLayout({
   onRefresh,
   onLogout,
   adminEmail = "admin@starxflow.com",
+  isRealtimeConnected = false,
   children,
 }: AdminLayoutProps) {
   const prefersReduced = useReducedMotion();
@@ -81,6 +83,7 @@ export function AdminLayout({
             onToggleMobileMenu={() => setIsMobileMenuOpen(true)}
             newLeadsCount={newLeadsCount}
             adminEmail={adminEmail}
+            isRealtimeConnected={isRealtimeConnected}
           />
         </header>
 

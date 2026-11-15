@@ -141,7 +141,7 @@ export function AdminKPIsRow({
       />
       <AdminStatsCard
         title="Automated Executions"
-        value={totalExecutions > 0 ? totalExecutions : 48290}
+        value={totalExecutions}
         change="99.98%"
         subtext="execution success"
         icon={Zap}

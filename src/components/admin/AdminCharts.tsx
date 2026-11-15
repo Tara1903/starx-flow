@@ -160,7 +160,8 @@ export function RevenueVelocityChart({
             Avg Plan MRR
           </p>
           <p className="text-base sm:text-lg font-bold font-mono text-white">
-            $499<span className="text-xs text-zinc-300 font-normal">/mo</span>
+            ${totalRevenue > 0 ? Math.round(totalRevenue / Math.max(1, activeWorkflows || 1)) : 0}
+            <span className="text-xs text-zinc-300 font-normal">/mo</span>
           </p>
         </div>
 

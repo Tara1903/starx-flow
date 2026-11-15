@@ -213,9 +213,15 @@ export function normalizePlanId(rawPlanId?: string | null): PlanTier {
   const cleaned = rawPlanId.trim().toLowerCase();
   if (cleaned === 'starter') return 'starter';
   if (cleaned === 'growth') return 'growth';
-  if (cleaned === 'pro') return 'pro';
+  if (cleaned === 'pro' || cleaned === 'professional') return 'pro';
   if (cleaned === 'enterprise') return 'pro'; // Legacy alias mapped to Pro tier ($99)
-  if (cleaned === 'free' || cleaned === 'trial' || cleaned === 'trialing') return 'free';
+  if (
+    cleaned === 'free' ||
+    cleaned === 'trial' ||
+    cleaned === 'trialing' ||
+    cleaned === 'free trial' ||
+    cleaned === 'free-trial'
+  ) return 'free';
   return 'free';
 }
 

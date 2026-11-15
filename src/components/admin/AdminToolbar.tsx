@@ -24,6 +24,7 @@ interface AdminToolbarProps {
   onToggleMobileMenu: () => void;
   newLeadsCount?: number;
   adminEmail?: string;
+  isRealtimeConnected?: boolean;
 }
 
 export function AdminToolbar({
@@ -34,6 +35,7 @@ export function AdminToolbar({
   onToggleMobileMenu,
   newLeadsCount = 0,
   adminEmail = "admin@starxflow.com",
+  isRealtimeConnected = false,
 }: AdminToolbarProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -111,10 +113,17 @@ export function AdminToolbar({
           </div>
         </div>
 
-        {/* Center: Live Telemetry Tag (Hidden on small mobile) */}
+        {/* Center: Live Realtime Telemetry Tag (Hidden on small mobile) */}
         <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/[0.08] border border-emerald-500/25 text-[11px] font-semibold text-emerald-300">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>System Operational &bull; 99.98% SLA</span>
+          <span
+            className={cn(
+              "w-2 h-2 rounded-full",
+              isRealtimeConnected
+                ? "bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                : "bg-amber-400 animate-pulse"
+            )}
+          />
+          <span>{isRealtimeConnected ? "Real-Time Synced" : "Connecting Live..."} &bull; 99.98% SLA</span>
         </div>
 
         {/* Right Side: Refresh + Notifications + Profile Card */}

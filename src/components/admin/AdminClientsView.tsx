@@ -62,6 +62,16 @@ const PLAN_STYLES: Record<string, { text: string; bg: string; border: string }> 
     bg: "bg-blue-500/10",
     border: "border-blue-500/20",
   },
+  Growth: {
+    text: "text-teal-300",
+    bg: "bg-teal-500/10",
+    border: "border-teal-500/25",
+  },
+  Pro: {
+    text: "text-emerald-300",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/25",
+  },
   Professional: {
     text: "text-emerald-300",
     bg: "bg-emerald-500/10",
@@ -123,7 +133,11 @@ export function AdminClientsView({
     }
 
     if (filterPlan !== "All") {
-      result = result.filter((c) => c.plan === filterPlan);
+      result = result.filter((c) => {
+        if (filterPlan === "Free Trial") return c.plan === "Free Trial" || c.status === "Trial";
+        if (filterPlan === "Pro") return c.plan === "Pro" || c.plan === "Professional";
+        return c.plan === filterPlan;
+      });
     }
 
     result.sort((a, b) => {
@@ -284,7 +298,7 @@ export function AdminClientsView({
                     Subscription Tier
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {["All", "Free Trial", "Starter", "Professional", "Enterprise"].map((pl) => (
+                    {["All", "Free Trial", "Starter", "Growth", "Pro", "Enterprise"].map((pl) => (
                       <button
                         key={pl}
                         onClick={() => setFilterPlan(pl)}
@@ -471,8 +485,12 @@ export function AdminClientsView({
           </div>
 
           <div className="space-y-3.5">
-            {["Enterprise", "Professional", "Starter", "Free Trial"].map((tier) => {
-              const count = clients.filter((c) => c.plan === tier).length;
+            {["Enterprise", "Pro", "Growth", "Starter", "Free Trial"].map((tier) => {
+              const count = clients.filter((c) => {
+                if (tier === "Pro") return c.plan === "Pro" || c.plan === "Professional";
+                if (tier === "Free Trial") return c.plan === "Free Trial" || c.status === "Trial";
+                return c.plan === tier;
+              }).length;
               const pct = clients.length > 0 ? Math.round((count / clients.length) * 100) : 0;
               const plan = PLAN_STYLES[tier] || PLAN_STYLES["Free Trial"];
 
@@ -671,10 +689,11 @@ export function AdminClientsView({
                         }}
                         className="w-full bg-black/60 border border-emerald-500/25 text-sm text-white rounded-xl px-3 py-2 outline-none focus:border-emerald-500/60 cursor-pointer"
                       >
-                        <option value="Free Trial">Free Trial</option>
-                        <option value="Starter">Starter</option>
-                        <option value="Professional">Professional</option>
-                        <option value="Enterprise">Enterprise</option>
+                        <option value="Free Trial">Free Trial ($0/mo)</option>
+                        <option value="Starter">Starter ($29/mo)</option>
+                        <option value="Growth">Growth ($59/mo)</option>
+                        <option value="Pro">Pro ($99/mo)</option>
+                        <option value="Enterprise">Enterprise (Custom)</option>
                       </select>
                     </div>
                   </div>

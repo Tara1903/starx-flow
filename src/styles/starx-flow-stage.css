@@ -1,0 +1,313 @@
+
+    :root {
+      --emerald-glow: #5eead4;
+      --mint-bright: #86efac;
+      --mint-core: #4ade80;
+      --forest-deep: #03110c;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #020b08;
+      color: #f2fbf6;
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    .font-editorial {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-feature-settings: "liga" 1, "kern" 1;
+    }
+
+    /* Full-Bleed 100% Width Studio Canvas (1440 x 2362 Full-Viewport Scale)
+       Hero section (y: 0..756) matches 100vh on standard 16:9 / 16:10 laptop browsers */
+    .starx-viewport-wrapper {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      position: relative;
+      background: radial-gradient(ellipse at 50% 18%, #09261b 0%, #020b08 75%);
+    }
+
+    .starx-stage {
+      width: 100%;
+      aspect-ratio: 1440 / 2362;
+      container-type: inline-size;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+      background-color: #03100b;
+    }
+
+    /* 1 unit of --u equals 1 pixel in the 1440x2362 full-scale desktop coordinate space */
+    .starx-stage-inner {
+      --u: calc(100cqw / 1440);
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Absolute positioning helper in 1440x2362 coordinate space */
+    .pos {
+      position: absolute;
+      left: calc(var(--x, 0) * var(--u));
+      top: calc(var(--y, 0) * var(--u));
+      width: calc(var(--w, auto) * var(--u));
+      height: calc(var(--h, auto) * var(--u));
+    }
+
+    .pos-auto {
+      position: absolute;
+      left: calc(var(--x, 0) * var(--u));
+      top: calc(var(--y, 0) * var(--u));
+    }
+
+    /* Mint Gradient Primary Pill Button */
+    .btn-mint-pill {
+      background: linear-gradient(180deg, #bcf8db 0%, #73dfaa 48%, #47ba82 100%);
+      color: #042115;
+      font-weight: 600;
+      white-space: nowrap;
+      border: calc(1.2 * var(--u)) solid rgba(210, 255, 232, 0.85);
+      box-shadow:
+        0 calc(5 * var(--u)) calc(26 * var(--u)) rgba(74, 222, 128, 0.5),
+        0 0 calc(14 * var(--u)) rgba(167, 243, 208, 0.45),
+        inset 0 calc(1.5 * var(--u)) calc(2.5 * var(--u)) rgba(255, 255, 255, 0.78);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+    .btn-mint-pill:hover {
+      transform: translateY(calc(-2 * var(--u))) scale(1.02);
+      box-shadow:
+        0 calc(8 * var(--u)) calc(32 * var(--u)) rgba(74, 222, 128, 0.72),
+        0 0 calc(20 * var(--u)) rgba(167, 243, 208, 0.65),
+        inset 0 calc(1.5 * var(--u)) calc(3 * var(--u)) rgba(255, 255, 255, 0.9);
+      filter: brightness(1.05);
+    }
+    .btn-mint-pill:active {
+      transform: translateY(0) scale(0.99);
+    }
+
+    /* Dark Glass Pill Button */
+    .btn-glass-pill {
+      background: linear-gradient(180deg, rgba(22, 54, 41, 0.58) 0%, rgba(8, 25, 18, 0.76) 100%);
+      color: #f0fdf6;
+      white-space: nowrap;
+      border: calc(1.2 * var(--u)) solid rgba(134, 239, 172, 0.38);
+      box-shadow:
+        0 calc(5 * var(--u)) calc(18 * var(--u)) rgba(0, 0, 0, 0.48),
+        inset 0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.22s ease;
+      cursor: pointer;
+    }
+    .btn-glass-pill:hover {
+      border-color: rgba(134, 239, 172, 0.75);
+      background: linear-gradient(180deg, rgba(32, 78, 58, 0.7) 0%, rgba(12, 38, 28, 0.85) 100%);
+      box-shadow:
+        0 calc(5 * var(--u)) calc(24 * var(--u)) rgba(74, 222, 128, 0.28),
+        inset 0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.28);
+      transform: translateY(calc(-1.5 * var(--u)));
+    }
+
+    /* Interactive Glass Card Surface */
+    .glass-shell {
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mode-pure-css .glass-shell {
+      background: linear-gradient(145deg, rgba(24, 68, 50, 0.54) 0%, rgba(8, 26, 19, 0.78) 100%);
+      border: calc(1.4 * var(--u)) solid rgba(134, 239, 172, 0.36);
+      box-shadow:
+        0 calc(16 * var(--u)) calc(38 * var(--u)) rgba(0, 0, 0, 0.62),
+        0 0 calc(22 * var(--u)) rgba(52, 211, 153, 0.15),
+        inset 0 calc(1.5 * var(--u)) calc(2.5 * var(--u)) rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .mode-hybrid .glass-shell {
+      background: rgba(12, 38, 28, 0.08);
+      border: calc(1 * var(--u)) solid rgba(134, 239, 172, 0.12);
+    }
+    .glass-shell:hover {
+      border-color: rgba(134, 239, 172, 0.5);
+      box-shadow: 0 0 calc(26 * var(--u)) rgba(74, 222, 128, 0.24);
+    }
+
+    /* Interactive Slot Pill inside WhatsApp Cards */
+    .wa-slot-pill {
+      background: linear-gradient(90deg, rgba(32, 96, 66, 0.72) 0%, rgba(20, 68, 46, 0.72) 100%);
+      border: calc(1.1 * var(--u)) solid rgba(110, 231, 183, 0.38);
+      color: #e6f9ef;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .wa-slot-pill:hover {
+      background: linear-gradient(90deg, rgba(48, 138, 94, 0.85) 0%, rgba(30, 98, 66, 0.85) 100%);
+      border-color: rgba(134, 239, 172, 0.78);
+      transform: scale(1.02);
+    }
+    .wa-slot-pill.active {
+      background: linear-gradient(90deg, rgba(62, 168, 114, 0.9) 0%, rgba(38, 122, 82, 0.9) 100%);
+      border-color: #86efac;
+      color: #ffffff;
+      box-shadow: 0 0 calc(14 * var(--u)) rgba(74, 222, 128, 0.5);
+    }
+
+    /* Calendar Date Cell */
+    .cal-day {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      color: rgba(215, 240, 228, 0.85);
+    }
+    .cal-day:hover {
+      background: rgba(74, 222, 128, 0.28);
+      color: #ffffff;
+    }
+    .cal-day.active {
+      background: radial-gradient(circle at 35% 30%, #bbf7d0 0%, #4ade80 65%, #22c55e 100%);
+      color: #032214;
+      font-weight: 700;
+      box-shadow: 0 0 calc(14 * var(--u)) #4ade80, 0 0 calc(5 * var(--u)) #ffffff;
+      transform: scale(1.14);
+    }
+
+    /* Orbital Node Circle */
+    .orbital-node-btn {
+      background: radial-gradient(circle at 35% 25%, rgba(46, 122, 88, 0.68) 0%, rgba(10, 34, 24, 0.84) 100%);
+      border: calc(1.5 * var(--u)) solid rgba(110, 231, 183, 0.58);
+      box-shadow:
+        0 0 calc(20 * var(--u)) rgba(52, 211, 153, 0.35),
+        inset 0 calc(1.5 * var(--u)) calc(3.5 * var(--u)) rgba(255, 255, 255, 0.32);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+    .orbital-node-btn:hover,
+    .orbital-node-btn.active {
+      transform: scale(1.12);
+      border-color: #a7f3d0;
+      box-shadow:
+        0 0 calc(28 * var(--u)) rgba(74, 222, 128, 0.75),
+        inset 0 calc(2 * var(--u)) calc(4 * var(--u)) rgba(255, 255, 255, 0.55);
+    }
+
+    /* Tilted Challenge Card */
+    .challenge-card {
+      cursor: pointer;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .challenge-card:hover,
+    .challenge-card.active {
+      filter: brightness(1.22);
+      box-shadow: 0 0 calc(28 * var(--u)) rgba(110, 231, 183, 0.4);
+    }
+
+    /* Section 3 Workflow Tab Button */
+    .workflow-tab {
+      transition: all 0.22s ease;
+      cursor: pointer;
+      white-space: nowrap;
+      color: rgba(215, 238, 226, 0.84);
+      border: calc(1.2 * var(--u)) solid transparent;
+    }
+    .workflow-tab:hover {
+      color: #ffffff;
+      background: rgba(34, 88, 64, 0.38);
+    }
+    .workflow-tab.active {
+      background: linear-gradient(90deg, rgba(28, 86, 60, 0.88) 0%, rgba(16, 56, 39, 0.88) 100%);
+      border: calc(1.4 * var(--u)) solid rgba(110, 231, 183, 0.8);
+      color: #ffffff;
+      box-shadow:
+        0 0 calc(20 * var(--u)) rgba(52, 211, 153, 0.4),
+        inset 0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.25);
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.78; filter: drop-shadow(0 0 5px #4ade80); }
+      50% { opacity: 1; filter: drop-shadow(0 0 12px #86efac); }
+    }
+    .animate-pulse-glow {
+      animation: pulseGlow 3s infinite ease-in-out;
+    }
+
+    .pure-css-sanctuary {
+      display: none;
+    }
+    .mode-pure-css .pure-css-sanctuary {
+      display: block;
+    }
+    .mode-pure-css .studio-env-img {
+      opacity: 0 !important;
+      pointer-events: none;
+    }
+  
+    /* Extended 12-Scene Emerald Architectural Liquid-Glass System */
+    .emerald-sanctuary-ext {
+      position: relative;
+      background:
+        radial-gradient(ellipse 80% 35% at 50% 0%, rgba(16, 86, 58, 0.38) 0%, transparent 70%),
+        radial-gradient(ellipse 70% 30% at 85% 28%, rgba(20, 98, 66, 0.25) 0%, transparent 70%),
+        radial-gradient(ellipse 70% 30% at 15% 62%, rgba(16, 82, 55, 0.25) 0%, transparent 70%),
+        linear-gradient(180deg, #03100b 0%, #020b08 45%, #03120c 85%, #010705 100%);
+      border-top: 1px solid rgba(110, 231, 183, 0.22);
+    }
+
+    .spatial-glass-card {
+      background: linear-gradient(155deg, rgba(18, 54, 39, 0.56) 0%, rgba(6, 22, 16, 0.82) 100%);
+      border: 1px solid rgba(110, 231, 183, 0.26);
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.65),
+        0 0 28px rgba(52, 211, 153, 0.08),
+        inset 0 1px 1.5px rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .spatial-glass-card:hover {
+      border-color: rgba(134, 239, 172, 0.52);
+      box-shadow:
+        0 24px 58px rgba(0, 0, 0, 0.72),
+        0 0 34px rgba(74, 222, 128, 0.18),
+        inset 0 1px 2px rgba(255, 255, 255, 0.25);
+    }
+
+    .spatial-pedestal-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(110, 231, 183, 0.55) 50%, transparent 100%);
+      box-shadow: 0 0 16px rgba(74, 222, 128, 0.45);
+    }
+
+    .eyebrow-emerald {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #6ee7a8;
+    }
+
+  
+/* Scene reveal helpers */
+.starx-scene-reveal {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.starx-scene-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}

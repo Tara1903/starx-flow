@@ -13,7 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { ScrollReveal } from "./ui/ScrollReveal";
-import { GlassCard } from "./ui/GlassCard";
+import { SpatialGlassCard } from "./spatial/SpatialGlassCard";
 import { cn } from "../lib/utils";
 
 interface BenefitBentoItem {
@@ -73,7 +73,7 @@ export function Benefits() {
   return (
     <section
       id="metrics"
-      className="py-24 lg:py-32 px-6 relative z-10 bg-black/20 overflow-hidden"
+      className="py-24 lg:py-32 px-6 relative z-10 bg-transparent overflow-hidden"
     >
       <div
         aria-hidden="true"
@@ -96,8 +96,8 @@ export function Benefits() {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <ScrollReveal direction="up" className="max-w-3xl mb-14 lg:mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 text-xs font-bold tracking-widest text-emerald-300 uppercase mb-4">
+        <ScrollReveal direction="up" className="max-w-3xl mb-14 lg:mb-16 spatial-content-protected">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full spatial-glass-crystal text-xs font-bold tracking-widest text-emerald-300 uppercase mb-4 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
             <HeartHandshake size={12} className="text-emerald-400" />
             Core Capabilities
           </div>
@@ -112,19 +112,14 @@ export function Benefits() {
         </ScrollReveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-5 lg:gap-6">
-          {benefits.map((b, i) => (
-            <ScrollReveal
-              key={b.title}
-              direction="up"
-              delay={i * 0.05}
-              className={b.spanClass}
-            >
-              <GlassCard
-                variant={b.featured ? "focus" : "obsidian"}
-                hoverable
+          {benefits.map((b) => (
+            <div key={b.title} className={b.spanClass}>
+              <SpatialGlassCard
+                variant={b.featured ? "primary" : "secondary"}
+                hoverTilt={true}
                 glow={b.featured}
                 className={cn(
-                  "p-6 sm:p-8 h-full group flex flex-col justify-between",
+                  "p-6 sm:p-8 h-full group flex flex-col justify-between border-emerald-500/20 hover:border-emerald-400/40",
                   b.featured && "relative overflow-hidden"
                 )}
               >
@@ -134,7 +129,7 @@ export function Benefits() {
                       {b.icon}
                     </div>
                     {b.metricBadge && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/12 border border-emerald-500/25 text-[11px] font-semibold text-emerald-300 tabular-nums">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full spatial-glass-crystal text-[11px] font-semibold text-emerald-300 tabular-nums shadow-[0_0_12px_rgba(16,185,129,0.25)]">
                         {b.featured ? (
                           <Sparkles className="w-3 h-3 text-emerald-400" />
                         ) : (
@@ -151,8 +146,8 @@ export function Benefits() {
                     {b.desc}
                   </p>
                 </div>
-              </GlassCard>
-            </ScrollReveal>
+              </SpatialGlassCard>
+            </div>
           ))}
         </div>
       </div>

@@ -59,7 +59,7 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
     );
 
     const baseClasses =
-      "relative overflow-hidden inline-flex items-center justify-center font-semibold transition-[background-color,color,border-color,box-shadow,transform,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] rounded-full select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/75 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-50 cursor-pointer";
+      "relative overflow-hidden inline-flex items-center justify-center font-semibold whitespace-nowrap transition-[background-color,color,border-color,box-shadow,transform,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] rounded-full select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/75 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-50 cursor-pointer";
 
     const variants: Record<CursorButtonVariant, string> = {
       primary:
