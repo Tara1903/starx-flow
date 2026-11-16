@@ -1139,6 +1139,23 @@ input[type=range]::-moz-range-thumb {
   z-index: 10;
 }
 
+/* ==========================================================================
+   MOBILE BOTTOM NAVIGATION: STRICTLY HIDDEN ON PC / LAPTOP (>= 768px)
+   ========================================================================== */
+@media (min-width: 768px) {
+  nav[aria-label="Mobile quick navigation"],
+  .mobile-bottom-nav,
+  [data-mobile-nav="bottom"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
 /* Dashboard Floating Glass Sidebar Dock */
 .glass-dock {
   background: linear-gradient(

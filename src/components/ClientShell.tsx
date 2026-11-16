@@ -35,9 +35,14 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     pathname?.startsWith('/setup') ||
     pathname?.startsWith('/dashboard') ||
     (pathname?.startsWith('/admin') && pathname !== '/admin/login');
+  const isAuthRoute =
+    pathname === '/login' ||
+    pathname === '/signup' ||
+    pathname === '/admin/login';
   const isHomePage = pathname === '/';
   const showNavbar = !isAppRoute;
   const showGlobalChrome = !isAppRoute && !isHomePage;
+  const showMobileBottomNav = !isAppRoute && !isAuthRoute;
 
   const isSignupOpen = useUIStore((state) => state.isSignupOpen);
   const closeSignup = useUIStore((state) => state.closeSignup);
@@ -111,7 +116,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
             <Footer />
           </div>
         )}
-        {!isAppRoute && <MobileFloatingNavigation />}
+        {showMobileBottomNav && <MobileFloatingNavigation />}
 
         {mounted && (
           <>

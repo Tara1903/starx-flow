@@ -7,6 +7,7 @@ import { useUIStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
 import { StarXCoreCanvas } from "./spatial/StarXCoreCanvas";
 import { useMagneticButton } from "@/lib/motion/MagneticController";
+import { StarXFlowMobileStage } from "./StarXFlowMobileStage";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    STATIC DATA DEFINITIONS FROM STARX FLOW RUNTIME
@@ -94,6 +95,11 @@ export function StarXFlowLanding() {
   const { openLogin, openSignup } = useUIStore();
   const { isLoggedIn } = useAuthStore();
   const heroGetStartedRef = useMagneticButton<HTMLButtonElement>({ strength: 0.8 });
+
+  const [selectedSlot, setSelectedSlot] = useState('Tue, 10:00 AM');
+  const [activeWorkflowTab, setActiveWorkflowTab] = useState('whatsapp');
+  const [activeChallengeIdx, setActiveChallengeIdx] = useState(0);
+  const [activeOrbitalIdx, setActiveOrbitalIdx] = useState(0);
 
   const appStateRef = useRef({
     selectedDate: 11,
@@ -189,6 +195,7 @@ export function StarXFlowLanding() {
   }, []);
 
   const selectTimeSlot = useCallback((slotName: string) => {
+    setSelectedSlot(slotName);
     appStateRef.current.selectedSlot = slotName;
     updateSlotLabels();
 
@@ -203,6 +210,7 @@ export function StarXFlowLanding() {
   }, [updateSlotLabels, showToast]);
 
   const selectWorkflowTab = useCallback((tabKey: string) => {
+    setActiveWorkflowTab(tabKey);
     if (!workflowTabsData[tabKey] || typeof document === 'undefined') return;
     appStateRef.current.activeWorkflowTab = tabKey;
     const data = workflowTabsData[tabKey];
@@ -254,6 +262,7 @@ export function StarXFlowLanding() {
   }, [showToast]);
 
   const selectOrbitalNode = useCallback((idx: number, name?: string) => {
+    setActiveOrbitalIdx(idx);
     if (typeof document === 'undefined') return;
     appStateRef.current.activeOrbitalNode = idx;
     for (let i = 0; i < 6; i++) {
@@ -279,6 +288,7 @@ export function StarXFlowLanding() {
   }, [showToast]);
 
   const highlightChallenge = useCallback((idx: number) => {
+    setActiveChallengeIdx(idx);
     if (typeof document === 'undefined') return;
     for (let i = 0; i < 4; i++) {
       const card = document.getElementById('challenge-card-' + i);
@@ -765,8 +775,8 @@ export function StarXFlowLanding() {
     <>
 
 
-  {/* MAIN PROPORTIONAL 1440x2362 FULL-SCALE WEBSITE CANVAS */}
-  <div className="starx-viewport-wrapper">
+  {/* MAIN PROPORTIONAL 1440x2362 FULL-SCALE WEBSITE CANVAS (DESKTOP/TABLET >= 768px) */}
+  <div className="starx-viewport-wrapper hidden md:block">
     <main id="starx-stage" className="starx-stage mode-hybrid">
       <div className="starx-stage-inner">
 
@@ -1852,6 +1862,27 @@ export function StarXFlowLanding() {
     </main>
   </div>
 
+  {/* ========================================================================= */}
+  {/* MOBILE RECONSTRUCTED & ART-DIRECTED SPATIAL EXPERIENCE (< 768px)          */}
+  {/* ========================================================================= */}
+  <div className="block md:hidden">
+    <StarXFlowMobileStage
+      selectedSlot={selectedSlot}
+      onSelectSlot={selectTimeSlot}
+      activeWorkflowTab={activeWorkflowTab}
+      onSelectWorkflowTab={selectWorkflowTab}
+      onCycleWorkflowTab={cycleWorkflowTab}
+      activeChallengeIdx={activeChallengeIdx}
+      onSelectChallenge={highlightChallenge}
+      activeOrbitalIdx={activeOrbitalIdx}
+      onSelectOrbitalNode={selectOrbitalNode}
+      onPulseAllNodes={pulseAllNodes}
+      onOpenModal={openModal}
+      onOpenCapability={openCapabilityDetail}
+      onScrollToSection={scrollToSection}
+    />
+  </div>
+
   {/* =========================================================================== */}
   {/* EXPANDED 12-SCENE LEGACY CONTENT RESTORATION IN EMERALD LIQUID GLASS        */}
   {/* Preserves 100% of verified copy from https://starx-flow.runs-on.dev         */}
@@ -1859,13 +1890,13 @@ export function StarXFlowLanding() {
   <div id="starx-extended-scenes" className="emerald-sanctuary-ext text-emerald-50">
 
     {/* Sticky Scene Jump Bar for Rapid Inspection of All 12 Restored Scenes */}
-    <div id="starx-scene-jump-bar" className="sticky top-0 z-40 border-b border-emerald-500/20 bg-[#020c08]/85 backdrop-blur-md" style={{ flexWrap: 'wrap' } as React.CSSProperties}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+    <div id="starx-scene-jump-bar" className="sticky top-0 z-40 border-b border-emerald-500/20 bg-[#020c08]/85 backdrop-blur-md overflow-x-auto no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-2 text-xs flex-nowrap min-w-max md:min-w-0 md:flex-wrap">
         <div className="flex items-center gap-2 shrink-0">
           <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-          <span className="font-semibold text-emerald-300 uppercase tracking-wider">12-Scene Complete Product Story:</span>
+          <span className="font-semibold text-emerald-300 uppercase tracking-wider">12-Scene Story:</span>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-nowrap md:flex-wrap shrink-0">
           <a href="#hero-section" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">01 Hero</a>
           <a href="#scene-legacy-hero-bridge" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">01B Autopilot &amp; Integrations</a>
           <a href="#scene-revenue-leakage" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">02 $48,590 Leakage &amp; ROI</a>
@@ -2655,7 +2686,7 @@ export function StarXFlowLanding() {
     {/* ========================================================================= */}
     {/* SCENE 12: FINAL CONVERSION CALL & COMPLETE MULTI-COLUMN FOOTER            */}
     {/* ========================================================================= */}
-    <section id="scene-final-cta-footer"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
+    <section id="scene-final-cta-footer"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32 md:pb-20">
       {/* Final Conversion Banner */}
       <div className="spatial-glass-card rounded-3xl p-8 sm:p-12 text-center max-w-4xl mx-auto border-emerald-400/45">
         <div className="eyebrow-emerald">Final Call</div>
