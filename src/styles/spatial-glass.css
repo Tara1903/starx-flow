@@ -23,6 +23,39 @@
   --spatial-emerald-specular: rgba(143, 255, 208, 0.65);
   --spatial-emerald-beam: rgba(40, 223, 160, 0.32);
 
+  /* Optical Vibrancy & Chromatic Specular Bevels (Glassy UI Integration) */
+  --glass-vibrancy-frost: blur(16px) brightness(1.04) contrast(1.02) saturate(175%);
+  --glass-vibrancy-crystal: blur(20px) brightness(1.06) contrast(1.03) saturate(185%);
+  --glass-vibrancy-subtle: blur(12px) brightness(1.03) contrast(1.01) saturate(160%);
+
+  --glass-optical-bevel:
+    inset 0 0 12px -3px rgba(143, 255, 208, 0.12),
+    inset 1.5px 2px 1px -1px rgba(255, 255, 255, 0.65),
+    inset -1.5px -2px 1px -1px rgba(143, 255, 208, 0.35),
+    inset 0 2px 4px -1px rgba(0, 0, 0, 0.35),
+    inset 2px 1px 4px -1px rgba(110, 231, 183, 0.18),
+    inset -2px -1px 4px -1px rgba(16, 185, 129, 0.14),
+    inset 0 0.5px 2px 0 rgba(255, 255, 255, 0.25);
+
+  --glass-optical-bevel-intense:
+    inset 0 0 16px -2px rgba(143, 255, 208, 0.22),
+    inset 2px 2.5px 1.5px -1px rgba(255, 255, 255, 0.80),
+    inset -2px -2.5px 1.5px -1px rgba(143, 255, 208, 0.45),
+    inset 0 2.5px 5px -1px rgba(0, 0, 0, 0.40),
+    inset 2.5px 1.5px 5px -1px rgba(110, 231, 183, 0.25),
+    inset -2.5px -1.5px 5px -1px rgba(16, 185, 129, 0.20),
+    inset 0 0.5px 2px 0 rgba(255, 255, 255, 0.35);
+
+  --glass-optical-bevel-input:
+    inset 0 0 8px -2px rgba(143, 255, 208, 0.08),
+    inset 1px 1.5px 1px -1px rgba(255, 255, 255, 0.45),
+    inset -1px -1.5px 1px -1px rgba(143, 255, 208, 0.25),
+    inset 0 1.5px 3px -1px rgba(0, 0, 0, 0.35);
+
+  --glass-surface-gloss:
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.06), transparent 55%),
+    linear-gradient(rgba(255, 255, 255, 0.04), transparent 40%);
+
   /* Glass Tier 1: Architectural Glass (Backdrop / Arch / Podiums) */
   --glass-arch-bg: linear-gradient(135deg, rgba(8, 32, 20, 0.45) 0%, rgba(2, 12, 8, 0.75) 100%);
   --glass-arch-border: 1px solid rgba(40, 223, 160, 0.15);
@@ -32,19 +65,19 @@
   --glass-primary-bg: linear-gradient(145deg, rgba(12, 40, 25, 0.65) 0%, rgba(4, 16, 10, 0.82) 100%);
   --glass-primary-border: 1px solid rgba(40, 223, 160, 0.22);
   --glass-primary-blur: 16px;
-  --glass-primary-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(143, 255, 208, 0.25);
+  --glass-primary-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.8), var(--glass-optical-bevel);
 
   /* Glass Tier 3: Secondary Contextual Glass (Capability Cards, Problem Shards) */
   --glass-secondary-bg: linear-gradient(160deg, rgba(10, 28, 18, 0.50) 0%, rgba(4, 14, 9, 0.75) 100%);
   --glass-secondary-border: 1px solid rgba(40, 223, 160, 0.14);
   --glass-secondary-blur: 12px;
-  --glass-secondary-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(143, 255, 208, 0.15);
+  --glass-secondary-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), var(--glass-optical-bevel-input);
 
   /* Glass Tier 4: Crystal Glass (Badges, WhatsApp Card, Floating Capsules) */
   --glass-crystal-bg: linear-gradient(135deg, rgba(16, 50, 32, 0.60) 0%, rgba(8, 26, 16, 0.75) 100%);
   --glass-crystal-border: 1px solid rgba(143, 255, 208, 0.32);
   --glass-crystal-blur: 20px;
-  --glass-crystal-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 16px rgba(40, 223, 160, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  --glass-crystal-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 16px rgba(40, 223, 160, 0.18), var(--glass-optical-bevel-intense);
 
   /* Tier 5: Reflective Platform Sheen */
   --glass-platform-bg: linear-gradient(180deg, rgba(40, 223, 160, 0.15) 0%, rgba(8, 122, 81, 0.05) 60%, transparent 100%);
@@ -54,31 +87,31 @@
 .mat-arch-glass {
   background: var(--glass-arch-bg);
   border: var(--glass-arch-border);
-  backdrop-filter: blur(var(--glass-arch-blur));
-  -webkit-backdrop-filter: blur(var(--glass-arch-blur));
+  backdrop-filter: var(--glass-vibrancy-crystal);
+  -webkit-backdrop-filter: var(--glass-vibrancy-crystal);
 }
 
 .mat-primary-glass {
   background: var(--glass-primary-bg);
   border: var(--glass-primary-border);
-  backdrop-filter: blur(var(--glass-primary-blur));
-  -webkit-backdrop-filter: blur(var(--glass-primary-blur));
+  backdrop-filter: var(--glass-vibrancy-frost);
+  -webkit-backdrop-filter: var(--glass-vibrancy-frost);
   box-shadow: var(--glass-primary-shadow);
 }
 
 .mat-secondary-glass {
   background: var(--glass-secondary-bg);
   border: var(--glass-secondary-border);
-  backdrop-filter: blur(var(--glass-secondary-blur));
-  -webkit-backdrop-filter: blur(var(--glass-secondary-blur));
+  backdrop-filter: var(--glass-vibrancy-subtle);
+  -webkit-backdrop-filter: var(--glass-vibrancy-subtle);
   box-shadow: var(--glass-secondary-shadow);
 }
 
 .mat-crystal-glass {
   background: var(--glass-crystal-bg);
   border: var(--glass-crystal-border);
-  backdrop-filter: blur(var(--glass-crystal-blur));
-  -webkit-backdrop-filter: blur(var(--glass-crystal-blur));
+  backdrop-filter: var(--glass-vibrancy-crystal);
+  -webkit-backdrop-filter: var(--glass-vibrancy-crystal);
   box-shadow: var(--glass-crystal-shadow);
 }
 
@@ -130,9 +163,9 @@
 .glass-panel {
   background: linear-gradient(145deg, rgba(12, 40, 25, 0.65) 0%, rgba(4, 16, 10, 0.82) 100%);
   border: 1px solid rgba(110, 231, 183, 0.2);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(143, 255, 208, 0.18);
+  backdrop-filter: var(--glass-vibrancy-frost);
+  -webkit-backdrop-filter: var(--glass-vibrancy-frost);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.8), var(--glass-optical-bevel);
   border-radius: 1.25rem;
 }
 
@@ -141,7 +174,7 @@
 }
 .glass-panel-hover:hover {
   border-color: rgba(143, 255, 208, 0.42);
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(40, 223, 160, 0.16), inset 0 1px 2px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(40, 223, 160, 0.16), var(--glass-optical-bevel-intense);
   transform: translateY(-2px);
 }
 
@@ -158,7 +191,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #a7f3d0;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.12);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.12), var(--glass-optical-bevel-input);
 }
 
 .spatial-btn-primary {
@@ -196,9 +229,9 @@
   font-weight: 500;
   font-size: 0.9375rem;
   border: 1px solid rgba(110, 231, 183, 0.28);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  backdrop-filter: var(--glass-vibrancy-subtle);
+  -webkit-backdrop-filter: var(--glass-vibrancy-subtle);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), var(--glass-optical-bevel-input);
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   text-decoration: none;
@@ -208,4 +241,22 @@
   border-color: rgba(110, 231, 183, 0.5);
   color: #ffffff;
   transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   ACCESSIBILITY: WCAG REDUCED TRANSPARENCY FALLBACKS
+   ========================================================================== */
+@media (prefers-reduced-transparency: reduce) {
+  .mat-arch-glass,
+  .mat-primary-glass,
+  .mat-secondary-glass,
+  .mat-crystal-glass,
+  .glass-panel,
+  .spatial-btn-secondary {
+    background-color: #07130d !important;
+    background-image: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: rgba(110, 231, 183, 0.35) !important;
+  }
 }

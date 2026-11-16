@@ -30,7 +30,7 @@ export default function AdminLogin() {
   // If already logged in as admin or super admin, show a state to proceed to dashboard
   if (isLoggedIn && (user?.email === 'admin@starxflow.com' || user?.role === 'admin' || user?.role === 'super_admin')) {
     return (
-      <section className="min-h-screen flex items-center justify-center bg-[#020a07] text-[#f0f5ef] p-4 relative overflow-hidden font-sans">
+      <section className="min-h-screen flex items-center justify-center pt-24 sm:pt-28 pb-12 bg-[#020a07] text-[#f0f5ef] p-4 relative overflow-hidden font-sans">
         <div
           aria-hidden="true"
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none"
@@ -115,7 +115,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-[#020a07] text-[#f0f5ef] p-4 relative overflow-hidden font-sans">
+    <section className="min-h-screen flex items-center justify-center pt-24 sm:pt-28 pb-12 bg-[#020a07] text-[#f0f5ef] p-4 relative overflow-hidden font-sans">
       {/* Background Glow */}
       <div
         aria-hidden="true"

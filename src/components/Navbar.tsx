@@ -387,9 +387,17 @@ export function Navbar() {
                 </Link>
                 <button
                   type="button"
-                  onClick={openLogin}
+                  onClick={() => {
+                    if (pathname === "/login") return;
+                    openLogin();
+                  }}
                   data-cursor-invert="secondary"
-                  className="px-4 py-2 rounded-full text-sm font-medium text-zinc-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-emerald-400/40 hover:text-white transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
+                  className={cn(
+                    "px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer whitespace-nowrap flex-shrink-0",
+                    pathname === "/login"
+                      ? "text-emerald-300 bg-white/[0.08] border border-emerald-400/40"
+                      : "text-zinc-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-emerald-400/40 hover:text-white"
+                  )}
                 >
                   Log in
                 </button>
@@ -397,7 +405,10 @@ export function Navbar() {
                   size="sm"
                   variant="primary"
                   magneticStrength="low"
-                  onClick={openSignup}
+                  onClick={() => {
+                    if (pathname === "/signup") return;
+                    openSignup();
+                  }}
                   className="px-5 py-2 text-sm font-bold whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(40,223,160,0.35)]"
                 >
                   Get Started

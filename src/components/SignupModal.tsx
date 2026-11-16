@@ -374,7 +374,7 @@ export function SignupModal({
       }}
       className={
         isStandalone
-          ? "min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#020a07] text-[#f0f5ef] relative z-10 selection:bg-emerald-500/30 selection:text-emerald-200"
+          ? "min-h-screen flex items-center justify-center pt-24 sm:pt-28 pb-12 p-4 sm:p-6 bg-[#020a07] text-[#f0f5ef] relative z-10 selection:bg-emerald-500/30 selection:text-emerald-200"
           : "fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl overflow-y-auto"
       }
     >
@@ -394,28 +394,28 @@ export function SignupModal({
         <div className="absolute -bottom-32 -right-32 w-72 h-72 rounded-full bg-emerald-500/10 blur-[90px] pointer-events-none" />
 
         {/* Top Header Controls: Brand, Continue as Guest & Close Button */}
-        <div className="relative z-30 flex items-center justify-between px-6 sm:px-8 pt-5 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-              <Sparkles size={14} />
+        {!isStandalone ? (
+          <div className="relative z-30 flex items-center justify-between px-6 sm:px-8 pt-5 pb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                <Sparkles size={14} />
+              </div>
+              <span className="text-sm font-extrabold tracking-tight text-white">
+                StarX <span className="text-emerald-400">Flow</span>
+              </span>
+              <span className="sr-only">Welcome to StarX Flow!</span>
             </div>
-            <span className="text-sm font-extrabold tracking-tight text-white">
-              StarX <span className="text-emerald-400">Flow</span>
-            </span>
-            <span className="sr-only">Welcome to StarX Flow!</span>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={enterGuestDashboard}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 transition-all cursor-pointer shadow-[0_0_12px_rgba(40,223,160,0.15)]"
-            >
-              <Compass size={12} />
-              <span>Explore Live Dashboard</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={enterGuestDashboard}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 transition-all cursor-pointer shadow-[0_0_12px_rgba(40,223,160,0.15)]"
+              >
+                <Compass size={12} />
+                <span>Explore Live Dashboard</span>
+              </button>
 
-            {!isStandalone && (
               <button
                 type="button"
                 onClick={dismissGuest}
@@ -425,9 +425,21 @@ export function SignupModal({
               >
                 <X size={16} />
               </button>
-            )}
+            </div>
           </div>
-        </div>
+        ) : (
+          /* On standalone page with top navbar: Clean streamlined header bar avoiding logo collision */
+          <div className="relative z-30 flex items-center justify-end px-6 sm:px-8 pt-5 pb-2">
+            <button
+              type="button"
+              onClick={enterGuestDashboard}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 transition-all cursor-pointer shadow-[0_0_12px_rgba(40,223,160,0.15)]"
+            >
+              <Compass size={13} />
+              <span>Explore Live Dashboard</span>
+            </button>
+          </div>
+        )}
 
         {/* Mobile Segmented Capsule Switcher (< 768px) */}
         <div className="flex md:hidden px-6 pt-2 pb-1">
