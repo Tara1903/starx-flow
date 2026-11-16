@@ -1,4 +1,5 @@
 :root {
+      --u: 1px;
       --emerald-glow: #5eead4;
       --mint-bright: #86efac;
       --mint-core: #4ade80;
@@ -596,6 +597,24 @@
       backdrop-filter: blur(16px) brightness(1.04) contrast(1.02) saturate(175%);
       -webkit-backdrop-filter: blur(16px) brightness(1.04) contrast(1.02) saturate(175%);
       transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .spatial-glass-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(
+        480px circle at var(--glass-light-x, 50%) var(--glass-light-y, 20%),
+        rgba(255, 255, 255, 0.14) 0%,
+        rgba(143, 255, 208, 0.06) 35%,
+        transparent 70%
+      );
+      pointer-events: none;
+      opacity: 0.85;
+      mix-blend-mode: overlay;
+      transition: opacity 0.3s ease;
+      z-index: 1;
     }
     .spatial-glass-card:hover {
       border-color: rgba(134, 239, 172, 0.52);

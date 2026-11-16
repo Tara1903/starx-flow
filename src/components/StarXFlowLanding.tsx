@@ -306,7 +306,14 @@ export function StarXFlowLanding() {
 
   const scrollToSection = useCallback((id: string) => {
     if (typeof document === 'undefined') return;
-    const el = document.getElementById(id);
+    const isMobile = window.innerWidth < 768;
+    const mobileMappedId = id === 'hero-section' ? 'hero-mobile-section' :
+      id === 'challenge-section' ? 'challenge-mobile-section' :
+      id === 'action-section' ? 'action-mobile-section' :
+      id === 'capabilities-section' ? 'capabilities-mobile-section' :
+      id === 'pricing-section' ? 'pricing-mobile-section' : id;
+    const targetId = isMobile ? mobileMappedId : id;
+    const el = document.getElementById(targetId) || document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
@@ -2797,7 +2804,7 @@ export function StarXFlowLanding() {
 
   <div
     id="studio-inspector-bar"
-    className="fixed bottom-3 right-3 z-50 flex flex-wrap items-center gap-2 rounded-full px-3.5 py-2 text-xs shadow-2xl"
+    className="hidden md:flex fixed bottom-3 right-3 z-50 flex-wrap items-center gap-2 rounded-full px-3.5 py-2 text-xs shadow-2xl"
     style={{ background: 'rgba(4, 20, 14, 0.9)', border: '1px solid rgba(110, 231, 183, 0.4)', backdropFilter: 'blur(12px)' } as React.CSSProperties}
   >
     <span className="font-semibold text-emerald-300 flex items-center gap-1.5">

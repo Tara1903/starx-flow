@@ -48,3 +48,8 @@ tests/live-e2e/reports/screenshots/
 tests/__screenshots__/
 test-results/
 .live/
+
+screenshots/
+.agent/
+STARX_OLD_HOMEPAGE_FULL_2X.png
+starx_flow.html

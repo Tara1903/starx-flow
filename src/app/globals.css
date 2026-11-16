@@ -1075,6 +1075,26 @@ input[type=range]::-moz-range-thumb {
   z-index: 10;
 }
 
+/* Agentic Glass: Dynamic cursor-coupled specular caustics */
+.glass-navbar-floating::after,
+.glass-navbar-scrolled::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    460px circle at var(--glass-light-x, 50%) var(--glass-light-y, 20%),
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(143, 255, 208, 0.06) 35%,
+    transparent 70%
+  );
+  pointer-events: none;
+  opacity: 0.9;
+  mix-blend-mode: overlay;
+  transition: opacity 0.3s ease;
+  z-index: 5;
+}
+
 .glass-navbar-scrolled {
   background: linear-gradient(
     145deg,
@@ -1259,6 +1279,24 @@ input[type=range]::-moz-range-thumb {
   );
   pointer-events: none;
   z-index: 2;
+}
+
+.glass-card-obsidian::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    520px circle at var(--glass-light-x, 50%) var(--glass-light-y, 20%),
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(143, 255, 208, 0.05) 38%,
+    transparent 70%
+  );
+  pointer-events: none;
+  opacity: 0.85;
+  mix-blend-mode: overlay;
+  transition: opacity 0.3s ease;
+  z-index: 1;
 }
 
 /* Reusable Liquid Glass Panel with cursor specular tracking */

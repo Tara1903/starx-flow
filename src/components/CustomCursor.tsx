@@ -53,6 +53,22 @@ export function CustomCursor() {
       document.documentElement.classList.remove('starx-cursor-native');
     }
 
+    // Agentic Glass: Broadcast interactive specular caustics coordinates to hovered glass surface
+    if (target?.closest) {
+      const glassEl = target.closest<HTMLElement>(
+        '.spatial-glass-card, .glass-navbar-floating, .glass-navbar-scrolled, .glass-card-obsidian, .glass-panel, .glass-dock, .glass-capsule-nav, .mat-primary-glass, .mat-crystal-glass'
+      );
+      if (glassEl) {
+        const rect = glassEl.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          const relX = ((e.clientX - rect.left) / rect.width) * 100;
+          const relY = ((e.clientY - rect.top) / rect.height) * 100;
+          glassEl.style.setProperty('--glass-light-x', `${relX.toFixed(1)}%`);
+          glassEl.style.setProperty('--glass-light-y', `${relY.toFixed(1)}%`);
+        }
+      }
+    }
+
     // Magnetic CTA attraction
     if (!inDisabledZone && target?.closest) {
       const magneticEl = target.closest<HTMLElement>("[data-magnetic]");

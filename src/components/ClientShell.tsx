@@ -15,6 +15,7 @@ import { AmbientEnvironment } from './AmbientEnvironment';
 import { PageTransition } from './ui/PageTransition';
 import { ToastViewport } from './ui/ToastViewport';
 import { CustomCursor } from './CustomCursor';
+import { OpticalGlassFilter } from './spatial/OpticalGlassFilter';
 
 const CommandCenter = dynamic(
   () => import('./CommandCenter').then((m) => m.CommandCenter),
@@ -62,9 +63,9 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     return cleanup;
   }, [initSession]);
 
-  // First-visit optional authentication invitation (disabled on homepage to preserve spatial composition)
+  // First-visit optional authentication invitation (disabled on homepage and auth pages to preserve spatial composition)
   useEffect(() => {
-    if (!mounted || isAppRoute || isHomePage || isLoggedIn) return;
+    if (!mounted || isAppRoute || isHomePage || isAuthRoute || isLoggedIn) return;
     try {
       const dismissed = localStorage.getItem('starx_auth_prompt_dismissed_v1');
       if (!dismissed) {
@@ -79,7 +80,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     } catch {
       // LocalStorage unavailable
     }
-  }, [mounted, isAppRoute, isLoggedIn, openFirstVisitPrompt]);
+  }, [mounted, isAppRoute, isHomePage, isAuthRoute, isLoggedIn, openFirstVisitPrompt]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -93,6 +94,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     <MotionConfig reducedMotion="user">
       <MotionProvider>
         <CustomCursor />
+        <OpticalGlassFilter />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-emerald-500 focus:text-black focus:px-4 focus:py-2 focus:rounded-lg focus:font-bold"

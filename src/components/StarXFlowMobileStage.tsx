@@ -168,7 +168,7 @@ export function StarXFlowMobileStage({
       {/* ========================================================================= */}
       <section 
         id="hero-mobile-section" 
-        className="relative pt-24 pb-12 px-4 sm:px-6 flex flex-col items-center text-center"
+        className="relative scroll-mt-24 pt-24 pb-12 px-4 sm:px-6 flex flex-col items-center text-center"
       >
         {/* Brand/Product Eyebrow */}
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/30 mb-4 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
@@ -404,7 +404,7 @@ export function StarXFlowMobileStage({
       {/* ========================================================================= */}
       <section 
         id="challenge-mobile-section" 
-        className="relative py-14 px-4 sm:px-6 border-t border-emerald-500/15"
+        className="relative scroll-mt-24 py-14 px-4 sm:px-6 border-t border-emerald-500/15"
       >
         {/* Top Eyebrow & Headline: The Challenge */}
         <div className="text-left mb-6">
@@ -567,7 +567,7 @@ export function StarXFlowMobileStage({
       {/* ========================================================================= */}
       <section 
         id="action-mobile-section" 
-        className="relative py-14 px-4 sm:px-6 border-t border-emerald-500/15"
+        className="relative scroll-mt-24 py-14 px-4 sm:px-6 border-t border-emerald-500/15"
       >
         <div className="text-left mb-6">
           <div className="text-xs font-semibold tracking-[0.2em] text-[#6ee7a8] uppercase mb-1.5">
@@ -696,7 +696,7 @@ export function StarXFlowMobileStage({
       {/* ========================================================================= */}
       <section 
         id="capabilities-mobile-section" 
-        className="relative py-14 px-4 sm:px-6 border-t border-emerald-500/15"
+        className="relative scroll-mt-24 py-14 px-4 sm:px-6 border-t border-emerald-500/15"
       >
         <div className="text-left mb-6">
           <div className="text-xs font-semibold tracking-[0.2em] text-[#6ee7a8] uppercase mb-1.5">
@@ -761,7 +761,7 @@ export function StarXFlowMobileStage({
       {/* ========================================================================= */}
       <section 
         id="pricing-mobile-section" 
-        className="relative py-14 px-4 sm:px-6 border-t border-emerald-500/15"
+        className="relative scroll-mt-24 py-14 px-4 sm:px-6 border-t border-emerald-500/15"
       >
         <div className="text-left mb-6">
           <div className="text-xs font-semibold tracking-[0.2em] text-[#6ee7a8] uppercase mb-1.5">

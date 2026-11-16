@@ -58,19 +58,21 @@ export function StarXCoreCanvas() {
     masterGroup.position.set(0, 0.2, -8);
     scene.add(masterGroup);
 
-    // 1. Refined Ambient Crystalline Gem (Soft ambient background core)
+    // 1. Refined Ambient Crystalline Gem (Physical Optical Glass with IOR 1.52 & Chromatic Dispersion)
     const coreGeometry = new THREE.IcosahedronGeometry(1.6, 0);
     const coreMaterial = new THREE.MeshPhysicalMaterial({
       color: 0x10b981,
       emissive: 0x064e3b,
       emissiveIntensity: 0.18,
-      roughness: 0.2,
-      metalness: 0.3,
-      transmission: 0.92,
-      ior: 1.5,
-      reflectivity: 0.5,
+      roughness: 0.08,
+      metalness: 0.1,
+      transmission: 0.95,
+      thickness: 1.5,
+      ior: 1.52,
+      dispersion: 0.045,
+      reflectivity: 0.55,
       transparent: true,
-      opacity: 0.22,
+      opacity: 0.28,
     });
     const coreMesh = new THREE.Mesh(coreGeometry, coreMaterial);
     masterGroup.add(coreMesh);

@@ -307,7 +307,7 @@ export function SignupModal({
         }}
         className={
           isStandalone
-            ? "min-h-screen flex items-center justify-center p-3 sm:p-6 bg-[#020a07] text-[#f0f5ef] relative z-10"
+            ? "min-h-screen flex flex-col items-center justify-start pt-28 sm:pt-36 pb-16 px-4 sm:px-6 bg-[#020a07] text-[#f0f5ef] relative z-10 overflow-y-auto"
             : "fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl"
         }
       >
@@ -318,7 +318,10 @@ export function SignupModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby="otp-modal-title"
-          className="relative w-full max-w-lg glass-card-obsidian rounded-3xl overflow-hidden border border-emerald-500/25 shadow-[0_30px_90px_rgba(0,0,0,0.92),0_0_55px_rgba(16,185,129,0.18)]"
+          className={cn(
+            "relative w-full max-w-lg glass-card-obsidian rounded-3xl overflow-hidden border border-emerald-500/25 shadow-[0_30px_90px_rgba(0,0,0,0.92),0_0_55px_rgba(16,185,129,0.18)]",
+            isStandalone ? "mt-4" : ""
+          )}
         >
           <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
 
@@ -374,7 +377,7 @@ export function SignupModal({
       }}
       className={
         isStandalone
-          ? "min-h-screen flex items-center justify-center pt-24 sm:pt-28 pb-12 p-4 sm:p-6 bg-[#020a07] text-[#f0f5ef] relative z-10 selection:bg-emerald-500/30 selection:text-emerald-200"
+          ? "min-h-screen flex flex-col items-center justify-start pt-28 sm:pt-36 pb-16 px-4 sm:px-6 bg-[#020a07] text-[#f0f5ef] relative z-10 selection:bg-emerald-500/30 selection:text-emerald-200 overflow-y-auto"
           : "fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl overflow-y-auto"
       }
     >
@@ -386,15 +389,18 @@ export function SignupModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-modal-title"
-        className="relative w-full max-w-[840px] my-auto bg-[#07130d]/92 backdrop-blur-3xl rounded-[32px] overflow-hidden border border-white/[0.14] shadow-[0_32px_100px_rgba(0,0,0,0.92),0_0_60px_rgba(16,185,129,0.12)] flex flex-col"
+        className={cn(
+          "relative w-full max-w-[840px] bg-[#07130d]/92 backdrop-blur-3xl rounded-[32px] overflow-hidden border border-white/[0.14] shadow-[0_32px_100px_rgba(0,0,0,0.92),0_0_60px_rgba(16,185,129,0.12)] flex flex-col",
+          isStandalone ? "mt-4 mb-12" : "my-auto"
+        )}
       >
         {/* Subtle Ambient Emerald Accent Spotlights */}
         <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/80 to-transparent z-30" />
         <div className="absolute -top-32 -left-32 w-72 h-72 rounded-full bg-emerald-500/15 blur-[90px] pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-72 h-72 rounded-full bg-emerald-500/10 blur-[90px] pointer-events-none" />
 
-        {/* Top Header Controls: Brand, Continue as Guest & Close Button */}
-        {!isStandalone ? (
+        {/* Top Header Controls: ONLY on overlay modal (!isStandalone). On standalone /login and /signup, the floating top navbar already displays the brand logo and dashboard links */}
+        {!isStandalone && (
           <div className="relative z-30 flex items-center justify-between px-6 sm:px-8 pt-5 pb-2">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
@@ -427,19 +433,9 @@ export function SignupModal({
               </button>
             </div>
           </div>
-        ) : (
-          /* On standalone page with top navbar: Clean streamlined header bar avoiding logo collision */
-          <div className="relative z-30 flex items-center justify-end px-6 sm:px-8 pt-5 pb-2">
-            <button
-              type="button"
-              onClick={enterGuestDashboard}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 transition-all cursor-pointer shadow-[0_0_12px_rgba(40,223,160,0.15)]"
-            >
-              <Compass size={13} />
-              <span>Explore Live Dashboard</span>
-            </button>
-          </div>
         )}
+
+        {isStandalone && <div className="h-6 sm:h-8" />}
 
         {/* Mobile Segmented Capsule Switcher (< 768px) */}
         <div className="flex md:hidden px-6 pt-2 pb-1">
