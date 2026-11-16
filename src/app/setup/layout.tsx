@@ -19,11 +19,15 @@ export default function SetupLayout({ children }: { children: React.ReactNode })
     // 1. If auth is loading, wait
     if (authLoading) return;
 
-    // 2. Sync onboarding progress from DB if logged in
-    if (isLoggedIn) {
-      fetchOnboarding();
+    // 2. Enforce authentication guard
+    if (!isLoggedIn) {
+      router.push(`/signup?returnUrl=${encodeURIComponent(location || '/setup/welcome')}`);
+      return;
     }
-  }, [isLoggedIn, authLoading, router]);
+
+    // 3. Sync onboarding progress from DB if logged in
+    fetchOnboarding();
+  }, [isLoggedIn, authLoading, location, router, fetchOnboarding]);
 
   useEffect(() => {
     // 4. Once onboarding data is loaded
@@ -49,25 +53,25 @@ export default function SetupLayout({ children }: { children: React.ReactNode })
   // Loading state
   if (authLoading || isFetching) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#050505] text-white">
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#020a07] text-[#f0f5ef]">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
-        <p className="mt-4 text-xs font-semibold text-zinc-500 tracking-wider uppercase">Loading Onboarding...</p>
+        <p className="mt-4 text-xs font-semibold font-mono text-[#b8c9bd]/70 tracking-wider uppercase">Loading Onboarding...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-300 flex flex-col font-sans selection:bg-emerald-500/20 selection:text-emerald-400">
+    <div className="min-h-screen bg-[#020a07] text-[#f0f5ef] flex flex-col font-sans selection:bg-emerald-500/20 selection:text-emerald-400 relative overflow-hidden">
       
-      {/* Premium background mesh effect (radial gradient, zero heavy filter blur) */}
+      {/* Background Emerald Ambient Depth */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div
-          className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(16,185,129,0.03) 0%, transparent 70%)" }}
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[550px]"
+          style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(40, 223, 160, 0.12) 0%, rgba(16, 185, 129, 0.04) 50%, transparent 80%)" }}
         />
         <div
-          className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(59,130,246,0.02) 0%, transparent 70%)" }}
+          className="absolute bottom-0 right-1/4 w-[600px] h-[600px]"
+          style={{ background: "radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%)" }}
         />
       </div>
 

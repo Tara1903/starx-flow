@@ -1,7 +1,13 @@
 "use client";
 
 import React from "react";
-import { motion, useReducedMotion } from "motion/react";
+import {
+  motion,
+  useReducedMotion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "motion/react";
 import {
   Users,
   CheckCircle2,
@@ -38,8 +44,43 @@ export function AdminStatsCard({
 }: StatsCardProps) {
   const prefersReduced = useReducedMotion();
 
+  // 3D Gyroscopic Tilt Physics
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springConfig = { damping: 25, stiffness: 350, mass: 0.6 };
+  const smoothX = useSpring(mouseX, springConfig);
+  const smoothY = useSpring(mouseY, springConfig);
+
+  const rotateX = useTransform(smoothY, [-0.5, 0.5], prefersReduced ? [0, 0] : [4, -4]);
+  const rotateY = useTransform(smoothX, [-0.5, 0.5], prefersReduced ? [0, 0] : [-4, 4]);
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    e.currentTarget.style.setProperty("--sx-spot-x", `${x}px`);
+    e.currentTarget.style.setProperty("--sx-spot-y", `${y}px`);
+    e.currentTarget.style.setProperty("--sx-spot-opacity", "1");
+    if (!prefersReduced) {
+      mouseX.set(x / rect.width - 0.5);
+      mouseY.set(y / rect.height - 0.5);
+    }
+  };
+
+  const handlePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.style.setProperty("--sx-spot-opacity", "0");
+    if (!prefersReduced) {
+      mouseX.set(0);
+      mouseY.set(0);
+    }
+  };
+
   return (
     <motion.div
+      data-cursor-spotlight="true"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+      style={prefersReduced ? undefined : { rotateX, rotateY, transformStyle: "preserve-3d" as const }}
       whileHover={
         prefersReduced
           ? undefined

@@ -271,22 +271,90 @@ function dbRowToBusinessGoal(row: Record<string, unknown>): BusinessGoal {
    STORE
    ────────────────────────────────────────────── */
 
+const DEFAULT_CHANNELS: ConnectedChannel[] = [
+  { id: 'chan-1', channelKey: 'whatsapp', isConnected: true, credentials: { phone: '+44 7700 900123' }, lastSynced: 'Just now' },
+  { id: 'chan-2', channelKey: 'instagram', isConnected: true, credentials: { handle: '@apexphysio' }, lastSynced: '5 mins ago' },
+  { id: 'chan-3', channelKey: 'google_calendar', isConnected: true, credentials: { account: 'sarah@apexphysio.co.uk' }, lastSynced: '1 min ago' },
+  { id: 'chan-4', channelKey: 'stripe', isConnected: true, credentials: { mode: 'Live' }, lastSynced: 'Active' },
+  { id: 'chan-5', channelKey: 'sms', isConnected: false, credentials: {}, lastSynced: null },
+  { id: 'chan-6', channelKey: 'resend', isConnected: true, credentials: {}, lastSynced: 'Active' }
+];
+
+const DEFAULT_WORKFLOWS: Workflow[] = [
+  {
+    id: 'wf-1',
+    name: 'Instant WhatsApp Inbound Qualification & Booking',
+    description: 'Autonomous reception agent captures client requirements, checks live Google Calendar availability, and reserves appointments in under 2 seconds.',
+    trigger: 'Incoming WhatsApp Message',
+    action: 'Check Calendar & Book Slot',
+    isActive: true,
+    channel: 'WhatsApp',
+    aiTone: 'Professional',
+    customPrompt: 'You are the receptionist for Apex Physiotherapy. Be warm, professional, verify injuries, check calendar availability, and confirm bookings.',
+    executionsCount: 842,
+    successRate: 99.4,
+    savedHours: 42.5
+  },
+  {
+    id: 'wf-2',
+    name: 'Instagram DM Lead Conversion & Triage',
+    description: 'Detects high-intent comments and DMs, provides pricing info, and proposes booking slots directly in Instagram.',
+    trigger: 'Instagram Direct Message',
+    action: 'Qualify & Schedule',
+    isActive: true,
+    channel: 'Instagram',
+    aiTone: 'Friendly',
+    customPrompt: 'Answer questions about services and pricing, and guide the prospect to schedule an initial consultation.',
+    executionsCount: 318,
+    successRate: 98.1,
+    savedHours: 18.0
+  },
+  {
+    id: 'wf-3',
+    name: 'Automated 24h & 1h Appointment Reminders',
+    description: 'Dispatches WhatsApp reminders to slash costly no-shows by up to 70% with two-way cancellation/rescheduling support.',
+    trigger: '24 Hours Before Appointment',
+    action: 'Send WhatsApp Reminder',
+    isActive: true,
+    channel: 'WhatsApp',
+    aiTone: 'Friendly',
+    customPrompt: 'Send appointment reminder with time, clinic location, therapist name, and cancel/reschedule option.',
+    executionsCount: 524,
+    successRate: 100,
+    savedHours: 26.2
+  },
+  {
+    id: 'wf-4',
+    name: 'Automated 5-Star Google Review Booster',
+    description: 'Triggers a personalized WhatsApp review request 2 hours after completed appointment to build local search dominance.',
+    trigger: '2 Hours Post-Appointment',
+    action: 'Request Google Review',
+    isActive: true,
+    channel: 'Reviews',
+    aiTone: 'Friendly',
+    customPrompt: 'Thank the client for visiting and ask if they would take 30 seconds to share their experience on Google.',
+    executionsCount: 196,
+    successRate: 96.8,
+    savedHours: 12.0
+  }
+];
+
 let isInitSessionRunning = false;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   isLoggedIn: false,
   isLoading: true,
   user: null,
-  workflows: [],
-  connectedChannels: [],
+  workflows: DEFAULT_WORKFLOWS,
+  connectedChannels: DEFAULT_CHANNELS,
   chartData: [
-    { day: "Mon", value: 0 },
-    { day: "Tue", value: 0 },
-    { day: "Wed", value: 0 },
-    { day: "Thu", value: 0 },
-    { day: "Fri", value: 0 },
-    { day: "Sat", value: 0 },
-    { day: "Sun", value: 0 },
+    { day: "Mon", value: 34 },
+    { day: "Tue", value: 48 },
+    { day: "Wed", value: 52 },
+    { day: "Thu", value: 68 },
+    { day: "Fri", value: 61 },
+    { day: "Sat", value: 43 },
+    { day: "Sun", value: 29 },
   ],
   logs: [],
   selectedWorkflowId: null,

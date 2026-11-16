@@ -35,15 +35,78 @@ function dbRowToMemory(row: Record<string, unknown>): AgentMemory {
   };
 }
 
+export const DEFAULT_AGENTS: Agent[] = [
+  {
+    id: "agent-aria",
+    name: "Aria",
+    role: "receptionist",
+    description: "Multi-channel front-desk receptionist managing incoming client inquiries with empathetic tone.",
+    isActive: true,
+    systemPrompt: "You are Aria, the primary client care concierge. Warmly greet every client, answer clinic inquiries, verify opening hours, and smoothly offer booking slots.",
+    permissions: ["read_inbox", "send_message", "detect_intent", "read_schedule"],
+  },
+  {
+    id: "agent-chronos",
+    name: "Chronos",
+    role: "booking",
+    description: "Precision booking coordinator handling schedule queries, rescheduling, and conflict-free calendar booking.",
+    isActive: true,
+    systemPrompt: "You are Chronos. Detect preferred appointment dates and times, verify therapist availability against European business hours, and confirm bookings.",
+    permissions: ["read_calendar", "write_calendar", "send_reminders", "manage_cancellations"],
+  },
+  {
+    id: "agent-veritas",
+    name: "Veritas",
+    role: "review",
+    description: "Autonomous customer sentiment sentinel and 5-star Google review harvester.",
+    isActive: true,
+    systemPrompt: "You are Veritas. 2 hours after a completed appointment, dispatch a personalized satisfaction inquiry. Route happy clients to Google Maps reviews.",
+    permissions: ["read_reviews", "send_followups", "flag_negative_sentiment"],
+  },
+  {
+    id: "agent-nexus",
+    name: "Nexus",
+    role: "sales",
+    description: "High-value corporate wellness intake and bespoke quotation architect.",
+    isActive: true,
+    systemPrompt: "You are Nexus. Qualify enterprise inquiries, extract team headcount and timeline, and generate tailored retainer estimates.",
+    permissions: ["qualify_leads", "update_crm", "escalate_to_human", "generate_quotes"],
+  },
+];
+
+export const DEFAULT_AGENT_MEMORIES: AgentMemory[] = [
+  {
+    id: "mem-1",
+    leadId: "lead-1",
+    key: "preferred_therapist",
+    value: "Dr. Sarah Jenkins",
+    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+  },
+  {
+    id: "mem-2",
+    leadId: "lead-1",
+    key: "clinical_focus",
+    value: "Right knee post-ACL reconstruction rehabilitation",
+    createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
+  },
+  {
+    id: "mem-3",
+    leadId: "lead-2",
+    key: "communication_preference",
+    value: "WhatsApp only (between 09:00 - 18:00 CET)",
+    createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+  },
+];
+
 export const useAgentStore = create<AgentState>((set, get) => ({
-  agents: [],
-  agentMemories: [],
+  agents: DEFAULT_AGENTS,
+  agentMemories: DEFAULT_AGENT_MEMORIES,
 
   fetchAgents: async () => {
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
     if (!userId || !isSupabaseConfigured) {
-      set({ agents: [] });
+      set({ agents: get().agents.length > 0 ? get().agents : DEFAULT_AGENTS });
       return;
     }
 
@@ -55,17 +118,18 @@ export const useAgentStore = create<AgentState>((set, get) => ({
 
       if (error) {
         console.error('[StarX] Fetch agents error:', error);
+        set({ agents: get().agents.length > 0 ? get().agents : DEFAULT_AGENTS });
         return;
       }
 
       if (data && data.length > 0) {
         set({ agents: data.map(dbRowToAgent) });
       } else {
-        set({ agents: [] });
+        set({ agents: get().agents.length > 0 ? get().agents : DEFAULT_AGENTS });
       }
     } catch (e) {
       console.error('[StarX] Fetch agents exception:', e);
-      set({ agents: [] });
+      set({ agents: get().agents.length > 0 ? get().agents : DEFAULT_AGENTS });
     }
   },
 

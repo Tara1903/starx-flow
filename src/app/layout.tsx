@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Playfair_Display, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 import '../styles/starx-flow-stage.css';
+import '../styles/starx-motion.css';
+import '../styles/starx-lusion.css';
 import '../cursor/cursor.css';
 import { ClientShell } from '@/components/ClientShell';
 import { SEO_CONFIG } from '@/lib/seoConfig';
@@ -18,7 +20,6 @@ const cormorantGaramond = Cormorant_Garamond({
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-jakarta',
-  weight: ['500', '600', '700', '800'],
   display: 'swap',
 });
 

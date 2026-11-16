@@ -11,29 +11,26 @@ export function Footer() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
-        <div className="glass-card-obsidian p-8 md:p-12 rounded-3xl border border-white/10">
+        <div className="glass-shell p-8 md:p-12 rounded-3xl border border-emerald-500/25 bg-[#061a12]/80 shadow-[0_0_50px_rgba(16,185,129,0.08)]">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-12 mb-12">
             {/* Brand block */}
-            <div className="lg:col-span-2 space-y-5">
-              <Link href="/" className="flex items-center gap-3 w-fit">
-                <img
-                  src="/logo.svg"
-                  alt="StarX Flow Logo"
-                  className="h-7 w-auto object-contain"
-                />
+            <div className="lg:col-span-2 space-y-4">
+              <Link href="/" className="flex items-center gap-2.5 w-fit">
+                <span className="text-emerald-400 text-lg">✦</span>
+                <span className="text-base font-semibold text-white font-sans">StarX Flow</span>
               </Link>
-              <p className="text-zinc-400 text-sm font-medium leading-relaxed max-w-sm">
+              <p className="text-emerald-100/75 text-sm font-medium leading-relaxed max-w-sm">
                 The premier AI Operating System and WhatsApp Automation Platform
                 for Local Service &amp; Appointment-Driven Businesses. Put your
                 front desk on autopilot with zero booking commissions.
               </p>
               <div className="pt-1">
-                <span className="text-xs font-semibold text-zinc-500 block mb-1">
+                <span className="text-xs font-semibold text-emerald-300/70 block mb-1">
                   Official Support:
                 </span>
                 <a
                   href="mailto:support@starx-flow.runs-on.dev"
-                  className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                  className="text-sm text-emerald-400 hover:text-white transition-colors font-medium underline"
                 >
                   support@starx-flow.runs-on.dev
                 </a>
@@ -42,11 +39,11 @@ export function Footer() {
 
             {/* Industries */}
             <div>
-              <h4 className="text-white font-bold text-xs tracking-widest uppercase mb-5 flex items-center gap-2">
+              <h4 className="text-white font-semibold text-xs tracking-widest uppercase mb-5 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                 Industries
               </h4>
-              <ul className="space-y-3.5 text-sm text-zinc-400 font-medium">
+              <ul className="space-y-3.5 text-sm text-emerald-100/75 font-medium">
                 {[
                   { label: "Gyms & Fitness", href: "/industries/gyms-fitness" },
                   { label: "Dental & Clinics", href: "/industries/dental-clinics" },
@@ -57,9 +54,9 @@ export function Footer() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="group flex items-center gap-1.5 hover:text-emerald-400 transition-colors"
+                      className="group flex items-center gap-1.5 hover:text-white transition-colors"
                     >
-                      <ArrowRight className="w-3 h-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
+                      <ArrowRight className="w-3 h-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200 text-emerald-400" />
                       {item.label}
                     </Link>
                   </li>
@@ -69,11 +66,11 @@ export function Footer() {
 
             {/* Architecture */}
             <div>
-              <h4 className="text-white font-bold text-xs tracking-widest uppercase mb-5 flex items-center gap-2">
+              <h4 className="text-white font-semibold text-xs tracking-widest uppercase mb-5 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                 Architecture
               </h4>
-              <ul className="space-y-3.5 text-sm text-zinc-400 font-medium">
+              <ul className="space-y-3.5 text-sm text-emerald-100/75 font-medium">
                 {[
                   { label: "How It Works", href: "/how-it-works" },
                   { label: "Security & Privacy", href: "/security" },
@@ -84,9 +81,9 @@ export function Footer() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="group flex items-center gap-1.5 hover:text-emerald-400 transition-colors"
+                      className="group flex items-center gap-1.5 hover:text-white transition-colors"
                     >
-                      <ArrowRight className="w-3 h-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
+                      <ArrowRight className="w-3 h-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200 text-emerald-400" />
                       {item.label}
                     </Link>
                   </li>
@@ -96,11 +93,11 @@ export function Footer() {
 
             {/* Company */}
             <div>
-              <h4 className="text-white font-bold text-xs tracking-widest uppercase mb-5 flex items-center gap-2">
+              <h4 className="text-white font-semibold text-xs tracking-widest uppercase mb-5 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                 Company
               </h4>
-              <ul className="space-y-3.5 text-sm text-zinc-400 font-medium">
+              <ul className="space-y-3.5 text-sm text-emerald-100/75 font-medium">
                 {[
                   { label: "About Us", href: "/about" },
                   { label: "Pricing & Plans", href: "/pricing" },
@@ -111,9 +108,9 @@ export function Footer() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="group flex items-center gap-1.5 hover:text-emerald-400 transition-colors"
+                      className="group flex items-center gap-1.5 hover:text-white transition-colors"
                     >
-                      <ArrowRight className="w-3 h-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
+                      <ArrowRight className="w-3 h-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200 text-emerald-400" />
                       {item.label}
                     </Link>
                   </li>
@@ -122,18 +119,23 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-white/[0.08] flex flex-col lg:flex-row items-center justify-between gap-4 text-xs font-medium text-zinc-500">
+          <div className="pt-6 border-t border-emerald-500/20 flex flex-col lg:flex-row items-center justify-between gap-4 text-xs font-medium text-emerald-200/65">
             <span>
-              &copy; {new Date().getFullYear()} StarX Flow. All rights reserved.
+              &copy; {new Date().getFullYear()} StarX Flow (StarX Alpha Labs). All rights reserved.
             </span>
             <div className="flex flex-wrap justify-center gap-4 lg:gap-6 items-center">
-              <Link href="/admin" className="hover:text-white transition-colors">
+              <Link href="/dashboard" className="hover:text-emerald-300 transition-colors font-semibold text-emerald-400 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live Dashboard
+              </Link>
+              <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-emerald-500/30" />
+              <Link href="/admin/login" className="hover:text-emerald-300 transition-colors">
                 Admin Login
               </Link>
-              <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-white/15" />
-              <span>Canonical Host: starx-flow.runs-on.dev</span>
-              <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-white/15" />
-              <span className="flex items-center gap-1.5 text-emerald-400/90">
+              <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-emerald-500/30" />
+              <span className="font-mono">Canonical Host: starx-flow.runs-on.dev</span>
+              <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-emerald-500/30" />
+              <span className="flex items-center gap-1.5 text-emerald-300">
                 <ShieldCheck size={14} className="text-emerald-400" />
                 TLS 1.3 Transport &amp; At-Rest Encryption
               </span>

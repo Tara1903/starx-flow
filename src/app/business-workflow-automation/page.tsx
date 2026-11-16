@@ -94,7 +94,25 @@ export default function BusinessWorkflowAutomationPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-[#020a07] text-[#f0f5ef] flex flex-col font-sans selection:bg-emerald-500/30 pt-32 lg:pt-40 pb-24 relative overflow-hidden">
+      {/* Background Emerald Ambient Glow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/4 right-0 w-[600px] h-[600px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
+        }}
+      />
+
       {jsonLd.map((schema, i) => (
         <Script
           key={i}
@@ -104,38 +122,43 @@ export default function BusinessWorkflowAutomationPage() {
         />
       ))}
 
-      <div className="flex-1 pt-32 pb-24">
-        <div className="max-w-7xl mx-auto px-6">
+      <div className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           
           {/* Breadcrumbs */}
           <nav aria-label="Breadcrumb" className="mb-8">
-            <ol className="flex items-center gap-2 text-xs md:text-sm text-zinc-400">
+            <ol className="flex items-center gap-2 text-xs font-mono text-[#b8c9bd]/70 uppercase tracking-widest">
               <li><Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link></li>
               <li>/</li>
-              <li className="text-zinc-200 font-medium">Business Workflow Automation</li>
+              <li className="text-emerald-300 font-semibold">Business Workflow Automation</li>
             </ol>
           </nav>
 
           {/* Hero Section */}
-          <div className="text-center max-w-4xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold tracking-wide mb-6">
-              <Zap className="w-4 h-4" />
+          <div className="text-center max-w-4xl mx-auto mb-16 lg:mb-20">
+            <div className="spatial-pill-badge mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
               Event-Driven Operational Automation
             </div>
             
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+            <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.08]">
               Intelligent Business Workflow <br />
-              <span className="text-emerald-400">Automation for Modern Operations</span>
+              <span className="text-gradient-emerald">Automation for Modern Operations</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-zinc-300 leading-relaxed font-normal mb-8 max-w-3xl mx-auto">
+            <p className="text-lg md:text-xl text-[#b8c9bd] leading-relaxed font-normal mb-8 max-w-3xl mx-auto">
               Eliminate repetitive manual tasks. Connect inbound customer chats, calendar schedules, CRM records, and automated notifications into one seamless operational engine.
             </p>
 
             {/* Direct Answer Box for AI Answer Engines */}
-            <div className="text-left bg-white/[0.03] border border-emerald-500/20 rounded-2xl p-6 text-zinc-300 text-base leading-relaxed mb-10 shadow-lg">
-              <strong className="text-emerald-400 block mb-2 font-semibold">Direct Answer:</strong>
-              A business workflow automation platform connects disparate business software tools, customer communications, and databases to execute operational tasks automatically based on defined triggers and conditions. StarX-Flow combines visual trigger-action workflow building with generative conversational AI, allowing businesses to automate lead routing, reminder dispatch, review collection, and appointment operations without complex engineering.
+            <div className="text-left glass-panel p-6 sm:p-8 text-[#b8c9bd] text-sm md:text-base leading-relaxed mb-10 border-emerald-400/30 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.8),0_0_25px_rgba(40,223,160,0.12)]">
+              <div className="flex items-center gap-2 text-emerald-300 font-semibold mb-2 font-mono text-xs uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Direct Answer</span>
+              </div>
+              <p className="font-normal text-white/90">
+                A business workflow automation platform connects disparate business software tools, customer communications, and databases to execute operational tasks automatically based on defined triggers and conditions. StarX-Flow combines visual trigger-action workflow building with generative conversational AI, allowing businesses to automate lead routing, reminder dispatch, review collection, and appointment operations without complex engineering.
+              </p>
             </div>
 
             <LandingCTAButtons primaryText="Automate Your Workflows Free" secondaryText="Compare With Zapier" secondaryHref="/compare/starx-flow-vs-zapier" />
@@ -144,32 +167,32 @@ export default function BusinessWorkflowAutomationPage() {
           {/* Workflow Automation Features */}
           <div className="max-w-6xl mx-auto mb-24">
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
                   <GitBranch className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Visual Trigger-Action Builder</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <h3 className="text-xl font-bold mb-3 text-white">Visual Trigger-Action Builder</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed">
                   Design complex business logic with no-code simplicity. Chain triggers, conditions, and actions into reliable workflows.
                 </p>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
                   <Bell className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Automated Reminder Engine</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <h3 className="text-xl font-bold mb-3 text-white">Automated Reminder Engine</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed">
                   Schedule automated WhatsApp and SMS appointment reminders 24h and 1h prior to slash costly customer no-shows.
                 </p>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
                   <Calendar className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Google & Outlook Sync</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <h3 className="text-xl font-bold mb-3 text-white">Google & Outlook Sync</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed">
                   Keep your entire team aligned. Automated calendar invitations and updates sync across Google and Microsoft ecosystems.
                 </p>
               </div>
@@ -178,7 +201,7 @@ export default function BusinessWorkflowAutomationPage() {
 
           {/* FAQ Accordion */}
           <div className="max-w-3xl mx-auto mb-24">
-            <h2 className="text-3xl font-bold text-center mb-10 flex items-center justify-center gap-3">
+            <h2 className="font-editorial text-3xl sm:text-4xl font-bold text-center mb-10 flex items-center justify-center gap-3 text-white">
               <HelpCircle className="w-8 h-8 text-emerald-400" />
               Frequently Asked Questions
             </h2>
@@ -187,13 +210,13 @@ export default function BusinessWorkflowAutomationPage() {
               {faqs.map((faq, i) => (
                 <details
                   key={i}
-                  className="group glass-panel rounded-2xl border border-white/10 p-6 [&_summary::-webkit-details-marker]:hidden"
+                  className="group glass-panel rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden border border-emerald-500/15"
                 >
                   <summary className="flex items-center justify-between cursor-pointer font-semibold text-lg text-white">
                     <span>{faq.question}</span>
                     <span className="text-emerald-400 transition-transform group-open:rotate-180">↓</span>
                   </summary>
-                  <p className="mt-4 text-zinc-400 text-sm leading-relaxed border-t border-white/5 pt-4">
+                  <p className="mt-4 text-[#b8c9bd] text-sm leading-relaxed border-t border-emerald-500/10 pt-4 font-normal">
                     {faq.answer}
                   </p>
                 </details>
@@ -202,13 +225,13 @@ export default function BusinessWorkflowAutomationPage() {
           </div>
 
           {/* Conversion CTA Block */}
-          <div className="max-w-4xl mx-auto text-center glass-panel p-12 md:p-16 rounded-[2.5rem] border border-emerald-500/20 relative overflow-hidden mb-16">
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent" />
+          <div className="max-w-4xl mx-auto text-center glass-panel p-12 md:p-16 rounded-[2.5rem] border border-emerald-400/30 relative overflow-hidden mb-16 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.12)]">
+            <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent pointer-events-none" />
             <div className="relative z-10">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              <h2 className="font-editorial text-3xl md:text-5xl font-bold mb-4 text-white">
                 Automate Your Daily Business Workflows
               </h2>
-              <p className="text-lg text-zinc-300 max-w-2xl mx-auto mb-8">
+              <p className="text-lg text-[#b8c9bd] max-w-2xl mx-auto mb-8 font-normal">
                 Save 15+ hours every week and eliminate human error. Start your 14-day free trial today.
               </p>
               <LandingCTAButtons primaryText="Start Free Automation Trial" secondaryText="Compare With Make" secondaryHref="/compare/starx-flow-vs-make" />
@@ -216,15 +239,15 @@ export default function BusinessWorkflowAutomationPage() {
           </div>
 
           {/* Cross Links */}
-          <div className="max-w-4xl mx-auto border-t border-white/10 pt-12 text-center">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-6">
+          <div className="max-w-4xl mx-auto border-t border-emerald-500/15 pt-12 text-center">
+            <h3 className="text-xs font-mono font-semibold uppercase tracking-widest text-[#b8c9bd]/70 mb-6">
               Compare Workflow Platforms
             </h3>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Link href="/compare/starx-flow-vs-zapier" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">StarX-Flow vs Zapier</Link>
-              <Link href="/compare/starx-flow-vs-make" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">StarX-Flow vs Make</Link>
-              <Link href="/compare/starx-flow-vs-n8n" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">StarX-Flow vs n8n</Link>
-              <Link href="/ai-automation" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">AI Automation for Business</Link>
+              <Link href="/compare/starx-flow-vs-zapier" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">StarX-Flow vs Zapier</Link>
+              <Link href="/compare/starx-flow-vs-make" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">StarX-Flow vs Make</Link>
+              <Link href="/compare/starx-flow-vs-n8n" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">StarX-Flow vs n8n</Link>
+              <Link href="/ai-automation" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">AI Automation for Business</Link>
             </div>
           </div>
 

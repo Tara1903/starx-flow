@@ -94,7 +94,25 @@ export default function AIAutomationPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-[#020a07] text-[#f0f5ef] flex flex-col font-sans selection:bg-emerald-500/30 pt-32 lg:pt-40 pb-24 relative overflow-hidden">
+      {/* Background Emerald Ambient Glow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/4 right-0 w-[600px] h-[600px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
+        }}
+      />
+
       {jsonLd.map((schema, i) => (
         <Script
           key={i}
@@ -104,38 +122,43 @@ export default function AIAutomationPage() {
         />
       ))}
 
-      <div className="flex-1 pt-32 pb-24">
-        <div className="max-w-7xl mx-auto px-6">
+      <div className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           
           {/* Breadcrumbs */}
           <nav aria-label="Breadcrumb" className="mb-8">
-            <ol className="flex items-center gap-2 text-xs md:text-sm text-zinc-400">
+            <ol className="flex items-center gap-2 text-xs font-mono text-[#b8c9bd]/70 uppercase tracking-widest">
               <li><Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link></li>
               <li>/</li>
-              <li className="text-zinc-200 font-medium">AI Automation</li>
+              <li className="text-emerald-300 font-semibold">AI Automation</li>
             </ol>
           </nav>
 
           {/* Hero Section */}
-          <div className="text-center max-w-4xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold tracking-wide mb-6">
-              <Sparkles className="w-4 h-4" />
+          <div className="text-center max-w-4xl mx-auto mb-16 lg:mb-20">
+            <div className="spatial-pill-badge mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
               The Autonomous AI Operating System
             </div>
             
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+            <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.08]">
               AI Automation for Business: <br />
-              <span className="text-emerald-400">From Leads to Completed Workflows</span>
+              <span className="text-gradient-emerald">From Inbound Leads to Calendar Lock</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-zinc-300 leading-relaxed font-normal mb-8 max-w-3xl mx-auto">
+            <p className="text-lg md:text-xl text-[#b8c9bd] leading-relaxed font-normal mb-8 max-w-3xl mx-auto">
               Automate inbound customer communications, appointment bookings, calendar management, and operational tasks 24/7 with zero code.
             </p>
 
-            {/* Direct Answer Box for AI Answer Engines */}
-            <div className="text-left bg-white/[0.03] border border-emerald-500/20 rounded-2xl p-6 text-zinc-300 text-base leading-relaxed mb-10 shadow-lg">
-              <strong className="text-emerald-400 block mb-2 font-semibold">Direct Definition:</strong>
-              AI business automation is the application of generative language models and autonomous software agents to handle repetitive customer communication, appointment booking, CRM updates, and operational tasks without human intervention. StarX-Flow delivers turnkey AI business automation by unifying WhatsApp, Instagram, Google Calendar, and workflow logic into a single zero-code platform.
+            {/* Direct Answer Box */}
+            <div className="text-left glass-panel p-6 sm:p-8 text-[#b8c9bd] text-sm md:text-base leading-relaxed mb-10 border-emerald-400/30 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.8),0_0_25px_rgba(40,223,160,0.12)]">
+              <div className="flex items-center gap-2 text-emerald-300 font-semibold mb-2 font-mono text-xs uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Direct Definition</span>
+              </div>
+              <p className="font-normal text-white/90">
+                AI business automation is the application of generative language models and autonomous software agents to handle repetitive customer communication, appointment booking, CRM updates, and operational tasks without human intervention. StarX Flow delivers turnkey AI business automation by unifying WhatsApp, Instagram, Google Calendar, and workflow logic into a single zero-code platform.
+              </p>
             </div>
 
             <LandingCTAButtons primaryText="Start 14-Day Free Trial" secondaryText="Test Live AI Chat" />
@@ -143,41 +166,41 @@ export default function AIAutomationPage() {
 
           {/* The Problem Section */}
           <div className="max-w-5xl mx-auto mb-24">
-            <div className="glass-panel p-8 md:p-12 rounded-3xl border border-white/10">
-              <h2 className="text-2xl md:text-4xl font-bold text-center mb-6">
+            <div className="glass-panel p-8 md:p-12 rounded-3xl border-emerald-500/25 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.8)]">
+              <h2 className="font-editorial text-2xl md:text-4xl font-bold text-center text-white mb-4">
                 Why Manual Front-Desk Operations Hurt Business Growth
               </h2>
-              <p className="text-zinc-400 text-center max-w-2xl mx-auto mb-12">
+              <p className="text-[#b8c9bd] text-center max-w-2xl mx-auto mb-12 font-normal">
                 Traditional businesses lose 20% to 40% of prospective clients due to missed calls, delayed replies, and scheduling friction.
               </p>
 
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="bg-white/[0.02] p-6 rounded-2xl border border-white/5">
-                  <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center font-bold mb-4">
+                <div className="bg-[#010804] p-6 rounded-2xl border border-red-500/20">
+                  <div className="w-10 h-10 rounded-xl bg-red-950/60 text-red-400 flex items-center justify-center font-bold mb-4 font-mono">
                     42%
                   </div>
-                  <h3 className="font-semibold text-lg text-white mb-2">Unanswered Inquiries</h3>
-                  <p className="text-zinc-400 text-sm">
+                  <h3 className="font-editorial font-bold text-lg text-white mb-2">Unanswered Inquiries</h3>
+                  <p className="text-[#b8c9bd] text-sm font-normal">
                     Inbound calls and WhatsApp messages that arrive while staff are busy or after hours go straight to competitors.
                   </p>
                 </div>
 
-                <div className="bg-white/[0.02] p-6 rounded-2xl border border-white/5">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold mb-4">
+                <div className="bg-[#010804] p-6 rounded-2xl border border-amber-500/20">
+                  <div className="w-10 h-10 rounded-xl bg-amber-950/60 text-amber-400 flex items-center justify-center font-bold mb-4 font-mono">
                     $2.5k
                   </div>
-                  <h3 className="font-semibold text-lg text-white mb-2">High Staff Overhead</h3>
-                  <p className="text-zinc-400 text-sm">
-                    Paying receptionists simply to answer repetitive FAQs ("Where are you located?") and input dates manually drains margins.
+                  <h3 className="font-editorial font-bold text-lg text-white mb-2">High Staff Overhead</h3>
+                  <p className="text-[#b8c9bd] text-sm font-normal">
+                    Paying receptionists simply to answer repetitive FAQs (&quot;Where are you located?&quot;) and input dates manually drains margins.
                   </p>
                 </div>
 
-                <div className="bg-white/[0.02] p-6 rounded-2xl border border-white/5">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold mb-4">
+                <div className="bg-[#010804] p-6 rounded-2xl border border-emerald-500/20">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-950/60 text-emerald-400 flex items-center justify-center font-bold mb-4 font-mono">
                     15+ hrs
                   </div>
-                  <h3 className="font-semibold text-lg text-white mb-2">Lost Weekly Admin</h3>
-                  <p className="text-zinc-400 text-sm">
+                  <h3 className="font-editorial font-bold text-lg text-white mb-2">Lost Weekly Admin</h3>
+                  <p className="text-[#b8c9bd] text-sm font-normal">
                     Back-and-forth messaging trying to find mutually agreeable calendar times wastes hours of productive staff time every week.
                   </p>
                 </div>
@@ -188,21 +211,21 @@ export default function AIAutomationPage() {
           {/* Key Capabilities Grid */}
           <div className="max-w-6xl mx-auto mb-24">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">
-                Core Capabilities of StarX-Flow AI Automation
+              <h2 className="font-editorial text-3xl md:text-5xl font-bold text-white mb-4">
+                Core Capabilities of StarX Flow AI Automation
               </h2>
-              <p className="text-zinc-400 max-w-2xl mx-auto">
+              <p className="text-[#b8c9bd] max-w-2xl mx-auto font-normal">
                 Everything required to run an autonomous customer communication and booking engine out of the box.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+            <div className="grid md:grid-cols-3 gap-7">
+              <div className="glass-panel glass-panel-hover p-8 rounded-3xl border-emerald-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center mb-6 border border-emerald-400/30">
                   <MessageSquare className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Omnichannel Messaging</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+                <h3 className="font-editorial text-xl font-bold text-white mb-3">Omnichannel Messaging</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed mb-4 font-normal">
                   Deploy conversational AI agents natively across WhatsApp, Instagram Direct, Web Chat, and Email with unified message history.
                 </p>
                 <Link href="/whatsapp-ai-chatbot" className="text-emerald-400 text-sm font-semibold flex items-center gap-1 hover:underline">
@@ -210,12 +233,12 @@ export default function AIAutomationPage() {
                 </Link>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8 rounded-3xl border-emerald-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center mb-6 border border-emerald-400/30">
                   <Calendar className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Autonomous Calendar Booking</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+                <h3 className="font-editorial text-xl font-bold text-white mb-3">Autonomous Calendar Booking</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed mb-4 font-normal">
                   Check availability, verify time slot conflicts, and write confirmed bookings directly to Google Calendar and Microsoft Outlook 365.
                 </p>
                 <Link href="/features" className="text-emerald-400 text-sm font-semibold flex items-center gap-1 hover:underline">
@@ -223,12 +246,12 @@ export default function AIAutomationPage() {
                 </Link>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8 rounded-3xl border-emerald-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center mb-6 border border-emerald-400/30">
                   <Bot className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">RAG Knowledge Retrieval</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+                <h3 className="font-editorial text-xl font-bold text-white mb-3">RAG Knowledge Retrieval</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed mb-4 font-normal">
                   Ground responses in your business documents, price sheets, and policies. The AI answers nuanced questions with 100% accuracy.
                 </p>
                 <Link href="/ai-customer-support" className="text-emerald-400 text-sm font-semibold flex items-center gap-1 hover:underline">
@@ -236,12 +259,12 @@ export default function AIAutomationPage() {
                 </Link>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8 rounded-3xl border-emerald-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center mb-6 border border-emerald-400/30">
                   <Users className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Customer Identity CRM</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+                <h3 className="font-editorial text-xl font-bold text-white mb-3">Customer Identity CRM</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed mb-4 font-normal">
                   Automatically link phone numbers, emails, and social handles into unified lead profiles with tags, notes, and booking histories.
                 </p>
                 <Link href="/product" className="text-emerald-400 text-sm font-semibold flex items-center gap-1 hover:underline">
@@ -249,12 +272,12 @@ export default function AIAutomationPage() {
                 </Link>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8 rounded-3xl border-emerald-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center mb-6 border border-emerald-400/30">
                   <Zap className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Event-Driven Workflows</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+                <h3 className="font-editorial text-xl font-bold text-white mb-3">Event-Driven Workflows</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed mb-4 font-normal">
                   Trigger automated appointment reminders, follow-up messages, Google Review requests, and staff alerts based on real events.
                 </p>
                 <Link href="/business-workflow-automation" className="text-emerald-400 text-sm font-semibold flex items-center gap-1 hover:underline">
@@ -262,12 +285,12 @@ export default function AIAutomationPage() {
                 </Link>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8 rounded-3xl border-emerald-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center mb-6 border border-emerald-400/30">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Human-in-the-Loop Handoff</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+                <h3 className="font-editorial text-xl font-bold text-white mb-3">Human-in-the-Loop Handoff</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed mb-4 font-normal">
                   Staff can jump into any live thread with a single click. The AI immediately pauses and cedes control, resuming whenever toggled.
                 </p>
                 <Link href="/pricing" className="text-emerald-400 text-sm font-semibold flex items-center gap-1 hover:underline">
@@ -280,46 +303,46 @@ export default function AIAutomationPage() {
           {/* How It Works */}
           <div className="max-w-4xl mx-auto mb-24">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              <h2 className="font-editorial text-3xl md:text-4xl font-bold text-white mb-4">
                 Deploy AI Automation in 3 Simple Steps
               </h2>
-              <p className="text-zinc-400">
+              <p className="text-[#b8c9bd] font-normal">
                 Zero complex coding. Zero API engineering. Live in 5 minutes.
               </p>
             </div>
 
             <div className="space-y-6">
-              <div className="glass-panel p-6 rounded-2xl border border-white/10 flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-emerald-500 text-black font-bold flex items-center justify-center shrink-0">
+              <div className="glass-panel p-6 sm:p-8 rounded-2xl border-emerald-500/20 flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-500 text-[#020a07] font-black font-mono flex items-center justify-center shrink-0">
                   1
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Connect Your Calendars & Channels</h3>
-                  <p className="text-zinc-400 text-sm">
+                  <h3 className="font-editorial text-lg font-bold text-white mb-1">Connect Your Calendars &amp; Channels</h3>
+                  <p className="text-[#b8c9bd] text-sm font-normal">
                     Link your Google Calendar or Outlook 365 account with one click. Authorize your WhatsApp Business number or Instagram Direct page.
                   </p>
                 </div>
               </div>
 
-              <div className="glass-panel p-6 rounded-2xl border border-white/10 flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-emerald-500 text-black font-bold flex items-center justify-center shrink-0">
+              <div className="glass-panel p-6 sm:p-8 rounded-2xl border-emerald-500/20 flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-500 text-[#020a07] font-black font-mono flex items-center justify-center shrink-0">
                   2
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Upload Your Business Profile & FAQs</h3>
-                  <p className="text-zinc-400 text-sm">
-                    Paste your services, duration, staff rosters, and common questions. StarX-Flow automatically indexes your documents for retrieval.
+                  <h3 className="font-editorial text-lg font-bold text-white mb-1">Upload Your Business Profile &amp; FAQs</h3>
+                  <p className="text-[#b8c9bd] text-sm font-normal">
+                    Paste your services, duration, staff rosters, and common questions. StarX Flow automatically indexes your documents for retrieval.
                   </p>
                 </div>
               </div>
 
-              <div className="glass-panel p-6 rounded-2xl border border-white/10 flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-emerald-500 text-black font-bold flex items-center justify-center shrink-0">
+              <div className="glass-panel p-6 sm:p-8 rounded-2xl border-emerald-500/20 flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-500 text-[#020a07] font-black font-mono flex items-center justify-center shrink-0">
                   3
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Go Live and Capture Leads 24/7</h3>
-                  <p className="text-zinc-400 text-sm">
+                  <h3 className="font-editorial text-lg font-bold text-white mb-1">Go Live and Capture Leads 24/7</h3>
+                  <p className="text-[#b8c9bd] text-sm font-normal">
                     Your AI receptionist immediately begins answering inquiries, qualifying leads, and confirming bookings in under 2 seconds.
                   </p>
                 </div>
@@ -329,7 +352,7 @@ export default function AIAutomationPage() {
 
           {/* FAQ Accordion */}
           <div className="max-w-3xl mx-auto mb-24">
-            <h2 className="text-3xl font-bold text-center mb-10 flex items-center justify-center gap-3">
+            <h2 className="font-editorial text-3xl md:text-4xl font-bold text-center text-white mb-10 flex items-center justify-center gap-3">
               <HelpCircle className="w-8 h-8 text-emerald-400" />
               Frequently Asked Questions
             </h2>
@@ -338,13 +361,13 @@ export default function AIAutomationPage() {
               {faqs.map((faq, i) => (
                 <details
                   key={i}
-                  className="group glass-panel rounded-2xl border border-white/10 p-6 [&_summary::-webkit-details-marker]:hidden"
+                  className="group glass-panel rounded-2xl border-emerald-500/20 p-6 [&_summary::-webkit-details-marker]:hidden"
                 >
                   <summary className="flex items-center justify-between cursor-pointer font-semibold text-lg text-white">
-                    <span>{faq.question}</span>
+                    <span className="font-editorial">{faq.question}</span>
                     <span className="text-emerald-400 transition-transform group-open:rotate-180">↓</span>
                   </summary>
-                  <p className="mt-4 text-zinc-400 text-sm leading-relaxed border-t border-white/5 pt-4">
+                  <p className="mt-4 text-[#b8c9bd] text-sm leading-relaxed border-t border-emerald-500/15 pt-4 font-normal">
                     {faq.answer}
                   </p>
                 </details>
@@ -353,30 +376,28 @@ export default function AIAutomationPage() {
           </div>
 
           {/* Conversion CTA Block */}
-          <div className="max-w-4xl mx-auto text-center glass-panel p-12 md:p-16 rounded-[2.5rem] border border-emerald-500/20 relative overflow-hidden mb-16">
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent" />
+          <div className="max-w-4xl mx-auto text-center glass-panel p-10 sm:p-14 rounded-[2.5rem] border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.15)] relative overflow-hidden mb-16">
             <div className="relative z-10">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              <h2 className="font-editorial text-3xl md:text-5xl font-bold mb-4 text-white">
                 Ready to Automate Your Business Operations?
               </h2>
-              <p className="text-lg text-zinc-300 max-w-2xl mx-auto mb-8">
-                Join thousands of modern businesses capturing more bookings and saving 15+ hours weekly with StarX-Flow.
+              <p className="text-lg text-[#b8c9bd] max-w-2xl mx-auto mb-8 font-normal">
+                Join thousands of modern businesses capturing more bookings and saving 15+ hours weekly with StarX Flow.
               </p>
               <LandingCTAButtons primaryText="Claim Your 14-Day Free Trial" secondaryText="Talk With Our AI" />
             </div>
           </div>
 
           {/* Related Industry Pages */}
-          <div className="max-w-4xl mx-auto border-t border-white/10 pt-12 text-center">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-6">
+          <div className="max-w-4xl mx-auto border-t border-emerald-500/20 pt-12 text-center">
+            <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-[#b8c9bd] mb-6">
               Industry-Specific AI Solutions
             </h3>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Link href="/industries/dentist" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">Dental Clinics</Link>
-              <Link href="/industries/barber" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">Salons & Barbers</Link>
-              <Link href="/industries/plumber" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">Plumbers & Contractors</Link>
-              <Link href="/industries/med-spa" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">Med Spas & Wellness</Link>
-              <Link href="/industries/personal-trainer" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">Fitness Coaches</Link>
+              <Link href="/industries/dental-clinics" className="text-xs font-mono px-4 py-2 rounded-full bg-[#010804] hover:bg-emerald-500/10 border border-emerald-500/20 text-[#b8c9bd] hover:text-white transition-all">Dental Clinics</Link>
+              <Link href="/industries/barbershops" className="text-xs font-mono px-4 py-2 rounded-full bg-[#010804] hover:bg-emerald-500/10 border border-emerald-500/20 text-[#b8c9bd] hover:text-white transition-all">Salons &amp; Barbers</Link>
+              <Link href="/industries/wellness-spas" className="text-xs font-mono px-4 py-2 rounded-full bg-[#010804] hover:bg-emerald-500/10 border border-emerald-500/20 text-[#b8c9bd] hover:text-white transition-all">Spas &amp; Wellness</Link>
+              <Link href="/industries/gyms-fitness" className="text-xs font-mono px-4 py-2 rounded-full bg-[#010804] hover:bg-emerald-500/10 border border-emerald-500/20 text-[#b8c9bd] hover:text-white transition-all">Fitness &amp; Gyms</Link>
             </div>
           </div>
 

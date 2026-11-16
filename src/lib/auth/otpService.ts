@@ -3,8 +3,8 @@ import { supabaseAdmin, isSupabaseAdminConfigured } from '../supabaseAdmin';
 import { ResendEmailAdapter } from '../integrations/email/resendEmailAdapter';
 import { renderOtpVerificationEmail } from '../email/templates';
 
-// Strictly 8-digit numeric character set for StarX Flow verification
-const OTP_CHARSET = '0123456789';
+// Unambiguous alphanumeric character set (excluding 0, O, 1, I, L) for StarX Flow verification
+const OTP_CHARSET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 const OTP_LENGTH = 8;
 const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 const MAX_ATTEMPTS = 5;
@@ -33,9 +33,16 @@ export function generateEightCharOtp(): string {
   const bytes = crypto.randomBytes(OTP_LENGTH);
   let code = '';
   for (let i = 0; i < OTP_LENGTH; i++) {
-    code += String(bytes[i] % 10);
+    code += OTP_CHARSET[bytes[i] % OTP_CHARSET.length];
   }
   return code;
+}
+
+/**
+ * Test helper to inspect ephemeral in-memory OTP in testing environments.
+ */
+export function _getMemoryOtpForTesting(email: string): string | undefined {
+  return memoryOtpStore.get(email.trim().toLowerCase())?.code;
 }
 
 /**
@@ -188,7 +195,7 @@ export async function verifyEightCharOtp(params: {
   if (rawCode.length !== OTP_LENGTH) {
     return {
       success: false,
-      error: `Verification code must be exactly 8 digits (received ${rawCode.length}).`,
+      error: `Verification code must be exactly 8 characters (received ${rawCode.length}).`,
     };
   }
 

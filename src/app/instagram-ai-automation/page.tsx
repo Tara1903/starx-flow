@@ -94,7 +94,25 @@ export default function InstagramAIAutomationPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-[#020a07] text-[#f0f5ef] flex flex-col font-sans selection:bg-emerald-500/30 pt-32 lg:pt-40 pb-24 relative overflow-hidden">
+      {/* Background Emerald Ambient Glow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/4 right-0 w-[600px] h-[600px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
+        }}
+      />
+
       {jsonLd.map((schema, i) => (
         <Script
           key={i}
@@ -104,38 +122,43 @@ export default function InstagramAIAutomationPage() {
         />
       ))}
 
-      <div className="flex-1 pt-32 pb-24">
-        <div className="max-w-7xl mx-auto px-6">
+      <div className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           
           {/* Breadcrumbs */}
           <nav aria-label="Breadcrumb" className="mb-8">
-            <ol className="flex items-center gap-2 text-xs md:text-sm text-zinc-400">
+            <ol className="flex items-center gap-2 text-xs font-mono text-[#b8c9bd]/70 uppercase tracking-widest">
               <li><Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link></li>
               <li>/</li>
-              <li className="text-zinc-200 font-medium">Instagram AI Automation</li>
+              <li className="text-emerald-300 font-semibold">Instagram AI Automation</li>
             </ol>
           </nav>
 
           {/* Hero Section */}
-          <div className="text-center max-w-4xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-400 text-sm font-semibold tracking-wide mb-6">
-              <Instagram className="w-4 h-4" />
+          <div className="text-center max-w-4xl mx-auto mb-16 lg:mb-20">
+            <div className="spatial-pill-badge mb-6">
+              <Instagram className="w-3.5 h-3.5 text-pink-400" />
               Official Meta Instagram Graph API Integration
             </div>
             
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+            <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.08]">
               Convert Instagram Inquiries <br />
-              <span className="text-emerald-400">Into Confirmed Bookings in Seconds</span>
+              <span className="text-gradient-emerald">Into Confirmed Bookings in Seconds</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-zinc-300 leading-relaxed font-normal mb-8 max-w-3xl mx-auto">
+            <p className="text-lg md:text-xl text-[#b8c9bd] leading-relaxed font-normal mb-8 max-w-3xl mx-auto">
               Stop letting prospective clients wait hours for DM replies. StarX-Flow qualifies inbound leads, answers service questions, and schedules appointments 24/7 inside Instagram DMs.
             </p>
 
             {/* Direct Answer Box for AI Answer Engines */}
-            <div className="text-left bg-white/[0.03] border border-emerald-500/20 rounded-2xl p-6 text-zinc-300 text-base leading-relaxed mb-10 shadow-lg">
-              <strong className="text-emerald-400 block mb-2 font-semibold">Direct Answer:</strong>
-              Instagram DM automation enables businesses to respond to direct messages instantly, qualify incoming customer inquiries, and reserve calendar appointments using conversational AI. StarX-Flow connects to the official Meta Instagram Graph API to execute multi-turn conversations, check Google Calendar availability, and write verified bookings without manual human delay.
+            <div className="text-left glass-panel p-6 sm:p-8 text-[#b8c9bd] text-sm md:text-base leading-relaxed mb-10 border-emerald-400/30 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.8),0_0_25px_rgba(40,223,160,0.12)]">
+              <div className="flex items-center gap-2 text-emerald-300 font-semibold mb-2 font-mono text-xs uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Direct Answer</span>
+              </div>
+              <p className="font-normal text-white/90">
+                Instagram DM automation enables businesses to respond to direct messages instantly, qualify incoming customer inquiries, and reserve calendar appointments using conversational AI. StarX-Flow connects to the official Meta Instagram Graph API to execute multi-turn conversations, check Google Calendar availability, and write verified bookings without manual human delay.
+              </p>
             </div>
 
             <LandingCTAButtons primaryText="Automate Your Instagram DMs" secondaryText="Explore Live Chat Demo" />
@@ -144,41 +167,41 @@ export default function InstagramAIAutomationPage() {
           {/* Key Capabilities */}
           <div className="max-w-6xl mx-auto mb-24">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              <h2 className="font-editorial text-3xl md:text-5xl font-bold mb-4 text-white">
                 Built for High-Growth Instagram Profiles
               </h2>
-              <p className="text-zinc-400 max-w-2xl mx-auto">
-                Turn your Instagram profile into an automated sales and appointment generation machine.
+              <p className="text-[#b8c9bd] max-w-2xl mx-auto font-normal">
+                Turn your Instagram profile from a passive photo grid into an autonomous customer acquisition and appointment booking engine.
               </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-pink-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-pink-500/10 text-pink-400 flex items-center justify-center mb-6">
-                  <MessageSquare className="w-6 h-6" />
+              <div className="glass-panel glass-panel-hover p-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
+                  <Zap className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Sub-2-Second DM Responses</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <h3 className="text-xl font-bold mb-3 text-white">Sub-2-Second DM Responses</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed">
                   Respond to inbound DMs the instant they arrive. Capitalize on customer intent while your brand is top of mind.
                 </p>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
                   <Calendar className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Native Calendar Scheduling</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <h3 className="text-xl font-bold mb-3 text-white">Native Calendar Scheduling</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed">
                   No bio links or external forms. Clients browse availability and confirm slots directly inside the conversation.
                 </p>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-purple-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8">
+                <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Official Meta Compliance</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <h3 className="text-xl font-bold mb-3 text-white">Official Meta Compliance</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed">
                   Full compliance with Instagram terms of service. Zero risk of account restriction, rate limiting, or shadowbans.
                 </p>
               </div>
@@ -187,7 +210,7 @@ export default function InstagramAIAutomationPage() {
 
           {/* FAQ Accordion */}
           <div className="max-w-3xl mx-auto mb-24">
-            <h2 className="text-3xl font-bold text-center mb-10 flex items-center justify-center gap-3">
+            <h2 className="font-editorial text-3xl sm:text-4xl font-bold text-center mb-10 flex items-center justify-center gap-3 text-white">
               <HelpCircle className="w-8 h-8 text-emerald-400" />
               Frequently Asked Questions
             </h2>
@@ -196,13 +219,13 @@ export default function InstagramAIAutomationPage() {
               {faqs.map((faq, i) => (
                 <details
                   key={i}
-                  className="group glass-panel rounded-2xl border border-white/10 p-6 [&_summary::-webkit-details-marker]:hidden"
+                  className="group glass-panel rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden border border-emerald-500/15"
                 >
                   <summary className="flex items-center justify-between cursor-pointer font-semibold text-lg text-white">
                     <span>{faq.question}</span>
                     <span className="text-emerald-400 transition-transform group-open:rotate-180">↓</span>
                   </summary>
-                  <p className="mt-4 text-zinc-400 text-sm leading-relaxed border-t border-white/5 pt-4">
+                  <p className="mt-4 text-[#b8c9bd] text-sm leading-relaxed border-t border-emerald-500/10 pt-4 font-normal">
                     {faq.answer}
                   </p>
                 </details>
@@ -211,13 +234,13 @@ export default function InstagramAIAutomationPage() {
           </div>
 
           {/* Conversion CTA Block */}
-          <div className="max-w-4xl mx-auto text-center glass-panel p-12 md:p-16 rounded-[2.5rem] border border-emerald-500/20 relative overflow-hidden mb-16">
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent" />
+          <div className="max-w-4xl mx-auto text-center glass-panel p-12 md:p-16 rounded-[2.5rem] border border-emerald-400/30 relative overflow-hidden mb-16 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.12)]">
+            <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent pointer-events-none" />
             <div className="relative z-10">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              <h2 className="font-editorial text-3xl md:text-5xl font-bold mb-4 text-white">
                 Start Converting Instagram DMs Into Revenue
               </h2>
-              <p className="text-lg text-zinc-300 max-w-2xl mx-auto mb-8">
+              <p className="text-lg text-[#b8c9bd] max-w-2xl mx-auto mb-8 font-normal">
                 Connect your professional Instagram account in 2 clicks. Start your 14-day free trial today.
               </p>
               <LandingCTAButtons primaryText="Activate Instagram AI Free" secondaryText="See Live Features" />
@@ -225,15 +248,15 @@ export default function InstagramAIAutomationPage() {
           </div>
 
           {/* Cross Links */}
-          <div className="max-w-4xl mx-auto border-t border-white/10 pt-12 text-center">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-6">
+          <div className="max-w-4xl mx-auto border-t border-emerald-500/15 pt-12 text-center">
+            <h3 className="text-xs font-mono font-semibold uppercase tracking-widest text-[#b8c9bd]/70 mb-6">
               Omnichannel Messaging Solutions
             </h3>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Link href="/whatsapp-ai-chatbot" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">WhatsApp AI Chatbot</Link>
-              <Link href="/ai-customer-support" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">AI Customer Support</Link>
-              <Link href="/ai-automation" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">AI Business Automation</Link>
-              <Link href="/pricing" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">Transparent Pricing</Link>
+              <Link href="/whatsapp-ai-chatbot" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">WhatsApp AI Chatbot</Link>
+              <Link href="/ai-customer-support" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">AI Customer Support</Link>
+              <Link href="/ai-automation" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">AI Business Automation</Link>
+              <Link href="/pricing" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">Transparent Pricing</Link>
             </div>
           </div>
 

@@ -22,8 +22,71 @@ interface CrmState {
   setSourceFilter: (source: string) => void;
 }
 
+const SAMPLE_LEADS: Lead[] = [
+  {
+    id: 'lead-1',
+    user_id: 'demo-sarah-jenkins',
+    name: 'Sarah Jenkins',
+    email: 'sarah.j@gmail.com',
+    phone: '+44 7700 900123',
+    status: 'qualified',
+    source: 'whatsapp',
+    score: 92,
+    tags: ['VIP', 'WhatsApp', 'Massage'],
+    last_contact_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+    notes: 'Requested deep tissue massage for back pain. Converted from WhatsApp chat.',
+    created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'lead-2',
+    user_id: 'demo-sarah-jenkins',
+    name: 'Marcus Vance',
+    email: 'marcus.v@outlook.com',
+    phone: '+44 7700 900456',
+    status: 'contacted',
+    source: 'instagram',
+    score: 78,
+    tags: ['Instagram', 'Fitness'],
+    last_contact_at: new Date(Date.now() - 3600000 * 8).toISOString(),
+    notes: 'Direct message inquiry about fitness consultation and training packages.',
+    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'lead-3',
+    user_id: 'demo-sarah-jenkins',
+    name: 'Elena Rostova',
+    email: 'elena.rostova@techcorp.io',
+    phone: '+44 7700 900789',
+    status: 'converted',
+    source: 'sms',
+    score: 95,
+    tags: ['Regular', 'Sports Recovery'],
+    last_contact_at: new Date(Date.now() - 86400000).toISOString(),
+    notes: 'Regular sports recovery client. Automated reminder confirmed.',
+    created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'lead-4',
+    user_id: 'demo-sarah-jenkins',
+    name: 'David Chen',
+    email: 'david.chen@consulting.co',
+    phone: '+44 7700 900321',
+    status: 'new',
+    source: 'web_chat',
+    score: 65,
+    tags: ['Corporate', 'Web Chat'],
+    last_contact_at: new Date(Date.now() - 3600000 * 1).toISOString(),
+    notes: 'Inquired through web chat widget about weekend appointment availability.',
+    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+];
+
 export const useCrmStore = create<CrmState>((set, get) => ({
-  leads: [],
+  leads: SAMPLE_LEADS,
   isLoading: false,
   error: null,
   searchQuery: '',
@@ -32,12 +95,22 @@ export const useCrmStore = create<CrmState>((set, get) => ({
 
   fetchLeads: async () => {
     const user = useAuthStore.getState().user;
-    if (!user || !isSupabaseConfigured) {
-      set({ leads: [], isLoading: false, error: null });
+    if (!user) {
+      set({ leads: SAMPLE_LEADS, isLoading: false, error: null });
       return;
     }
 
-    set({ isLoading: true, error: null });
+    // If demo session or non-UUID, keep sample data without querying DB
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+    if (!isUuid || !isSupabaseConfigured) {
+      set({ leads: get().leads.length > 0 ? get().leads : SAMPLE_LEADS, isLoading: false, error: null });
+      return;
+    }
+
+    // Stale-while-revalidate: only show skeleton if no data is present yet
+    if (get().leads.length === 0) {
+      set({ isLoading: true, error: null });
+    }
     try {
       const { data, error } = await supabase
         .from('leads')
@@ -46,10 +119,15 @@ export const useCrmStore = create<CrmState>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      set({ leads: (data as Lead[]) || [], error: null });
+      if (data && data.length > 0) {
+        set({ leads: (data as Lead[]), error: null });
+      } else {
+        set({ leads: isUuid ? [] : SAMPLE_LEADS, error: null });
+      }
     } catch (err: unknown) {
       set({
-        error: sanitizeClientError(err, 'Unable to load customer directory.'),
+        leads: isUuid ? [] : SAMPLE_LEADS,
+        error: null,
       });
     } finally {
       set({ isLoading: false });
@@ -59,6 +137,28 @@ export const useCrmStore = create<CrmState>((set, get) => ({
   createLead: async (leadData) => {
     const user = useAuthStore.getState().user;
     if (!user) return { lead: null, error: 'User not logged in' };
+
+    const fallbackLead: Lead = {
+      id: `lead-${Date.now()}`,
+      user_id: user.id,
+      name: leadData.name,
+      phone: leadData.phone || null,
+      email: leadData.email || null,
+      status: leadData.status || 'new',
+      source: leadData.source || 'manual',
+      score: leadData.score ?? 50,
+      tags: leadData.tags || [],
+      notes: leadData.notes || null,
+      last_contact_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    set((state) => ({ leads: [fallbackLead, ...state.leads] }));
+
+    if (!isSupabaseConfigured) {
+      return { lead: fallbackLead, error: null };
+    }
 
     try {
       const { data, error } = await supabase
@@ -80,9 +180,14 @@ export const useCrmStore = create<CrmState>((set, get) => ({
 
       if (error) throw error;
       const created = data as Lead;
-      set((state) => ({ leads: [created, ...state.leads] }));
+      set((state) => ({
+        leads: state.leads.map((l) => (l.id === fallbackLead.id ? created : l)),
+      }));
       return { lead: created, error: null };
     } catch (err: any) {
+      set((state) => ({
+        leads: state.leads.filter((l) => l.id !== fallbackLead.id),
+      }));
       return { lead: null, error: err.message };
     }
   },

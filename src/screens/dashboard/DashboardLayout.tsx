@@ -142,7 +142,18 @@ export function DashboardLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans flex overflow-x-clip relative">
+    <div className="min-h-screen bg-[#020a07] text-[#f0f5ef] font-sans flex overflow-x-clip relative selection:bg-emerald-500/30 selection:text-emerald-200">
+      {/* Background Emerald Ambient Depth */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div
+          className="absolute -top-40 -left-40 w-[600px] h-[600px] pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(40, 223, 160, 0.08) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute top-1/3 -right-40 w-[500px] h-[500px] pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)" }}
+        />
+      </div>
       {/* 1. Sidebar component (Persistent on desktop, bottom navigation on mobile) */}
       <DashboardSidebar />
 

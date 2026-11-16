@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
 import { 
   ShieldCheck, 
   Lock, 
@@ -11,13 +10,10 @@ import {
   FileCheck2, 
   Server, 
   RefreshCw, 
-  AlertCircle, 
-  ArrowRight,
-  CheckCircle2,
-  Mail
+  CheckCircle2, 
+  Mail,
+  Sparkles,
 } from "lucide-react";
-import { GlassPanel } from "@/components/ui/GlassPanel";
-import { VIEWPORT_CONFIG } from "@/lib/motionVariants";
 
 export function SecurityClient() {
   const securityControls = [
@@ -105,78 +101,94 @@ export function SecurityClient() {
   ];
 
   return (
-    <div className="pt-32 lg:pt-40 pb-20 min-h-screen relative overflow-hidden bg-black text-white">
-      {/* Background Ambience */}
-      <div className="absolute top-[10%] right-[10%] w-[600px] h-[600px] atmo-glow atmo-glow-emerald opacity-15 pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[5%] w-[500px] h-[500px] atmo-glow atmo-glow-soft opacity-10 pointer-events-none" />
+    <div className="pt-32 lg:pt-40 pb-20 lg:pb-28 min-h-screen relative overflow-hidden bg-[#020a07] text-[#f0f5ef]">
+      {/* Background Emerald Ambient Glow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/4 right-0 w-[600px] h-[600px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
+        }}
+      />
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         
         {/* Navigation Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="mb-10 text-xs font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+        <nav aria-label="Breadcrumb" className="mb-10 text-xs font-mono text-[#b8c9bd]/70 uppercase tracking-widest flex items-center gap-2">
           <Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link>
           <span>/</span>
-          <span className="text-zinc-300">Security & Privacy Architecture</span>
+          <span className="text-emerald-300">Security &amp; Privacy Architecture</span>
         </nav>
 
         {/* Hero Section */}
         <div className="max-w-4xl mx-auto text-center mb-16 lg:mb-24">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6">
-            <ShieldCheck size={12} className="text-emerald-400" />
-            Security & Data Governance
+          <div className="spatial-pill-badge mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+            Enterprise Data Governance
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white mb-8 leading-tight">
+          <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-8 leading-[1.08]">
             Enterprise trust built on <br />
-            <span className="text-gradient-silver">provable engineering.</span>
+            <span className="text-gradient-emerald">provable engineering.</span>
           </h1>
-          <p className="text-lg md:text-xl text-zinc-400 font-medium leading-relaxed max-w-3xl mx-auto">
-            We don&apos;t rely on marketing slogans or unverified badges. StarX-Flow protects your merchant data and client conversations through database-level isolation, cryptographic webhook verification, and immutable audit trails.
+          <p className="text-lg md:text-xl text-[#b8c9bd] font-normal leading-relaxed max-w-3xl mx-auto">
+            We don&apos;t rely on marketing slogans or unverified badges. StarX Flow protects your merchant data and client conversations through database-level isolation, cryptographic webhook verification, and immutable audit trails.
           </p>
         </div>
 
-        {/* Direct Answer Summary Block (AEO / GEO Extraction) */}
-        <GlassPanel tier="panel" className="p-8 md:p-10 rounded-3xl mb-20 border border-emerald-500/20 bg-emerald-950/10">
+        {/* Direct Answer Summary Block */}
+        <div className="glass-panel p-8 md:p-10 rounded-3xl mb-20 border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(40,223,160,0.12)]">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/30 text-emerald-400 shrink-0">
+            <div className="p-3 bg-emerald-500/15 rounded-2xl border border-emerald-400/30 text-emerald-300 shrink-0">
               <CheckCircle2 size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white mb-2">Key Takeaway: The StarX-Flow Security Architecture</h2>
-              <p className="text-sm md:text-base text-zinc-300 leading-relaxed font-normal">
-                StarX-Flow secures appointment-driven businesses through six architectural pillars: <strong>(1) PostgreSQL Row Level Security (RLS)</strong> enforcing strict tenant isolation at the database engine level; <strong>(2) HMAC-SHA256 cryptographic signature validation</strong> on all Meta WhatsApp and Instagram webhooks; <strong>(3) PostgreSQL exclusion constraints (btree_gist)</strong> preventing overlapping appointment ranges; <strong>(4) Engine-level immutable audit logging</strong> prohibiting log updates or deletions; <strong>(5) TLS 1.3 transport encryption</strong> and AES-256 storage encryption; and <strong>(6) Programmatic GDPR Article 17 and 20 endpoints</strong> for customer data export and right-to-erasure compliance.
+              <h2 className="font-editorial text-xl md:text-2xl font-bold text-white mb-2">
+                Key Takeaway: The StarX Flow Security Architecture
+              </h2>
+              <p className="text-sm md:text-base text-[#b8c9bd] leading-relaxed font-normal">
+                StarX Flow secures appointment-driven businesses through six architectural pillars: <strong>(1) PostgreSQL Row Level Security (RLS)</strong> enforcing strict tenant isolation at the database engine level; <strong>(2) HMAC-SHA256 cryptographic signature validation</strong> on all Meta WhatsApp and Instagram webhooks; <strong>(3) PostgreSQL exclusion constraints (btree_gist)</strong> preventing overlapping appointment ranges; <strong>(4) Engine-level immutable audit logging</strong> prohibiting log updates or deletions; <strong>(5) TLS 1.3 transport encryption</strong> and AES-256 storage encryption; and <strong>(6) Programmatic GDPR Article 17 and 20 endpoints</strong> for customer data export and right-to-erasure compliance.
               </p>
             </div>
           </div>
-        </GlassPanel>
+        </div>
 
         {/* Security Controls Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
-          {securityControls.map((ctrl, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 mb-24">
+          {securityControls.map((ctrl) => (
             <div
-              key={i}
-              className="glass-card p-8 rounded-3xl flex flex-col justify-between border border-white/10"
+              key={ctrl.title}
+              className="glass-panel glass-panel-hover p-8 rounded-3xl flex flex-col justify-between border-emerald-500/20"
             >
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                  <div className="p-3 bg-emerald-500/15 rounded-2xl border border-emerald-400/30 shadow-[0_0_15px_rgba(40,223,160,0.12)]">
                     {ctrl.icon}
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  <span className="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 rounded-full uppercase tracking-wider">
                     {ctrl.badge}
                   </span>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">
+                <h3 className="font-editorial text-2xl font-bold text-white mb-3 tracking-tight">
                   {ctrl.title}
                 </h3>
-                <p className="text-sm text-zinc-400 font-medium leading-relaxed mb-6">
+                <p className="text-sm text-[#b8c9bd] font-normal leading-relaxed mb-6">
                   {ctrl.description}
                 </p>
               </div>
 
-              <ul className="space-y-2.5 border-t border-white/5 pt-6 text-xs text-zinc-400 font-medium">
+              <ul className="space-y-2.5 border-t border-emerald-500/20 pt-6 text-xs text-emerald-100/90 font-medium">
                 {ctrl.details.map((point, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 mt-1.5" />
+                  <li key={idx} className="flex items-start gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 mt-1.5 shadow-[0_0_6px_#34d399]" />
                     <span>{point}</span>
                   </li>
                 ))}
@@ -188,57 +200,57 @@ export function SecurityClient() {
         {/* Sub-Processor Transparency Table */}
         <div className="mb-24">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold text-white tracking-tight mb-4">
-              Infrastructure & Sub-Processor Transparency
+            <h2 className="font-editorial text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">
+              Infrastructure &amp; Sub-Processor Transparency
             </h2>
-            <p className="text-zinc-400 text-sm font-medium">
+            <p className="text-[#b8c9bd] text-base font-normal">
               We exclusively deploy on enterprise cloud infrastructure maintaining accredited security certifications.
             </p>
           </div>
 
-          <GlassPanel tier="mist" className="p-6 md:p-8 rounded-3xl overflow-x-auto">
+          <div className="glass-panel p-6 md:p-8 rounded-3xl overflow-x-auto border-emerald-500/20 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.8)]">
             <table className="w-full text-left text-sm border-collapse min-w-[600px]">
               <thead>
-                <tr className="border-b border-white/10 text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <tr className="border-b border-emerald-500/20 text-xs font-mono font-bold text-emerald-300 uppercase tracking-wider">
                   <th className="py-4 px-4">Sub-Processor</th>
                   <th className="py-4 px-4">Operational Role</th>
                   <th className="py-4 px-4">Accredited Standards</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-zinc-300 font-medium text-xs md:text-sm">
-                {subProcessors.map((sp, idx) => (
-                  <tr key={idx} className="hover:bg-white/5 transition-colors">
-                    <td className="py-4 px-4 font-bold text-white flex items-center gap-2">
+              <tbody className="divide-y divide-emerald-500/15 text-[#b8c9bd] font-normal text-xs md:text-sm">
+                {subProcessors.map((sp) => (
+                  <tr key={sp.name} className="hover:bg-emerald-500/5 transition-colors">
+                    <td className="py-4 px-4 font-bold text-white flex items-center gap-2.5">
                       <Server size={14} className="text-emerald-400" />
                       {sp.name}
                     </td>
                     <td className="py-4 px-4">{sp.role}</td>
-                    <td className="py-4 px-4 text-emerald-400/90 font-semibold">{sp.cert}</td>
+                    <td className="py-4 px-4 text-emerald-300 font-mono font-semibold">{sp.cert}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </GlassPanel>
+          </div>
         </div>
 
         {/* Vulnerability Disclosure & Contact */}
-        <GlassPanel tier="panel" className="p-8 md:p-12 rounded-3xl border border-white/10 text-center max-w-3xl mx-auto">
-          <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mx-auto mb-6 border border-emerald-500/20">
+        <div className="glass-panel p-8 md:p-12 rounded-3xl border-emerald-400/30 text-center max-w-3xl mx-auto shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_25px_rgba(40,223,160,0.1)]">
+          <div className="w-12 h-12 bg-emerald-500/15 rounded-2xl flex items-center justify-center text-emerald-300 mx-auto mb-6 border border-emerald-400/30 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
             <Mail size={24} />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">
+          <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">
             Security Vulnerability Disclosure
           </h2>
-          <p className="text-sm md:text-base text-zinc-400 font-medium leading-relaxed mb-6">
-            We welcome responsible security research. If you believe you have discovered a potential vulnerability in StarX-Flow, please contact our security engineering team directly. We commit to acknowledging all submissions within 24 hours.
+          <p className="text-sm md:text-base text-[#b8c9bd] font-normal leading-relaxed mb-6">
+            We welcome responsible security research. If you believe you have discovered a potential vulnerability in StarX Flow, please contact our security engineering team directly. We commit to acknowledging all submissions within 24 hours.
           </p>
-          <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-3 rounded-full text-sm font-bold text-white">
-            <span className="text-zinc-400 font-normal">Direct Security Contact:</span>
-            <a href="mailto:security@starx-flow.runs-on.dev" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+          <div className="inline-flex items-center gap-3 bg-[#010804] border border-emerald-500/25 px-6 py-3 rounded-full text-sm font-semibold text-white">
+            <span className="text-[#b8c9bd] font-normal">Direct Security Contact:</span>
+            <a href="mailto:security@starx-flow.runs-on.dev" className="text-emerald-400 hover:text-emerald-300 transition-colors font-mono">
               security@starx-flow.runs-on.dev
             </a>
           </div>
-        </GlassPanel>
+        </div>
 
       </div>
     </div>

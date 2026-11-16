@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUIStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
+import { StarXCoreCanvas } from "./spatial/StarXCoreCanvas";
+import { useMagneticButton } from "@/lib/motion/MagneticController";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   DATA DEFINITIONS
+   STATIC DATA DEFINITIONS FROM STARX FLOW RUNTIME
    ───────────────────────────────────────────────────────────────────────────── */
 
-const calendarDaysLayout: { label?: string; isHeader?: boolean; day?: number; muted?: boolean }[] = [
+const calendarDaysLayout = [
   { label: 'S', isHeader: true },
   { label: 'M', isHeader: true },
   { label: 'T', isHeader: true },
@@ -19,9 +21,63 @@ const calendarDaysLayout: { label?: string; isHeader?: boolean; day?: number; mu
   { label: 'F', isHeader: true },
   { day: 3 }, { day: 4 }, { day: 5 }, { day: 6 }, { day: 7 }, { day: 8 },
   { day: 9 }, { day: 10 }, { day: 11 }, { day: 12 }, { day: 13 }, { day: 14 },
-  { day: 16 }, { day: 17 }, { day: 18 }, { day: 19 }, { day: 20 }, { day: 21 },
-  { day: 23 }, { day: 24 }, { day: 25 }, { day: 26 }, { day: 27 }, { day: 28 },
-  { day: 30 }, { day: 31, muted: true }, { day: 1, muted: true }, { day: 2, muted: true }, { day: 3, muted: true }, { day: 4, muted: true }
+  { day: 17 }, { day: 18 }, { day: 19 }, { day: 20 }, { day: 22 }, { day: 23 },
+  { day: 24 }, { day: 25 }, { day: 26 }, { day: 27 }, { day: 28 }, { day: 29 },
+  { day: 30 }, { day: 31 }, { day: 1, muted: true }, { day: 2, muted: true }, { day: 3, muted: true }, { day: 4, muted: true }
+];
+
+const workflowTabsData: Record<string, {
+  sideTitle: string;
+  sideDesc: string;
+  phoneHeader: string;
+  phoneStatus: string;
+  incomingText: string;
+  botPrompt: string;
+  confirmedTitle: string;
+}> = {
+  whatsapp: {
+    sideTitle: '24/7 WhatsApp Bookings',
+    sideDesc: 'Turn enquiries into confirmed appointments automatically, anytime, day or night.',
+    phoneHeader: 'Your Business',
+    phoneStatus: 'Online',
+    incomingText: 'Hi! Can I book a consultation?',
+    botPrompt: 'Sure! Here are the available slots:',
+    confirmedTitle: 'Booking Confirmed'
+  },
+  ai: {
+    sideTitle: 'AI-Powered Client Triage',
+    sideDesc: 'Instantly answer FAQs, qualify service needs, and recommend the right specialist in natural language.',
+    phoneHeader: 'StarX AI Concierge',
+    phoneStatus: 'AI Active • Instant Reply',
+    incomingText: 'Do you have evening slots this week?',
+    botPrompt: 'Yes! I found 3 priority openings for you:',
+    confirmedTitle: 'AI Triage Complete'
+  },
+  scheduling: {
+    sideTitle: 'Multi-Staff Calendar Sync',
+    sideDesc: 'Real-time two-way sync across Google, Outlook, and staff rosters with zero double-bookings.',
+    phoneHeader: 'Smart Scheduler',
+    phoneStatus: '4 Providers Synced',
+    incomingText: 'Can I reschedule to Tuesday?',
+    botPrompt: 'Tap a verified conflict-free slot below:',
+    confirmedTitle: 'Calendar Synced'
+  },
+  crm: {
+    sideTitle: 'Unified Service CRM & History',
+    sideDesc: 'Every chat, intake form, booking note, and visit audit trail linked automatically to one client profile.',
+    phoneHeader: 'Client CRM Profile',
+    phoneStatus: '100% Direct Ownership',
+    incomingText: 'Same treatment as my last visit please!',
+    botPrompt: 'Loaded your preferences! Pick a time:',
+    confirmedTitle: 'CRM Record Updated'
+  }
+};
+
+const challengeInsights = [
+  { title: 'Missed enquiries eliminated', desc: 'StarX Flow responds on WhatsApp in under 2 seconds, 24/7—capturing 100% of after-hours leads.', nodeIdx: 2 },
+  { title: 'Manual bookings automated', desc: 'Clients pick live slots directly inside WhatsApp without back-and-forth phone calls.', nodeIdx: 0 },
+  { title: 'Scheduling conflicts prevented', desc: 'Real-time multi-provider calendar locking guarantees zero double-bookings.', nodeIdx: 4 },
+  { title: 'No-shows reduced by 78%', desc: 'Automated WhatsApp reminders and 1-tap rescheduling keep your daily roster full.', nodeIdx: 5 }
 ];
 
 const capabilityDetails = [
@@ -33,281 +89,684 @@ const capabilityDetails = [
   { title: 'Unified Service CRM & Audit Trail', subtitle: 'Complete chronological history of every message, booking, provider note, and visit outcome.' }
 ];
 
-const workflowTabContents: Record<string, { title: string; desc: string; phoneTitle: string; phoneStatus: string; incomingText: string; promptText: string; confirmedTitle: string }> = {
-  whatsapp: {
-    title: '24/7 WhatsApp Bookings',
-    desc: 'Turn enquiries into confirmed appointments automatically, anytime, day or night.',
-    phoneTitle: 'Your Business',
-    phoneStatus: 'Online',
-    incomingText: 'Hi! Can I book a consultation?',
-    promptText: 'Sure! Here are the available slots:',
-    confirmedTitle: 'Booking Confirmed'
-  },
-  ai: {
-    title: 'Contextual AI Understanding',
-    desc: 'Understands customer intent, reschedules gracefully, and answers business queries instantly.',
-    phoneTitle: 'StarX AI Concierge',
-    phoneStatus: 'Active Intelligence',
-    incomingText: 'Can I reschedule my appointment to Wednesday?',
-    promptText: 'Checking live staff calendar availability...',
-    confirmedTitle: 'Slot Updated'
-  },
-  scheduling: {
-    title: 'Smart Calendar Synchronization',
-    desc: 'Two-way sync with Google, Apple, and Outlook calendars with zero double-booking tolerance.',
-    phoneTitle: 'Calendar Engine',
-    phoneStatus: 'Two-Way Sync Active',
-    incomingText: 'Is the 2:00 PM slot reserved for Sarah?',
-    promptText: 'Locked atomically across Google & Outlook calendars:',
-    confirmedTitle: 'Synchronized'
-  },
-  crm: {
-    title: 'Customer Intelligence & History',
-    desc: 'Complete client profiles, appointment history, preferences, and automated follow-ups in one place.',
-    phoneTitle: 'Client CRM Profile',
-    phoneStatus: 'Record #4892 Synced',
-    incomingText: 'View consultation history for Elena Rostova',
-    promptText: '3 previous visits • Preferred: Wed 11:00 AM:',
-    confirmedTitle: 'Profile Verified'
-  }
-};
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   COMPONENT IMPLEMENTATION
-   ───────────────────────────────────────────────────────────────────────────── */
-
 export function StarXFlowLanding() {
-
   const router = useRouter();
-  const openLogin = useUIStore((s) => s.openLogin);
-  const openSignup = useUIStore((s) => s.openSignup);
-  const openDemo = useUIStore((s) => s.openDemo);
-  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const { openLogin, openSignup } = useUIStore();
+  const { isLoggedIn } = useAuthStore();
+  const heroGetStartedRef = useMagneticButton<HTMLButtonElement>({ strength: 0.8 });
 
-  // Interactive UI State
-  const [selectedDate, setSelectedDate] = useState<number>(11);
-  const [selectedSlot, setSelectedSlot] = useState<string>('Tue, 10:00 AM');
-  const [activeWorkflowTab, setActiveWorkflowTab] = useState<string>('whatsapp');
-  const [activeOrbitalNode, setActiveOrbitalNode] = useState<number>(0);
-  const [renderMode, setRenderMode] = useState<'hybrid' | 'pure-css'>('hybrid');
-  const [xrayOpacity, setXrayOpacity] = useState<number>(0);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastTimeout, setToastTimeout] = useState<NodeJS.Timeout | null>(null);
-
-  // ROI Calculator State
-  const [roiSessionVal, setRoiSessionVal] = useState<number>(80);
-  const [roiMissedCalls, setRoiMissedCalls] = useState<number>(20);
-  const roiMonthlyRecovery = Math.round(roiSessionVal * roiMissedCalls * 0.75);
-  const roiHoursSaved = Math.round(roiMissedCalls * 1.5);
-
-  // Sarah K. AI Receptionist Interactive Demo State
-  const [sarahMessages, setSarahMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string }>>([
-    {
-      sender: 'user',
-      text: 'Hi, do you have any slots for a deep tissue massage tomorrow?'
-    },
-    {
-      sender: 'bot',
-      text: 'Hi! We have openings at <strong>10:30 AM</strong> and <strong>2:00 PM</strong> with therapist Sarah. Want me to book one?'
-    }
-  ]);
-  const [sarahInput, setSarahInput] = useState<string>('');
-  const [sarahConfirmedText, setSarahConfirmedText] = useState<string>(
-    'Appointment confirmed — Sarah K., Deep Tissue, 2:00 PM'
-  );
-
-  // Modal State
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean;
-    mode: 'login' | 'signup' | 'capability';
-    title: string;
-    eyebrow: string;
-    subtitle: string;
-    submitText: string;
-    showBizName: boolean;
-    isSuccess: boolean;
-  }>({
-    isOpen: false,
-    mode: 'signup',
-    title: 'Run Your Business on One Flow',
-    eyebrow: 'STARX FLOW ENVIRONMENT',
-    subtitle: 'Connect your WhatsApp Business number, staff calendars, and customer CRM in under 3 minutes.',
-    submitText: 'Start 14-Day Free Trial →',
-    showBizName: true,
-    isSuccess: false
+  const appStateRef = useRef({
+    selectedDate: 11,
+    selectedSlot: 'Tue, 10:00 AM',
+    activeWorkflowTab: 'whatsapp',
+    activeOrbitalNode: 0,
+    renderMode: 'hybrid'
   });
 
-  const [bizName, setBizName] = useState('');
-  const [email, setEmail] = useState('');
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const spatialMotionRef = useRef<{
+    targetX: number;
+    targetY: number;
+    currentX: number;
+    currentY: number;
+    cursorX: number;
+    cursorY: number;
+    ringX: number;
+    ringY: number;
+    reducedMotion: boolean;
+    rafId: number | null;
+  }>({
+    targetX: 0,
+    targetY: 0,
+    currentX: 0,
+    currentY: 0,
+    cursorX: 720,
+    cursorY: 380,
+    ringX: 720,
+    ringY: 380,
+    reducedMotion: false,
+    rafId: null
+  });
 
-  // Mouse tilt tracking
-  const [mousePos, setMousePos] = useState({ mx: '0.5', my: '0.5' });
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width).toFixed(3);
-    const y = ((e.clientY - rect.top) / rect.height).toFixed(3);
-    setMousePos({ mx: x, my: y });
-  };
-
-  // Toast Helper
-  const showToast = (msg: string) => {
-    if (toastTimeout) clearTimeout(toastTimeout);
-    setToastMessage(msg);
-    const t = setTimeout(() => {
-      setToastMessage(null);
-    }, 3800);
-    setToastTimeout(t);
-  };
-
-  const hideToast = () => {
-    if (toastTimeout) clearTimeout(toastTimeout);
-    setToastMessage(null);
-  };
-
-  // Time Slot Selection
-  const selectTimeSlot = (slot: string) => {
-    setSelectedSlot(slot);
-    showToast(`Selected Slot: ${slot}`);
-  };
-
-  // Workflow Tabs
-  const resetWorkflowDemo = () => {
-    setActiveWorkflowTab('whatsapp');
-    setSelectedSlot('Tue, 10:00 AM');
-    showToast('Workflow demo reset to 24/7 WhatsApp Bookings');
-  };
-
-  const selectWorkflowTab = (tab: string) => {
-    setActiveWorkflowTab(tab);
-    showToast(`Switched to ${workflowTabContents[tab]?.title || tab}`);
-  };
-
-  const cycleWorkflowTab = () => {
-    const tabs = ['whatsapp', 'ai', 'scheduling', 'crm'];
-    const idx = tabs.indexOf(activeWorkflowTab);
-    const nextTab = tabs[(idx + 1) % tabs.length];
-    selectWorkflowTab(nextTab);
-  };
-
-  // Orbital Nodes
-  const selectOrbitalNode = (idx: number, name: string) => {
-    setActiveOrbitalNode(idx);
-    showToast(`Node Connected: ${name}`);
-  };
-
-  const pulseAllNodes = () => {
-    showToast('All 6 Orbital Beams Synchronized with Core');
-  };
-
-  // Challenge highlight
-  const highlightChallenge = (idx: number) => {
-    const labels = ['Missed Enquiries', 'Manual Bookings', 'Scheduling Conflicts', 'No-Shows'];
-    showToast(`Challenge Identified: ${labels[idx]} — Resolved by StarX Flow`);
-  };
-
-  // Capability detail
-  const openCapabilityDetail = (idx: number) => {
-    const cap = capabilityDetails[idx];
-    if (!cap) return;
-    openModal('capability', cap.title, cap.subtitle);
-  };
-
-  // Smooth Scroll
-  const scrollToSection = (secId: string) => {
-    const el = document.getElementById(secId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+  const checkReducedMotionPreference = useCallback(() => {
+    if (typeof document === 'undefined') return false;
+    if (document.body.classList.contains('force-motion-enabled')) {
+      return false;
     }
-  };
+    if (document.body.classList.contains('reduced-motion-forced')) {
+      return true;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return true;
+    }
+    return false;
+  }, []);
 
-  // Modal Handlers
-  const openModal = (mode: 'login' | 'signup' | 'capability', planOrTitle?: string, customSubtitle?: string) => {
+  const showToast = useCallback((msg: string) => {
+    if (typeof document === 'undefined') return;
+    const toast = document.getElementById('starx-toast');
+    const text = document.getElementById('toast-text');
+    if (!toast || !text) return;
+    text.textContent = msg;
+    toast.classList.remove('hidden');
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
+      hideToast();
+    }, 3400);
+  }, []);
+
+  const hideToast = useCallback(() => {
+    if (typeof document === 'undefined') return;
+    const toast = document.getElementById('starx-toast');
+    if (toast) toast.classList.add('hidden');
+  }, []);
+
+  const updateSlotLabels = useCallback(() => {
+    if (typeof document === 'undefined') return;
+    const customerLabel = document.getElementById('customer-card-slot');
+    const confirmedSlot = document.getElementById('action-confirmed-slot');
+    const modalBadge = document.getElementById('modal-slot-summary');
+    const displaySlot = appStateRef.current.selectedSlot;
+
+    if (customerLabel) customerLabel.textContent = displaySlot;
+    if (confirmedSlot) confirmedSlot.textContent = displaySlot;
+    if (modalBadge) modalBadge.textContent = displaySlot;
+
+    ['slot-10am', 'slot-2pm', 'slot-4pm'].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      const slot = id === 'slot-10am' ? 'Tue, 10:00 AM' : (id === 'slot-2pm' ? 'Tue, 2:00 PM' : 'Tue, 4:00 PM');
+      if (slot === displaySlot) {
+        btn.style.background = '#4ade80';
+        btn.style.color = '#03110c';
+        btn.style.borderColor = '#86efac';
+      } else {
+        btn.style.background = 'rgba(6, 78, 59, 0.45)';
+        btn.style.color = '#6ee7a8';
+        btn.style.borderColor = 'rgba(74, 222, 128, 0.35)';
+      }
+    });
+  }, []);
+
+  const selectTimeSlot = useCallback((slotName: string) => {
+    appStateRef.current.selectedSlot = slotName;
+    updateSlotLabels();
+
+    const confirmedCard = document.getElementById('action-confirmed-card');
+    if (confirmedCard) {
+      confirmedCard.style.transform = 'scale(1.04)';
+      setTimeout(() => {
+        confirmedCard.style.transform = '';
+      }, 220);
+    }
+    showToast('Appointment slot updated to: ' + slotName);
+  }, [updateSlotLabels, showToast]);
+
+  const selectWorkflowTab = useCallback((tabKey: string) => {
+    if (!workflowTabsData[tabKey] || typeof document === 'undefined') return;
+    appStateRef.current.activeWorkflowTab = tabKey;
+    const data = workflowTabsData[tabKey];
+
+    ['whatsapp', 'ai', 'scheduling', 'crm'].forEach((k) => {
+      const btn = document.getElementById('tab-btn-' + k);
+      if (btn) {
+        if (k === tabKey) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+    });
+
+    const sideTitle = document.getElementById('tab-side-title');
+    const sideDesc = document.getElementById('tab-side-desc');
+    const phoneTitle = document.getElementById('phone-header-title');
+    const phoneStatus = document.getElementById('phone-header-status');
+    const incomingText = document.getElementById('phone-incoming-msg');
+    const botPrompt = document.getElementById('phone-bot-prompt');
+    const confirmedTitle = document.getElementById('phone-confirmed-title');
+
+    if (sideTitle) sideTitle.textContent = data.sideTitle;
+    if (sideDesc) sideDesc.textContent = data.sideDesc;
+    if (phoneTitle) phoneTitle.textContent = data.phoneHeader;
+    if (phoneStatus) phoneStatus.textContent = data.phoneStatus;
+    if (incomingText) incomingText.textContent = data.incomingText;
+    if (botPrompt) botPrompt.textContent = data.botPrompt;
+    if (confirmedTitle) confirmedTitle.textContent = data.confirmedTitle;
+  }, []);
+
+  const cycleWorkflowTab = useCallback(() => {
+    const order = ['whatsapp', 'ai', 'scheduling', 'crm'];
+    const nextIdx = (order.indexOf(appStateRef.current.activeWorkflowTab) + 1) % order.length;
+    selectWorkflowTab(order[nextIdx]);
+    showToast('Switched workflow preview: ' + workflowTabsData[order[nextIdx]].sideTitle);
+  }, [selectWorkflowTab, showToast]);
+
+    const pulseAllNodes = useCallback(() => {
+    if (typeof document === 'undefined') return;
+    for (let i = 0; i < 6; i++) {
+      const btn = document.getElementById('orbital-node-' + i);
+      const beam = document.getElementById('orb-beam-' + i);
+      if (btn) btn.classList.add('active');
+      if (beam) {
+        beam.setAttribute('stroke-opacity', '0.95');
+        beam.setAttribute('stroke-width', '2.8');
+      }
+    }
+    showToast('All 6 StarX operations synchronized in real time');
+  }, [showToast]);
+
+  const selectOrbitalNode = useCallback((idx: number, name?: string) => {
+    if (typeof document === 'undefined') return;
+    appStateRef.current.activeOrbitalNode = idx;
+    for (let i = 0; i < 6; i++) {
+      const btn = document.getElementById('orbital-node-' + i);
+      const beam = document.getElementById('orb-beam-' + i);
+      if (btn) {
+        if (i === idx) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+      if (beam) {
+        if (i === idx) {
+          beam.style.opacity = '1';
+          beam.style.stroke = '#86efac';
+          beam.style.strokeWidth = '2.5';
+        } else {
+          beam.style.opacity = '0.38';
+          beam.style.stroke = '#34d399';
+          beam.style.strokeWidth = '1.8';
+        }
+      }
+    }
+    showToast('Active operation hub: ' + (name || ('Node ' + (idx + 1))));
+  }, [showToast]);
+
+  const highlightChallenge = useCallback((idx: number) => {
+    if (typeof document === 'undefined') return;
+    for (let i = 0; i < 4; i++) {
+      const card = document.getElementById('challenge-card-' + i);
+      if (card) {
+        if (i === idx) card.classList.add('active');
+        else card.classList.remove('active');
+      }
+    }
+    const info = challengeInsights[idx];
+    if (info) {
+      selectOrbitalNode(info.nodeIdx, info.title);
+      showToast(info.title + ' — ' + info.desc);
+    }
+  }, [selectOrbitalNode, showToast]);
+
+  const scrollToSection = useCallback((id: string) => {
+    if (typeof document === 'undefined') return;
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  const setRenderMode = useCallback((mode: string) => {
+    if (typeof document === 'undefined') return;
+    const stage = document.getElementById('starx-stage');
+    const btnHybrid = document.getElementById('btn-mode-hybrid');
+    const btnPure = document.getElementById('btn-mode-pure');
+    if (!stage) return;
+    if (mode === 'pure-css') {
+      stage.classList.remove('mode-hybrid');
+      stage.classList.add('mode-pure-css');
+      if (btnPure) btnPure.classList.add('active');
+      if (btnHybrid) btnHybrid.classList.remove('active');
+      showToast('Render mode: Pure CSS Vector Geometry (Background image disabled)');
+    } else {
+      stage.classList.remove('mode-pure-css');
+      stage.classList.add('mode-hybrid');
+      if (btnHybrid) btnHybrid.classList.add('active');
+      if (btnPure) btnPure.classList.remove('active');
+      showToast('Render mode: Hybrid 3D Sanctuary (Fidelity aligned)');
+    }
+  }, [showToast]);
+
+  const updateXrayOpacity = useCallback((val: string | number) => {
+    if (typeof document === 'undefined') return;
+    const img = document.getElementById('xray-ref-img');
+    const pct = document.getElementById('xray-opacity-val');
+    if (img) img.style.opacity = String(Number(val) / 100);
+    if (pct) pct.textContent = val + '%';
+  }, []);
+
+  const openModal = useCallback((mode: string, planOrTitle?: string, customSubtitle?: string) => {
+    // Check live authentication system
     if (mode === 'login') {
       if (isLoggedIn) {
         router.push('/dashboard');
-      } else {
-        openLogin();
+        return;
       }
-      return;
+      if (openLogin) {
+        openLogin();
+        return;
+      }
     }
-
     if (mode === 'signup') {
       if (isLoggedIn) {
         router.push('/dashboard');
-      } else {
-        openSignup();
+        return;
       }
-      return;
+      if (openSignup) {
+        openSignup();
+        return;
+      }
     }
+
+    if (typeof document === 'undefined') return;
+    const backdrop = document.getElementById('starx-modal-backdrop');
+    const eyebrow = document.getElementById('modal-eyebrow');
+    const title = document.getElementById('modal-title');
+    const subtitle = document.getElementById('modal-subtitle');
+    const nameGroup = document.getElementById('modal-name-group');
+    const submitBtn = document.getElementById('modal-submit-btn');
+    const successBox = document.getElementById('modal-success-box');
+    const form = document.getElementById('modal-form');
+
+    if (!backdrop) return;
+    if (successBox) successBox.classList.add('hidden');
+    if (form) form.classList.remove('hidden');
 
     if (mode === 'capability') {
-      setModalState({
-        isOpen: true,
-        mode,
-        title: planOrTitle || 'StarX Flow Module',
-        eyebrow: 'CORE CAPABILITY MODULE',
-        subtitle: customSubtitle || 'Enterprise module specification and operational workflow configuration.',
-        submitText: 'Enable This Module →',
-        showBizName: true,
-        isSuccess: false
-      });
+      if (eyebrow) eyebrow.textContent = 'CORE CAPABILITY MODULE';
+      if (title) title.textContent = planOrTitle || 'Capability Details';
+      if (subtitle) subtitle.textContent = customSubtitle || 'Enterprise module specification and operational workflow configuration.';
+      if (nameGroup) nameGroup.classList.remove('hidden');
+      if (submitBtn) submitBtn.textContent = 'Enable This Module →';
+    } else if (mode === 'login') {
+      if (eyebrow) eyebrow.textContent = 'CLIENT & STAFF PORTAL';
+      if (title) title.textContent = 'Access StarX Flow';
+      if (subtitle) subtitle.textContent = 'Sign in to access your autonomous front desk, provider calendars, and client records.';
+      if (nameGroup) nameGroup.classList.add('hidden');
+      if (submitBtn) submitBtn.textContent = 'Sign In to Workspace →';
     } else {
-      setModalState({
-        isOpen: true,
-        mode,
-        title: 'Run Your Business on One Flow',
-        eyebrow: planOrTitle ? `SELECTED: ${planOrTitle.toUpperCase()}` : 'STARX FLOW ENVIRONMENT',
-        subtitle: 'Connect your WhatsApp Business number, staff calendars, and customer CRM in under 3 minutes.',
-        submitText: 'Start 14-Day Free Trial →',
-        showBizName: true,
-        isSuccess: false
-      });
+      if (eyebrow) eyebrow.textContent = planOrTitle ? ('SELECTED: ' + planOrTitle.toUpperCase()) : 'STARX FLOW ENVIRONMENT';
+      if (title) title.textContent = 'Run Your Business on One Flow';
+      if (subtitle) subtitle.textContent = 'Connect your WhatsApp Business number, staff calendars, and customer CRM in under 3 minutes.';
+      if (nameGroup) nameGroup.classList.remove('hidden');
+      if (submitBtn) submitBtn.textContent = 'Start 14-Day Free Trial →';
     }
-  };
 
-  const closeModal = () => {
-    setModalState(prev => ({ ...prev, isOpen: false, isSuccess: false }));
-    setBizName('');
-    setEmail('');
-  };
+    updateSlotLabels();
+    backdrop.classList.remove('hidden');
+    backdrop.classList.add('flex');
+  }, [isLoggedIn, router, openLogin, openSignup, updateSlotLabels]);
 
-  const handleModalSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setModalState(prev => ({ ...prev, isSuccess: true }));
-    showToast(`Request received for ${email || 'your business'}!`);
+  const closeModal = useCallback(() => {
+    if (typeof document === 'undefined') return;
+    const backdrop = document.getElementById('starx-modal-backdrop');
+    if (backdrop) {
+      backdrop.classList.add('hidden');
+      backdrop.classList.remove('flex');
+    }
+  }, []);
+
+  const handleModalSubmit = useCallback((e: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (typeof document === 'undefined') return;
+    const form = document.getElementById('modal-form');
+    const successBox = document.getElementById('modal-success-box');
+    const bizInput = (document.getElementById('modal-business-input') || document.getElementById('modal-biz-name')) as HTMLInputElement | null;
+    const emailInput = (document.getElementById('modal-email-input') || document.getElementById('modal-email')) as HTMLInputElement | null;
+    const successTitle = document.getElementById('modal-success-title');
+    const successMsg = document.getElementById('modal-success-msg');
+
+    const bizName = (bizInput && bizInput.value.trim()) ? bizInput.value.trim() : 'Your Business';
+    const contact = (emailInput && emailInput.value.trim()) ? emailInput.value.trim() : 'your account';
+
+    if (form) form.classList.add('hidden');
+    if (successTitle) successTitle.textContent = bizName + ' is Connected!';
+    if (successMsg) {
+      successMsg.textContent = 'Confirmation sent to ' + contact + ' for Nov ' + appStateRef.current.selectedDate + ' (' + appStateRef.current.selectedSlot + ').';
+    }
+    if (successBox) successBox.classList.remove('hidden');
+
+    const phoneHeader = document.getElementById('phone-header-title');
+    if (phoneHeader) phoneHeader.textContent = bizName + ' AI Assistant';
+    showToast('Live environment generated for ' + bizName + '!');
     setTimeout(() => {
       closeModal();
-    }, 2400);
-  };
+    }, 3200);
+  }, [showToast, closeModal]);
 
-  // Sarah K. AI Receptionist Demo Handler
-  const handleSarahDemoReply = (e: React.FormEvent) => {
-    e.preventDefault();
-    const msg = sarahInput.trim() || 'Book 2:00 PM please';
-    setSarahInput('');
+  const openCapabilityDetail = useCallback((idx: number) => {
+    const cap = capabilityDetails[idx];
+    if (!cap) return;
+    openModal('capability', cap.title, cap.subtitle);
+  }, [openModal]);
 
+  /* ─────────────────────────────────────────────────────────────────────────
+     TOP-LEVEL INTERACTIVE HANDLERS AS REQUIRED BY PHASE 4.1 RUNTIME
+     ───────────────────────────────────────────────────────────────────────── */
+
+  const updateRoiCalculator = useCallback(() => {
+    if (typeof document === 'undefined') return;
+    const valInput = document.getElementById('roi-session-val') as HTMLInputElement | null;
+    const callsInput = document.getElementById('roi-missed-calls') as HTMLInputElement | null;
+    const valReadout = document.getElementById('roi-session-readout');
+    const callsReadout = document.getElementById('roi-missed-readout');
+    const recOut = document.getElementById('roi-monthly-recovery');
+    const hrsOut = document.getElementById('roi-hours-saved');
+
+    const sessionVal = valInput ? Number(valInput.value) : 80;
+    const missedCalls = callsInput ? Number(callsInput.value) : 20;
+
+    if (valReadout) valReadout.textContent = '$' + sessionVal;
+    if (callsReadout) callsReadout.textContent = missedCalls + ' inquiries';
+
+    const recovered = Math.round(sessionVal * missedCalls * 0.75);
+    const hours = Math.round(missedCalls * 1.5);
+
+    if (recOut) recOut.textContent = '$' + recovered.toLocaleString();
+    if (hrsOut) hrsOut.textContent = hours + ' hrs/mo';
+  }, []);
+
+  const handleSarahDemoReply = useCallback((e: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (typeof document === 'undefined') return;
+    const input = document.getElementById('sarah-demo-input') as HTMLInputElement | null;
+    const thread = document.getElementById('sarah-demo-thread');
+    const bannerText = document.getElementById('sarah-demo-confirmed-text');
+    if (!input || !thread) return;
+    const msg = input.value.trim() || 'Book 2:00 PM please';
+    input.value = '';
+
+    const userBubble = document.createElement('div');
+    userBubble.className = 'max-w-[85%] rounded-2xl rounded-tl-sm bg-[#061c14]/90 border border-emerald-500/25 px-4 py-2.5 text-emerald-50 text-xs';
+    userBubble.textContent = msg;
+    thread.appendChild(userBubble);
+
+    const botBubble = document.createElement('div');
+    botBubble.className = 'max-w-[88%] ml-auto rounded-2xl rounded-tr-sm bg-emerald-900/50 border border-emerald-400/40 px-4 py-2.5 text-white text-xs';
     const chosenTime = msg.includes('10:30') ? '10:30 AM' : '2:00 PM';
+    botBubble.innerHTML = 'Done! You are confirmed for a <strong>Deep Tissue Massage</strong> tomorrow at <strong>' + chosenTime + '</strong> with Sarah K. Calendar invite sent!';
+    thread.appendChild(botBubble);
+    thread.scrollTop = thread.scrollHeight;
 
-    setSarahMessages(prev => [
-      ...prev,
-      { sender: 'user', text: msg },
-      {
-        sender: 'bot',
-        text: `Done! You are confirmed for a <strong>Deep Tissue Massage</strong> tomorrow at <strong>${chosenTime}</strong> with Sarah K. Calendar invite sent!`
+    if (bannerText) {
+      bannerText.textContent = 'Appointment confirmed — Sarah K., Deep Tissue, ' + chosenTime;
+    }
+    showToast('AI Receptionist confirmed slot: ' + chosenTime + ' with Sarah K.');
+  }, [showToast]);
+
+  const renderHeroCalendar = useCallback(() => {
+    if (typeof document === 'undefined') return;
+    const grid = document.getElementById('hero-calendar-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    calendarDaysLayout.forEach((item) => {
+      if (item.isHeader) {
+        const hd = document.createElement('div');
+        hd.style.fontSize = 'calc(10 * var(--u))';
+        hd.style.color = 'rgba(167, 243, 208, 0.6)';
+        hd.style.fontWeight = '600';
+        hd.textContent = item.label || '';
+        grid.appendChild(hd);
+      } else {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = String(item.day);
+        btn.style.width = 'calc(19 * var(--u))';
+        btn.style.height = 'calc(19 * var(--u))';
+        btn.style.margin = '0 auto';
+        btn.style.borderRadius = '999px';
+        btn.style.fontSize = 'calc(9.5 * var(--u))';
+        btn.style.display = 'flex';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+        btn.style.border = 'none';
+        btn.style.cursor = 'pointer';
+        btn.style.transition = 'all 0.15s ease';
+
+        if (item.muted) {
+          btn.style.background = 'transparent';
+          btn.style.color = 'rgba(236, 253, 245, 0.18)';
+        } else if (item.day === appStateRef.current.selectedDate) {
+          btn.style.background = '#4ade80';
+          btn.style.color = '#03110c';
+          btn.style.fontWeight = '700';
+          btn.style.boxShadow = '0 0 calc(9 * var(--u)) rgba(74, 222, 128, 0.8)';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.color = '#ecfdf5';
+          btn.addEventListener('mouseenter', () => {
+            btn.style.background = 'rgba(74, 222, 128, 0.2)';
+          });
+          btn.addEventListener('mouseleave', () => {
+            if (item.day !== appStateRef.current.selectedDate) {
+              btn.style.background = 'transparent';
+            }
+          });
+        }
+
+        btn.addEventListener('click', () => {
+          appStateRef.current.selectedDate = item.day!;
+          renderHeroCalendar();
+          showToast('Selected date: Nov ' + item.day + ', 2026');
+        });
+
+        grid.appendChild(btn);
       }
-    ]);
+    });
+  }, [showToast]);
 
-    setSarahConfirmedText(`Appointment confirmed — Sarah K., Deep Tissue, ${chosenTime}`);
-    showToast(`AI Receptionist confirmed slot: ${chosenTime} with Sarah K.`);
-  };
+  const initSpatialMotionEngine = useCallback(() => {
+    if (typeof window === 'undefined') return () => {};
+    const stageInner = document.querySelector('.starx-stage-inner') as HTMLElement | null;
+    const dot = document.getElementById('starx-cursor-dot');
+    const ring = document.getElementById('starx-cursor-ring');
+    const spatialMotion = spatialMotionRef.current;
+
+    const onPointerMove = (e: PointerEvent) => {
+      const vw = Math.max(window.innerWidth || document.documentElement.clientWidth || 1440, 320);
+      const vh = Math.max(window.innerHeight || document.documentElement.clientHeight || 900, 320);
+      spatialMotion.targetX = ((e.clientX / vw) - 0.5) * 2;
+      spatialMotion.targetY = ((e.clientY / vh) - 0.5) * 2;
+      spatialMotion.cursorX = e.clientX;
+      spatialMotion.cursorY = e.clientY;
+
+      if (stageInner) {
+        const pctX = Math.round((e.clientX / vw) * 100);
+        const pctY = Math.round((e.clientY / vh) * 100);
+        stageInner.style.setProperty('--pointer-x', pctX + '%');
+        stageInner.style.setProperty('--pointer-y', pctY + '%');
+      }
+
+      if (dot && !checkReducedMotionPreference()) {
+        dot.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      }
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+
+    const interactiveSelectors = 'a, button, input, .glass-shell, .spatial-glass-card';
+    const onMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target || !ring || !dot) return;
+      if (target.matches && (target.matches('input, textarea') || target.closest('input, textarea'))) {
+        dot.classList.add('cursor-text-mode');
+        ring.classList.add('cursor-text-mode');
+      } else if (target.closest && target.closest(interactiveSelectors)) {
+        dot.classList.remove('cursor-text-mode');
+        ring.classList.remove('cursor-text-mode');
+        ring.classList.add('cursor-hover');
+      } else {
+        dot.classList.remove('cursor-text-mode');
+        ring.classList.remove('cursor-text-mode');
+        ring.classList.remove('cursor-hover');
+      }
+    };
+
+    document.addEventListener('mouseover', onMouseOver, { passive: true });
+
+    const magneticBtns = document.querySelectorAll('.btn-mint-pill, .btn-glass-pill');
+    const magneticCleanups: Array<() => void> = [];
+    magneticBtns.forEach((btnEl) => {
+      const btn = btnEl as HTMLElement;
+      const onMagMove = (e: PointerEvent) => {
+        if (checkReducedMotionPreference()) return;
+        const rect = btn.getBoundingClientRect();
+        const dx = (e.clientX - (rect.left + rect.width / 2)) * 0.18;
+        const dy = (e.clientY - (rect.top + rect.height / 2)) * 0.22;
+        btn.style.transform = `translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, 0) scale(1.03)`;
+      };
+      const onMagLeave = () => {
+        btn.style.transform = '';
+      };
+      btn.addEventListener('pointermove', onMagMove as any);
+      btn.addEventListener('pointerleave', onMagLeave);
+      magneticCleanups.push(() => {
+        btn.removeEventListener('pointermove', onMagMove as any);
+        btn.removeEventListener('pointerleave', onMagLeave);
+      });
+    });
+
+    const storySections = document.querySelectorAll(
+      '#scene-legacy-hero-bridge, #scene-revenue-leakage, #scene-onboarding, #scene-operational-excellence, #scene-customer-segments, #scene-guarantees, #scene-pricing-comparison, #scene-faq, #scene-final-cta-footer'
+    );
+    storySections.forEach((sec) => {
+      sec.classList.add('scroll-scene-reveal', 'scene-active');
+    });
+
+    let io: IntersectionObserver | null = null;
+    if ('IntersectionObserver' in window) {
+      io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.remove('scene-entering');
+            entry.target.classList.add('scene-active');
+          }
+        });
+      }, { threshold: 0.08 });
+      storySections.forEach((sec) => io!.observe(sec));
+    }
+
+    const onScroll = () => {
+      if (checkReducedMotionPreference()) return;
+      const sy = window.scrollY || window.pageYOffset || 0;
+      const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+      const progress = Math.min(Math.max(sy / maxScroll, 0), 1);
+      document.documentElement.style.setProperty('--scroll-progress', progress.toFixed(4));
+
+      const heroSec = document.getElementById('hero-section');
+      const challengeSec = document.getElementById('challenge-section');
+      const actionSec = document.getElementById('action-section');
+      if (heroSec) {
+        heroSec.style.setProperty('--scene-offset', Math.min(sy * -0.04, 0).toFixed(1) + 'px');
+      }
+      if (challengeSec) {
+        const offset = (sy - 450) * -0.03;
+        challengeSec.style.setProperty('--scene-offset', Math.max(Math.min(offset, 14), -14).toFixed(1) + 'px');
+      }
+      if (actionSec) {
+        const offset = (sy - 950) * -0.025;
+        actionSec.style.setProperty('--scene-offset', Math.max(Math.min(offset, 12), -12).toFixed(1) + 'px');
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    function tickSpatialFrame() {
+      const reduced = checkReducedMotionPreference();
+      if (!reduced) {
+        spatialMotion.currentX += (spatialMotion.targetX - spatialMotion.currentX) * 0.09;
+        spatialMotion.currentY += (spatialMotion.targetY - spatialMotion.currentY) * 0.09;
+        spatialMotion.ringX += (spatialMotion.cursorX - spatialMotion.ringX) * 0.16;
+        spatialMotion.ringY += (spatialMotion.cursorY - spatialMotion.ringY) * 0.16;
+
+        document.documentElement.style.setProperty('--cam-x', spatialMotion.currentX.toFixed(4));
+        document.documentElement.style.setProperty('--cam-y', spatialMotion.currentY.toFixed(4));
+
+        if (ring) {
+          ring.style.transform = `translate3d(${spatialMotion.ringX.toFixed(1)}px, ${spatialMotion.ringY.toFixed(1)}px, 0)`;
+        }
+      }
+      spatialMotion.rafId = requestAnimationFrame(tickSpatialFrame);
+    }
+
+    if (dot) dot.style.transform = `translate3d(${spatialMotion.cursorX}px, ${spatialMotion.cursorY}px, 0)`;
+    if (ring) ring.style.transform = `translate3d(${spatialMotion.ringX}px, ${spatialMotion.ringY}px, 0)`;
+    spatialMotion.rafId = requestAnimationFrame(tickSpatialFrame);
+
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('mouseover', onMouseOver);
+      window.removeEventListener('scroll', onScroll);
+      magneticCleanups.forEach(fn => fn());
+      if (io) io.disconnect();
+      if (spatialMotion.rafId) cancelAnimationFrame(spatialMotion.rafId);
+    };
+  }, [checkReducedMotionPreference]);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     TOP-LEVEL MOUNT HOOK
+     ───────────────────────────────────────────────────────────────────────── */
+
+  useEffect(() => {
+    // Expose runtime functions on window for complete parity with starx_flow.html
+    if (typeof window !== 'undefined') {
+      (window as any).selectTimeSlot = selectTimeSlot;
+      (window as any).selectWorkflowTab = selectWorkflowTab;
+      (window as any).cycleWorkflowTab = cycleWorkflowTab;
+      (window as any).selectOrbitalNode = selectOrbitalNode;
+      (window as any).pulseAllNodes = pulseAllNodes;
+      (window as any).highlightChallenge = highlightChallenge;
+      (window as any).openCapabilityDetail = openCapabilityDetail;
+      (window as any).scrollToSection = scrollToSection;
+      (window as any).setRenderMode = setRenderMode;
+      (window as any).updateXrayOpacity = updateXrayOpacity;
+      (window as any).openModal = openModal;
+      (window as any).closeModal = closeModal;
+      (window as any).hideToast = hideToast;
+      (window as any).handleModalSubmit = handleModalSubmit;
+      (window as any).updateRoiCalculator = updateRoiCalculator;
+      (window as any).handleSarahDemoReply = handleSarahDemoReply;
+      (window as any).initSpatialMotionEngine = initSpatialMotionEngine;
+    }
+
+    // 1. Render Hero Calendar
+    renderHeroCalendar();
+
+    // 2. Initial slot labels
+    updateSlotLabels();
+
+    // 3. Initialize ROI calculator
+    updateRoiCalculator();
+
+    // 4. Initialize Spatial Motion Engine & Cursor Runtime
+    const motionCleanup = initSpatialMotionEngine();
+
+    return () => {
+      if (motionCleanup) motionCleanup();
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, [
+    renderHeroCalendar,
+    updateSlotLabels,
+    updateRoiCalculator,
+    initSpatialMotionEngine,
+    selectTimeSlot,
+    selectWorkflowTab,
+    cycleWorkflowTab,
+    selectOrbitalNode,
+    pulseAllNodes,
+    highlightChallenge,
+    openCapabilityDetail,
+    scrollToSection,
+    setRenderMode,
+    updateXrayOpacity,
+    openModal,
+    closeModal,
+    hideToast,
+    handleModalSubmit,
+    handleSarahDemoReply,
+  ]);
 
   return (
     <>
 
 
   {/* MAIN PROPORTIONAL 1440x2362 FULL-SCALE WEBSITE CANVAS */}
-  <div className="starx-viewport-wrapper" onMouseMove={handleMouseMove} style={{ '--mx': mousePos.mx, '--my': mousePos.my } as React.CSSProperties}>
+  <div className="starx-viewport-wrapper">
     <main id="starx-stage" className="starx-stage mode-hybrid">
       <div className="starx-stage-inner">
 
@@ -317,18 +776,32 @@ export function StarXFlowLanding() {
         <img
           id="studio-env-img"
           src="/assets/starx_clean_env.webp"
-          alt="StarX Flow Architectural Studio Environment"
-          className="pos pointer-events-none select-none transition-opacity duration-300"
-          style={{
-            '--x': 0,
-            '--y': 0,
-            '--w': 1440,
-            '--h': 2362,
-            zIndex: 1,
-            objectFit: 'cover',
-            opacity: renderMode === 'pure-css' ? 0 : 1
-          } as React.CSSProperties}
+          alt="StarX Flow 3D Sanctuary Environment"
+          className="studio-env-img position-absolute inset-0 w-full h-full object-cover pointer-events-none select-none transition-opacity duration-300"
+          style={{ position: 'absolute', inset: '0', width: '100%', height: '100%', zIndex: 1 } as React.CSSProperties}
         />
+        {/* LAYER 0A-GLOW: HERO ARCHITECTURAL PORTAL AURORA & POINTER LIGHT */}
+        <div id="hero-portal-aurora" className="hero-portal-aurora"></div>
+
+        {/* LAYER 0C: REAL-TIME THREE.JS 3D SPATIAL CORE & ORBITAL RINGS */}
+        <div
+          id="hero-spatial-3d-canvas"
+          className="pointer-events-none select-none"
+          style={{
+            position: 'absolute',
+            top: '0',
+            right: '0',
+            width: '60%',
+            height: '750px',
+            zIndex: 2,
+            opacity: 0.82,
+            overflow: 'hidden'
+          } as React.CSSProperties}
+          aria-hidden="true"
+        >
+          <StarXCoreCanvas />
+        </div>
+
 
         {/* ========================================================================= */}
         {/* LAYER 0B: PURE CSS/SVG ARCHITECTURAL SANCTUARY ENGINE (FOR PURE CSS MODE) */}
@@ -371,81 +844,14 @@ export function StarXFlowLanding() {
         </div>
 
         {/* ========================================================================= */}
-        {/* LAYER 1: TOP NAVIGATION BAR (Positioned cleanly at top of 100vh Hero)     */}
+        {/* LAYER 1: TOP NAVIGATION BAR                                               */}
+        {/* Unified global <Navbar /> rendered from ClientShell at fixed z-50         */}
         {/* ========================================================================= */}
-        <header id="top-nav" style={{ position: 'relative', zIndex: 20 } as React.CSSProperties}>
-          {/* Brand Logo (72, 26) */}
-          <a
-            href="#hero-section"
-            className="pos-auto flex items-center group"
-            style={{ '--x': 72, '--y': 26, gap: 'calc(10 * var(--u))', textDecoration: 'none', whiteSpace: 'nowrap' } as React.CSSProperties}
-          >
-            <svg style={{ width: 'calc(34 * var(--u))', height: 'calc(34 * var(--u))', filter: 'drop-shadow(0 0 calc(8 * var(--u)) rgba(110, 231, 183, 0.85))' } as React.CSSProperties} viewBox="0 0 32 32" fill="none">
-              <path d="M16 2L19.4 12.6L30 16L19.4 19.4L16 30L12.6 19.4L2 16L12.6 12.6L16 2Z" fill="url(#logoStarGrad)"/>
-              <path d="M16 6L18.2 13.8L26 16L18.2 18.2L16 26L13.8 18.2L6 16L13.8 13.8L16 6Z" fill="#ecfdf5"/>
-              <defs>
-                <linearGradient id="logoStarGrad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#a7f3d0"/>
-                  <stop offset="1" stopColor="#10b981"/>
-                </linearGradient>
-              </defs>
-            </svg>
-            <span style={{ fontSize: 'calc(19.5 * var(--u))', fontWeight: 600, letterSpacing: 'calc(-0.3 * var(--u))', color: '#ffffff' } as React.CSSProperties} className="group-hover:text-emerald-300 transition-colors">
-              StarX Flow
-            </span>
-          </a>
-
-          {/* Center Navigation Links */}
-          <nav aria-label="Main Navigation">
-            <a
-              href="#hero-section"
-              className="pos-auto hover:text-emerald-300 transition-colors"
-              style={{ '--x': 464, '--y': 35, fontSize: 'calc(15.5 * var(--u))', fontWeight: 500, color: 'rgba(236, 253, 245, 0.9)', textDecoration: 'none' } as React.CSSProperties}
-            >Product</a>
-            <a
-              href="#challenge-section"
-              className="pos-auto hover:text-emerald-300 transition-colors"
-              style={{ '--x': 566, '--y': 35, fontSize: 'calc(15.5 * var(--u))', fontWeight: 500, color: 'rgba(236, 253, 245, 0.9)', textDecoration: 'none' } as React.CSSProperties}
-            >Solutions</a>
-            <a
-              href="#pricing-section"
-              className="pos-auto hover:text-emerald-300 transition-colors"
-              style={{ '--x': 673, '--y': 35, fontSize: 'calc(15.5 * var(--u))', fontWeight: 500, color: 'rgba(236, 253, 245, 0.9)', textDecoration: 'none' } as React.CSSProperties}
-            >Pricing</a>
-            <a
-              href="#capabilities-section"
-              className="pos-auto hover:text-emerald-300 transition-colors"
-              style={{ '--x': 768, '--y': 35, fontSize: 'calc(15.5 * var(--u))', fontWeight: 500, color: 'rgba(236, 253, 245, 0.9)', textDecoration: 'none' } as React.CSSProperties}
-            >Resources</a>
-          </nav>
-
-          {/* Right Action Buttons */}
-          <button
-            id="btn-nav-login"
-            type="button"
-            onClick={() => openModal('login')}
-            className="pos btn-glass-pill flex items-center justify-center rounded-full"
-            style={{ '--x': 1126, '--y': 22, '--w': 96, '--h': 42, fontSize: 'calc(15 * var(--u))', fontWeight: 500 } as React.CSSProperties}
-          >
-            Log in
-          </button>
-
-          <button
-            id="btn-nav-get-started"
-            type="button"
-            onClick={() => openModal('signup', 'Growth Trial')}
-            className="pos btn-mint-pill flex items-center justify-center rounded-full"
-            style={{ '--x': 1238, '--y': 22, '--w': 146, '--h': 42, fontSize: 'calc(15 * var(--u))', gap: 'calc(6 * var(--u))' } as React.CSSProperties}
-          >
-            <span>Get Started</span>
-            <span style={{ fontSize: 'calc(16 * var(--u))', lineHeight: '1' } as React.CSSProperties}>→</span>
-          </button>
-        </header>
 
         {/* ========================================================================= */}
         {/* SECTION 1: FULL-VIEWPORT HERO (y: 0..756 = 100vh on standard laptop)      */}
         {/* ========================================================================= */}
-        <section id="hero-section" style={{ position: 'relative', zIndex: 15 } as React.CSSProperties}>
+        <section id="hero-section"  style={{ position: 'relative', zIndex: 15 } as React.CSSProperties}>
           {/* Eyebrow */}
           <div
             id="hero-eyebrow"
@@ -477,6 +883,7 @@ export function StarXFlowLanding() {
 
           {/* Hero Primary CTA & Secondary CTA */}
           <button
+            ref={heroGetStartedRef}
             id="btn-hero-get-started"
             type="button"
             onClick={() => openModal('signup', 'Full Suite')}
@@ -585,38 +992,9 @@ export function StarXFlowLanding() {
               id="hero-calendar-grid"
               className="pos"
               style={{ '--x': 113, '--y': 138, '--w': 154, '--h': 180, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', alignItems: 'center', justifyItems: 'center', fontSize: 'calc(11.6 * var(--u))' } as React.CSSProperties}
-            >{calendarDaysLayout.map((item, idx) => {
-                if (item.isHeader) {
-                  return (
-                    <div
-                      key={`hdr-${idx}`}
-                      style={{ fontSize: 'calc(10 * var(--u))', color: 'rgba(167, 243, 208, 0.6)', fontWeight: 600 } as React.CSSProperties}
-                    >
-                      {item.label}
-                    </div>
-                  );
-                }
-                const isActive = item.day === selectedDate && !item.muted;
-                return (
-                  <button
-                    key={`day-${idx}`}
-                    type="button"
-                    onClick={() => {
-                      setSelectedDate(item.day!);
-                      showToast(`Selected November ${item.day} • ${selectedSlot}`);
-                    }}
-                    className={`cal-day border-0 bg-transparent p-0 ${isActive ? 'active' : ''}`}
-                    style={{
-                      width: 'calc(23 * var(--u))',
-                      height: 'calc(23 * var(--u))',
-                      fontSize: 'calc(11.4 * var(--u))',
-                      opacity: item.muted ? 0.32 : 1
-                    } as React.CSSProperties}
-                  >
-                    {item.day}
-                  </button>
-                );
-              })}</div>
+            >
+              {/* Populated dynamically by JS */}
+            </div>
           </div>
 
           {/* 2) FRONT-LEFT CARD: WHATSAPP FLOATING GLASS CARD (left: 742, top: 274, w: 262, h: 317) */}
@@ -637,16 +1015,16 @@ export function StarXFlowLanding() {
 
             {/* Incoming Message Bubble */}
             <div
-              style={{ marginTop: 'calc(16 * var(--u))', width: 'calc(210 * var(--u))', background: 'rgba(7, 24, 17, 0.62)', border: 'calc(1.1 * var(--u)) solid rgba(110, 231, 183, 0.22)', borderRadius: 'calc(12 * var(--u))', padding: 'calc(9.5 * var(--u)) calc(12 * var(--u))' } as React.CSSProperties}
+              style={{ marginTop: 'calc(16 * var(--u))', width: 'calc(210 * var(--u))', background: 'rgba(7, 26, 19, 0.85)', border: 'calc(1.1 * var(--u)) solid rgba(110, 231, 183, 0.32)', borderRadius: 'calc(14 * var(--u))', padding: 'calc(10 * var(--u)) calc(13 * var(--u))', boxShadow: '0 calc(4 * var(--u)) calc(12 * var(--u)) rgba(0, 0, 0, 0.4)' } as React.CSSProperties}
             >
-              <div style={{ fontSize: 'calc(13.4 * var(--u))', lineHeight: '1.32', color: 'rgba(236, 253, 245, 0.95)' } as React.CSSProperties}>
+              <div style={{ fontSize: 'calc(13.4 * var(--u))', lineHeight: '1.34', color: '#f3fbf7', fontWeight: 400 } as React.CSSProperties}>
                 Hi! Can I book an<br/>appointment for this week?
               </div>
             </div>
 
             {/* Outgoing Reply Bubble + Interactive Slot Pills (fitted cleanly inside card) */}
             <div
-              style={{ marginTop: 'calc(9 * var(--u))', marginLeft: 'calc(36 * var(--u))', width: 'calc(184 * var(--u))', background: 'rgba(14, 44, 32, 0.6)', border: 'calc(1.1 * var(--u)) solid rgba(110, 231, 183, 0.28)', borderRadius: 'calc(14 * var(--u))', padding: 'calc(9 * var(--u)) calc(12 * var(--u))' } as React.CSSProperties}
+              style={{ marginTop: 'calc(10 * var(--u))', marginLeft: 'calc(36 * var(--u))', width: 'calc(184 * var(--u))', background: 'rgba(10, 36, 26, 0.90)', border: 'calc(1.1 * var(--u)) solid rgba(110, 231, 183, 0.38)', borderRadius: 'calc(14 * var(--u))', padding: 'calc(10 * var(--u)) calc(12 * var(--u))', boxShadow: '0 calc(4 * var(--u)) calc(14 * var(--u)) rgba(0, 0, 0, 0.4)' } as React.CSSProperties}
             >
               <div style={{ fontSize: 'calc(13.2 * var(--u))', lineHeight: '1.28', fontWeight: 500, color: '#ffffff', marginBottom: 'calc(9 * var(--u))' } as React.CSSProperties}>
                 Sure! Here are the available slots:
@@ -707,7 +1085,7 @@ export function StarXFlowLanding() {
             {/* Compact single-line status pill so it never wraps or overlaps Customer card */}
             <div
               id="hero-ai-status-box"
-              style={{ marginTop: 'calc(14 * var(--u))', background: 'rgba(7, 24, 17, 0.65)', border: 'calc(1.1 * var(--u)) solid rgba(110, 231, 183, 0.28)', borderRadius: 'calc(13 * var(--u))', padding: 'calc(9.5 * var(--u)) calc(12 * var(--u))', transform: 'rotate(-1.8deg)' } as React.CSSProperties}
+              style={{ marginTop: 'calc(14 * var(--u))', background: 'rgba(7, 26, 19, 0.88)', border: 'calc(1.1 * var(--u)) solid rgba(110, 231, 183, 0.35)', borderRadius: 'calc(13 * var(--u))', padding: 'calc(9.5 * var(--u)) calc(12 * var(--u))', boxShadow: '0 calc(4 * var(--u)) calc(12 * var(--u)) rgba(0, 0, 0, 0.4)' } as React.CSSProperties}
             >
               <div className="flex items-center justify-between" style={{ gap: 'calc(6 * var(--u))', whiteSpace: 'nowrap' } as React.CSSProperties}>
                 <span id="hero-ai-status-text" style={{ fontSize: 'calc(14 * var(--u))', fontWeight: 600, color: '#ffffff' } as React.CSSProperties}>Booking confirmed</span>
@@ -763,7 +1141,7 @@ export function StarXFlowLanding() {
         {/* ========================================================================= */}
         {/* SECTION 2: THE DAILY CHALLENGE vs THE STARX FLOW WAY (y: 790..1195)       */}
         {/* ========================================================================= */}
-        <section id="challenge-section" style={{ position: 'relative', zIndex: 15 } as React.CSSProperties}>
+        <section id="challenge-section"  style={{ position: 'relative', zIndex: 15 } as React.CSSProperties}>
           {/* LEFT COLUMN: THE DAILY CHALLENGE */}
           <div
             className="pos-auto uppercase"
@@ -780,22 +1158,22 @@ export function StarXFlowLanding() {
             shouldn’t feel fragmented.
           </h2>
 
-          {/* 4 TILTED FRAGMENTED GLASS CARDS */}
+          {/* 4 REFINED CHALLENGE CARDS (Clean, poised horizontal alignment with negative space) */}
           {/* Card 1: Missed enquiries */}
           <button
             type="button"
             onClick={() => highlightChallenge(0)}
             id="challenge-card-0"
             className="pos challenge-card glass-shell flex flex-col items-center justify-center text-center"
-            style={{ '--x': 37, '--y': 965, '--w': 130, '--h': 139, borderRadius: 'calc(19 * var(--u))', transform: 'rotate(-10deg)' } as React.CSSProperties}
+            style={{ '--x': 45, '--y': 975, '--w': 125, '--h': 130, borderRadius: 'calc(18 * var(--u))', transform: 'none' } as React.CSSProperties}
           >
-            <svg style={{ width: 'calc(33 * var(--u))', height: 'calc(33 * var(--u))', color: 'rgba(215, 240, 228, 0.9)', marginBottom: 'calc(10 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <svg style={{ width: 'calc(30 * var(--u))', height: 'calc(30 * var(--u))', color: 'rgba(215, 240, 228, 0.9)', marginBottom: 'calc(10 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
               <circle cx="9.5" cy="11.5" r="0.8" fill="currentColor"/>
               <circle cx="12.5" cy="11.5" r="0.8" fill="currentColor"/>
               <circle cx="15.5" cy="11.5" r="0.8" fill="currentColor"/>
             </svg>
-            <span style={{ fontSize: 'calc(14.8 * var(--u))', lineHeight: '1.2', fontWeight: 500, color: 'rgba(235, 248, 242, 0.94)' } as React.CSSProperties}>
+            <span style={{ fontSize: 'calc(14 * var(--u))', lineHeight: '1.2', fontWeight: 500, color: 'rgba(235, 248, 242, 0.94)' } as React.CSSProperties}>
               Missed<br/>enquiries
             </span>
           </button>
@@ -806,16 +1184,16 @@ export function StarXFlowLanding() {
             onClick={() => highlightChallenge(1)}
             id="challenge-card-1"
             className="pos challenge-card glass-shell flex flex-col items-center justify-center text-center"
-            style={{ '--x': 208, '--y': 956, '--w': 130, '--h': 139, borderRadius: 'calc(19 * var(--u))', transform: 'rotate(9deg)' } as React.CSSProperties}
+            style={{ '--x': 190, '--y': 975, '--w': 125, '--h': 130, borderRadius: 'calc(18 * var(--u))', transform: 'none' } as React.CSSProperties}
           >
-            <svg style={{ width: 'calc(32 * var(--u))', height: 'calc(32 * var(--u))', color: 'rgba(215, 240, 228, 0.9)', marginBottom: 'calc(10 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <svg style={{ width: 'calc(30 * var(--u))', height: 'calc(30 * var(--u))', color: 'rgba(215, 240, 228, 0.9)', marginBottom: 'calc(10 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="3" y="4" width="18" height="18" rx="2"/>
               <line x1="16" y1="2" x2="16" y2="6"/>
               <line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
               <circle cx="12" cy="15" r="1.5" fill="currentColor"/>
             </svg>
-            <span style={{ fontSize: 'calc(14.8 * var(--u))', lineHeight: '1.2', fontWeight: 500, color: 'rgba(235, 248, 242, 0.94)' } as React.CSSProperties}>
+            <span style={{ fontSize: 'calc(14 * var(--u))', lineHeight: '1.2', fontWeight: 500, color: 'rgba(235, 248, 242, 0.94)' } as React.CSSProperties}>
               Manual<br/>bookings
             </span>
           </button>
@@ -826,14 +1204,14 @@ export function StarXFlowLanding() {
             onClick={() => highlightChallenge(2)}
             id="challenge-card-2"
             className="pos challenge-card glass-shell flex flex-col items-center justify-center text-center"
-            style={{ '--x': 359, '--y': 1018, '--w': 131, '--h': 139, borderRadius: 'calc(19 * var(--u))', transform: 'rotate(-1deg)' } as React.CSSProperties}
+            style={{ '--x': 335, '--y': 975, '--w': 125, '--h': 130, borderRadius: 'calc(18 * var(--u))', transform: 'none' } as React.CSSProperties}
           >
-            <svg style={{ width: 'calc(32 * var(--u))', height: 'calc(32 * var(--u))', color: 'rgba(215, 240, 228, 0.9)', marginBottom: 'calc(10 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <svg style={{ width: 'calc(30 * var(--u))', height: 'calc(30 * var(--u))', color: 'rgba(215, 240, 228, 0.9)', marginBottom: 'calc(10 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <polygon points="12 2 2 7 12 12 22 7 12 2"/>
               <polyline points="2 12 12 17 22 12"/>
               <polyline points="2 17 12 22 22 17"/>
             </svg>
-            <span style={{ fontSize: 'calc(14.5 * var(--u))', lineHeight: '1.2', fontWeight: 500, color: 'rgba(235, 248, 242, 0.94)' } as React.CSSProperties}>
+            <span style={{ fontSize: 'calc(14 * var(--u))', lineHeight: '1.2', fontWeight: 500, color: 'rgba(235, 248, 242, 0.94)' } as React.CSSProperties}>
               Scheduling<br/>conflicts
             </span>
           </button>
@@ -844,13 +1222,13 @@ export function StarXFlowLanding() {
             onClick={() => highlightChallenge(3)}
             id="challenge-card-3"
             className="pos challenge-card glass-shell flex flex-col items-center justify-center text-center"
-            style={{ '--x': 505, '--y': 968, '--w': 110, '--h': 121, borderRadius: 'calc(18 * var(--u))', transform: 'rotate(2.5deg)' } as React.CSSProperties}
+            style={{ '--x': 480, '--y': 975, '--w': 125, '--h': 130, borderRadius: 'calc(18 * var(--u))', transform: 'none' } as React.CSSProperties}
           >
-            <svg style={{ width: 'calc(30 * var(--u))', height: 'calc(30 * var(--u))', color: 'rgba(215, 240, 228, 0.9)', marginBottom: 'calc(9 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <svg style={{ width: 'calc(30 * var(--u))', height: 'calc(30 * var(--u))', color: 'rgba(215, 240, 228, 0.9)', marginBottom: 'calc(10 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            <span style={{ fontSize: 'calc(14.5 * var(--u))', lineHeight: '1.2', fontWeight: 500, color: 'rgba(235, 248, 242, 0.94)' } as React.CSSProperties}>
+            <span style={{ fontSize: 'calc(14 * var(--u))', lineHeight: '1.2', fontWeight: 500, color: 'rgba(235, 248, 242, 0.94)' } as React.CSSProperties}>
               No-shows
             </span>
           </button>
@@ -858,34 +1236,34 @@ export function StarXFlowLanding() {
           {/* RIGHT COLUMN: THE STARX FLOW WAY */}
           <div
             className="pos-auto uppercase"
-            style={{ '--x': 926, '--y': 792, fontSize: 'calc(12.2 * var(--u))', fontWeight: 600, letterSpacing: 'calc(1.9 * var(--u))', color: '#6ee7a8', whiteSpace: 'nowrap' } as React.CSSProperties}
+            style={{ '--x': 926, '--y': 772, fontSize: 'calc(12 * var(--u))', fontWeight: 600, letterSpacing: 'calc(1.9 * var(--u))', color: '#6ee7a8', whiteSpace: 'nowrap' } as React.CSSProperties}
           >
             THE STARX FLOW WAY
           </div>
 
           <h2
             className="pos-auto font-editorial m-0"
-            style={{ '--x': 926, '--y': 812, fontSize: 'calc(46.5 * var(--u))', fontWeight: 400, lineHeight: '1.03', letterSpacing: 'calc(-0.4 * var(--u))', color: '#f4fbf7', whiteSpace: 'nowrap' } as React.CSSProperties}
+            style={{ '--x': 926, '--y': 791, fontSize: 'calc(39.5 * var(--u))', fontWeight: 400, lineHeight: '1.02', letterSpacing: 'calc(-0.4 * var(--u))', color: '#f4fbf7', whiteSpace: 'nowrap' } as React.CSSProperties}
           >
             From scattered tasks to<br/>
             a <span style={{ color: '#6ee7a8' } as React.CSSProperties}>connected</span> operation.
           </h2>
 
-          {/* SVG Orbital Connection Arcs around the Central Star Sphere (1116.5, 1034.7) */}
+          {/* SVG Orbital Connection Arcs around the Central Star Sphere (Quiet, elegant architectural guides) */}
           <svg
             className="pos pointer-events-none"
             style={{ '--x': 820, '--y': 900, '--w': 590, '--h': 290 } as React.CSSProperties}
             viewBox="820 900 590 290"
             fill="none"
           >
-            <ellipse cx="1116" cy="1038" rx="232" ry="88" stroke="#4ade80" strokeOpacity="0.25" strokeWidth="1.6" strokeDasharray="5 5"/>
-            <ellipse cx="1116" cy="1038" rx="164" ry="104" stroke="#6ee7b7" strokeOpacity="0.28" strokeWidth="1.6"/>
-            <line id="orb-beam-0" x1="995" y1="941" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.38" strokeWidth="1.8"/>
-            <line id="orb-beam-1" x1="1239" y1="941" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.38" strokeWidth="1.8"/>
-            <line id="orb-beam-2" x1="885" y1="1026" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.38" strokeWidth="1.8"/>
-            <line id="orb-beam-3" x1="1348" y1="1026" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.38" strokeWidth="1.8"/>
-            <line id="orb-beam-4" x1="969" y1="1130" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.38" strokeWidth="1.8"/>
-            <line id="orb-beam-5" x1="1265" y1="1130" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.38" strokeWidth="1.8"/>
+            <ellipse cx="1116" cy="1038" rx="232" ry="88" stroke="#4ade80" strokeOpacity="0.14" strokeWidth="1.2" strokeDasharray="4 4"/>
+            <ellipse cx="1116" cy="1038" rx="164" ry="104" stroke="#6ee7b7" strokeOpacity="0.16" strokeWidth="1.2"/>
+            <line id="orb-beam-0" x1="995" y1="941" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.16" strokeWidth="1.2"/>
+            <line id="orb-beam-1" x1="1239" y1="941" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.16" strokeWidth="1.2"/>
+            <line id="orb-beam-2" x1="885" y1="1026" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.16" strokeWidth="1.2"/>
+            <line id="orb-beam-3" x1="1348" y1="1026" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.16" strokeWidth="1.2"/>
+            <line id="orb-beam-4" x1="969" y1="1130" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.16" strokeWidth="1.2"/>
+            <line id="orb-beam-5" x1="1265" y1="1130" x2="1116" y2="1035" stroke="#5eead4" strokeOpacity="0.16" strokeWidth="1.2"/>
           </svg>
 
           {/* Center Star Sphere Interactive Trigger */}
@@ -1002,7 +1380,7 @@ export function StarXFlowLanding() {
         {/* ========================================================================= */}
         {/* SECTION 3: SEE IT IN ACTION ("Real workflows. Real business impact.")     */}
         {/* ========================================================================= */}
-        <section id="action-section" style={{ position: 'relative', zIndex: 15 } as React.CSSProperties}>
+        <section id="action-section"  style={{ position: 'relative', zIndex: 15 } as React.CSSProperties}>
           {/* Left Eyebrow & Heading */}
           <div
             className="pos-auto uppercase"
@@ -1026,10 +1404,10 @@ export function StarXFlowLanding() {
 
           <div className="pos-auto" style={{ '--x': 160, '--y': 1479, width: 'calc(265 * var(--u))' } as React.CSSProperties}>
             <h3 id="workflow-side-title" className="m-0" style={{ fontSize: 'calc(19.8 * var(--u))', fontWeight: 600, color: '#ffffff', letterSpacing: 'calc(-0.2 * var(--u))' } as React.CSSProperties}>
-              {workflowTabContents[activeWorkflowTab]?.title || '24/7 WhatsApp Bookings'}
+              24/7 WhatsApp Bookings
             </h3>
             <p id="workflow-side-desc" className="m-0" style={{ marginTop: 'calc(11 * var(--u))', fontSize: 'calc(15.2 * var(--u))', lineHeight: '1.45', color: 'rgba(210, 234, 222, 0.85)' } as React.CSSProperties}>
-              {workflowTabContents[activeWorkflowTab]?.desc || 'Turn enquiries into confirmed appointments automatically, anytime, day or night.'}
+              Turn enquiries into confirmed appointments automatically, anytime, day or night.
             </p>
             <button
               id="btn-explore-workflow"
@@ -1052,7 +1430,7 @@ export function StarXFlowLanding() {
               type="button"
               id="tab-btn-whatsapp"
               onClick={() => selectWorkflowTab('whatsapp')}
-              className={`workflow-tab flex items-center justify-center rounded-full h-full ${activeWorkflowTab === 'whatsapp' ? 'active' : ''}`}
+              className="workflow-tab active flex items-center justify-center rounded-full h-full"
               style={{ padding: '0 calc(20 * var(--u))', fontSize: 'calc(14.5 * var(--u))', fontWeight: 500, gap: 'calc(8 * var(--u))' } as React.CSSProperties}
             >
               <span style={{ width: 'calc(21 * var(--u))', height: 'calc(21 * var(--u))', borderRadius: '999px', background: '#22c55e', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#042115', flexShrink: 0 } as React.CSSProperties}>
@@ -1067,7 +1445,7 @@ export function StarXFlowLanding() {
               type="button"
               id="tab-btn-ai"
               onClick={() => selectWorkflowTab('ai')}
-              className={`workflow-tab flex items-center justify-center rounded-full h-full ${activeWorkflowTab === 'ai' ? 'active' : ''}`}
+              className="workflow-tab flex items-center justify-center rounded-full h-full"
               style={{ padding: '0 calc(19 * var(--u))', fontSize: 'calc(14.5 * var(--u))', fontWeight: 500, gap: 'calc(8 * var(--u))' } as React.CSSProperties}
             >
               <svg style={{ width: 'calc(18 * var(--u))', height: 'calc(18 * var(--u))', color: '#6ee7b7', flexShrink: 0 } as React.CSSProperties} viewBox="0 0 24 24" fill="currentColor">
@@ -1080,7 +1458,7 @@ export function StarXFlowLanding() {
               type="button"
               id="tab-btn-scheduling"
               onClick={() => selectWorkflowTab('scheduling')}
-              className={`workflow-tab flex items-center justify-center rounded-full h-full ${activeWorkflowTab === 'scheduling' ? 'active' : ''}`}
+              className="workflow-tab flex items-center justify-center rounded-full h-full"
               style={{ padding: '0 calc(19 * var(--u))', fontSize: 'calc(14.5 * var(--u))', fontWeight: 500, gap: 'calc(8 * var(--u))' } as React.CSSProperties}
             >
               <svg style={{ width: 'calc(18 * var(--u))', height: 'calc(18 * var(--u))', color: '#6ee7b7', flexShrink: 0 } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1093,7 +1471,7 @@ export function StarXFlowLanding() {
               type="button"
               id="tab-btn-crm"
               onClick={() => selectWorkflowTab('crm')}
-              className={`workflow-tab flex items-center justify-center rounded-full h-full ${activeWorkflowTab === 'crm' ? 'active' : ''}`}
+              className="workflow-tab flex items-center justify-center rounded-full h-full"
               style={{ padding: '0 calc(19 * var(--u))', fontSize: 'calc(14.5 * var(--u))', fontWeight: 500, gap: 'calc(8 * var(--u))' } as React.CSSProperties}
             >
               <svg style={{ width: 'calc(18 * var(--u))', height: 'calc(18 * var(--u))', color: '#6ee7b7', flexShrink: 0 } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1128,11 +1506,8 @@ export function StarXFlowLanding() {
                 ✦
               </div>
               <div style={{ whiteSpace: 'nowrap' } as React.CSSProperties}>
-                <div id="phone-header-title" style={{ fontSize: 'calc(14.2 * var(--u))', fontWeight: 600, color: '#ffffff', lineHeight: '1.15' } as React.CSSProperties}>{workflowTabContents[activeWorkflowTab]?.phoneTitle || 'Your Business'}</div>
-                <div className="flex items-center" style={{ gap: 'calc(6 * var(--u))' } as React.CSSProperties}>
-                  <span id="phone-header-status" style={{ fontSize: 'calc(11.2 * var(--u))', color: '#6ee7a8', lineHeight: '1.15' } as React.CSSProperties}>{workflowTabContents[activeWorkflowTab]?.phoneStatus || 'Online'}</span>
-                  <button type="button" onClick={resetWorkflowDemo} className="hover:text-emerald-300 transition-colors cursor-pointer bg-transparent border-0 p-0" title="Reset Demo Flow" style={{ fontSize: 'calc(10.5 * var(--u))', color: 'rgba(167, 243, 208, 0.65)' } as React.CSSProperties}>↺</button>
-                </div>
+                <div id="phone-header-title" style={{ fontSize: 'calc(14.2 * var(--u))', fontWeight: 600, color: '#ffffff', lineHeight: '1.15' } as React.CSSProperties}>Your Business</div>
+                <div id="phone-header-status" style={{ fontSize: 'calc(11.2 * var(--u))', color: '#6ee7a8', lineHeight: '1.15' } as React.CSSProperties}>Online</div>
               </div>
             </div>
 
@@ -1142,7 +1517,7 @@ export function StarXFlowLanding() {
               className="flex items-baseline justify-between"
               style={{ marginTop: 'calc(13 * var(--u))', marginLeft: 'calc(22 * var(--u))', width: 'calc(248 * var(--u))', background: 'linear-gradient(90deg, rgba(220, 242, 231, 0.95) 0%, rgba(182, 218, 200, 0.93) 100%)', color: '#052316', borderRadius: 'calc(12 * var(--u))', padding: 'calc(8 * var(--u)) calc(12 * var(--u))', boxShadow: '0 calc(5 * var(--u)) calc(16 * var(--u)) rgba(0,0,0,0.38)', whiteSpace: 'nowrap' } as React.CSSProperties}
             >
-              <span id="phone-incoming-text" style={{ fontSize: 'calc(12.8 * var(--u))', fontWeight: 600 } as React.CSSProperties}>{workflowTabContents[activeWorkflowTab]?.incomingText || 'Hi! Can I book a consultation?'}</span>
+              <span id="phone-incoming-text" style={{ fontSize: 'calc(12.8 * var(--u))', fontWeight: 600 } as React.CSSProperties}>Hi! Can I book a consultation?</span>
               <span style={{ fontSize: 'calc(9.5 * var(--u))', color: 'rgba(5, 35, 22, 0.7)', marginLeft: 'calc(6 * var(--u))', flexShrink: 0 } as React.CSSProperties}>9:42 AM</span>
             </div>
 
@@ -1151,7 +1526,7 @@ export function StarXFlowLanding() {
               style={{ marginTop: 'calc(11 * var(--u))', width: 'calc(272 * var(--u))', background: 'rgba(9, 34, 24, 0.84)', border: 'calc(1.2 * var(--u)) solid rgba(110, 231, 183, 0.4)', borderRadius: 'calc(15 * var(--u))', padding: 'calc(10 * var(--u)) calc(14 * var(--u))', boxShadow: '0 0 calc(24 * var(--u)) rgba(52, 211, 153, 0.22)' } as React.CSSProperties}
             >
               <div id="phone-bot-prompt" style={{ fontSize: 'calc(13.4 * var(--u))', fontWeight: 600, color: '#ffffff', marginBottom: 'calc(9 * var(--u))', whiteSpace: 'nowrap' } as React.CSSProperties}>
-                {workflowTabContents[activeWorkflowTab]?.promptText || 'Sure! Here are the available slots:'}
+                Sure! Here are the available slots:
               </div>
 
               <div className="flex flex-col" style={{ gap: 'calc(6.5 * var(--u))' } as React.CSSProperties}>
@@ -1159,7 +1534,7 @@ export function StarXFlowLanding() {
                   type="button"
                   data-slot="Tue, 10:00 AM"
                   onClick={() => selectTimeSlot('Tue, 10:00 AM')}
-                  className={`wa-slot-pill phone-slot-btn flex items-center justify-center rounded-full ${selectedSlot === 'Tue, 10:00 AM' ? 'active' : ''}`}
+                  className="wa-slot-pill phone-slot-btn active flex items-center justify-center rounded-full"
                   style={{ height: 'calc(28 * var(--u))', fontSize: 'calc(12.8 * var(--u))', fontWeight: 500 } as React.CSSProperties}
                 >
                   Tue, 10:00 AM
@@ -1168,7 +1543,7 @@ export function StarXFlowLanding() {
                   type="button"
                   data-slot="Tue, 2:00 PM"
                   onClick={() => selectTimeSlot('Tue, 2:00 PM')}
-                  className={`wa-slot-pill phone-slot-btn flex items-center justify-center rounded-full ${selectedSlot === 'Tue, 2:00 PM' ? 'active' : ''}`}
+                  className="wa-slot-pill phone-slot-btn flex items-center justify-center rounded-full"
                   style={{ height: 'calc(28 * var(--u))', fontSize: 'calc(12.8 * var(--u))', fontWeight: 500 } as React.CSSProperties}
                 >
                   Tue, 2:00 PM
@@ -1177,7 +1552,7 @@ export function StarXFlowLanding() {
                   type="button"
                   data-slot="Wed, 11:00 AM"
                   onClick={() => selectTimeSlot('Wed, 11:00 AM')}
-                  className={`wa-slot-pill phone-slot-btn flex items-center justify-center rounded-full ${selectedSlot === 'Wed, 11:00 AM' ? 'active' : ''}`}
+                  className="wa-slot-pill phone-slot-btn flex items-center justify-center rounded-full"
                   style={{ height: 'calc(28 * var(--u))', fontSize: 'calc(12.8 * var(--u))', fontWeight: 500 } as React.CSSProperties}
                 >
                   Wed, 11:00 AM
@@ -1186,15 +1561,15 @@ export function StarXFlowLanding() {
             </div>
           </div>
 
-          {/* Glowing Energy Connector Beam from Phone to Booking Confirmed Card */}
+          {/* Hairline Architectural Connector Guide from Phone to Confirmed Card */}
           <svg
-            className="pos pointer-events-none animate-pulse-glow"
+            className="pos pointer-events-none"
             style={{ '--x': 862, '--y': 1522, '--w': 172, '--h': 146 } as React.CSSProperties}
             viewBox="862 1522 172 146"
             fill="none"
           >
-            <path d="M868 1628 C 925 1628, 952 1551, 1024 1551" stroke="#6ee7b7" strokeWidth="3" strokeLinecap="round"/>
-            <circle cx="1024" cy="1551" r="4.5" fill="#bbf7d0"/>
+            <path d="M868 1628 C 925 1628, 952 1551, 1024 1551" stroke="#6ee7b7" strokeOpacity="0.28" strokeWidth="1.4" strokeLinecap="round"/>
+            <circle cx="1024" cy="1551" r="3" fill="#6ee7b7" fillOpacity="0.6"/>
           </svg>
 
           {/* RIGHT FLOATING CARD: BOOKING CONFIRMED (left: 1023, top: 1460, w: 285, h: 182) */}
@@ -1213,14 +1588,14 @@ export function StarXFlowLanding() {
             </div>
 
             <div id="confirmed-card-title" style={{ fontSize: 'calc(20 * var(--u))', fontWeight: 600, color: '#ffffff', letterSpacing: 'calc(-0.3 * var(--u))', whiteSpace: 'nowrap' } as React.CSSProperties}>
-              {workflowTabContents[activeWorkflowTab]?.confirmedTitle || 'Booking Confirmed'}
+              Booking Confirmed
             </div>
 
             <div className="flex items-center justify-center" style={{ marginTop: 'calc(8 * var(--u))', gap: 'calc(7 * var(--u))', fontSize: 'calc(15 * var(--u))', color: 'rgba(205, 238, 220, 0.9)', whiteSpace: 'nowrap' } as React.CSSProperties}>
               <svg style={{ width: 'calc(16 * var(--u))', height: 'calc(16 * var(--u))', color: '#6ee7b7' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
-              <span id="confirmed-card-slot">{selectedSlot}</span>
+              <span id="confirmed-card-slot">Tue, 10:00 AM</span>
             </div>
           </div>
         </section>
@@ -1231,14 +1606,14 @@ export function StarXFlowLanding() {
         <section id="capabilities-section" style={{ position: 'relative', zIndex: 15 } as React.CSSProperties}>
           <div
             className="pos-auto uppercase"
-            style={{ '--x': 85, '--y': 1706, fontSize: 'calc(12.2 * var(--u))', fontWeight: 600, letterSpacing: 'calc(1.9 * var(--u))', color: '#6ee7a8', whiteSpace: 'nowrap' } as React.CSSProperties}
+            style={{ '--x': 85, '--y': 1682, fontSize: 'calc(12 * var(--u))', fontWeight: 600, letterSpacing: 'calc(1.9 * var(--u))', color: '#6ee7a8', whiteSpace: 'nowrap' } as React.CSSProperties}
           >
             CORE CAPABILITIES
           </div>
 
           <h2
             className="pos-auto font-editorial m-0"
-            style={{ '--x': 85, '--y': 1726, fontSize: 'calc(39 * var(--u))', fontWeight: 400, lineHeight: '1.08', color: '#f4fbf7', whiteSpace: 'nowrap' } as React.CSSProperties}
+            style={{ '--x': 85, '--y': 1700, fontSize: 'calc(34.5 * var(--u))', fontWeight: 400, lineHeight: '1.05', color: '#f4fbf7', whiteSpace: 'nowrap' } as React.CSSProperties}
           >
             Everything you need, working together.
           </h2>
@@ -1251,7 +1626,7 @@ export function StarXFlowLanding() {
             className="pos glass-shell flex flex-col items-center justify-center text-center cursor-pointer group"
             style={{ '--x': 129, '--y': 1787, '--w': 162.5, '--h': 125, borderRadius: 'calc(16 * var(--u))', padding: 'calc(12 * var(--u))' } as React.CSSProperties}
           >
-            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(34 * var(--u))', height: 'calc(34 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))', filter: 'drop-shadow(0 0 calc(8 * var(--u)) rgba(74,222,128,0.5))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(32 * var(--u))', height: 'calc(32 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
               <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
               <path d="M9.5 9.5c.3.8 1.1 1.8 2.1 2.3.4.2.8.1 1-.2l.5-.6c.2-.2.5-.3.8-.1l1.2.6c.3.2.4.5.3.8-.2.8-.9 1.3-1.7 1.3-2.4 0-5.2-2.7-5.2-5.1 0-.8.5-1.5 1.3-1.7.3-.1.6 0 .8.3l.6 1.2c.1.3.1.6-.1.8l-.6.4z" fill="currentColor" stroke="none"/>
             </svg>
@@ -1267,7 +1642,7 @@ export function StarXFlowLanding() {
             className="pos glass-shell flex flex-col items-center justify-center text-center cursor-pointer group"
             style={{ '--x': 336, '--y': 1787, '--w': 162.5, '--h': 125, borderRadius: 'calc(16 * var(--u))', padding: 'calc(12 * var(--u))' } as React.CSSProperties}
           >
-            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(34 * var(--u))', height: 'calc(34 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))', filter: 'drop-shadow(0 0 calc(8 * var(--u)) rgba(74,222,128,0.5))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(32 * var(--u))', height: 'calc(32 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
@@ -1283,7 +1658,7 @@ export function StarXFlowLanding() {
             className="pos glass-shell flex flex-col items-center justify-center text-center cursor-pointer group"
             style={{ '--x': 544, '--y': 1787, '--w': 162.5, '--h': 125, borderRadius: 'calc(16 * var(--u))', padding: 'calc(12 * var(--u))' } as React.CSSProperties}
           >
-            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(34 * var(--u))', height: 'calc(34 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))', filter: 'drop-shadow(0 0 calc(8 * var(--u)) rgba(74,222,128,0.5))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(32 * var(--u))', height: 'calc(32 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
             <span style={{ fontSize: 'calc(13.6 * var(--u))', lineHeight: '1.24', fontWeight: 500, color: '#f0fdf6' } as React.CSSProperties}>
@@ -1298,7 +1673,7 @@ export function StarXFlowLanding() {
             className="pos glass-shell flex flex-col items-center justify-center text-center cursor-pointer group"
             style={{ '--x': 752, '--y': 1787, '--w': 162.5, '--h': 125, borderRadius: 'calc(16 * var(--u))', padding: 'calc(12 * var(--u))' } as React.CSSProperties}
           >
-            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(34 * var(--u))', height: 'calc(34 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))', filter: 'drop-shadow(0 0 calc(8 * var(--u)) rgba(74,222,128,0.5))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(32 * var(--u))', height: 'calc(32 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
               <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
               <circle cx="9" cy="14" r="1" fill="currentColor"/><circle cx="15" cy="14" r="1" fill="currentColor"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
             </svg>
@@ -1314,7 +1689,7 @@ export function StarXFlowLanding() {
             className="pos glass-shell flex flex-col items-center justify-center text-center cursor-pointer group"
             style={{ '--x': 958, '--y': 1787, '--w': 162.5, '--h': 125, borderRadius: 'calc(16 * var(--u))', padding: 'calc(12 * var(--u))' } as React.CSSProperties}
           >
-            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(34 * var(--u))', height: 'calc(34 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))', filter: 'drop-shadow(0 0 calc(8 * var(--u)) rgba(74,222,128,0.5))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(32 * var(--u))', height: 'calc(32 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
               <line x1="16" y1="13" x2="8" y2="13"/>
@@ -1332,7 +1707,7 @@ export function StarXFlowLanding() {
             className="pos glass-shell flex flex-col items-center justify-center text-center cursor-pointer group"
             style={{ '--x': 1165, '--y': 1787, '--w': 162.5, '--h': 125, borderRadius: 'calc(16 * var(--u))', padding: 'calc(12 * var(--u))' } as React.CSSProperties}
           >
-            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(34 * var(--u))', height: 'calc(34 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))', filter: 'drop-shadow(0 0 calc(8 * var(--u)) rgba(74,222,128,0.5))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <svg className="group-hover:scale-110 transition-transform" style={{ width: 'calc(32 * var(--u))', height: 'calc(32 * var(--u))', color: '#6ee7b7', marginBottom: 'calc(9 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
               <polygon points="12 2 2 7 12 12 22 7 12 2"/>
               <polyline points="2 12 12 17 22 12"/>
               <polyline points="2 17 12 22 22 17"/>
@@ -1469,18 +1844,8 @@ export function StarXFlowLanding() {
         <img
           id="xray-ref-img"
           src="/assets/starx_ref_orig.webp"
-          alt="Design Reference X-Ray Layer"
-          className="pos pointer-events-none select-none transition-opacity duration-200"
-          style={{
-            '--x': 0,
-            '--y': 0,
-            '--w': 1440,
-            '--h': 2362,
-            zIndex: 2,
-            objectFit: 'cover',
-            opacity: renderMode === 'hybrid' ? (xrayOpacity / 100) : 0,
-            pointerEvents: 'none'
-          } as React.CSSProperties}
+          alt="Original Reference Image Overlay"
+          style={{ position: 'absolute', inset: '0', width: '100%', height: '100%', zIndex: 30, opacity: 0, pointerEvents: 'none', transition: 'opacity 0.15s ease' } as React.CSSProperties}
         />
 
       </div>
@@ -1494,13 +1859,13 @@ export function StarXFlowLanding() {
   <div id="starx-extended-scenes" className="emerald-sanctuary-ext text-emerald-50">
 
     {/* Sticky Scene Jump Bar for Rapid Inspection of All 12 Restored Scenes */}
-    <div className="sticky top-0 z-40 border-b border-emerald-500/20 bg-[#020c08]/85 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 overflow-x-auto text-xs">
+    <div id="starx-scene-jump-bar" className="sticky top-0 z-40 border-b border-emerald-500/20 bg-[#020c08]/85 backdrop-blur-md" style={{ flexWrap: 'wrap' } as React.CSSProperties}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2 shrink-0">
           <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
           <span className="font-semibold text-emerald-300 uppercase tracking-wider">12-Scene Complete Product Story:</span>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-1.5">
           <a href="#hero-section" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">01 Hero</a>
           <a href="#scene-legacy-hero-bridge" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">01B Autopilot &amp; Integrations</a>
           <a href="#scene-revenue-leakage" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">02 $48,590 Leakage &amp; ROI</a>
@@ -1520,7 +1885,7 @@ export function StarXFlowLanding() {
     {/* ========================================================================= */}
     {/* SCENE 01B & 01C: LEGACY HERO POSITIONING, SARAH K. DEMO & INTEGRATIONS    */}
     {/* ========================================================================= */}
-    <section id="scene-legacy-hero-bridge" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14">
+    <section id="scene-legacy-hero-bridge"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         {/* Left: Restored Legacy Hero Messaging & Social Proof */}
         <div className="lg:col-span-6 space-y-5">
@@ -1529,27 +1894,26 @@ export function StarXFlowLanding() {
             <span>Autonomous Front Desk</span>
           </div>
 
-          <h2 className="font-editorial text-4xl sm:text-5xl lg:text-6xl font-normal text-white leading-[1.02] tracking-tight">
-            Your front desk,<br/>
-            <span className="text-emerald-300 font-semibold">now on autopilot.</span>
+          <h2 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-normal text-white leading-tight tracking-tight">
+            Autonomous Front Desk,<br/>
+            <span className="text-emerald-300">live in action.</span>
           </h2>
 
-          <p className="text-base sm:text-lg text-emerald-100/85 leading-relaxed max-w-xl">
+          <p className="text-base text-emerald-100/80 leading-relaxed max-w-xl">
             Automate bookings, capture leads, and reply to every customer instantly — 24/7 on WhatsApp.
           </p>
 
-          <div className="flex flex-wrap items-center gap-4 pt-1">
+          <div className="flex flex-wrap items-center gap-4 pt-2">
             <button
               type="button"
               onClick={() => openModal('signup', '14-Day Free Trial')}
-              className="px-7 py-3.5 rounded-full font-semibold text-sm text-emerald-950 transition-transform hover:scale-105 cursor-pointer"
-              style={{ background: 'linear-gradient(180deg, #bcf8db 0%, #68d89b 50%, #44b87d 100%)', boxShadow: '0 0 28px rgba(74, 222, 128, 0.45)' } as React.CSSProperties}
+              className="px-6 py-3 rounded-full font-semibold text-xs text-emerald-950 bg-emerald-400 hover:bg-emerald-300 transition-colors cursor-pointer"
             >
               Start Free Trial →
             </button>
             <a
               href="#scene-onboarding"
-              className="px-6 py-3.5 rounded-full font-medium text-sm text-emerald-100 border border-emerald-400/35 bg-emerald-950/40 hover:border-emerald-300 transition-colors"
+              className="px-5 py-3 rounded-full font-medium text-xs text-emerald-200/80 hover:text-white border border-emerald-500/25 hover:border-emerald-400/40 transition-colors"
             >
               See 10-Minute Setup
             </a>
@@ -1593,26 +1957,20 @@ export function StarXFlowLanding() {
 
             {/* Conversation Thread */}
             <div id="sarah-demo-thread" className="space-y-3.5 my-5 text-sm">
-              {sarahMessages.map((msg, idx) => (
-                <div
-                  key={`sarah-msg-${idx}`}
-                  className={
-                    msg.sender === 'user'
-                      ? 'max-w-[85%] rounded-2xl rounded-tl-sm bg-[#061c14]/90 border border-emerald-500/25 px-4 py-3 text-emerald-50 text-xs sm:text-sm'
-                      : 'max-w-[88%] ml-auto rounded-2xl rounded-tr-sm bg-emerald-900/50 border border-emerald-400/40 px-4 py-3 text-white shadow-[0_0_20px_rgba(16,185,129,0.15)] text-xs sm:text-sm'
-                  }
-                  dangerouslySetInnerHTML={{ __html: msg.text }}
-                />
-              ))}
+              <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#061c14]/90 border border-emerald-500/25 px-4 py-3 text-emerald-50">
+                Hi, do you have any slots for a deep tissue massage tomorrow?
+              </div>
+
+              <div className="max-w-[88%] ml-auto rounded-2xl rounded-tr-sm bg-emerald-900/50 border border-emerald-400/40 px-4 py-3 text-white shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                Hi! We have openings at <strong>10:30 AM</strong> and <strong>2:00 PM</strong> with therapist Sarah. Want me to book one?
+              </div>
             </div>
 
             {/* Interactive Reply Simulation Input */}
-            <form id="sarah-demo-form" onSubmit={handleSarahDemoReply} className="flex items-center gap-2 mt-3">
+            <form onSubmit={handleSarahDemoReply} className="flex items-center gap-2 mt-3">
               <input
                 id="sarah-demo-input"
                 type="text"
-                value={sarahInput}
-                onChange={(e) => setSarahInput(e.target.value)}
                 placeholder="Message AI Receptionist... (e.g. Book 2:00 PM please)"
                 className="flex-1 rounded-full bg-[#04150f]/90 border border-emerald-500/30 px-4 py-2.5 text-xs text-white placeholder-emerald-200/45 focus:outline-none focus:border-emerald-400"
               />
@@ -1631,7 +1989,7 @@ export function StarXFlowLanding() {
             >
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-emerald-400 text-emerald-950 font-bold inline-flex items-center justify-center">✓</span>
-                <span id="sarah-demo-confirmed-text" className="font-semibold">{sarahConfirmedText}</span>
+                <span id="sarah-demo-confirmed-text" className="font-medium text-white">Appointment confirmed — Sarah K., Deep Tissue, 2:00 PM</span>
               </div>
               <span className="text-[11px] text-emerald-300 font-mono">Synced</span>
             </div>
@@ -1681,7 +2039,7 @@ export function StarXFlowLanding() {
     {/* ========================================================================= */}
     {/* SCENE 02B: BUSINESS PROBLEMS, $48,590 REVENUE LEAKAGE & ROI CALCULATOR    */}
     {/* ========================================================================= */}
-    <section id="scene-revenue-leakage" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section id="scene-revenue-leakage"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left 7 Cols: Your front desk is leaking revenue + 3 Numbered Problems */}
         <div className="lg:col-span-7 space-y-6">
@@ -1695,32 +2053,32 @@ export function StarXFlowLanding() {
             </p>
           </div>
 
-          <div className="space-y-4">
-            <div className="spatial-glass-card rounded-2xl p-5 flex items-start gap-4">
+          <div className="space-y-6 pt-3">
+            <div className="flex items-start gap-5 pb-5 border-b border-emerald-500/15">
               <span className="font-editorial text-3xl font-semibold text-emerald-400 leading-none shrink-0">01</span>
               <div>
                 <h3 className="text-base font-semibold text-white">Missed Bookings</h3>
-                <p className="text-sm text-emerald-100/80 mt-1 leading-relaxed">
+                <p className="text-sm text-emerald-100/75 mt-1.5 leading-relaxed">
                   Over 62% of calls to local businesses go unanswered during busy hours or after-hours, leading directly to lost clients.
                 </p>
               </div>
             </div>
 
-            <div className="spatial-glass-card rounded-2xl p-5 flex items-start gap-4">
+            <div className="flex items-start gap-5 pb-5 border-b border-emerald-500/15">
               <span className="font-editorial text-3xl font-semibold text-emerald-400 leading-none shrink-0">02</span>
               <div>
                 <h3 className="text-base font-semibold text-white">Juggling Admin Tasks</h3>
-                <p className="text-sm text-emerald-100/80 mt-1 leading-relaxed">
+                <p className="text-sm text-emerald-100/75 mt-1.5 leading-relaxed">
                   Manually managing booking links, reminder texts, calendar syncs, and intake forms wastes hours of high-value staff time.
                 </p>
               </div>
             </div>
 
-            <div className="spatial-glass-card rounded-2xl p-5 flex items-start gap-4">
+            <div className="flex items-start gap-5">
               <span className="font-editorial text-3xl font-semibold text-emerald-400 leading-none shrink-0">03</span>
               <div>
                 <h3 className="text-base font-semibold text-white">Leaked Leads</h3>
-                <p className="text-sm text-emerald-100/80 mt-1 leading-relaxed">
+                <p className="text-sm text-emerald-100/75 mt-1.5 leading-relaxed">
                   No automated follow-ups to convert class trial signups, rescue no-shows, or consistently gather 5-star Google reviews.
                 </p>
               </div>
@@ -1753,16 +2111,16 @@ export function StarXFlowLanding() {
             <div>
               <div className="flex justify-between text-xs font-medium mb-1">
                 <label htmlFor="roi-session-val" className="text-emerald-100">Average Session Value</label>
-                <span id="roi-session-readout" className="text-emerald-300 font-bold">{`${roiSessionVal}`}</span>
+                <span id="roi-session-readout" className="text-emerald-300 font-bold">$80</span>
               </div>
               <input
                 id="roi-session-val"
                 type="range"
-                min={30}
-                max={300}
-                step={5}
-                value={roiSessionVal}
-                onChange={(e) => setRoiSessionVal(Number(e.target.value))}
+                min="30"
+                max="300"
+                step="5"
+                value="80"
+                onInput={updateRoiCalculator} onChange={updateRoiCalculator}
                 className="w-full accent-emerald-400 cursor-pointer"
               />
               <div className="flex justify-between text-[10px] text-emerald-200/60">
@@ -1773,16 +2131,16 @@ export function StarXFlowLanding() {
             <div>
               <div className="flex justify-between text-xs font-medium mb-1">
                 <label htmlFor="roi-missed-calls" className="text-emerald-100">Est. Missed Calls / Month</label>
-                <span id="roi-missed-readout" className="text-emerald-300 font-bold">{`${roiMissedCalls} inquiries`}</span>
+                <span id="roi-missed-readout" className="text-emerald-300 font-bold">20 inquiries</span>
               </div>
               <input
                 id="roi-missed-calls"
                 type="range"
-                min={5}
-                max={100}
-                step={1}
-                value={roiMissedCalls}
-                onChange={(e) => setRoiMissedCalls(Number(e.target.value))}
+                min="5"
+                max="100"
+                step="1"
+                value="20"
+                onInput={updateRoiCalculator} onChange={updateRoiCalculator}
                 className="w-full accent-emerald-400 cursor-pointer"
               />
               <div className="flex justify-between text-[10px] text-emerald-200/60">
@@ -1793,12 +2151,12 @@ export function StarXFlowLanding() {
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="rounded-2xl bg-[#041710]/90 border border-emerald-400/35 p-3.5">
                 <div className="text-[11px] text-emerald-300">Est. Monthly Recovery</div>
-                <div id="roi-monthly-recovery" className="font-editorial text-2xl font-semibold text-emerald-300">{`${roiMonthlyRecovery.toLocaleString()}`}</div>
+                <div id="roi-monthly-recovery" className="text-2xl font-bold text-white mt-0.5">$1,200</div>
                 <div className="text-[10px] text-emerald-200/70 mt-1">Conservative 75% capture rate via WhatsApp AI assistant.</div>
               </div>
               <div className="rounded-2xl bg-[#041710]/90 border border-emerald-400/35 p-3.5">
                 <div className="text-[11px] text-emerald-300">Staff Hours Saved</div>
-                <div id="roi-hours-saved" className="font-editorial text-2xl font-semibold text-emerald-300">{`${roiHoursSaved} hrs`}</div>
+                <div id="roi-hours-saved" className="text-2xl font-bold text-white mt-0.5">30 hrs</div>
                 <div className="text-[10px] text-emerald-200/70 mt-1">Saves 1.5 hours of reminders &amp; callbacks per lead.</div>
               </div>
             </div>
@@ -1812,7 +2170,7 @@ export function StarXFlowLanding() {
     {/* ========================================================================= */}
     {/* SCENE 04: THREE-STAGE ARCHITECTURAL GLASS ONBOARDING (< 10 MINUTES)       */}
     {/* ========================================================================= */}
-    <section id="scene-onboarding" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section id="scene-onboarding"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center max-w-3xl mx-auto">
         <div className="eyebrow-emerald">Onboarding Setup</div>
         <h2 className="font-editorial text-4xl sm:text-5xl font-normal text-white mt-2">
@@ -1825,37 +2183,34 @@ export function StarXFlowLanding() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
         {/* Step 01 */}
-        <div className="spatial-glass-card rounded-3xl p-7 relative">
-          <div className="flex items-center justify-between mb-4">
+        <div className="spatial-glass-card rounded-3xl p-8 relative">
+          <div className="mb-5">
             <span className="font-editorial text-5xl font-semibold text-emerald-400/90">01</span>
-            <span className="px-3 py-1 rounded-full text-[11px] font-medium bg-emerald-500/15 border border-emerald-400/30 text-emerald-300">2 Clicks</span>
           </div>
           <h3 className="text-lg font-semibold text-white">Connect Your Calendars</h3>
-          <p className="text-sm text-emerald-100/80 mt-2 leading-relaxed">
+          <p className="text-sm text-emerald-100/75 mt-2 leading-relaxed">
             Sync Google Calendar, Outlook, and your POS systems in just two clicks. Keep your staff availability synchronized in real-time.
           </p>
         </div>
 
         {/* Step 02 */}
-        <div className="spatial-glass-card rounded-3xl p-7 relative">
-          <div className="flex items-center justify-between mb-4">
+        <div className="spatial-glass-card rounded-3xl p-8 relative">
+          <div className="mb-5">
             <span className="font-editorial text-5xl font-semibold text-emerald-400/90">02</span>
-            <span className="px-3 py-1 rounded-full text-[11px] font-medium bg-emerald-500/15 border border-emerald-400/30 text-emerald-300">&lt; 5 Minutes</span>
           </div>
           <h3 className="text-lg font-semibold text-white">Configure Services</h3>
-          <p className="text-sm text-emerald-100/80 mt-2 leading-relaxed">
+          <p className="text-sm text-emerald-100/75 mt-2 leading-relaxed">
             Input your service menus, pricing, team rosters, and common questions. Our AI trains on your exact operational rules in under 5 minutes.
           </p>
         </div>
 
         {/* Step 03 */}
-        <div className="spatial-glass-card rounded-3xl p-7 relative">
-          <div className="flex items-center justify-between mb-4">
+        <div className="spatial-glass-card rounded-3xl p-8 relative">
+          <div className="mb-5">
             <span className="font-editorial text-5xl font-semibold text-emerald-400/90">03</span>
-            <span className="px-3 py-1 rounded-full text-[11px] font-medium bg-emerald-500/15 border border-emerald-400/30 text-emerald-300">24/7 Live</span>
           </div>
           <h3 className="text-lg font-semibold text-white">Activate AI Receptionist</h3>
-          <p className="text-sm text-emerald-100/80 mt-2 leading-relaxed">
+          <p className="text-sm text-emerald-100/75 mt-2 leading-relaxed">
             Launch your custom 24/7 WhatsApp AI receptionist. Instantly capture incoming leads, schedule appointments, and follow up.
           </p>
         </div>
@@ -1867,7 +2222,7 @@ export function StarXFlowLanding() {
     {/* ========================================================================= */}
     {/* SCENE 06B: ENGINEERED FOR OPERATIONAL EXCELLENCE (FULL EXPLANATIONS)      */}
     {/* ========================================================================= */}
-    <section id="scene-operational-excellence" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section id="scene-operational-excellence"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center max-w-3xl mx-auto">
         <div className="eyebrow-emerald">Core Capabilities — Complete Specification</div>
         <h2 className="font-editorial text-4xl sm:text-5xl font-normal text-white mt-2">
@@ -1879,50 +2234,50 @@ export function StarXFlowLanding() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-        <div className="spatial-glass-card rounded-3xl p-6">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300 font-bold mb-4">01</div>
-          <h3 className="text-lg font-semibold text-white">24/7 WhatsApp Bookings</h3>
-          <p className="text-sm text-emerald-100/80 mt-2 leading-relaxed">
+        <div className="p-7 rounded-2xl bg-emerald-950/25 border border-emerald-500/15">
+          <div className="text-xs font-mono font-medium text-emerald-400">01 / BOOKINGS</div>
+          <h3 className="text-lg font-semibold text-white mt-2">24/7 WhatsApp Bookings</h3>
+          <p className="text-sm text-emerald-100/75 mt-2 leading-relaxed">
             Enable clients to schedule, reschedule, or cancel slots late at night when your front desk is closed.
           </p>
         </div>
 
-        <div className="spatial-glass-card rounded-3xl p-6">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300 font-bold mb-4">02</div>
-          <h3 className="text-lg font-semibold text-white">No-Show Prevention</h3>
-          <p className="text-sm text-emerald-100/80 mt-2 leading-relaxed">
+        <div className="p-7 rounded-2xl bg-emerald-950/25 border border-emerald-500/15">
+          <div className="text-xs font-mono font-medium text-emerald-400">02 / ATTENDANCE</div>
+          <h3 className="text-lg font-semibold text-white mt-2">No-Show Prevention</h3>
+          <p className="text-sm text-emerald-100/75 mt-2 leading-relaxed">
             Auto-send smart confirmation invites and 24-hour reminders directly over WhatsApp to secure bookings.
           </p>
         </div>
 
-        <div className="spatial-glass-card rounded-3xl p-6">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300 font-bold mb-4">03</div>
-          <h3 className="text-lg font-semibold text-white">Google Review Booster</h3>
-          <p className="text-sm text-emerald-100/80 mt-2 leading-relaxed">
+        <div className="p-7 rounded-2xl bg-emerald-950/25 border border-emerald-500/15">
+          <div className="text-xs font-mono font-medium text-emerald-400">03 / REPUTATION</div>
+          <h3 className="text-lg font-semibold text-white mt-2">Google Review Booster</h3>
+          <p className="text-sm text-emerald-100/75 mt-2 leading-relaxed">
             Automatically follow up with clients post-session to request 5-star reviews and increase search rankings.
           </p>
         </div>
 
-        <div className="spatial-glass-card rounded-3xl p-6">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300 font-bold mb-4">04</div>
-          <h3 className="text-lg font-semibold text-white">Staff Calendar Sync</h3>
-          <p className="text-sm text-emerald-100/80 mt-2 leading-relaxed">
+        <div className="p-7 rounded-2xl bg-emerald-950/25 border border-emerald-500/15">
+          <div className="text-xs font-mono font-medium text-emerald-400">04 / SYNCHRONIZATION</div>
+          <h3 className="text-lg font-semibold text-white mt-2">Staff Calendar Sync</h3>
+          <p className="text-sm text-emerald-100/75 mt-2 leading-relaxed">
             Real-time, two-way sync with Google Calendar and Microsoft Outlook across all staff members.
           </p>
         </div>
 
-        <div className="spatial-glass-card rounded-3xl p-6">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300 font-bold mb-4">05</div>
-          <h3 className="text-lg font-semibold text-white">WhatsApp Intake Forms</h3>
-          <p className="text-sm text-emerald-100/80 mt-2 leading-relaxed">
+        <div className="p-7 rounded-2xl bg-emerald-950/25 border border-emerald-500/15">
+          <div className="text-xs font-mono font-medium text-emerald-400">05 / ONBOARDING</div>
+          <h3 className="text-lg font-semibold text-white mt-2">WhatsApp Intake Forms</h3>
+          <p className="text-sm text-emerald-100/75 mt-2 leading-relaxed">
             Deliver digital waiver links, health questionnaires, and gym registration forms automatically prior to visits.
           </p>
         </div>
 
-        <div className="spatial-glass-card rounded-3xl p-6">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300 font-bold mb-4">06</div>
-          <h3 className="text-lg font-semibold text-white">Unified Service CRM</h3>
-          <p className="text-sm text-emerald-100/80 mt-2 leading-relaxed">
+        <div className="p-7 rounded-2xl bg-emerald-950/25 border border-emerald-500/15">
+          <div className="text-xs font-mono font-medium text-emerald-400">06 / TELEMETRY</div>
+          <h3 className="text-lg font-semibold text-white mt-2">Unified Service CRM</h3>
+          <p className="text-sm text-emerald-100/75 mt-2 leading-relaxed">
             Aggregate client session histories, staff notes, and scheduling labels in a beautiful unified dashboard.
           </p>
         </div>
@@ -1934,7 +2289,7 @@ export function StarXFlowLanding() {
     {/* ========================================================================= */}
     {/* SCENE 07: CUSTOMER SEGMENTS & USE CASES (SOLO VS. GROWING PRACTICES)      */}
     {/* ========================================================================= */}
-    <section id="scene-customer-segments" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section id="scene-customer-segments"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center max-w-3xl mx-auto">
         <div className="eyebrow-emerald">Purpose-Built For Your Scale</div>
         <h2 className="font-editorial text-4xl sm:text-5xl font-normal text-white mt-2">
@@ -2042,7 +2397,7 @@ export function StarXFlowLanding() {
     {/* ========================================================================= */}
     {/* SCENE 08 & 10: PLATFORM GUARANTEES & OPERATIONAL INDEPENDENCE             */}
     {/* ========================================================================= */}
-    <section id="scene-guarantees" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section id="scene-guarantees"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center max-w-3xl mx-auto">
         <div className="eyebrow-emerald">Platform Guarantees</div>
         <h2 className="font-editorial text-4xl sm:text-5xl font-normal text-white mt-2">
@@ -2120,7 +2475,7 @@ export function StarXFlowLanding() {
     {/* ========================================================================= */}
     {/* SCENE 09B: COMPLETE 3-TIER PRICING COMPARISON ($29 / $59 / $99)           */}
     {/* ========================================================================= */}
-    <section id="scene-pricing-comparison" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section id="scene-pricing-comparison"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center max-w-3xl mx-auto">
         <div className="eyebrow-emerald">Transparent Pricing — Full Plan Specifications</div>
         <h2 className="font-editorial text-4xl sm:text-5xl font-normal text-white mt-2">
@@ -2223,7 +2578,7 @@ export function StarXFlowLanding() {
     {/* ========================================================================= */}
     {/* SCENE 11: COMPREHENSIVE GLASS FAQ & 5 CORE DIFFERENTIATORS                */}
     {/* ========================================================================= */}
-    <section id="scene-faq" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section id="scene-faq"  className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center max-w-3xl mx-auto">
         <div className="eyebrow-emerald">Product Intelligence &amp; FAQs</div>
         <h2 className="font-editorial text-4xl sm:text-5xl font-normal text-white mt-2">
@@ -2300,7 +2655,7 @@ export function StarXFlowLanding() {
     {/* ========================================================================= */}
     {/* SCENE 12: FINAL CONVERSION CALL & COMPLETE MULTI-COLUMN FOOTER            */}
     {/* ========================================================================= */}
-    <section id="scene-final-cta-footer" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
+    <section id="scene-final-cta-footer"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
       {/* Final Conversion Banner */}
       <div className="spatial-glass-card rounded-3xl p-8 sm:p-12 text-center max-w-4xl mx-auto border-emerald-400/45">
         <div className="eyebrow-emerald">Final Call</div>
@@ -2385,7 +2740,12 @@ export function StarXFlowLanding() {
       <div className="mt-10 pt-6 border-t border-emerald-500/15 flex flex-wrap items-center justify-between gap-4 text-[11px] text-emerald-200/65">
         <div>© 2026 StarX Flow (StarX Alpha Labs). All rights reserved.</div>
         <div className="flex flex-wrap items-center gap-4">
-          <button type="button" onClick={() => openModal('login')} className="hover:text-emerald-300 bg-transparent border-0 p-0 text-inherit cursor-pointer">Admin Login</button>
+          <Link href="/dashboard" className="text-emerald-300 font-semibold hover:text-white flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Live Dashboard
+          </Link>
+          <span>•</span>
+          <Link href="/admin/login" className="hover:text-emerald-300">Admin Login</Link>
           <span>•</span>
           <span className="font-mono">Canonical Host: starx-flow.runs-on.dev</span>
           <span>•</span>
@@ -2399,6 +2759,11 @@ export function StarXFlowLanding() {
   {/* =========================================================================== */}
   {/* FLOATING STUDIO INSPECTOR BAR (Mode Switcher & X-Ray Reference Diff Slider) */}
   {/* =========================================================================== */}
+  {/* =========================================================================== */}
+  {/* APPROVED TWO-ELEMENT CUSTOM EMERALD SPATIAL CURSOR                          */}
+  {/* Handled globally by <CustomCursor /> with 3-layer refraction glow & spring dynamics */}
+  {/* =========================================================================== */}
+
   <div
     id="studio-inspector-bar"
     className="fixed bottom-3 right-3 z-50 flex flex-wrap items-center gap-2 rounded-full px-3.5 py-2 text-xs shadow-2xl"
@@ -2432,10 +2797,10 @@ export function StarXFlowLanding() {
       <input
         id="xray-slider"
         type="range"
-        min={0}
-        max={100}
-        value={xrayOpacity}
-        onChange={(e) => setXrayOpacity(Number(e.target.value))}
+        min="0"
+        max="100"
+        value="0"
+        onChange={(e: any) => updateXrayOpacity(e.target.value)} onInput={(e: any) => updateXrayOpacity(e.target.value)}
         className="w-20 accent-emerald-400 cursor-pointer"
         title="Slide to overlay reference layout and verify alignment"
       />
@@ -2446,17 +2811,15 @@ export function StarXFlowLanding() {
   {/* =========================================================================== */}
   {/* INTERACTIVE GLASS TOAST BANNER (FOR ORBITAL NODES & CHALLENGE CARDS)        */}
   {/* =========================================================================== */}
-  {toastMessage && (
-    <div
-      id="live-status-toast"
-      className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full px-4 py-2 text-xs font-medium text-emerald-50 shadow-2xl transition-all"
-      style={{ background: 'rgba(6, 28, 20, 0.92)', border: '1px solid rgba(110, 231, 183, 0.55)', backdropFilter: 'blur(12px)' } as React.CSSProperties}
-    >
-      <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-      <span id="live-status-toast-text">{toastMessage}</span>
-      <button type="button" onClick={hideToast} className="text-emerald-300/70 hover:text-white ml-1">✕</button>
-    </div>
-  )}
+  <div
+    id="live-status-toast"
+    className="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-3 rounded-full px-4 py-2 text-xs font-medium text-emerald-50 shadow-2xl transition-all"
+    style={{ background: 'rgba(6, 28, 20, 0.92)', border: '1px solid rgba(110, 231, 183, 0.55)', backdropFilter: 'blur(12px)' } as React.CSSProperties}
+  >
+    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+    <span id="live-status-toast-text">Connected Operation Active</span>
+    <button type="button" onClick={hideToast} className="text-emerald-300 hover:text-white ml-1">✕</button>
+  </div>
 
   {/* =========================================================================== */}
   {/* INTERACTIVE MODAL (FOR GET STARTED, LOGIN, AND CAPABILITY DEEP-DIVES)       */}
@@ -2545,5 +2908,3 @@ export function StarXFlowLanding() {
     </>
   );
 }
-
-export default StarXFlowLanding;

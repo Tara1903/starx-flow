@@ -10,10 +10,9 @@ import {
   Calculator,
   Hourglass,
   DollarSign,
+  Sparkles,
 } from "lucide-react";
 import { useUIStore } from "../../store/uiStore";
-import { GlassCard } from "../../components/ui/GlassCard";
-import { GlassButton } from "../../components/ui/GlassButton";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
 import { CANONICAL_PLANS } from "@/lib/plans";
 
@@ -75,49 +74,56 @@ export function PricingClient() {
   ];
 
   return (
-    <div className="pt-32 lg:pt-40 pb-16 lg:pb-24 px-4 sm:px-6 min-h-screen relative overflow-hidden bg-black">
+    <div className="pt-32 lg:pt-40 pb-20 lg:pb-28 px-4 sm:px-6 min-h-screen relative overflow-hidden bg-[#020a07] text-[#f0f5ef]">
+      {/* Emerald Ambient Glows */}
       <div
         aria-hidden="true"
-        className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full opacity-10 pointer-events-none"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none"
         style={{
           background:
-            "radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)",
+            "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/4 right-0 w-[600px] h-[600px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
         }}
       />
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
-        <ScrollReveal direction="up" className="text-center max-w-4xl mx-auto mb-12 lg:mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 text-xs font-bold tracking-widest text-emerald-300 uppercase mb-6">
-            Transparent Pricing
+        <ScrollReveal direction="up" className="text-center max-w-4xl mx-auto mb-14 lg:mb-18">
+          <div className="spatial-pill-badge mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+            Transparent Subscriptions
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.06]">
+          <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.08]">
             Flat subscriptions.{" "}
-            <span className="block text-gradient-green">
+            <span className="block text-gradient-emerald">
               No booking commissions.
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto font-medium">
-            Choose a plan that matches your booking volume. Save time, recover missed calls, and run a modern front desk.
+          <p className="text-lg md:text-xl text-[#b8c9bd] max-w-2xl mx-auto font-normal leading-relaxed">
+            Choose a plan that matches your booking volume. Save time, recover missed calls, and run a modern autonomous front desk.
           </p>
         </ScrollReveal>
 
         {/* Interactive ROI Calculator Block */}
         <ScrollReveal direction="up" delay={0.1}>
-          <GlassCard
-            variant="premium"
-            className="max-w-4xl mx-auto p-6 sm:p-8 md:p-12 mb-20 relative overflow-hidden"
-          >
+          <div className="glass-panel max-w-4xl mx-auto p-6 sm:p-8 md:p-12 mb-20 relative overflow-hidden">
             <div className="flex items-center gap-3.5 mb-10">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0">
-                <Calculator size={20} />
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0 shadow-[0_0_15px_rgba(40,223,160,0.18)]">
+                <Calculator size={22} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white tracking-tight">
+                <h2 className="font-editorial text-2xl font-bold text-white tracking-tight">
                   Lead &amp; Time Recovery ROI Calculator
                 </h2>
-                <p className="text-zinc-400 text-sm font-medium mt-0.5">
-                  Estimate how much revenue and admin time StarX Flow will reclaim for you.
+                <p className="text-[#b8c9bd] text-sm font-normal mt-0.5">
+                  Estimate how much revenue and admin time StarX Flow will reclaim for you each month.
                 </p>
               </div>
             </div>
@@ -127,10 +133,10 @@ export function PricingClient() {
               <div className="space-y-8">
                 <div className="space-y-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-300 uppercase tracking-wider text-xs">
-                      Average Session Value
+                    <span className="text-[#b8c9bd] uppercase tracking-wider text-xs font-mono">
+                      Average Ticket Value
                     </span>
-                    <span className="text-emerald-300 bg-emerald-500/12 border border-emerald-500/30 px-3 py-1 rounded-full text-xs">
+                    <span className="text-emerald-300 bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-mono">
                       ${ticketValue}
                     </span>
                   </div>
@@ -139,12 +145,12 @@ export function PricingClient() {
                     min="30"
                     max="300"
                     step="5"
-                    aria-label="Average Session Value"
+                    aria-label="Average Ticket Value"
                     value={ticketValue}
                     onChange={(e) => setTicketValue(Number(e.target.value))}
-                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    className="w-full h-2 bg-emerald-950/60 border border-emerald-500/20 rounded-lg appearance-none cursor-pointer accent-[#28dfa0]"
                   />
-                  <div className="flex justify-between text-xs text-zinc-500 font-semibold">
+                  <div className="flex justify-between text-xs text-emerald-200/50 font-mono">
                     <span>$30</span>
                     <span>$150</span>
                     <span>$300</span>
@@ -153,10 +159,10 @@ export function PricingClient() {
 
                 <div className="space-y-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-300 uppercase tracking-wider text-xs">
+                    <span className="text-[#b8c9bd] uppercase tracking-wider text-xs font-mono">
                       Est. Missed Calls / Month
                     </span>
-                    <span className="text-emerald-300 bg-emerald-500/12 border border-emerald-500/30 px-3 py-1 rounded-full text-xs">
+                    <span className="text-emerald-300 bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-mono">
                       {missedLeads} inquiries
                     </span>
                   </div>
@@ -168,9 +174,9 @@ export function PricingClient() {
                     aria-label="Estimated Missed Calls per Month"
                     value={missedLeads}
                     onChange={(e) => setMissedLeads(Number(e.target.value))}
-                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    className="w-full h-2 bg-emerald-950/60 border border-emerald-500/20 rounded-lg appearance-none cursor-pointer accent-[#28dfa0]"
                   />
-                  <div className="flex justify-between text-xs text-zinc-500 font-semibold">
+                  <div className="flex justify-between text-xs text-emerald-200/50 font-mono">
                     <span>5 leads</span>
                     <span>50 leads</span>
                     <span>100 leads</span>
@@ -180,77 +186,73 @@ export function PricingClient() {
 
               {/* Right Outputs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
-                <div className="rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/30 p-6 flex flex-col justify-between">
+                <div className="rounded-2xl bg-emerald-500/10 border border-emerald-400/30 p-6 flex flex-col justify-between shadow-[0_0_20px_rgba(40,223,160,0.1)]">
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <p className="text-[11px] text-zinc-300 font-bold uppercase tracking-wider">
+                    <p className="text-[11px] text-emerald-300 font-bold uppercase tracking-wider font-mono">
                       Est. Monthly Recovery
                     </p>
-                    <div className="text-emerald-400 bg-emerald-500/15 p-2 rounded-xl flex-shrink-0">
+                    <div className="text-emerald-300 bg-emerald-400/20 p-2 rounded-xl flex-shrink-0">
                       <DollarSign size={18} />
                     </div>
                   </div>
-                  <p className="text-4xl font-extrabold text-emerald-400 tracking-tight tabular-nums mb-2">
+                  <p className="text-4xl font-extrabold text-[#8fffd0] tracking-tight tabular-nums mb-2 font-mono">
                     ${revenueRecovered.toLocaleString()}
                   </p>
-                  <span className="text-xs text-emerald-300/80 font-medium leading-relaxed">
+                  <span className="text-xs text-emerald-200/80 font-normal leading-relaxed">
                     Conservative 75% capture rate via WhatsApp AI assistant.
                   </span>
                 </div>
 
-                <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-6 flex flex-col justify-between">
+                <div className="rounded-2xl bg-[#061a12]/60 border border-emerald-500/20 p-6 flex flex-col justify-between">
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <p className="text-[11px] text-zinc-300 font-bold uppercase tracking-wider">
+                    <p className="text-[11px] text-[#b8c9bd] font-bold uppercase tracking-wider font-mono">
                       Staff Hours Saved
                     </p>
-                    <div className="text-zinc-300 bg-white/[0.06] p-2 rounded-xl flex-shrink-0">
+                    <div className="text-zinc-300 bg-white/5 p-2 rounded-xl flex-shrink-0">
                       <Hourglass size={18} />
                     </div>
                   </div>
-                  <p className="text-4xl font-extrabold text-white tracking-tight tabular-nums mb-2">
+                  <p className="text-4xl font-extrabold text-white tracking-tight tabular-nums mb-2 font-mono">
                     {hoursReclaimed} hrs
                   </p>
-                  <span className="text-xs text-zinc-400 font-medium leading-relaxed">
-                    Saves 1.5 hours of reminders &amp; callbacks per lead.
+                  <span className="text-xs text-[#b8c9bd]/80 font-normal leading-relaxed">
+                    Saves 1.5 hours of manual reminders &amp; callbacks per lead.
                   </span>
                 </div>
               </div>
             </div>
-          </GlassCard>
+          </div>
         </ScrollReveal>
 
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-7 max-w-6xl mx-auto mb-28 items-stretch">
           {plans.map((plan, idx) => (
             <ScrollReveal key={plan.name} direction="up" delay={idx * 0.08}>
-              <GlassCard
-                variant={plan.popular ? "focal" : "premium"}
-                sheen={Boolean(plan.popular)}
-                hover
-                glow={Boolean(plan.popular)}
-                className={`relative p-8 md:p-9 h-full flex flex-col ${
+              <div
+                className={`glass-panel glass-panel-hover relative p-8 md:p-9 h-full flex flex-col ${
                   plan.popular
-                    ? "border-emerald-500/50 md:scale-[1.03] z-10"
-                    : "border-white/10"
+                    ? "border-emerald-400/50 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.2),inset_0_1px_2px_rgba(255,255,255,0.3)] md:scale-[1.03] z-10"
+                    : "border-emerald-500/20"
                 }`}
               >
                 {plan.popular && (
-                  <div className="inline-flex w-fit mb-4 px-3.5 py-1 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 text-[#02120c] text-xs font-bold shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+                  <div className="inline-flex w-fit mb-4 px-3.5 py-1 rounded-full bg-gradient-to-r from-[#bcf8db] to-[#44b87d] text-[#03110c] text-xs font-bold shadow-[0_0_20px_rgba(40,223,160,0.4)]">
                     Most Popular
                   </div>
                 )}
 
                 <div className="mb-7">
-                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                  <p className="text-zinc-400 text-xs sm:text-sm font-medium mb-6 min-h-[40px] leading-relaxed">
+                  <h3 className="font-editorial text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                  <p className="text-[#b8c9bd] text-xs sm:text-sm font-normal mb-6 min-h-[40px] leading-relaxed">
                     {plan.desc}
                   </p>
                   <div className="flex items-end gap-1.5 mb-2">
-                    <span className="text-5xl font-bold tracking-tight text-white">
+                    <span className="text-5xl font-extrabold tracking-tight text-white font-mono">
                       {plan.price}
                     </span>
-                    <span className="text-zinc-400 font-medium mb-1">/month</span>
+                    <span className="text-[#b8c9bd] font-normal mb-1">/month</span>
                   </div>
-                  <p className="text-emerald-400 text-[11px] font-bold uppercase tracking-wider">
+                  <p className="text-emerald-400 text-[11px] font-bold uppercase tracking-wider font-mono">
                     Billed monthly • Zero commissions
                   </p>
                 </div>
@@ -258,26 +260,34 @@ export function PricingClient() {
                 <div className="flex-1 space-y-3.5 mb-9">
                   {plan.features.map((feature) => (
                     <div key={feature} className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-500/30">
-                        <Check size={12} className="text-emerald-400" />
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-400/30">
+                        <Check size={12} className="text-emerald-300" />
                       </div>
-                      <span className="text-zinc-200 font-medium text-sm leading-relaxed">
+                      <span className="text-emerald-100/90 font-normal text-sm leading-relaxed">
                         {feature}
                       </span>
                     </div>
                   ))}
                 </div>
 
-                <GlassButton
-                  size="lg"
-                  variant={plan.popular ? "primary" : "secondary"}
-                  magnetic={Boolean(plan.popular)}
-                  onClick={openSignup}
-                  className="w-full"
-                >
-                  Start 14-Day Trial
-                </GlassButton>
-              </GlassCard>
+                {plan.popular ? (
+                  <button
+                    type="button"
+                    onClick={openSignup}
+                    className="spatial-btn-primary w-full"
+                  >
+                    Start 14-Day Free Trial
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={openSignup}
+                    className="spatial-btn-secondary w-full"
+                  >
+                    Start 14-Day Free Trial
+                  </button>
+                )}
+              </div>
             </ScrollReveal>
           ))}
         </div>
@@ -285,11 +295,11 @@ export function PricingClient() {
         {/* FAQs */}
         <div className="max-w-3xl mx-auto mb-24">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+            <h2 className="font-editorial text-3xl md:text-4xl font-bold text-white mb-3">
               Frequently asked questions
             </h2>
-            <p className="text-zinc-400 font-medium text-base sm:text-lg">
-              Everything you need to know about the product and calendar setups.
+            <p className="text-[#b8c9bd] font-normal text-base sm:text-lg">
+              Everything you need to know about subscriptions, calendars, and setup.
             </p>
           </div>
 
@@ -297,7 +307,7 @@ export function PricingClient() {
             {faqs.map((faq, i) => (
               <div
                 key={faq.q}
-                className="glass-card-obsidian border border-white/10 rounded-2xl overflow-hidden transition-colors hover:border-emerald-500/30"
+                className="glass-panel overflow-hidden transition-colors hover:border-emerald-400/40"
               >
                 <button
                   type="button"
@@ -309,10 +319,10 @@ export function PricingClient() {
                     {faq.q}
                   </span>
                   <div
-                    className={`w-8 h-8 rounded-full border border-white/15 flex items-center justify-center flex-shrink-0 transition-colors ${
+                    className={`w-8 h-8 rounded-full border border-emerald-400/25 flex items-center justify-center flex-shrink-0 transition-colors ${
                       openFaq === i
-                        ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                        : "bg-white/[0.04] text-zinc-300"
+                        ? "bg-emerald-500/25 border-emerald-400/50 text-emerald-200"
+                        : "bg-[#061a12] text-[#b8c9bd]"
                     }`}
                   >
                     {openFaq === i ? <Minus size={16} /> : <Plus size={16} />}
@@ -327,7 +337,7 @@ export function PricingClient() {
                       transition={{ duration: 0.22 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-zinc-400 text-sm sm:text-base leading-relaxed font-medium">
+                      <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-[#b8c9bd] text-sm sm:text-base leading-relaxed font-normal">
                         {faq.a}
                       </div>
                     </motion.div>
@@ -339,23 +349,22 @@ export function PricingClient() {
         </div>
 
         {/* Bottom CTA */}
-        <GlassCard
-          variant="focal"
-          glow
-          sheen
-          className="max-w-5xl mx-auto rounded-[2.5rem] p-10 sm:p-16 text-center mb-8"
-        >
-          <h2 className="text-3xl sm:text-5xl font-bold text-white mb-5 tracking-tight leading-tight">
+        <div className="glass-panel max-w-5xl mx-auto rounded-[2.5rem] p-10 sm:p-16 text-center mb-8 border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.15)]">
+          <h2 className="font-editorial text-3xl sm:text-5xl font-bold text-white mb-5 tracking-tight leading-tight">
             Still have questions?
           </h2>
-          <p className="text-lg text-zinc-300 mb-9 max-w-2xl mx-auto leading-relaxed font-medium">
+          <p className="text-lg text-[#b8c9bd] mb-9 max-w-2xl mx-auto leading-relaxed font-normal">
             Need to double-check custom calendar flows or complex vertical configurations? Get in touch with our solutions engineers.
           </p>
-          <GlassButton size="lg" variant="primary" magnetic onClick={openSignup}>
-            Get in touch
+          <button
+            type="button"
+            onClick={openSignup}
+            className="spatial-btn-primary"
+          >
+            Get in touch with an engineer
             <ArrowRight size={18} />
-          </GlassButton>
-        </GlassCard>
+          </button>
+        </div>
       </div>
     </div>
   );

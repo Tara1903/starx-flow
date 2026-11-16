@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 
 import { useOnboardingStore } from '../../../store/onboardingStore';
 import { StepCard } from '../../../components/setup/StepCard';
-import { StepHeader } from '../../../components/setup/StepHeader';
 import { Sparkles, MessageSquare, ArrowRight, Bot, Shield, Zap } from 'lucide-react';
 
 export default function WelcomeStep() {
@@ -32,12 +31,12 @@ export default function WelcomeStep() {
       desc: "Upload FAQs and set response tones to let our AI handle customer queries instantly."
     },
     {
-      icon: <MessageSquare className="w-5 h-5 text-blue-400" />,
+      icon: <MessageSquare className="w-5 h-5 text-emerald-300" />,
       title: "Unified Messaging",
       desc: "Connect WhatsApp, Instagram, and SMS into one centralized operations hub."
     },
     {
-      icon: <Zap className="w-5 h-5 text-purple-400" />,
+      icon: <Zap className="w-5 h-5 text-emerald-400" />,
       title: "Automate Workflows",
       desc: "Instantly trigger notifications, follow-ups, and actions when messages arrive."
     }
@@ -50,17 +49,17 @@ export default function WelcomeStep() {
         {/* Glow behind icon */}
         <div className="relative mb-6">
           <div className="absolute inset-0 bg-emerald-500/20 rounded-2xl blur-xl animate-pulse" />
-          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl glass-panel border border-white/[0.08] text-emerald-400">
+          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl glass-panel border border-emerald-500/30 text-emerald-400 shadow-[0_0_20px_rgba(40,223,160,0.18)]">
             <Sparkles className="w-8 h-8" />
           </div>
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-3">
-          Welcome to <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">StarX Flow</span>
+        <h1 className="font-editorial text-3xl md:text-5xl font-bold tracking-tight text-white mb-3 leading-[1.1]">
+          Welcome to <span className="text-gradient-emerald">StarX Flow</span>
         </h1>
         
-        <p className="text-zinc-400 text-sm md:text-base leading-relaxed mb-8 max-w-lg">
-          Let's get your business connected. In about 10 minutes, we'll set up your channels, train your AI assistant, and send a test message to ensure everything works flawlessly.
+        <p className="text-[#b8c9bd] text-sm md:text-base leading-relaxed mb-8 max-w-lg font-normal">
+          Let&apos;s get your business connected. In about 10 minutes, we&apos;ll set up your channels, train your AI assistant, and send a test message to ensure everything works flawlessly.
         </p>
 
         {/* Benefits Grid */}
@@ -68,24 +67,24 @@ export default function WelcomeStep() {
           {benefits.map((benefit, i) => (
             <div 
               key={i}
-              className="flex items-start gap-4 p-4 rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.02] hover:border-white/[0.06] transition-all duration-300"
+              className="glass-panel glass-panel-hover flex items-start gap-4 p-4 rounded-xl border border-emerald-500/15"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/[0.03] border border-white/[0.06] flex-shrink-0">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex-shrink-0 text-emerald-400">
                 {benefit.icon}
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white">{benefit.title}</h3>
-                <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{benefit.desc}</p>
+                <p className="text-xs text-[#b8c9bd] mt-0.5 leading-relaxed font-normal">{benefit.desc}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:justify-center items-center">
           <button
             onClick={handleStart}
-            className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-bold text-sm hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 flex items-center justify-center gap-2 group shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.35)]"
+            className="spatial-btn-primary w-full sm:w-auto flex items-center justify-center gap-2 group cursor-pointer"
           >
             <span>Begin Guided Setup</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -93,15 +92,15 @@ export default function WelcomeStep() {
           
           <button
             onClick={handleSkip}
-            className="w-full sm:w-auto px-6 py-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] text-zinc-400 font-semibold text-sm hover:bg-white/[0.04] hover:text-white transition-all duration-300"
+            className="spatial-btn-secondary w-full sm:w-auto cursor-pointer"
           >
             Skip to Dashboard
           </button>
         </div>
 
         {/* Secure badge */}
-        <div className="flex items-center gap-1.5 mt-8 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-          <Shield className="w-3.5 h-3.5 text-emerald-500/60" />
+        <div className="flex items-center gap-1.5 mt-8 text-[10px] font-mono font-bold text-[#b8c9bd]/60 uppercase tracking-widest">
+          <Shield className="w-3.5 h-3.5 text-emerald-400" />
           <span>Enterprise-Grade End-to-End Encryption</span>
         </div>
 

@@ -22,10 +22,18 @@ import { useUIStore } from "../store/uiStore";
 import { useShield } from "../lib/shield";
 
 interface SignupModalProps {
-  onClose: () => void;
+  onClose?: () => void;
+  isStandalone?: boolean;
+  defaultMode?: "login" | "signup";
+  returnUrl?: string;
 }
 
-export function SignupModal({ onClose }: SignupModalProps) {
+export function SignupModal({
+  onClose,
+  isStandalone = false,
+  defaultMode,
+  returnUrl,
+}: SignupModalProps) {
   const router = useRouter();
   const prefersReduced = useReducedMotion();
 
@@ -33,6 +41,12 @@ export function SignupModal({ onClose }: SignupModalProps) {
   const authMode = useUIStore((state) => state.authMode);
   const setAuthMode = useUIStore((state) => state.setAuthMode);
   const isFirstVisitPrompt = useUIStore((state) => state.isFirstVisitPrompt);
+
+  useEffect(() => {
+    if (defaultMode) {
+      setAuthMode(defaultMode);
+    }
+  }, [defaultMode, setAuthMode]);
 
   // Local Form States
   const [loginMethod, setLoginMethod] = useState<"password" | "otp">("password");
@@ -78,7 +92,34 @@ export function SignupModal({ onClose }: SignupModalProps) {
     } catch {
       // Storage unavailable
     }
-    onClose();
+    if (onClose) onClose();
+  };
+
+  // Immediate entry into the actual live inner dashboard
+  const enterGuestDashboard = () => {
+    const demoUser = {
+      id: "demo-sarah-jenkins",
+      name: "Dr. Sarah Jenkins",
+      email: "sarah@apexphysio.co.uk",
+      businessName: "Apex Physiotherapy & Wellness",
+      businessType: "Healthcare & Wellness",
+      role: "owner",
+      onboardingComplete: true,
+      plan: "Growth Autopilot",
+    };
+    useAuthStore.setState({
+      isLoggedIn: true,
+      isLoading: false,
+      user: demoUser,
+    });
+    try {
+      localStorage.setItem("starx_auth_user_v1", JSON.stringify(demoUser));
+      localStorage.setItem("starx_auth_prompt_dismissed_v1", "true");
+    } catch {
+      // Storage unavailable
+    }
+    if (onClose) onClose();
+    router.push(returnUrl || "/dashboard");
   };
 
   // Close on Escape key
@@ -142,7 +183,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
     }
 
     dismissGuest();
-    router.push("/dashboard");
+    router.push(returnUrl || "/dashboard");
   };
 
   // Handle Signup Submit
@@ -198,7 +239,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
     }
 
     dismissGuest();
-    router.push("/setup/account");
+    router.push(returnUrl && returnUrl.startsWith("/setup") ? returnUrl : "/setup/account");
   };
 
   // Resend 8-Digit OTP handler
@@ -247,9 +288,9 @@ export function SignupModal({ onClose }: SignupModalProps) {
     setTimeout(() => {
       dismissGuest();
       if (authMode === "signup" || isNewUser) {
-        router.push("/setup/account");
+        router.push(returnUrl && returnUrl.startsWith("/setup") ? returnUrl : "/setup/account");
       } else {
-        router.push("/dashboard");
+        router.push(returnUrl || "/dashboard");
       }
     }, 1600);
   };
@@ -264,7 +305,11 @@ export function SignupModal({ onClose }: SignupModalProps) {
         onMouseDown={(e) => {
           if (e.target === e.currentTarget && !isVerifying) dismissGuest();
         }}
-        className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl"
+        className={
+          isStandalone
+            ? "min-h-screen flex items-center justify-center p-3 sm:p-6 bg-[#020a07] text-[#f0f5ef] relative z-10"
+            : "fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl"
+        }
       >
         <motion.div
           initial={{ scale: 0.94, opacity: 0, y: 16 }}
@@ -278,17 +323,19 @@ export function SignupModal({ onClose }: SignupModalProps) {
           <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
 
           {/* Top Close button */}
-          <div className="absolute top-4 right-4 z-20">
-            <button
-              type="button"
-              onClick={dismissGuest}
-              disabled={isVerifying}
-              aria-label="Close verification modal"
-              className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer disabled:opacity-30"
-            >
-              <X size={18} />
-            </button>
-          </div>
+          {!isStandalone && (
+            <div className="absolute top-4 right-4 z-20">
+              <button
+                type="button"
+                onClick={dismissGuest}
+                disabled={isVerifying}
+                aria-label="Close verification modal"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer disabled:opacity-30"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
 
           <LiquidGlassOTPModalView
             otpChars={otpChars}
@@ -325,7 +372,11 @@ export function SignupModal({ onClose }: SignupModalProps) {
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !isSubmitting) dismissGuest();
       }}
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl overflow-y-auto"
+      className={
+        isStandalone
+          ? "min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#020a07] text-[#f0f5ef] relative z-10 selection:bg-emerald-500/30 selection:text-emerald-200"
+          : "fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl overflow-y-auto"
+      }
     >
       <motion.div
         initial={false}
@@ -357,22 +408,24 @@ export function SignupModal({ onClose }: SignupModalProps) {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={dismissGuest}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 transition-all cursor-pointer"
+              onClick={enterGuestDashboard}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 transition-all cursor-pointer shadow-[0_0_12px_rgba(40,223,160,0.15)]"
             >
               <Compass size={12} />
-              <span>{isFirstVisitPrompt ? "Skip for now • Continue as Guest" : "Continue as Guest"}</span>
+              <span>Explore Live Dashboard</span>
             </button>
 
-            <button
-              type="button"
-              onClick={dismissGuest}
-              disabled={isSubmitting}
-              aria-label="Close modal"
-              className="w-7 h-7 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
-            >
-              <X size={16} />
-            </button>
+            {!isStandalone && (
+              <button
+                type="button"
+                onClick={dismissGuest}
+                disabled={isSubmitting}
+                aria-label="Close modal"
+                className="w-7 h-7 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
 

@@ -724,16 +724,28 @@ export function PresentationViewerClient() {
   };
 
   return (
-    <>
-      
-      <div className="pt-32 lg:pt-36 pb-12 min-h-screen bg-transparent text-white flex flex-col justify-between" ref={viewerRef}>
-      {/* Dynamic Slide Background mesh */}
+    <div className="pt-32 lg:pt-36 pb-12 min-h-screen bg-[#020a07] text-[#f0f5ef] flex flex-col justify-between relative overflow-hidden" ref={viewerRef}>
+      {/* Dynamic Slide Background emerald glow */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] atmo-glow atmo-glow-emerald opacity-5" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[500px] atmo-glow atmo-glow-soft opacity-5" />
+        <div
+          aria-hidden="true"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute bottom-1/4 right-0 w-[600px] h-[600px] pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
+          }}
+        />
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 w-full flex-grow flex flex-col justify-between relative z-10 gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full flex-grow flex flex-col justify-between relative z-10 gap-6">
         
         {/* TOP Action Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 pb-6">
@@ -885,7 +897,6 @@ export function PresentationViewerClient() {
         </div>
 
       </div>
-      </div>
-    </>
+    </div>
   );
 }

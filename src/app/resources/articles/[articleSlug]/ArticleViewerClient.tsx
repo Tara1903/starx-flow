@@ -282,7 +282,12 @@ export function ArticleViewerClient() {
 
   if (!article) {
     return (
-      <div className="pt-40 pb-24 min-h-screen bg-black flex flex-col items-center justify-center text-center">
+      <div className="pt-40 pb-24 min-h-screen bg-[#020a07] text-[#f0f5ef] flex flex-col items-center justify-center text-center relative overflow-hidden font-sans">
+        <div
+          aria-hidden="true"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(40, 223, 160, 0.1) 0%, transparent 70%)" }}
+        />
         <h2 className="text-3xl font-bold text-white mb-4">Article Not Found</h2>
         <p className="text-zinc-400 mb-8 max-w-md">
           The operations runbook you are looking for does not exist or has been relocated to another slug.
@@ -297,59 +302,71 @@ export function ArticleViewerClient() {
   }
 
   return (
-    <>
-      
-      <div className="pt-32 lg:pt-40 pb-20 min-h-screen relative overflow-hidden bg-transparent text-white">
+    <div className="pt-32 lg:pt-40 pb-24 min-h-screen relative overflow-hidden bg-[#020a07] text-[#f0f5ef]">
       {/* Scroll Reading Progress Bar */}
       <div 
-        className="fixed top-0 left-0 h-1 bg-emerald-500 z-50 transition-all duration-75"
+        className="fixed top-0 left-0 h-1 bg-gradient-to-r from-emerald-400 to-[#8fffd0] z-50 transition-all duration-75 shadow-[0_0_8px_#34d399]"
         style={{ width: `${scrollProgress}%` }}
       />
 
       {/* Atmospheric Glowing Backgrounds */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] atmo-glow atmo-glow-emerald opacity-[0.06] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[700px] h-[400px] atmo-glow atmo-glow-soft opacity-[0.06] pointer-events-none" />
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/4 right-0 w-[600px] h-[600px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
+        }}
+      />
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         
         {/* Navigation Breadcrumb */}
-        <div className="mb-10 flex items-center justify-between">
+        <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
           <Link href="/resources"
-            className="inline-flex items-center gap-2 text-sm font-bold text-zinc-400 hover:text-emerald-400 transition-colors group"
+            className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#b8c9bd] hover:text-emerald-300 transition-colors group"
           >
-            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform text-emerald-400" />
             <span>Back to Resources</span>
           </Link>
-          <div className="flex items-center gap-2 text-zinc-500 text-xs font-semibold">
+          <div className="flex items-center gap-2 text-[#b8c9bd]/70 text-xs font-mono uppercase tracking-wider">
             <span>Resources</span>
-            <ChevronRight size={12} />
+            <ChevronRight size={12} className="text-emerald-500/40" />
             <span>Guides</span>
-            <ChevronRight size={12} />
-            <span className="text-emerald-400">{article.category}</span>
+            <ChevronRight size={12} className="text-emerald-500/40" />
+            <span className="text-emerald-300 font-semibold">{article.category}</span>
           </div>
         </div>
 
         {/* Article Title & Metadata Header */}
-        <div className="border-b border-white/10 pb-10 mb-12 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6">
-            <Sparkles size={10} className="text-emerald-400" />
+        <div className="border-b border-emerald-500/20 pb-10 mb-12 text-left">
+          <div className="spatial-pill-badge mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
             {article.category}
           </div>
-          <h1 className="text-3xl md:text-5xl lg:text-[3.8rem] font-bold text-white tracking-tight leading-[1.1] mb-6 max-w-4xl">
+          <h1 className="font-editorial text-3xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.1] mb-6 max-w-4xl">
             {article.title}
           </h1>
           
-          <div className="flex flex-wrap items-center gap-6 text-sm text-zinc-400 font-semibold">
+          <div className="flex flex-wrap items-center gap-6 text-xs sm:text-sm text-[#b8c9bd] font-mono">
             <span className="flex items-center gap-1.5">
-              <User size={15} className="text-zinc-500" /> {article.author}
+              <User size={15} className="text-emerald-400" /> {article.author}
             </span>
-            <span className="w-1.5 h-1.5 bg-zinc-700 rounded-full" />
+            <span className="w-1.5 h-1.5 bg-emerald-500/40 rounded-full" />
             <span className="flex items-center gap-1.5">
-              <Clock size={15} className="text-zinc-500" /> {article.readTime}
+              <Clock size={15} className="text-emerald-400" /> {article.readTime}
             </span>
-            <span className="w-1.5 h-1.5 bg-zinc-700 rounded-full" />
+            <span className="w-1.5 h-1.5 bg-emerald-500/40 rounded-full" />
             <span className="flex items-center gap-1.5">
-              <CalendarIcon size={15} className="text-zinc-500" /> {article.date}
+              <CalendarIcon size={15} className="text-emerald-400" /> {article.date}
             </span>
           </div>
         </div>
@@ -359,21 +376,23 @@ export function ArticleViewerClient() {
           
           {/* Main Article Body Column */}
           <article className="lg:col-span-8 text-left">
-            <div className="prose prose-invert max-w-none text-zinc-300 font-medium text-sm md:text-base leading-relaxed flex flex-col gap-8">
+            <div className="flex flex-col gap-8">
               
               {/* Introduction Lead Paragraph */}
-              <p className="text-lg md:text-xl text-white font-semibold leading-relaxed border-l-2 border-emerald-500 pl-4 bg-emerald-500/5 py-3 rounded-r-xl">
-                {article.intro}
-              </p>
+              <div className="glass-panel p-6 sm:p-8 rounded-2xl border-emerald-400/30 border-l-4 border-l-emerald-400 shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+                <p className="text-base sm:text-lg text-white font-normal leading-relaxed">
+                  {article.intro}
+                </p>
+              </div>
 
               {/* Dynamic Sections rendering */}
               {article.sections.map((section, idx) => (
                 <div key={idx} className="flex flex-col gap-4 mt-4">
-                  <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight border-b border-white/5 pb-2">
+                  <h3 className="font-editorial text-2xl md:text-3xl font-bold text-white tracking-tight border-b border-emerald-500/15 pb-2">
                     {section.heading}
                   </h3>
                   {section.paragraphs.map((p, pIdx) => (
-                    <p key={pIdx} className="text-zinc-400 font-medium leading-relaxed">
+                    <p key={pIdx} className="text-[#b8c9bd] font-normal text-base leading-relaxed">
                       {p}
                     </p>
                   ))}
@@ -382,8 +401,8 @@ export function ArticleViewerClient() {
                   {section.listItems && (
                     <ul className="flex flex-col gap-2.5 my-2 list-none pl-1">
                       {section.listItems.map((item, lIdx) => (
-                        <li key={lIdx} className="flex items-start gap-2 text-zinc-400 text-sm md:text-base">
-                          <span className="text-emerald-400 font-bold mt-0.5">✔</span>
+                        <li key={lIdx} className="flex items-start gap-2.5 text-[#b8c9bd] text-sm md:text-base">
+                          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-1" />
                           <span>{item}</span>
                         </li>
                       ))}
@@ -392,12 +411,12 @@ export function ArticleViewerClient() {
 
                   {/* Script/Snippet Mock if any */}
                   {section.snippet && (
-                    <div className="border border-white/10 rounded-2xl bg-zinc-950 p-4 font-mono text-xs my-4 shadow-xl overflow-hidden">
-                      <div className="flex justify-between items-center text-[10px] text-zinc-500 pb-2 border-b border-white/5 mb-3 font-semibold tracking-wider uppercase">
+                    <div className="border border-emerald-500/25 rounded-2xl bg-[#010804] p-5 font-mono text-xs my-4 shadow-xl overflow-hidden">
+                      <div className="flex justify-between items-center text-[10px] text-emerald-300 pb-2 border-b border-emerald-500/20 mb-3 font-semibold tracking-wider uppercase">
                         <span>{section.snippet.title}</span>
-                        <span>starx-flow-script</span>
+                        <span>starx-flow-trace</span>
                       </div>
-                      <pre className="text-emerald-300 font-medium whitespace-pre-wrap text-left break-words">
+                      <pre className="text-emerald-300 font-mono text-xs leading-relaxed whitespace-pre-wrap text-left break-words">
                         {section.snippet.code}
                       </pre>
                     </div>
@@ -406,16 +425,17 @@ export function ArticleViewerClient() {
               ))}
 
               {/* Action Closing */}
-              <div className="mt-10 border-t border-white/10 pt-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <div className="mt-10 border-t border-emerald-500/20 pt-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <button
+                  type="button"
                   onClick={handleCopyLink}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 font-bold text-xs rounded-xl hover:text-white transition-colors"
+                  className="spatial-btn-secondary py-2.5 px-5 text-xs font-mono"
                 >
                   {isCopied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
                   {isCopied ? "Link Copied!" : "Copy Article Link"}
                 </button>
-                <span className="text-zinc-500 text-xs font-semibold">
-                  Last updated May 2026. Published by StarX OS.
+                <span className="text-[#b8c9bd]/70 text-xs font-mono">
+                  Verified Runbook • Published by StarX Flow OS
                 </span>
               </div>
 
@@ -427,44 +447,46 @@ export function ArticleViewerClient() {
             <div className="sticky top-32 flex flex-col gap-6 text-left">
               
               {/* Strategic Metrics Widget */}
-              <GlassPanel tier="panel" className="bg-zinc-950/40 p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 blur-[25px]" />
-                <h4 className="text-white font-extrabold text-base mb-5 flex items-center gap-2">
+              <div className="glass-panel p-6 sm:p-7 rounded-[2rem] border-emerald-500/20 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.8)]">
+                <h4 className="font-editorial text-white font-bold text-lg mb-5 flex items-center gap-2">
                   <TrendingUp size={18} className="text-emerald-400" /> Key Target Metrics
                 </h4>
                 <div className="flex flex-col gap-5">
                   {article.metrics.map((metric, idx) => (
-                    <div key={idx} className="pb-4 border-b border-white/5 last:border-0 last:pb-0">
-                      <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 block mb-1">
+                    <div key={idx} className="pb-4 border-b border-emerald-500/15 last:border-0 last:pb-0">
+                      <span className="text-[10px] font-mono uppercase font-bold tracking-widest text-[#b8c9bd] block mb-1">
                         {metric.label}
                       </span>
-                      <span className="text-2xl md:text-3xl font-black text-emerald-400 block font-mono">
+                      <span className="text-2xl md:text-3xl font-black text-emerald-300 block font-mono">
                         {metric.value}
                       </span>
-                      <span className="text-xs text-zinc-400 font-medium block mt-0.5">
+                      <span className="text-xs text-[#b8c9bd] font-normal block mt-0.5">
                         {metric.sub}
                       </span>
                     </div>
                   ))}
                 </div>
-              </GlassPanel>
+              </div>
 
               {/* Sidebar Signup Action CTA */}
-              <GlassPanel tier="panel" className="bg-gradient-to-br from-emerald-500/10 to-transparent p-6 rounded-[2rem] border border-emerald-500/20 text-center flex flex-col gap-4">
-                <MessageSquare size={32} className="text-emerald-400 mx-auto" />
+              <div className="glass-panel p-6 sm:p-7 rounded-[2rem] border-emerald-400/30 text-center flex flex-col gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_25px_rgba(40,223,160,0.12)]">
+                <div className="w-12 h-12 bg-emerald-500/15 border border-emerald-400/30 rounded-2xl flex items-center justify-center text-emerald-300 mx-auto shadow-[0_0_15px_rgba(40,223,160,0.15)]">
+                  <MessageSquare size={24} />
+                </div>
                 <div>
-                  <h4 className="text-white font-extrabold text-base mb-1.5">Put Bookings On Autopilot</h4>
-                  <p className="text-zinc-400 text-xs leading-relaxed font-semibold">
-                    Implement the exact runbook triggers described in this guide for your own clinic, spa, salon, or service shop.
+                  <h4 className="font-editorial text-white font-bold text-xl mb-1.5">Put Bookings On Autopilot</h4>
+                  <p className="text-[#b8c9bd] text-xs leading-relaxed font-normal">
+                    Implement the exact runbook triggers described in this guide for your clinic, gym, spa, or salon.
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={openSignup}
-                  className="bg-emerald-500 text-black font-black text-xs py-3.5 rounded-xl hover:bg-emerald-400 transition-colors shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                  className="spatial-btn-primary w-full py-3.5 text-xs font-semibold"
                 >
-                  Start Free 14-Day Trial
+                  Start 14-Day Free Trial
                 </button>
-              </GlassPanel>
+              </div>
 
             </div>
           </div>
@@ -472,7 +494,6 @@ export function ArticleViewerClient() {
         </div>
 
       </div>
-      </div>
-    </>
+    </div>
   );
 }

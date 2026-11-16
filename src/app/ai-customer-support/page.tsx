@@ -94,7 +94,25 @@ export default function AICustomerSupportPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-[#020a07] text-[#f0f5ef] flex flex-col font-sans selection:bg-emerald-500/30 pt-32 lg:pt-40 pb-24 relative overflow-hidden">
+      {/* Background Emerald Ambient Glow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/4 right-0 w-[600px] h-[600px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
+        }}
+      />
+
       {jsonLd.map((schema, i) => (
         <Script
           key={i}
@@ -104,38 +122,43 @@ export default function AICustomerSupportPage() {
         />
       ))}
 
-      <div className="flex-1 pt-32 pb-24">
-        <div className="max-w-7xl mx-auto px-6">
+      <div className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           
           {/* Breadcrumbs */}
           <nav aria-label="Breadcrumb" className="mb-8">
-            <ol className="flex items-center gap-2 text-xs md:text-sm text-zinc-400">
+            <ol className="flex items-center gap-2 text-xs font-mono text-[#b8c9bd]/70 uppercase tracking-widest">
               <li><Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link></li>
               <li>/</li>
-              <li className="text-zinc-200 font-medium">AI Customer Support</li>
+              <li className="text-emerald-300 font-semibold">AI Customer Support</li>
             </ol>
           </nav>
 
           {/* Hero Section */}
-          <div className="text-center max-w-4xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold tracking-wide mb-6">
-              <Bot className="w-4 h-4" />
+          <div className="text-center max-w-4xl mx-auto mb-16 lg:mb-20">
+            <div className="spatial-pill-badge mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
               24/7 Omnichannel Customer Resolution
             </div>
             
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+            <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.08]">
               Instant 24/7 AI Customer Support <br />
-              <span className="text-emerald-400">Without Per-Resolution Fees</span>
+              <span className="text-gradient-emerald">Without Per-Resolution Fees</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-zinc-300 leading-relaxed font-normal mb-8 max-w-3xl mx-auto">
+            <p className="text-lg md:text-xl text-[#b8c9bd] leading-relaxed font-normal mb-8 max-w-3xl mx-auto">
               Resolve up to 80% of repetitive customer inquiries instantly across WhatsApp, Instagram, and Web Chat with grounded RAG intelligence and seamless human handoff.
             </p>
 
             {/* Direct Answer Box for AI Answer Engines */}
-            <div className="text-left bg-white/[0.03] border border-emerald-500/20 rounded-2xl p-6 text-zinc-300 text-base leading-relaxed mb-10 shadow-lg">
-              <strong className="text-emerald-400 block mb-2 font-semibold">Direct Answer:</strong>
-              AI customer support software uses generative artificial intelligence and Retrieval-Augmented Generation (RAG) to understand customer inquiries and deliver accurate, context-aware answers from company documentation. StarX-Flow operates across WhatsApp, Instagram, and web chat, resolving up to 80% of routine inquiries automatically while smoothly escalating complex issues to human agents.
+            <div className="text-left glass-panel p-6 sm:p-8 text-[#b8c9bd] text-sm md:text-base leading-relaxed mb-10 border-emerald-400/30 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.8),0_0_25px_rgba(40,223,160,0.12)]">
+              <div className="flex items-center gap-2 text-emerald-300 font-semibold mb-2 font-mono text-xs uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Direct Answer</span>
+              </div>
+              <p className="font-normal text-white/90">
+                AI customer support software uses generative artificial intelligence and Retrieval-Augmented Generation (RAG) to understand customer inquiries and deliver accurate, context-aware answers from company documentation. StarX-Flow operates across WhatsApp, Instagram, and web chat, resolving up to 80% of routine inquiries automatically while smoothly escalating complex issues to human agents.
+              </p>
             </div>
 
             <LandingCTAButtons primaryText="Deploy AI Support Free" secondaryText="Test AI Knowledge Engine" />
@@ -144,32 +167,32 @@ export default function AICustomerSupportPage() {
           {/* Three Pillars of Modern AI Support */}
           <div className="max-w-6xl mx-auto mb-24">
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
                   <FileText className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">RAG Knowledge Engine</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <h3 className="text-xl font-bold mb-3 text-white">RAG Knowledge Engine</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed">
                   Upload PDF policies, service lists, and FAQs. The AI answers queries strictly using verified company facts with zero hallucinations.
                 </p>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
                   <Users className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Human-in-the-Loop Inbox</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <h3 className="text-xl font-bold mb-3 text-white">Human-in-the-Loop Inbox</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed">
                   Monitor live AI conversations in a unified team inbox. Staff can take over with one click to handle VIP or sensitive requests.
                 </p>
               </div>
 
-              <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-500/30 transition-all">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
+              <div className="glass-panel glass-panel-hover p-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
                   <Calendar className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Integrated Calendar Booking</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <h3 className="text-xl font-bold mb-3 text-white">Integrated Calendar Booking</h3>
+                <p className="text-[#b8c9bd] text-sm leading-relaxed">
                   Support conversations seamlessly transition into scheduled appointments, demos, or service calls without third-party links.
                 </p>
               </div>
@@ -178,7 +201,7 @@ export default function AICustomerSupportPage() {
 
           {/* FAQ Accordion */}
           <div className="max-w-3xl mx-auto mb-24">
-            <h2 className="text-3xl font-bold text-center mb-10 flex items-center justify-center gap-3">
+            <h2 className="font-editorial text-3xl sm:text-4xl font-bold text-center mb-10 flex items-center justify-center gap-3 text-white">
               <HelpCircle className="w-8 h-8 text-emerald-400" />
               Frequently Asked Questions
             </h2>
@@ -187,13 +210,13 @@ export default function AICustomerSupportPage() {
               {faqs.map((faq, i) => (
                 <details
                   key={i}
-                  className="group glass-panel rounded-2xl border border-white/10 p-6 [&_summary::-webkit-details-marker]:hidden"
+                  className="group glass-panel rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden border border-emerald-500/15"
                 >
                   <summary className="flex items-center justify-between cursor-pointer font-semibold text-lg text-white">
                     <span>{faq.question}</span>
                     <span className="text-emerald-400 transition-transform group-open:rotate-180">↓</span>
                   </summary>
-                  <p className="mt-4 text-zinc-400 text-sm leading-relaxed border-t border-white/5 pt-4">
+                  <p className="mt-4 text-[#b8c9bd] text-sm leading-relaxed border-t border-emerald-500/10 pt-4 font-normal">
                     {faq.answer}
                   </p>
                 </details>
@@ -202,13 +225,13 @@ export default function AICustomerSupportPage() {
           </div>
 
           {/* Conversion CTA Block */}
-          <div className="max-w-4xl mx-auto text-center glass-panel p-12 md:p-16 rounded-[2.5rem] border border-emerald-500/20 relative overflow-hidden mb-16">
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent" />
+          <div className="max-w-4xl mx-auto text-center glass-panel p-12 md:p-16 rounded-[2.5rem] border border-emerald-400/30 relative overflow-hidden mb-16 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.12)]">
+            <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent pointer-events-none" />
             <div className="relative z-10">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              <h2 className="font-editorial text-3xl md:text-5xl font-bold mb-4 text-white">
                 Upgrade Your Customer Support with 24/7 AI
               </h2>
-              <p className="text-lg text-zinc-300 max-w-2xl mx-auto mb-8">
+              <p className="text-lg text-[#b8c9bd] max-w-2xl mx-auto mb-8 font-normal">
                 Cut response times to under 2 seconds. Free up staff hours. Start your 14-day trial today.
               </p>
               <LandingCTAButtons primaryText="Start Free Support Trial" secondaryText="View Comparison with Intercom" secondaryHref="/compare/starx-flow-vs-intercom" />
@@ -216,15 +239,15 @@ export default function AICustomerSupportPage() {
           </div>
 
           {/* Cross Links */}
-          <div className="max-w-4xl mx-auto border-t border-white/10 pt-12 text-center">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-6">
+          <div className="max-w-4xl mx-auto border-t border-emerald-500/15 pt-12 text-center">
+            <h3 className="text-xs font-mono font-semibold uppercase tracking-widest text-[#b8c9bd]/70 mb-6">
               Compare Support Solutions
             </h3>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Link href="/compare/starx-flow-vs-intercom" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">StarX-Flow vs Intercom</Link>
-              <Link href="/whatsapp-ai-chatbot" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">WhatsApp AI Chatbot</Link>
-              <Link href="/ai-automation" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">AI Business Automation</Link>
-              <Link href="/pricing" className="text-xs md:text-sm px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300">Explore Transparent Pricing</Link>
+              <Link href="/compare/starx-flow-vs-intercom" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">StarX-Flow vs Intercom</Link>
+              <Link href="/whatsapp-ai-chatbot" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">WhatsApp AI Chatbot</Link>
+              <Link href="/ai-automation" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">AI Business Automation</Link>
+              <Link href="/pricing" className="text-xs md:text-sm px-4 py-2 rounded-full glass-panel hover:border-emerald-400/40 text-[#b8c9bd] hover:text-white transition-all">Explore Transparent Pricing</Link>
             </div>
           </div>
 

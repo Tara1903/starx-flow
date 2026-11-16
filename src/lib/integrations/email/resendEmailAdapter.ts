@@ -109,6 +109,11 @@ export class ResendEmailAdapter {
       throw new Error('SECURITY VIOLATION: Internal staff notes must never be dispatched to external email recipients.');
     }
 
+    // Check idempotency registry to prevent duplicate sends across both simulated and live runs
+    if (idempotencyKey && ResendEmailAdapter.simulatedIdempotencyRegistry.has(idempotencyKey)) {
+      return ResendEmailAdapter.simulatedIdempotencyRegistry.get(idempotencyKey)!;
+    }
+
     const recipients = Array.isArray(to) ? to : [to];
     for (const r of recipients) {
       if (!r || !r.includes('@')) {
@@ -206,6 +211,10 @@ export class ResendEmailAdapter {
       status: 'sent',
       timestamp: new Date().toISOString(),
     };
+
+    if (idempotencyKey) {
+      ResendEmailAdapter.simulatedIdempotencyRegistry.set(idempotencyKey, result);
+    }
 
     // Record email thread in database for conversation continuity
     if (isSupabaseAdminConfigured && conversationId) {

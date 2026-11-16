@@ -11,6 +11,7 @@ nextjs-portal,
 @theme {
   --font-sans: var(--font-jakarta), var(--font-inter), "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif), "Playfair Display", Georgia, serif;
+  --font-editorial: var(--font-cormorant), var(--font-serif), "Cormorant Garamond", "Playfair Display", Georgia, serif;
   --font-mono: var(--font-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 

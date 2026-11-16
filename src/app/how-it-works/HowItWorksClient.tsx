@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
 import { 
   ArrowRight, 
   CheckCircle2, 
@@ -12,14 +11,11 @@ import {
   Bell, 
   UserCheck, 
   ShieldAlert, 
-  GitBranch,
   Terminal,
-  Layers
+  Layers,
+  Sparkles,
 } from "lucide-react";
-import { GlassPanel } from "@/components/ui/GlassPanel";
-import { GlassButton } from "@/components/ui/GlassButton";
 import { useUIStore } from "@/store/uiStore";
-import { VIEWPORT_CONFIG } from "@/lib/motionVariants";
 
 export function HowItWorksClient() {
   const openSignup = useUIStore((state) => state.openSignup);
@@ -113,76 +109,92 @@ sharing feedback on Google helps our local staff immensely: [Review-Link]"`,
   ];
 
   return (
-    <div className="pt-32 lg:pt-40 pb-20 min-h-screen relative overflow-hidden bg-black text-white">
-      {/* Background Ambience */}
-      <div className="absolute top-[10%] right-[10%] w-[600px] h-[600px] atmo-glow atmo-glow-emerald opacity-15 pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[5%] w-[500px] h-[500px] atmo-glow atmo-glow-soft opacity-10 pointer-events-none" />
+    <div className="pt-32 lg:pt-40 pb-20 lg:pb-28 min-h-screen relative overflow-hidden bg-[#020a07] text-[#f0f5ef]">
+      {/* Background Emerald Ambient Glow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/4 right-0 w-[600px] h-[600px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
+        }}
+      />
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         
         {/* Navigation Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="mb-10 text-xs font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+        <nav aria-label="Breadcrumb" className="mb-10 text-xs font-mono text-[#b8c9bd]/70 uppercase tracking-widest flex items-center gap-2">
           <Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link>
           <span>/</span>
-          <span className="text-zinc-300">How It Works</span>
+          <span className="text-emerald-300">How It Works</span>
         </nav>
 
         {/* Hero Section */}
         <div className="max-w-4xl mx-auto text-center mb-16 lg:mb-24">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6">
-            <Layers size={12} className="text-emerald-400" />
-            Technical Architecture
+          <div className="spatial-pill-badge mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+            Technical Architecture &amp; Workflow
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white mb-8 leading-tight">
-            How StarX-Flow operates. <br />
-            <span className="text-gradient-silver">From inbound message to calendar lock.</span>
+          <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-8 leading-[1.08]">
+            How StarX Flow operates. <br />
+            <span className="text-gradient-emerald">From inbound message to calendar lock.</span>
           </h1>
-          <p className="text-lg md:text-xl text-zinc-400 font-medium leading-relaxed max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-[#b8c9bd] font-normal leading-relaxed max-w-3xl mx-auto">
             Discover the technical pipeline that transforms conversational messaging on WhatsApp and Instagram into confirmed appointments with zero double-bookings.
           </p>
         </div>
 
-        {/* Direct Answer Summary Block (AEO / GEO Extraction) */}
-        <GlassPanel tier="panel" className="p-8 md:p-10 rounded-3xl mb-20 border border-emerald-500/20 bg-emerald-950/10">
+        {/* Direct Answer Summary Block */}
+        <div className="glass-panel p-8 md:p-10 rounded-3xl mb-20 border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(40,223,160,0.12)]">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/30 text-emerald-400 shrink-0">
+            <div className="p-3 bg-emerald-500/15 rounded-2xl border border-emerald-400/30 text-emerald-300 shrink-0">
               <CheckCircle2 size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white mb-2">Key Takeaway: The 5-Stage Automated Booking Lifecycle</h2>
-              <p className="text-sm md:text-base text-zinc-300 leading-relaxed font-normal">
-                StarX-Flow operates an event-driven automation lifecycle: <strong>(1) Inbound Ingestion</strong> validates Meta HMAC-SHA256 signatures and checks idempotency; <strong>(2) CRM Resolution</strong> identifies client history and tenant working hours; <strong>(3) AI Orchestration</strong> references private RAG knowledge documents to answer FAQs and check live provider availability; <strong>(4) Concurrency Locking</strong> writes atomic PostgreSQL exclusion locks and creates two-way calendar events in Google Calendar or Outlook; and <strong>(5) Post-Booking Lifecycle</strong> dispatches digital intake forms, confirmations, and automated Google Review requests.
+              <h2 className="font-editorial text-xl md:text-2xl font-bold text-white mb-2">
+                Key Takeaway: The 5-Stage Automated Booking Lifecycle
+              </h2>
+              <p className="text-sm md:text-base text-[#b8c9bd] leading-relaxed font-normal">
+                StarX Flow operates an event-driven automation lifecycle: <strong>(1) Inbound Ingestion</strong> validates Meta HMAC-SHA256 signatures and checks idempotency; <strong>(2) CRM Resolution</strong> identifies client history and tenant working hours; <strong>(3) AI Orchestration</strong> references private RAG knowledge documents to answer FAQs and check live provider availability; <strong>(4) Concurrency Locking</strong> writes atomic PostgreSQL exclusion locks and creates two-way calendar events in Google Calendar or Outlook; and <strong>(5) Post-Booking Lifecycle</strong> dispatches digital intake forms, confirmations, and automated Google Review requests.
               </p>
             </div>
           </div>
-        </GlassPanel>
+        </div>
 
         {/* Step-by-Step Workflow Runbook */}
         <div className="space-y-12 mb-24">
-          {workflowSteps.map((step, idx) => (
+          {workflowSteps.map((step) => (
             <div
-              key={idx}
-              className="glass-panel p-8 md:p-12 rounded-3xl border border-white/10"
+              key={step.step}
+              className="glass-panel glass-panel-hover p-8 md:p-12 rounded-3xl border-emerald-500/20 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.8)]"
             >
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
                 {/* Left Step Header */}
                 <div className="lg:col-span-5 space-y-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl font-black text-emerald-400 font-mono">{step.step}</span>
-                    <span className="text-xs font-bold text-zinc-400 bg-white/5 border border-white/10 px-3 py-1 rounded-full uppercase tracking-wider">
+                    <span className="text-3xl font-black text-emerald-400 font-mono">{step.step}</span>
+                    <span className="text-xs font-mono text-emerald-300 bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 rounded-full uppercase tracking-wider">
                       {step.badge}
                     </span>
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                  <h3 className="font-editorial text-2xl md:text-3xl font-bold text-white tracking-tight">
                     {step.title}
                   </h3>
-                  <p className="text-sm md:text-base text-zinc-400 font-medium leading-relaxed">
+                  <p className="text-sm md:text-base text-[#b8c9bd] font-normal leading-relaxed">
                     {step.description}
                   </p>
-                  <ul className="space-y-2 pt-2 text-xs md:text-sm text-zinc-300 font-medium">
+                  <ul className="space-y-2.5 pt-2 text-xs md:text-sm text-emerald-100/90 font-medium">
                     {step.details.map((detail, dIdx) => (
-                      <li key={dIdx} className="flex items-start gap-2">
+                      <li key={dIdx} className="flex items-start gap-2.5">
                         <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
                         <span>{detail}</span>
                       </li>
@@ -191,15 +203,15 @@ sharing feedback on Google helps our local staff immensely: [Review-Link]"`,
                 </div>
 
                 {/* Right Technical Execution Snippet */}
-                <div className="lg:col-span-7 bg-black/80 rounded-2xl p-5 border border-white/10 font-mono text-xs text-zinc-300 overflow-x-auto shadow-2xl">
-                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-zinc-500">
+                <div className="lg:col-span-7 bg-[#010704]/90 rounded-2xl p-6 border border-emerald-500/25 font-mono text-xs text-[#b8c9bd] overflow-x-auto shadow-2xl">
+                  <div className="flex items-center justify-between pb-3 mb-4 border-b border-emerald-500/20 text-[#b8c9bd]/70">
                     <div className="flex items-center gap-2">
                       <Terminal size={14} className="text-emerald-400" />
                       <span>Pipeline Execution Trace</span>
                     </div>
-                    <span className="text-[10px] uppercase font-bold text-emerald-400/80">Stage {step.step} Active</span>
+                    <span className="text-[10px] uppercase font-bold text-emerald-300">Stage {step.step} Active</span>
                   </div>
-                  <pre className="whitespace-pre-wrap leading-relaxed text-[11px] md:text-xs text-emerald-400/90 font-mono">
+                  <pre className="whitespace-pre-wrap leading-relaxed text-[11px] md:text-xs text-emerald-300 font-mono">
                     {step.codeSnippet}
                   </pre>
                 </div>
@@ -210,47 +222,45 @@ sharing feedback on Google helps our local staff immensely: [Review-Link]"`,
         </div>
 
         {/* Human Escalation Safeguard Section */}
-        <div className="glass-panel p-8 md:p-12 rounded-3xl border border-emerald-500/20 bg-emerald-950/10 mb-24">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mx-auto border border-emerald-500/20">
-              <ShieldAlert size={24} />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-              The Intelligent Human Handoff Safeguard
-            </h2>
-            <p className="text-sm md:text-base text-zinc-300 font-normal leading-relaxed">
-              Automation should never trap your customers in an endless loop. If a client expresses frustration, asks for a human manager, or mentions clinical urgency, StarX-Flow immediately pauses automated AI responses, alerts your desktop and staff dashboard with an audible chime, and transitions the thread to manual human control.
-            </p>
+        <div className="glass-panel p-8 md:p-12 rounded-3xl border-emerald-400/30 mb-24 text-center max-w-4xl mx-auto shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_25px_rgba(40,223,160,0.1)]">
+          <div className="w-12 h-12 bg-emerald-500/15 rounded-2xl flex items-center justify-center text-emerald-300 mx-auto border border-emerald-400/30 mb-6 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
+            <ShieldAlert size={24} />
           </div>
+          <h2 className="font-editorial text-2xl md:text-4xl font-bold text-white tracking-tight mb-4">
+            The Intelligent Human Handoff Safeguard
+          </h2>
+          <p className="text-sm md:text-base text-[#b8c9bd] font-normal leading-relaxed max-w-2xl mx-auto">
+            Automation should never trap your customers in an endless loop. If a client expresses frustration, asks for a human manager, or mentions clinical urgency, StarX Flow immediately pauses automated AI responses, alerts your desktop and staff dashboard with an audible chime, and transitions the thread to manual human control.
+          </p>
         </div>
 
         {/* Technical Limitations & Prerequisites */}
         <div className="mb-24">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold text-white tracking-tight mb-4">
-              Technical Prerequisites & API Constraints
+            <h2 className="font-editorial text-3xl font-bold text-white tracking-tight mb-4">
+              Technical Prerequisites &amp; API Constraints
             </h2>
-            <p className="text-zinc-400 text-sm font-medium">
-              We believe in total transparency regarding third-party platform rules.
+            <p className="text-[#b8c9bd] text-sm font-normal">
+              Total transparency regarding third-party platform rules and protocol requirements.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="glass-panel p-6 rounded-3xl border border-white/5">
-              <h3 className="text-lg font-bold text-white mb-2">Meta 24-Hour Window</h3>
-              <p className="text-xs text-zinc-400 font-medium leading-relaxed">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
+            <div className="glass-panel p-6 rounded-2xl border-emerald-500/20">
+              <h3 className="font-editorial text-lg font-bold text-white mb-2">Meta 24-Hour Window</h3>
+              <p className="text-xs text-[#b8c9bd] font-normal leading-relaxed">
                 Under Meta business policies, free-form customer service messages can only be sent within 24 hours of the user&apos;s last inbound message. Beyond 24 hours, pre-approved Meta message templates are required.
               </p>
             </div>
-            <div className="glass-panel p-6 rounded-3xl border border-white/5">
-              <h3 className="text-lg font-bold text-white mb-2">Calendar Permission Scopes</h3>
-              <p className="text-xs text-zinc-400 font-medium leading-relaxed">
-                StarX-Flow requires Calendars.ReadWrite permission on Google Calendar or Microsoft Outlook to read availability and insert event blocks.
+            <div className="glass-panel p-6 rounded-2xl border-emerald-500/20">
+              <h3 className="font-editorial text-lg font-bold text-white mb-2">Calendar Permission Scopes</h3>
+              <p className="text-xs text-[#b8c9bd] font-normal leading-relaxed">
+                StarX Flow requires Calendars.ReadWrite permission on Google Calendar or Microsoft Outlook to read availability and insert event blocks with zero collisions.
               </p>
             </div>
-            <div className="glass-panel p-6 rounded-3xl border border-white/5">
-              <h3 className="text-lg font-bold text-white mb-2">Meta Phone Number Rules</h3>
-              <p className="text-xs text-zinc-400 font-medium leading-relaxed">
+            <div className="glass-panel p-6 rounded-2xl border-emerald-500/20">
+              <h3 className="font-editorial text-lg font-bold text-white mb-2">Meta Phone Number Rules</h3>
+              <p className="text-xs text-[#b8c9bd] font-normal leading-relaxed">
                 To connect a phone number to the WhatsApp Cloud API, that number must not be currently registered on the personal or standard WhatsApp Business mobile app.
               </p>
             </div>
@@ -258,15 +268,21 @@ sharing feedback on Google helps our local staff immensely: [Review-Link]"`,
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center max-w-2xl mx-auto">
-          <GlassButton
-            size="lg"
-            variant="primary"
-            magnetic
+        <div className="glass-panel max-w-5xl mx-auto rounded-[2.5rem] p-10 sm:p-16 text-center mb-8 border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.15)]">
+          <h2 className="font-editorial text-3xl sm:text-5xl font-bold text-white mb-5 tracking-tight leading-tight">
+            Ready to deploy your autonomous front desk?
+          </h2>
+          <p className="text-lg text-[#b8c9bd] mb-9 max-w-2xl mx-auto leading-relaxed font-normal">
+            Go live with WhatsApp intake, calendar synchronization, and automated reviews in under 10 minutes.
+          </p>
+          <button
+            type="button"
             onClick={openSignup}
+            className="spatial-btn-primary"
           >
-            Deploy Your AI Front Desk <ArrowRight size={18} />
-          </GlassButton>
+            Deploy Your AI Front Desk
+            <ArrowRight size={18} />
+          </button>
         </div>
 
       </div>

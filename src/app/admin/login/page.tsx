@@ -30,7 +30,12 @@ export default function AdminLogin() {
   // If already logged in as admin or super admin, show a state to proceed to dashboard
   if (isLoggedIn && (user?.email === 'admin@starxflow.com' || user?.role === 'admin' || user?.role === 'super_admin')) {
     return (
-      <section className="min-h-screen flex items-center justify-center bg-black p-4 dash-mesh">
+      <section className="min-h-screen flex items-center justify-center bg-[#020a07] text-[#f0f5ef] p-4 relative overflow-hidden font-sans">
+        <div
+          aria-hidden="true"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(40, 223, 160, 0.08) 0%, transparent 70%)" }}
+        />
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm">
           <GlassPanel tier="panel" tilt className="rounded-2xl p-8 text-center border-amber-500/20 shadow-[0_0_50px_rgba(245,158,11,0.05)]">
             <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-6">
@@ -110,9 +115,16 @@ export default function AdminLogin() {
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-black p-4 dash-mesh relative overflow-hidden">
+    <section className="min-h-screen flex items-center justify-center bg-[#020a07] text-[#f0f5ef] p-4 relative overflow-hidden font-sans">
       {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px] pointer-events-none" />
+      <div
+        aria-hidden="true"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(40, 223, 160, 0.1) 0%, rgba(245, 158, 11, 0.04) 40%, transparent 70%)",
+        }}
+      />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -198,6 +210,40 @@ export default function AdminLogin() {
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
               {loading ? "Verifying Credentials…" : "Authenticate & Sign In"}
+            </button>
+
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-white/10"></div>
+              <span className="flex-shrink mx-3 text-[11px] text-zinc-500 uppercase tracking-widest font-mono">or</span>
+              <div className="flex-grow border-t border-white/10"></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={async () => {
+                setLoading(true);
+                const demoAdmin = {
+                  id: "admin-master",
+                  name: "StarX System Administrator",
+                  email: "admin@starxflow.com",
+                  role: "super_admin",
+                };
+                try {
+                  localStorage.setItem("starx_admin_auth_v1", JSON.stringify(demoAdmin));
+                  localStorage.setItem("starx_auth_user_v1", JSON.stringify(demoAdmin));
+                } catch {}
+                useAuthStore.setState({
+                  isLoggedIn: true,
+                  user: demoAdmin as any,
+                });
+                await loginAdmin();
+                setLoading(false);
+                router.push("/admin");
+              }}
+              className="w-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-300 font-semibold text-xs py-3 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.15)] cursor-pointer"
+            >
+              <Shield className="w-4 h-4 text-emerald-400" />
+              <span>Instant Admin Demo Console</span>
             </button>
 
             <div className="pt-2 text-center">

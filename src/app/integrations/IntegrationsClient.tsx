@@ -9,16 +9,11 @@ import {
   CreditCard, 
   Mail, 
   CheckCircle2, 
-  Clock, 
   ArrowRight,
-  ExternalLink,
-  ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  Sparkles,
+  Layers,
 } from "lucide-react";
-import { GlassPanel } from "@/components/ui/GlassPanel";
-import { GlassButton } from "@/components/ui/GlassButton";
-import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { MOTION_DURATION, MOTION_EASE, VIEWPORT_CONFIG } from "@/lib/motionVariants";
 import { useUIStore } from "@/store/uiStore";
 
 export function IntegrationsClient() {
@@ -31,7 +26,6 @@ export function IntegrationsClient() {
       name: "Google Calendar",
       category: "Calendar & Scheduling",
       status: "LIVE & VERIFIED",
-      statusColor: "emerald",
       icon: <Calendar className="w-6 h-6 text-emerald-400" />,
       description:
         "Official OAuth2 authorization flow granting real-time bi-directional availability checks and instant event booking into Google Calendar v3 accounts.",
@@ -46,7 +40,6 @@ export function IntegrationsClient() {
       name: "Microsoft Outlook & Office 365",
       category: "Calendar & Scheduling",
       status: "LIVE & VERIFIED",
-      statusColor: "emerald",
       icon: <Calendar className="w-6 h-6 text-emerald-400" />,
       description:
         "Microsoft Graph API integration supporting business Exchange, Office 365, and Outlook calendars with delegated permission scoping.",
@@ -61,7 +54,6 @@ export function IntegrationsClient() {
       name: "Meta WhatsApp Cloud API",
       category: "Conversational Messaging",
       status: "LIVE & VERIFIED",
-      statusColor: "emerald",
       icon: <MessageSquare className="w-6 h-6 text-emerald-400" />,
       description:
         "Direct integration with Meta's official WhatsApp Business Cloud API. Normalizes incoming messages and executes autonomous 24/7 client booking conversations.",
@@ -76,7 +68,6 @@ export function IntegrationsClient() {
       name: "Instagram Direct Messaging",
       category: "Social Lead Capture",
       status: "LIVE & VERIFIED",
-      statusColor: "emerald",
       icon: <MessageSquare className="w-6 h-6 text-emerald-400" />,
       description:
         "Meta Graph API connection for professional Instagram business accounts. Automates inbound DM lead triage and schedules appointments without leaving Instagram.",
@@ -91,14 +82,13 @@ export function IntegrationsClient() {
       name: "Stripe Billing & Checkout",
       category: "Payments & Invoicing",
       status: "LIVE & VERIFIED",
-      statusColor: "emerald",
       icon: <CreditCard className="w-6 h-6 text-emerald-400" />,
       description:
         "Stripe hosted checkout integration supporting secure merchant subscription billing and optional upfront appointment deposit collection.",
       capabilities: [
         "Generates secure Stripe Checkout sessions with tenant metadata",
         "Webhook event processing for subscription activation and renewals",
-        "Zero payment card data stored on StarX-Flow servers (PCI-DSS compliant)",
+        "Zero payment card data stored on StarX Flow servers (PCI-DSS compliant)",
       ],
       authType: "Stripe API & Webhook Secret Validation",
     },
@@ -106,7 +96,6 @@ export function IntegrationsClient() {
       name: "Resend Transactional Email",
       category: "Email & Notifications",
       status: "LIVE & VERIFIED",
-      statusColor: "emerald",
       icon: <Mail className="w-6 h-6 text-emerald-400" />,
       description:
         "Transactional email infrastructure for dispatching instant calendar booking receipts, reminder notices, and staff cancellation alerts.",
@@ -145,12 +134,12 @@ export function IntegrationsClient() {
 
   const faqs = [
     {
-      q: "Does connecting my calendar give StarX-Flow access to personal emails?",
-      a: "No. StarX-Flow requests strictly scoped permissions (Calendars.ReadWrite) via official Google and Microsoft OAuth consent screens. We never request, read, or store your private emails, Google Drive files, or personal contacts.",
+      q: "Does connecting my calendar give StarX Flow access to personal emails?",
+      a: "No. StarX Flow requests strictly scoped permissions (Calendars.ReadWrite) via official Google and Microsoft OAuth consent screens. We never request, read, or store your private emails, Google Drive files, or personal contacts.",
     },
     {
-      q: "How does StarX-Flow prevent two clients from booking the exact same time slot?",
-      a: "When a customer requests a booking, StarX-Flow queries your connected calendar in real time. Before confirming, it writes a PostgreSQL exclusion constraint lock into your isolated tenant database, rejecting any concurrent attempt for the same provider time window.",
+      q: "How does StarX Flow prevent two clients from booking the exact same time slot?",
+      a: "When a customer requests a booking, StarX Flow queries your connected calendar in real time. Before confirming, it writes a PostgreSQL exclusion constraint lock into your isolated tenant database, rejecting any concurrent attempt for the same provider time window.",
     },
     {
       q: "Do I need a Meta Developer account to use the WhatsApp integration?",
@@ -163,94 +152,110 @@ export function IntegrationsClient() {
   ];
 
   return (
-    <div className="pt-32 lg:pt-40 pb-20 min-h-screen relative overflow-hidden bg-black text-white">
-      {/* Background Ambience */}
-      <div className="absolute top-[10%] right-[10%] w-[600px] h-[600px] atmo-glow atmo-glow-emerald opacity-15 pointer-events-none" />
-      <div className="absolute bottom-[20%] left-[5%] w-[500px] h-[500px] atmo-glow atmo-glow-soft opacity-10 pointer-events-none" />
+    <div className="pt-32 lg:pt-40 pb-20 lg:pb-28 min-h-screen relative overflow-hidden bg-[#020a07] text-[#f0f5ef]">
+      {/* Background Emerald Ambient Glow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-1/4 right-0 w-[600px] h-[600px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
+        }}
+      />
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         
         {/* Navigation Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="mb-10 text-xs font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+        <nav aria-label="Breadcrumb" className="mb-10 text-xs font-mono text-[#b8c9bd]/70 uppercase tracking-widest flex items-center gap-2">
           <Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link>
           <span>/</span>
-          <span className="text-zinc-300">Verified Integrations Directory</span>
+          <span className="text-emerald-300">Verified Integrations Directory</span>
         </nav>
 
         {/* Hero Section */}
-        <ScrollReveal direction="up" className="max-w-4xl mx-auto text-center mb-16 lg:mb-24">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-[10px] font-bold tracking-widest text-emerald-400 uppercase mb-6">
-            <CheckCircle2 size={12} className="text-emerald-400" />
-            Ecosystem & APIs
+        <div className="max-w-4xl mx-auto text-center mb-16 lg:mb-24">
+          <div className="spatial-pill-badge mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+            Ecosystem &amp; Authorized APIs
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white mb-8 leading-tight">
+          <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-8 leading-[1.08]">
             Connect your core tools. <br />
-            <span className="text-gradient-silver">Without aggregator middleman fees.</span>
+            <span className="text-gradient-emerald">Without aggregator middleman fees.</span>
           </h1>
-          <p className="text-lg md:text-xl text-zinc-400 font-medium leading-relaxed max-w-3xl mx-auto">
-            StarX-Flow integrates directly with enterprise calendar APIs, Meta messaging networks, and payment infrastructure through authorized OAuth2 protocols.
+          <p className="text-lg md:text-xl text-[#b8c9bd] font-normal leading-relaxed max-w-3xl mx-auto">
+            StarX Flow integrates directly with enterprise calendar APIs, Meta messaging networks, and payment infrastructure through authorized OAuth2 protocols.
           </p>
-        </ScrollReveal>
+        </div>
 
-        {/* Direct Answer Block (AEO / GEO Extraction) */}
-        <GlassPanel tier="panel" className="p-8 md:p-10 rounded-3xl mb-20 border border-emerald-500/20 bg-emerald-950/10">
+        {/* Direct Answer Block */}
+        <div className="glass-panel p-8 md:p-10 rounded-3xl mb-20 border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(40,223,160,0.12)]">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/30 text-emerald-400 shrink-0">
+            <div className="p-3 bg-emerald-500/15 rounded-2xl border border-emerald-400/30 text-emerald-300 shrink-0">
               <CheckCircle2 size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white mb-2">Key Takeaway: Verified Integrations</h2>
-              <p className="text-sm md:text-base text-zinc-300 leading-relaxed font-normal">
-                StarX-Flow natively integrates with <strong>Google Calendar (v3 API)</strong> and <strong>Microsoft Outlook (Graph API)</strong> for real-time two-way appointment scheduling; <strong>Meta WhatsApp Cloud API</strong> and <strong>Instagram Direct</strong> for conversational front-desk automation; <strong>Stripe</strong> for flat-rate merchant billing and deposit processing; and <strong>Resend</strong> for transactional email confirmations. All calendar and messaging connections are isolated via tenant-scoped OAuth2 tokens with zero third-party data sharing.
+              <h2 className="font-editorial text-xl md:text-2xl font-bold text-white mb-2">
+                Key Takeaway: Verified Integrations Directory
+              </h2>
+              <p className="text-sm md:text-base text-[#b8c9bd] leading-relaxed font-normal">
+                StarX Flow natively integrates with <strong>Google Calendar (v3 API)</strong> and <strong>Microsoft Outlook (Graph API)</strong> for real-time two-way appointment scheduling; <strong>Meta WhatsApp Cloud API</strong> and <strong>Instagram Direct</strong> for conversational front-desk automation; <strong>Stripe</strong> for flat-rate merchant billing and deposit processing; and <strong>Resend</strong> for transactional email confirmations. All connections are isolated via tenant-scoped OAuth2 tokens with zero third-party data sharing.
               </p>
             </div>
           </div>
-        </GlassPanel>
+        </div>
 
         {/* Live Integrations Grid */}
         <div className="mb-24">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8 tracking-tight flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981]" />
-            Live & Verified Integrations
+          <h2 className="font-editorial text-2xl md:text-4xl font-bold text-white mb-8 tracking-tight flex items-center gap-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]" />
+            Live &amp; Verified Integrations
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {liveIntegrations.map((item, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+            {liveIntegrations.map((item) => (
               <div
-                key={i}
-                className="glass-card p-8 rounded-3xl flex flex-col justify-between border border-white/10"
+                key={item.name}
+                className="glass-panel glass-panel-hover p-8 rounded-3xl flex flex-col justify-between border-emerald-500/20"
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                    <div className="p-3 bg-emerald-500/15 rounded-2xl border border-emerald-400/30">
                       {item.icon}
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    <span className="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 rounded-full uppercase tracking-wider">
                       {item.status}
                     </span>
                   </div>
-                  <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+                  <div className="text-xs font-mono font-semibold text-[#b8c9bd] uppercase tracking-wider mb-1">
                     {item.category}
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-3 tracking-tight">
+                  <h3 className="font-editorial text-2xl font-bold text-white mb-3 tracking-tight">
                     {item.name}
                   </h3>
-                  <p className="text-sm text-zinc-400 font-medium leading-relaxed mb-6">
+                  <p className="text-sm text-[#b8c9bd] font-normal leading-relaxed mb-6">
                     {item.description}
                   </p>
                 </div>
 
-                <div className="border-t border-white/5 pt-6 mt-auto">
-                  <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Capabilities:</div>
-                  <ul className="space-y-2 text-xs text-zinc-400 font-medium mb-4">
+                <div className="border-t border-emerald-500/20 pt-6 mt-auto">
+                  <div className="text-xs font-mono font-bold text-emerald-200 uppercase tracking-wider mb-3">Capabilities:</div>
+                  <ul className="space-y-2 text-xs text-[#b8c9bd] font-normal mb-4">
                     {item.capabilities.map((cap, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 mt-1.5" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 mt-1.5 shadow-[0_0_6px_#34d399]" />
                         <span>{cap}</span>
                       </li>
                     ))}
                   </ul>
-                  <div className="text-[11px] font-semibold text-zinc-500 pt-2 border-t border-white/5">
+                  <div className="text-[11px] font-mono text-emerald-400/80 pt-3 border-t border-emerald-500/15">
                     Auth: {item.authType}
                   </div>
                 </div>
@@ -261,26 +266,26 @@ export function IntegrationsClient() {
 
         {/* Integrations In Development */}
         <div className="mb-24">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-zinc-500" />
-            Integrations In Development & Roadmap
+          <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight flex items-center gap-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/40" />
+            Integrations In Development &amp; Sandbox Testing
           </h2>
-          <p className="text-zinc-400 text-sm font-medium mb-8">
-            In accordance with our strict product transparency policy, these integrations are planned or in sandbox testing and are not yet available on production accounts.
+          <p className="text-[#b8c9bd] text-sm font-normal mb-8">
+            In accordance with our strict product transparency policy, these integrations are in active development or sandbox testing and will be released in future milestone updates.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {inDevelopment.map((item, i) => (
-              <div key={i} className="glass-subtle p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
+            {inDevelopment.map((item) => (
+              <div key={item.name} className="glass-panel p-6 rounded-2xl border-emerald-500/15 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{item.category}</span>
-                    <span className="text-[10px] font-bold text-zinc-400 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full uppercase">
+                    <span className="text-xs font-mono text-[#b8c9bd] uppercase tracking-wider">{item.category}</span>
+                    <span className="text-[10px] font-mono font-bold text-emerald-400/80 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase">
                       {item.status}
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">{item.name}</h3>
-                  <p className="text-xs text-zinc-400 font-medium leading-relaxed">{item.description}</p>
+                  <h3 className="font-editorial text-lg font-bold text-white mb-2">{item.name}</h3>
+                  <p className="text-xs text-[#b8c9bd] font-normal leading-relaxed">{item.description}</p>
                 </div>
               </div>
             ))}
@@ -290,11 +295,11 @@ export function IntegrationsClient() {
         {/* Integration FAQ Accordion */}
         <div className="max-w-4xl mx-auto mb-24">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white tracking-tight mb-4">
-              Integration & Security Questions
+            <h2 className="font-editorial text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">
+              Integration &amp; Security Questions
             </h2>
-            <p className="text-zinc-400 text-sm font-medium">
-              Understand how data moves securely between StarX-Flow and your external tools.
+            <p className="text-[#b8c9bd] text-base font-normal">
+              Understand how data moves securely between StarX Flow and your external business tools.
             </p>
           </div>
 
@@ -303,12 +308,12 @@ export function IntegrationsClient() {
               const isOpen = openFaq === index;
               return (
                 <div
-                  key={index}
-                  className="glass-panel rounded-2xl border border-white/5 overflow-hidden transition-all duration-300"
+                  key={faq.q}
+                  className="glass-panel rounded-2xl border-emerald-500/20 overflow-hidden transition-all duration-300"
                 >
                   <button
                     onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="w-full py-5 px-6 text-left flex items-center justify-between gap-4 font-bold text-base md:text-lg text-white hover:text-emerald-400 transition-colors"
+                    className="w-full py-5 px-6 text-left flex items-center justify-between gap-4 font-bold text-base md:text-lg text-white hover:text-emerald-300 transition-colors"
                   >
                     <span>{faq.q}</span>
                     <ChevronDown
@@ -322,10 +327,10 @@ export function IntegrationsClient() {
                         initial={prefersReduced ? { opacity: 1 } : { height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={prefersReduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
-                        transition={{ duration: MOTION_DURATION.card, ease: MOTION_EASE.premium }}
+                        transition={{ duration: 0.22 }}
                         className="overflow-hidden"
                       >
-                        <div className="px-6 pb-6 text-sm md:text-base text-zinc-400 font-medium leading-relaxed border-t border-white/5 pt-4">
+                        <div className="px-6 pb-6 text-sm md:text-base text-[#b8c9bd] font-normal leading-relaxed border-t border-emerald-500/15 pt-4">
                           {faq.a}
                         </div>
                       </motion.div>
@@ -338,15 +343,21 @@ export function IntegrationsClient() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center max-w-2xl mx-auto">
-          <GlassButton
-            size="lg"
-            variant="primary"
-            magnetic
+        <div className="glass-panel max-w-5xl mx-auto rounded-[2.5rem] p-10 sm:p-16 text-center mb-8 border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.15)]">
+          <h2 className="font-editorial text-3xl sm:text-5xl font-bold text-white mb-5 tracking-tight leading-tight">
+            Connect your calendar in under 5 minutes
+          </h2>
+          <p className="text-lg text-[#b8c9bd] mb-9 max-w-2xl mx-auto leading-relaxed font-normal">
+            No developer setup required. Connect your Google Calendar or Outlook account with official one-click OAuth.
+          </p>
+          <button
+            type="button"
             onClick={openSignup}
+            className="spatial-btn-primary"
           >
-            Connect Your Calendar in 5 Minutes <ArrowRight size={18} />
-          </GlassButton>
+            Connect Your Calendar in 5 Minutes
+            <ArrowRight size={18} />
+          </button>
         </div>
 
       </div>

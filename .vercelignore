@@ -1,7 +1,10 @@
 # Tests and test artifacts
 tests/
 test-results/
+screenshots/
 scratch/
+scripts/
+starx_flow.html
 *.zip
 
 # Documentation and planning artifacts

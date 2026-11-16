@@ -377,6 +377,14 @@ export function Navbar() {
               </>
             ) : (
               <>
+                <Link
+                  href="/dashboard"
+                  data-cursor-invert="secondary"
+                  className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold text-emerald-300 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all cursor-pointer whitespace-nowrap flex-shrink-0 shadow-[0_0_15px_rgba(40,223,160,0.18)]"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
+                  <span>Dashboard</span>
+                </Link>
                 <button
                   type="button"
                   onClick={openLogin}
@@ -447,6 +455,7 @@ export function Navbar() {
             </p>
             <div className="flex flex-col gap-1">
               {[
+                { label: "Live Dashboard", href: "/dashboard" },
                 { label: "Product Overview", href: "/product" },
                 { label: "Features Directory", href: "/features" },
                 { label: "How It Works", href: "/how-it-works" },

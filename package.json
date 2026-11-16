@@ -15,7 +15,8 @@
     "test:security": "tsx tests/test-rbac-and-ui-security.ts",
     "test:integrity": "tsx tests/test-real-data-integrity.ts",
     "test:visual": "tsx tests/visual-regression.spec.ts",
-    "indexnow:submit": "node scripts/submit-indexnow.cjs"
+    "indexnow:submit": "node scripts/submit-indexnow.cjs",
+    "live": "node .agent/skills/live-edit/scripts/live.mjs start --target http://localhost:3000"
   },
   "allowScripts": {
     "esbuild": true,
@@ -27,6 +28,7 @@
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "@tailwindcss/postcss": "^4.3.0",
+    "@types/three": "^0.187.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.1.0",
     "clsx": "^2.1.1",
@@ -40,6 +42,7 @@
     "react-hook-form": "^7.75.0",
     "react-joyride": "^3.1.0",
     "tailwind-merge": "^3.5.0",
+    "three": "^0.187.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.13"
   },

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, useMotionValue, useSpring } from "motion/react";
 
@@ -26,6 +26,8 @@ export function CustomCursor() {
   const [isClicked, setIsClicked] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isDisabledZone, setIsDisabledZone] = useState(false);
+
+  const isVisibleRef = useRef(false);
   const cursorActiveRef = useRef(false);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -34,13 +36,16 @@ export function CustomCursor() {
       document.documentElement.classList.add('starx-cursor-enabled', 'starx-cursor-active');
       document.body.classList.add('starx-cursor-active');
     }
-    if (!isVisible) setIsVisible(true);
+    if (!isVisibleRef.current) {
+      isVisibleRef.current = true;
+      setIsVisible(true);
+    }
     lightX.set(e.clientX);
     lightY.set(e.clientY);
 
     // Check if we're in a disabled zone
     const target = e.target as HTMLElement;
-    const inDisabledZone = !!target.closest(DISABLED_ZONE_SELECTORS);
+    const inDisabledZone = !!target?.closest?.(DISABLED_ZONE_SELECTORS);
     setIsDisabledZone(inDisabledZone);
     if (inDisabledZone) {
       document.documentElement.classList.add('starx-cursor-native');
@@ -49,7 +54,7 @@ export function CustomCursor() {
     }
 
     // Magnetic CTA attraction
-    if (!inDisabledZone) {
+    if (!inDisabledZone && target?.closest) {
       const magneticEl = target.closest<HTMLElement>("[data-magnetic]");
       if (magneticEl) {
         const rect = magneticEl.getBoundingClientRect();
@@ -67,7 +72,7 @@ export function CustomCursor() {
         }
       }
     }
-  }, [lightX, lightY, isVisible]);
+  }, [lightX, lightY]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -75,6 +80,8 @@ export function CustomCursor() {
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      if (!target?.closest) return;
+
       // Check disabled zones
       if (target.closest(DISABLED_ZONE_SELECTORS)) {
         setIsDisabledZone(true);
@@ -86,10 +93,10 @@ export function CustomCursor() {
       setIsDisabledZone(false);
       document.documentElement.classList.remove('starx-cursor-native');
 
-      if (target.closest('button, a, [role="button"], .clickable, [data-magnetic]')) {
+      if (target.closest('button, a, [role="button"], .clickable, [data-magnetic], summary')) {
         setIsHovered(true);
         setIsCardHovered(false);
-      } else if (target.closest(".glass-card, .glass-panel, .glass-focus, .glass-hero, .glass-mist, .glass-focal, .glass-premium")) {
+      } else if (target.closest(".glass-card, .glass-panel, .glass-focus, .glass-hero, .glass-mist, .glass-focal, .glass-premium, .spatial-glass-card, .starx-glass-card-interactive, .glass-card-obsidian")) {
         setIsCardHovered(true);
         setIsHovered(false);
       } else {
@@ -101,17 +108,24 @@ export function CustomCursor() {
     const handleMouseDown = () => setIsClicked(true);
     const handleMouseUp = () => setIsClicked(false);
     const handleMouseLeave = () => {
+      isVisibleRef.current = false;
+      cursorActiveRef.current = false;
       setIsVisible(false);
       document.documentElement.classList.remove('starx-cursor-active');
       document.body.classList.remove('starx-cursor-active');
-      cursorActiveRef.current = false;
     };
-    const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseEnter = () => {
+      isVisibleRef.current = true;
+      cursorActiveRef.current = true;
+      setIsVisible(true);
+      document.documentElement.classList.add('starx-cursor-enabled', 'starx-cursor-active');
+      document.body.classList.add('starx-cursor-active');
+    };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseover", handleMouseOver);
-    window.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("mouseover", handleMouseOver, { passive: true });
+    window.addEventListener("mousedown", handleMouseDown, { passive: true });
+    window.addEventListener("mouseup", handleMouseUp, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
 
@@ -132,12 +146,15 @@ export function CustomCursor() {
 
   return (
     <div
+      id="starx-cursor-layer"
       data-testid="starx-cursor-layer"
       data-visible={shouldShow ? "true" : "false"}
-      className="starx-custom-cursor-root"
+      className="starx-custom-cursor-root starx-cursor-layer"
+      aria-hidden="true"
     >
       {/* Outer light ring — ambient glass reflection source */}
       <motion.div
+        id="starx-cursor-ring"
         data-testid="starx-cursor-ring"
         style={{ x: lightXSpring, y: lightYSpring }}
         className="fixed top-0 left-0 pointer-events-none z-[9999] -ml-5 -mt-5 h-10 w-10 rounded-full"
@@ -162,6 +179,7 @@ export function CustomCursor() {
 
       {/* Center dot — glass-aware light point */}
       <motion.div
+        id="starx-cursor-dot"
         data-testid="starx-cursor-dot"
         style={{ x: lightX, y: lightY }}
         className="fixed top-0 left-0 pointer-events-none z-[9999] -ml-[3px] -mt-[3px] h-1.5 w-1.5 rounded-full"

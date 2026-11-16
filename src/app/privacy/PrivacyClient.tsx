@@ -1,66 +1,91 @@
 "use client";
 
 import React from "react";
-import { motion } from "motion/react";
+import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 
 export function PrivacyClient() {
   return (
-    <section className="min-h-screen pt-32 pb-20 px-6 relative z-10 bg-black overflow-hidden">
-      {/* Background Mesh */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="atmo-glow atmo-glow-emerald w-[800px] h-[800px] top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20" />
-      </div>
+    <div className="pt-32 lg:pt-40 pb-20 min-h-screen relative z-10 bg-[#020a07] text-[#f0f5ef] overflow-hidden">
+      {/* Background Emerald Ambient Glow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 10%, rgba(40, 223, 160, 0.16) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+        }}
+      />
 
-      <div className="max-w-4xl mx-auto relative z-10">
-        <div className="mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full surface-primary text-[10px] font-bold tracking-widest text-zinc-400 uppercase mb-6">
-            Legal Document
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
+        {/* Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="mb-8 text-xs font-mono text-[#b8c9bd]/70 uppercase tracking-widest flex items-center gap-2">
+          <Link href="/" className="hover:text-emerald-400 transition-colors">Home</Link>
+          <span>/</span>
+          <span className="text-emerald-300">Privacy Policy</span>
+        </nav>
+
+        <div className="mb-14">
+          <div className="spatial-pill-badge mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+            Data Protection &amp; Governance
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-white mb-6">
-            Privacy <span className="text-gradient-silver">Policy</span>
+          <h1 className="font-editorial text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">
+            Privacy <span className="text-gradient-emerald">Policy</span>
           </h1>
-          <p className="text-zinc-400 font-medium">Last updated: November 4, 2026</p>
+          <p className="text-[#b8c9bd] font-mono text-xs">Last updated: November 15, 2026 • Compliant with GDPR Articles 17 &amp; 20</p>
         </div>
 
-        <div className="glass-mist p-8 md:p-16 rounded-[2.5rem] max-w-none">
+        <div className="glass-panel p-8 md:p-14 rounded-[2.5rem] border-emerald-400/25 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_25px_rgba(40,223,160,0.1)]">
           <div className="space-y-12">
             <section>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">1. Information We Collect</h2>
-              <p className="text-lg text-zinc-400 leading-relaxed font-medium">
-                We collect information that you provide directly to us when you create an account, use our services, or communicate with us. This may include your name, email address, phone number, business details, and any other information you choose to provide.
+              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">1. Information We Collect</h2>
+              <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal">
+                We collect information that you provide directly to us when creating a merchant account, connecting your calendars, or communicating with customer care. This includes your name, verified work email address, business phone number, staff rosters, service menus, and calendar availability.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">2. How We Use Information</h2>
-              <p className="text-lg text-zinc-400 leading-relaxed font-medium">
-                We use the information we collect to provide, maintain, and improve our services, communicate with you, process transactions, and protect our users and platform. We also use information to train and optimize the AI models powering our WhatsApp receptionists to better serve your clients.
+              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">2. Tenant Isolation &amp; Zero Cross-Merchant Training</h2>
+              <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal">
+                Every merchant organization is isolated by PostgreSQL Row Level Security (RLS) policies. Your client conversations, booking schedules, and intake waiver records are never shared with or exposed to any other business. We strictly do not use merchant client conversations to train public or external AI models.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">3. Data Security & Encryption</h2>
-              <p className="text-lg text-zinc-400 leading-relaxed font-medium">
-                We implement industry-standard 256-bit encryption and security measures designed to protect your data from unauthorized access, disclosure, alteration, and destruction. We do not sell your personal data or your clients' personal data to third parties.
+              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">3. Data Security, Transport &amp; Storage Encryption</h2>
+              <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal">
+                All data in transit is encrypted using TLS 1.3 with HTTP Strict Transport Security (HSTS) enforced across all endpoints. Persistent database records are encrypted at rest with AES-256. Webhooks from Meta WhatsApp Cloud API and Instagram Direct are validated cryptographically with HMAC-SHA256 signatures.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">4. WhatsApp Integration</h2>
-              <p className="text-lg text-zinc-400 leading-relaxed font-medium">
-                Our services integrate with the WhatsApp Business API. By using our platform, you also agree to WhatsApp's terms and privacy policies. We are not responsible for how WhatsApp handles data transmitted over their network.
+              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">4. WhatsApp &amp; Meta Cloud API Integration</h2>
+              <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal">
+                StarX Flow interfaces directly with Meta&apos;s official WhatsApp Business Cloud API. Messages sent by clients to your WhatsApp business number are processed solely to execute automated scheduling, answer merchant FAQs, and confirm appointments. You retain complete ownership of your customer list and conversation records.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">5. Contact Us</h2>
-              <p className="text-lg text-zinc-400 leading-relaxed font-medium">
-                If you have any questions about this Privacy Policy, please contact us at privacy@starx-flow.runs-on.dev.
+              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">5. Programmatic GDPR Rights (Export &amp; Erasure)</h2>
+              <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal">
+                Under GDPR Articles 17 and 20, merchants and their consumers possess the right to data portability and complete erasure. StarX Flow provides automated API endpoints (/api/gdpr/export and /api/gdpr/delete) allowing instant JSON export and irreversible cascade deletion of all personal data upon request.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">6. Contact Security &amp; Privacy Engineering</h2>
+              <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal">
+                For questions regarding this Privacy Policy or to submit compliance requests, please email our security officer at{" "}
+                <a href="mailto:privacy@starx-flow.runs-on.dev" className="text-emerald-400 underline font-mono">
+                  privacy@starx-flow.runs-on.dev
+                </a>
+                .
               </p>
             </section>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
