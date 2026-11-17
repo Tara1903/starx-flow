@@ -24,14 +24,12 @@ import {
   Bot,
   Phone,
   Cpu,
-  Plus,
-  Zap,
-  Sparkles,
   Search,
-  Volume2,
+  Zap,
   Pause,
   Play,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import {
@@ -44,20 +42,18 @@ import { GlassSheet } from "../ui/GlassSheet";
 import { navPillSpring, sidebarSpring, MOTION_EASE, liquidSpring } from "../../lib/motionVariants";
 
 /* ─────────────────────────────────────────────────────────────
-   GLASSY SIDEBAR V7 (VIDEO REFERENCE 02)
+   EXECUTIVE FULL-HEIGHT LIQUID GLASS SIDEBAR DOCK
    Features:
-   1. Floating vertical glass capsule dock (rounded-[32px], deep obsidian blur)
-   2. Sleek round expand/collapse trigger button (chevron toggle at brand header)
-   3. Collapsed search squircle with `Search ⌘K` tooltip -> full search bar in expanded state
-   4. Liquid glass icon squircles with distinct color glow
-   5. Dynamic sliding highlight pill on active item (`layoutId="activeSidebarPill"`)
-   6. Active indicator dot on collapsed dock
-   7. Hover flyout submenu on compound items (e.g. Workflows)
-   8. Categorized group headers ("CORE" and "AUTOMATION & OPS")
-   9. Embedded Live AI Receptionist activity widget with equalizer bars
-   10. Interactive AI Auto-Pilot toggle switch
-   11. User profile card with online status and sign-out
-   12. Fully keyboard navigable and zoom resilient
+   1. Full-height dock (fixed inset-y-0 left-0, 100vh / 100dvh)
+   2. 100% Non-scrollable in both extended (280px) and collapsed (72px) states
+   3. All 16 dashboard areas accessible directly
+   4. Category filter pills: All (16) | Core (6) | AI (4) | Ops (6)
+   5. Sleek brand header with smooth expand/collapse toggle
+   6. Command Center ⌘K search bar
+   7. Streamlined live AI Receptionist & Auto-Pilot control capsule
+   8. User profile card with active status and 1-click sign-out
+   9. Floating liquid-glass tooltips & flyouts in collapsed state
+   10. Fully keyboard navigable (Arrow keys, Home, End)
    ───────────────────────────────────────────────────────────── */
 
 interface SidebarItem {
@@ -87,6 +83,9 @@ export function DashboardSidebar() {
 
   const openCommandCenter = useUIStore((s) => s.openCommandCenter);
 
+  // Category filter state for expanded mode
+  const [selectedCategory, setSelectedCategory] = useState<"all" | "core" | "ai" | "ops">("all");
+
   // Auto-collapse on medium tablet screens
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth >= 640 && window.innerWidth < 1024) {
@@ -99,11 +98,10 @@ export function DashboardSidebar() {
   const unreadConversationsCount = conversations.filter((c) => c.unread).length;
 
   const [flyoutState, setFlyoutState] = useState<{ item: SidebarItem; top: number } | null>(null);
-  const [tooltipState, setTooltipState] = useState<{ label: string; badge?: string | number; top: number } | null>(null);
+  const [tooltipState, setTooltipState] = useState<{ label: string; badge?: string | number; groupName?: string; top: number } | null>(null);
   const [isAutoPilotActive, setIsAutoPilotActive] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(true);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
-  const [isQuickHubOpen, setIsQuickHubOpen] = useState(false);
   const desktopNavRef = useRef<HTMLElement>(null);
   const asideContainerRef = useRef<HTMLDivElement>(null);
   const flyoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -130,7 +128,8 @@ export function DashboardSidebar() {
       setFlyoutState({ item, top });
     } else {
       setFlyoutState(null);
-      setTooltipState({ label: item.label, badge: item.badge, top: top + btnRect.height / 2 });
+      const groupName = item.group === "core" ? "Core" : item.group === "ai" ? "AI Suite" : "Operations";
+      setTooltipState({ label: item.label, badge: item.badge, groupName, top: top + btnRect.height / 2 });
     }
   };
 
@@ -171,19 +170,20 @@ export function DashboardSidebar() {
     router.push("/");
   };
 
+  // All 16 Dashboard Sections
   const menuItems: SidebarItem[] = [
-    // Core Group
+    // ── Group 1: Core (6) ──
     {
       id: "overview",
       label: "Overview",
-      icon: <Home className="w-4.5 h-4.5" />,
+      icon: <Home className="w-3.5 h-3.5" />,
       group: "core",
       squircleColor: "from-emerald-500/25 to-teal-600/15 text-emerald-300 border-emerald-400/35",
     },
     {
       id: "conversations",
       label: "Inbox",
-      icon: <MessageSquare className="w-4.5 h-4.5" />,
+      icon: <MessageSquare className="w-3.5 h-3.5" />,
       badge: unreadConversationsCount > 0 ? unreadConversationsCount : undefined,
       group: "core",
       squircleColor: "from-blue-500/25 to-indigo-600/15 text-blue-300 border-blue-400/35",
@@ -191,7 +191,7 @@ export function DashboardSidebar() {
     {
       id: "workflows",
       label: "Workflows",
-      icon: <Layers className="w-4.5 h-4.5" />,
+      icon: <Layers className="w-3.5 h-3.5" />,
       badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : undefined,
       group: "core",
       squircleColor: "from-purple-500/25 to-violet-600/15 text-purple-300 border-purple-400/35",
@@ -204,21 +204,17 @@ export function DashboardSidebar() {
     {
       id: "crm",
       label: "Customers",
-      icon: <Users className="w-4.5 h-4.5" />,
+      icon: <Users className="w-3.5 h-3.5" />,
       group: "core",
       squircleColor: "from-emerald-500/25 to-green-600/15 text-emerald-300 border-emerald-400/35",
-      subItems: [
-        { label: "Active Clients", action: () => setActiveSection("crm") },
-        { label: "New Prospects", action: () => setActiveSection("crm") },
-      ],
     },
     {
       id: "calendar",
       label: "Calendar",
       icon: (
         <div className="flex flex-col items-center justify-center leading-none">
-          <span className="text-[7px] font-bold text-amber-300 tracking-tighter">{dayName}</span>
-          <span className="text-[11px] font-extrabold text-white leading-none">{dayNum}</span>
+          <span className="text-[6px] font-bold text-amber-300 tracking-tighter">{dayName}</span>
+          <span className="text-[9px] font-extrabold text-white leading-none">{dayNum}</span>
         </div>
       ),
       badge: "10:30",
@@ -228,44 +224,16 @@ export function DashboardSidebar() {
     {
       id: "orders",
       label: "Orders",
-      icon: <ShoppingBag className="w-4.5 h-4.5" />,
+      icon: <ShoppingBag className="w-3.5 h-3.5" />,
       group: "core",
       squircleColor: "from-rose-500/25 to-pink-600/15 text-rose-300 border-rose-400/35",
     },
 
-    // Automation & Ops Group
-    {
-      id: "knowledge",
-      label: "Knowledge",
-      icon: <BookOpen className="w-4.5 h-4.5" />,
-      group: "ops",
-      squircleColor: "from-sky-500/25 to-cyan-600/15 text-sky-300 border-sky-400/35",
-    },
-    {
-      id: "tasks",
-      label: "Tasks",
-      icon: <CheckSquare className="w-4.5 h-4.5" />,
-      group: "ops",
-      squircleColor: "from-amber-500/25 to-yellow-600/15 text-amber-300 border-amber-400/35",
-    },
-    {
-      id: "team",
-      label: "Team",
-      icon: <Contact className="w-4.5 h-4.5" />,
-      group: "ops",
-      squircleColor: "from-teal-500/25 to-emerald-600/15 text-teal-300 border-teal-400/35",
-    },
-    {
-      id: "playground",
-      label: "AI Playground",
-      icon: <Brain className="w-4.5 h-4.5" />,
-      group: "ai",
-      squircleColor: "from-purple-500/25 to-fuchsia-600/15 text-purple-300 border-purple-400/35",
-    },
+    // ── Group 2: AI Suite (4) ──
     {
       id: "agents",
       label: "AI Receptionist",
-      icon: <Bot className="w-4.5 h-4.5" />,
+      icon: <Bot className="w-3.5 h-3.5" />,
       badge: "Live",
       group: "ai",
       squircleColor: "from-emerald-500/25 to-teal-600/15 text-emerald-300 border-emerald-400/35",
@@ -273,28 +241,58 @@ export function DashboardSidebar() {
     {
       id: "voice",
       label: "Voice AI",
-      icon: <Phone className="w-4.5 h-4.5" />,
+      icon: <Phone className="w-3.5 h-3.5" />,
       group: "ai",
       squircleColor: "from-cyan-500/25 to-blue-600/15 text-cyan-300 border-cyan-400/35",
     },
     {
+      id: "playground",
+      label: "AI Playground",
+      icon: <Brain className="w-3.5 h-3.5" />,
+      group: "ai",
+      squircleColor: "from-purple-500/25 to-fuchsia-600/15 text-purple-300 border-purple-400/35",
+    },
+    {
       id: "os",
       label: "Business OS",
-      icon: <Cpu className="w-4.5 h-4.5" />,
+      icon: <Cpu className="w-3.5 h-3.5" />,
       group: "ai",
       squircleColor: "from-indigo-500/25 to-violet-600/15 text-indigo-300 border-indigo-400/35",
+    },
+
+    // ── Group 3: Operations & Config (6) ──
+    {
+      id: "knowledge",
+      label: "Knowledge",
+      icon: <BookOpen className="w-3.5 h-3.5" />,
+      group: "ops",
+      squircleColor: "from-sky-500/25 to-cyan-600/15 text-sky-300 border-sky-400/35",
+    },
+    {
+      id: "tasks",
+      label: "Tasks",
+      icon: <CheckSquare className="w-3.5 h-3.5" />,
+      group: "ops",
+      squircleColor: "from-amber-500/25 to-yellow-600/15 text-amber-300 border-amber-400/35",
+    },
+    {
+      id: "team",
+      label: "Team",
+      icon: <Contact className="w-3.5 h-3.5" />,
+      group: "ops",
+      squircleColor: "from-teal-500/25 to-emerald-600/15 text-teal-300 border-teal-400/35",
     },
     {
       id: "analytics",
       label: "Analytics",
-      icon: <BarChart3 className="w-4.5 h-4.5" />,
+      icon: <BarChart3 className="w-3.5 h-3.5" />,
       group: "ops",
       squircleColor: "from-cyan-500/25 to-teal-600/15 text-cyan-300 border-cyan-400/35",
     },
     {
       id: "channels",
       label: "Channels",
-      icon: <Radio className="w-4.5 h-4.5" />,
+      icon: <Radio className="w-3.5 h-3.5" />,
       badge: connectedChannelsCount > 0 ? connectedChannelsCount : undefined,
       group: "ops",
       squircleColor: "from-blue-500/25 to-sky-600/15 text-blue-300 border-blue-400/35",
@@ -302,38 +300,24 @@ export function DashboardSidebar() {
     {
       id: "settings",
       label: "Settings",
-      icon: <Settings className="w-4.5 h-4.5" />,
+      icon: <Settings className="w-3.5 h-3.5" />,
       group: "ops",
       squircleColor: "from-zinc-500/25 to-zinc-600/15 text-zinc-300 border-zinc-400/35",
     },
   ];
 
-  const coreItems = menuItems.filter((i) => i.group === "core");
-  const opsItems = menuItems.filter((i) => i.group !== "core");
+  // Filter items based on selected category in expanded mode (in collapsed, show all 16)
+  const displayedItems = isCollapsed
+    ? menuItems
+    : selectedCategory === "all"
+      ? menuItems
+      : menuItems.filter((i) => i.group === selectedCategory);
 
   const mobileCoreTabs = [
-    {
-      id: "overview" as DashboardSection,
-      label: "Home",
-      icon: <Home className="w-4.5 h-4.5" />,
-    },
-    {
-      id: "crm" as DashboardSection,
-      label: "Leads",
-      icon: <Users className="w-4.5 h-4.5" />,
-    },
-    {
-      id: "conversations" as DashboardSection,
-      label: "Inbox",
-      icon: <MessageSquare className="w-4.5 h-4.5" />,
-      badge: unreadConversationsCount > 0 ? unreadConversationsCount : undefined,
-    },
-    {
-      id: "workflows" as DashboardSection,
-      label: "Flows",
-      icon: <Layers className="w-4.5 h-4.5" />,
-      badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : undefined,
-    },
+    { id: "overview" as DashboardSection, label: "Home", icon: <Home className="w-4 h-4" /> },
+    { id: "crm" as DashboardSection, label: "Leads", icon: <Users className="w-4 h-4" /> },
+    { id: "conversations" as DashboardSection, label: "Inbox", icon: <MessageSquare className="w-4 h-4" />, badge: unreadConversationsCount > 0 ? unreadConversationsCount : undefined },
+    { id: "workflows" as DashboardSection, label: "Flows", icon: <Layers className="w-4 h-4" />, badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : undefined },
   ];
 
   const isCoreActive = mobileCoreTabs.some((t) => t.id === activeSection);
@@ -342,34 +326,33 @@ export function DashboardSidebar() {
   return (
     <>
       {/* ─────────────────────────────────────────────────────────────
-          DESKTOP FLOATING LIQUID GLASS DOCK CAPSULE (V7 REFERENCE 02)
+          DESKTOP FULL-HEIGHT DOCKED SIDEBAR (100% NON-SCROLLABLE)
           ───────────────────────────────────────────────────────────── */}
       <motion.aside
         aria-label="Dashboard sidebar"
         initial={false}
         animate={{ width: isCollapsed ? 72 : 280 }}
         transition={sidebarSpring}
-        className="hidden sm:flex flex-col h-[calc(100vh-24px)] fixed left-3 top-3 z-40 select-none"
+        className="hidden sm:flex flex-col fixed inset-y-0 left-0 z-40 select-none h-screen h-[100dvh]"
       >
         <div
           ref={asideContainerRef}
-          className="glass-card-obsidian rounded-[32px] flex flex-col h-full border border-white/[0.14] shadow-[0_20px_60px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] relative overflow-visible"
+          className="glass-card-obsidian flex flex-col h-full border-r border-white/[0.10] bg-[#030907]/95 backdrop-blur-2xl shadow-[8px_0_32px_rgba(0,0,0,0.5)] relative overflow-hidden"
         >
-          
-          {/* 1. Header with Brand & Floating Chevron Trigger Button */}
+          {/* 1. Header with Brand & Sleek Expand/Collapse Toggle Button */}
           <div
             className={cn(
-              "flex items-center pt-4 pb-3 px-3 relative border-b border-white/[0.06]",
-              isCollapsed ? "justify-center" : "justify-between px-4"
+              "flex items-center py-2 px-3 relative border-b border-white/[0.06] flex-shrink-0",
+              isCollapsed ? "justify-center" : "justify-between px-3.5"
             )}
           >
-            <div className="flex items-center gap-3 overflow-hidden">
+            <div className="flex items-center gap-2.5 overflow-hidden">
               {/* Brand Squircle */}
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400/25 to-emerald-600/10 border border-emerald-400/40 flex items-center justify-center flex-shrink-0 shadow-[0_0_16px_rgba(16,185,129,0.25)]">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400/25 to-emerald-600/10 border border-emerald-400/40 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
                 <img
                   src="/logo.svg"
                   alt="StarX"
-                  className="w-5 h-5 object-contain"
+                  className="w-4 h-4 object-contain"
                 />
               </div>
 
@@ -381,18 +364,18 @@ export function DashboardSidebar() {
                     initial={false}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0.92, x: -6 }}
-                    transition={{ duration: 0.16, ease: MOTION_EASE.premium }}
+                    transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
                     className="flex flex-col min-w-0"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white tracking-tight truncate">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-white tracking-tight truncate">
                         StarX Flow
                       </span>
-                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 rounded-full">
+                      <span className="text-[8px] font-extrabold uppercase px-1 py-0.2 bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 rounded-full leading-none">
                         PRO
                       </span>
                     </div>
-                    <span className="text-[10px] text-zinc-400 truncate max-w-[130px]">
+                    <span className="text-[9px] text-zinc-400 truncate max-w-[130px]">
                       {user?.businessName || "Studio workspace"}
                     </span>
                   </motion.div>
@@ -400,7 +383,7 @@ export function DashboardSidebar() {
               </AnimatePresence>
             </div>
 
-            {/* V7 Floating Chevron Toggle Button (Situated on header edge) */}
+            {/* Expand / Collapse Chevron Toggle Button */}
             <motion.button
               type="button"
               onClick={() => setIsCollapsed(!isCollapsed)}
@@ -409,22 +392,20 @@ export function DashboardSidebar() {
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.92 }}
               className={cn(
-                "w-7 h-7 rounded-full bg-[#0c1a15] border border-emerald-400/40 flex items-center justify-center text-zinc-300 hover:text-emerald-300 hover:border-emerald-400/70 transition-colors shadow-[0_4px_14px_rgba(0,0,0,0.6)] cursor-pointer z-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400",
-                isCollapsed
-                  ? "absolute -right-3.5 top-5"
-                  : "relative"
+                "w-6 h-6 rounded-full bg-[#0c1a15] border border-emerald-400/40 flex items-center justify-center text-zinc-300 hover:text-emerald-300 hover:border-emerald-400/70 transition-colors shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400",
+                isCollapsed ? "absolute -right-3 top-3.5 z-50 bg-[#07130e]" : "relative"
               )}
             >
               {isCollapsed ? (
-                <ChevronRight className="w-4 h-4 text-emerald-300" />
+                <ChevronRight className="w-3.5 h-3.5 text-emerald-300" />
               ) : (
-                <ChevronLeft className="w-4 h-4 text-emerald-300" />
+                <ChevronLeft className="w-3.5 h-3.5 text-emerald-300" />
               )}
             </motion.button>
           </div>
 
-          {/* 2. Search Component (Squircle in Collapsed, Full Glass Bar in Expanded) */}
-          <div className="px-3 pt-3 pb-1 relative z-10">
+          {/* 2. Quick Command Search (Expanded: Bar, Collapsed: Squircle) */}
+          <div className="px-2.5 pt-1.5 pb-0.5 relative z-10 flex-shrink-0">
             {isCollapsed ? (
               <div className="relative flex justify-center">
                 <button
@@ -437,7 +418,7 @@ export function DashboardSidebar() {
                     const btnRect = e.currentTarget.getBoundingClientRect();
                     if (asideRect) {
                       setTooltipState({
-                        label: "Search",
+                        label: "Search commands",
                         badge: "⌘K",
                         top: btnRect.top - asideRect.top + btnRect.height / 2,
                       });
@@ -445,170 +426,195 @@ export function DashboardSidebar() {
                   }}
                   onMouseLeave={() => setTooltipState(null)}
                   aria-label="Search and command center (Press ⌘K)"
-                  className="w-11 h-11 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-emerald-300 transition-all cursor-pointer shadow-sm group"
+                  className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-emerald-300 transition-all cursor-pointer shadow-sm group"
                 >
-                  <Search className="w-4.5 h-4.5 group-hover:scale-110 transition-transform" />
+                  <Search className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
                 </button>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={openCommandCenter}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.07] text-xs text-zinc-400 hover:text-white transition-all cursor-pointer shadow-inner group"
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.07] text-[11px] text-zinc-400 hover:text-white transition-all cursor-pointer shadow-inner group"
               >
-                <div className="flex items-center gap-2.5">
-                  <Search className="w-4 h-4 text-zinc-400 group-hover:text-emerald-300 transition-colors" />
+                <div className="flex items-center gap-2">
+                  <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-300 transition-colors" />
                   <span>Search commands...</span>
                 </div>
-                <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-zinc-300 border border-white/15">
+                <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/10 text-zinc-300 border border-white/15">
                   ⌘K
                 </kbd>
               </button>
             )}
           </div>
 
-          {/* 3. Navigation Items Scroll Area with Staggered Groups */}
+          {/* 3. Category Filter Selector Pills (Expanded Only) */}
+          {!isCollapsed && (
+            <div className="px-2.5 py-0.5 flex items-center gap-1 border-b border-white/[0.05] flex-shrink-0">
+              {(
+                [
+                  { id: "all", label: "All (16)" },
+                  { id: "core", label: "Core" },
+                  { id: "ai", label: "AI" },
+                  { id: "ops", label: "Ops" },
+                ] as const
+              ).map((cat) => {
+                const isSelected = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={cn(
+                      "flex-1 py-0.5 text-[9px] font-bold rounded-lg transition-all cursor-pointer text-center",
+                      isSelected
+                        ? "bg-emerald-500/22 text-emerald-300 border border-emerald-400/35 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]"
+                    )}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 4. Non-Scrollable Navigation Area: strictly overflow-hidden */}
           <nav
             ref={desktopNavRef}
             onKeyDown={handleDesktopNavKeyDown}
-            className="flex-1 px-2.5 py-2 space-y-4 overflow-y-auto console-scroll relative z-10"
+            aria-label="Dashboard sections"
+            className="flex-1 min-h-0 flex flex-col justify-between overflow-hidden px-1.5 xl:px-2 py-0.5 select-none"
           >
-            {/* Group 1: Core / Favorites */}
-            <div className="space-y-1">
-              {!isCollapsed && (
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-3 py-1 select-none">
-                  Core
-                </p>
-              )}
-              {coreItems.map((item) => renderNavItem(item))}
-            </div>
+            {displayedItems.map((item, idx) => {
+              const prevItem = displayedItems[idx - 1];
+              const showGroupDivider =
+                selectedCategory === "all" &&
+                prevItem &&
+                prevItem.group !== item.group;
 
-            {/* Group 2: Automation & Ops */}
-            <div className="space-y-1 pt-1 border-t border-white/[0.05]">
-              {!isCollapsed && (
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-3 py-1 select-none">
-                  Automation &amp; Ops
-                </p>
-              )}
-              {opsItems.map((item) => renderNavItem(item))}
-            </div>
+              return (
+                <React.Fragment key={item.id}>
+                  {showGroupDivider && (
+                    <div className="my-px border-t border-white/[0.05] flex-shrink-0" />
+                  )}
+                  {renderNavItem(item)}
+                </React.Fragment>
+              );
+            })}
           </nav>
 
-          {/* 4. Lower Widget & Controls (Expanded Only) */}
-          <AnimatePresence initial={false}>
-            {!isCollapsed && (
-              <motion.div
-                initial={false}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0.92, height: 0 }}
-                transition={{ duration: 0.2, ease: MOTION_EASE.premium }}
-                className="px-3 py-2 space-y-2 border-t border-white/[0.06] overflow-hidden"
-              >
-                {/* Embedded Live AI Receptionist Mini Activity Card (Matching V7 music player widget) */}
-                <div className="rounded-2xl p-3 bg-black/35 border border-white/[0.08] flex items-center justify-between gap-3 shadow-inner">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-500/18 border border-emerald-400/30 flex items-center justify-center flex-shrink-0 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                      <Bot className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-white truncate leading-tight">
-                          AI Receptionist
-                        </span>
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
-                      </div>
-                      <span className="text-[10px] text-zinc-400 block truncate">
-                        Active on 3 channels
-                      </span>
-                    </div>
+          {/* 5. Streamlined Lower AI Receptionist & Auto-Pilot Control Capsule */}
+          <div className="px-2 py-0.5 border-t border-white/[0.06] flex-shrink-0 relative z-10">
+            {!isCollapsed ? (
+              <div className="rounded-xl px-2 py-1 bg-black/35 border border-white/[0.07] flex items-center justify-between gap-1.5 shadow-inner">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="w-5.5 h-5.5 rounded-md bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center flex-shrink-0 text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                    <Bot className="w-3 h-3" />
                   </div>
-
-                  {/* Equalizer animation & play/pause toggle */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="flex items-end gap-0.5 h-4">
-                      {[10, 16, 8, 14].map((h, i) => (
-                        <motion.span
-                          key={i}
-                          animate={isPlayingAudio ? { height: [4, h, 6, h * 0.8, 4] } : { height: 4 }}
-                          transition={{
-                            duration: 0.8 + i * 0.15,
-                            repeat: Infinity,
-                            repeatType: "reverse",
-                            ease: "easeInOut",
-                          }}
-                          className="w-0.5 bg-emerald-400 rounded-full"
-                        />
-                      ))}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-white truncate leading-tight">
+                        AI Receptionist
+                      </span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                      className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 hover:bg-emerald-500/30 transition-colors cursor-pointer"
-                      aria-label={isPlayingAudio ? "Pause live agent" : "Resume live agent"}
-                    >
-                      {isPlayingAudio ? (
-                        <Pause className="w-3 h-3" />
-                      ) : (
-                        <Play className="w-3 h-3 ml-0.5" />
-                      )}
-                    </button>
+                    <span className="text-[8px] text-zinc-400 block truncate">
+                      Active on 3 channels
+                    </span>
                   </div>
                 </div>
 
-                {/* AI Auto-Pilot Switch Toggle */}
-                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-xs font-semibold text-zinc-200">AI Auto-Pilot</span>
+                {/* Equalizer & Auto-Pilot Switch */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <div className="flex items-end gap-0.5 h-3">
+                    {[6, 12, 5, 10].map((h, i) => (
+                      <motion.span
+                        key={i}
+                        animate={isPlayingAudio ? { height: [2.5, h, 4, h * 0.7, 2.5] } : { height: 2.5 }}
+                        transition={{
+                          duration: 0.8 + i * 0.15,
+                          repeat: Infinity,
+                          repeatType: "reverse",
+                          ease: "easeInOut",
+                        }}
+                        className="w-0.5 bg-emerald-400 rounded-full"
+                      />
+                    ))}
                   </div>
+
                   <button
                     type="button"
                     onClick={() => setIsAutoPilotActive(!isAutoPilotActive)}
-                    aria-label="Toggle autonomous mode"
+                    title={isAutoPilotActive ? "AI Auto-Pilot Active" : "AI Auto-Pilot Paused"}
                     className={cn(
-                      "w-9 h-5 rounded-full transition-colors duration-200 p-0.5 relative cursor-pointer border",
+                      "w-7 h-4 rounded-full transition-colors duration-200 p-0.5 relative cursor-pointer border",
                       isAutoPilotActive
-                        ? "bg-emerald-500/35 border-emerald-400/50 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                        ? "bg-emerald-500/35 border-emerald-400/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
                         : "bg-white/[0.08] border-white/15"
                     )}
                   >
                     <motion.div
-                      animate={{ x: isAutoPilotActive ? 16 : 0 }}
+                      animate={{ x: isAutoPilotActive ? 12 : 0 }}
                       transition={liquidSpring}
                       className={cn(
-                        "w-3.5 h-3.5 rounded-full shadow-sm",
+                        "w-2.5 h-2.5 rounded-full",
                         isAutoPilotActive ? "bg-emerald-400" : "bg-zinc-400"
                       )}
                     />
                   </button>
                 </div>
-              </motion.div>
+              </div>
+            ) : (
+              <div className="flex justify-center py-0.5">
+                <button
+                  type="button"
+                  onClick={() => setIsAutoPilotActive(!isAutoPilotActive)}
+                  onMouseEnter={(e) => {
+                    const asideRect = asideContainerRef.current?.getBoundingClientRect();
+                    const btnRect = e.currentTarget.getBoundingClientRect();
+                    if (asideRect) {
+                      setTooltipState({
+                        label: isAutoPilotActive ? "AI Receptionist: Active" : "AI Receptionist: Paused",
+                        badge: "3 ch",
+                        top: btnRect.top - asideRect.top + btnRect.height / 2,
+                      });
+                    }
+                  }}
+                  onMouseLeave={() => setTooltipState(null)}
+                  className="w-7 h-7 rounded-lg bg-emerald-500/18 border border-emerald-400/35 flex items-center justify-center text-emerald-300 relative shadow-sm cursor-pointer"
+                  title="AI Receptionist live status"
+                >
+                  <Bot className="w-3 h-3" />
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+                </button>
+              </div>
             )}
-          </AnimatePresence>
+          </div>
 
-          {/* 5. Footer Profile & Sign-out */}
-          <div className="p-3 border-t border-white/[0.07] relative z-10">
+          {/* 6. Footer User Profile & Sign-out */}
+          <div className="p-1.5 border-t border-white/[0.06] flex-shrink-0 relative z-10">
             <div
               className={cn(
-                "flex items-center justify-between rounded-2xl transition-colors",
-                isCollapsed ? "flex-col gap-2" : "px-1.5 py-1"
+                "flex items-center justify-between rounded-xl transition-colors",
+                isCollapsed ? "flex-col gap-1" : "px-2 py-0.5 bg-white/[0.02] border border-white/[0.06]"
               )}
             >
               {/* User Avatar with Green Live Dot */}
-              <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
                 <div className="relative flex-shrink-0">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-900 border border-white/15 flex items-center justify-center font-bold text-white text-xs shadow-md">
-                    {user?.name ? user.name.slice(0, 2).toUpperCase() : "SX"}
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-800 border border-white/15 flex items-center justify-center font-bold text-white text-[10px] shadow-sm">
+                    {user?.name ? user.name.slice(0, 2).toUpperCase() : "US"}
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#09120f]" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#09120f]" />
                 </div>
 
                 {!isCollapsed && (
                   <div className="flex flex-col min-w-0 max-w-[130px]">
-                    <span className="text-xs font-bold text-white truncate leading-tight">
+                    <span className="text-[11px] font-bold text-white truncate leading-tight">
                       {user?.name || "Partner"}
                     </span>
-                    <span className="text-[10px] text-zinc-400 truncate">
+                    <span className="text-[9px] text-zinc-400 truncate">
                       {user?.businessName || user?.email || "My Business"}
                     </span>
                   </div>
@@ -620,19 +626,19 @@ export function DashboardSidebar() {
                 type="button"
                 onClick={handleLogout}
                 className={cn(
-                  "flex items-center justify-center text-zinc-400 hover:text-red-400 p-2 rounded-xl hover:bg-red-500/10 transition-colors border border-transparent hover:border-red-500/20 cursor-pointer",
-                  isCollapsed ? "w-9 h-9" : ""
+                  "flex items-center justify-center text-zinc-400 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10 transition-colors border border-transparent hover:border-red-500/20 cursor-pointer",
+                  isCollapsed ? "w-7 h-7" : ""
                 )}
                 title="Sign Out"
                 aria-label="Sign out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
           {/* ─────────────────────────────────────────────────────────────
-              V7 FLOATING GLASS TOOLTIP (COLLAPSED DOCK, ROOT LEVEL)
+              FLOATING GLASS TOOLTIP (COLLAPSED DOCK)
               ───────────────────────────────────────────────────────────── */}
           <AnimatePresence>
             {isCollapsed && tooltipState && !flyoutState && (
@@ -640,15 +646,15 @@ export function DashboardSidebar() {
                 initial={{ opacity: 0.92, x: 6, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0.92, x: 6, scale: 0.95 }}
-                transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
+                transition={{ duration: 0.12, ease: MOTION_EASE.premium }}
                 style={{ top: tooltipState.top }}
-                className="absolute left-full ml-3 -translate-y-1/2 z-50 px-3 py-1.5 rounded-xl bg-[#08120e]/95 backdrop-blur-2xl border border-emerald-500/30 text-xs font-semibold text-white whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7),0_0_15px_rgba(16,185,129,0.15)] flex items-center gap-2 pointer-events-none select-none"
+                className="absolute left-full ml-3 -translate-y-1/2 z-50 px-2.5 py-1 rounded-xl bg-[#08120e]/95 backdrop-blur-2xl border border-emerald-500/30 text-[11px] font-semibold text-white whitespace-nowrap shadow-[0_10px_30px_rgba(0,0,0,0.7),0_0_15px_rgba(16,185,129,0.15)] flex items-center gap-1.5 pointer-events-none select-none"
               >
                 <span>{tooltipState.label}</span>
                 {tooltipState.badge !== undefined && (
                   <span
                     className={cn(
-                      "text-[9px] px-1.5 py-0.5 rounded-full font-bold",
+                      "text-[8px] px-1.5 py-0.2 rounded-full font-bold",
                       tooltipState.badge === "⌘K"
                         ? "font-mono bg-white/10 text-zinc-300 border border-white/15"
                         : "bg-red-500 text-white"
@@ -662,7 +668,7 @@ export function DashboardSidebar() {
           </AnimatePresence>
 
           {/* ─────────────────────────────────────────────────────────────
-              V7 CASCADING FLYOUT SUBMENU (COLLAPSED DOCK, ROOT LEVEL)
+              CASCADING FLYOUT SUBMENU (COLLAPSED DOCK)
               ───────────────────────────────────────────────────────────── */}
           <AnimatePresence>
             {isCollapsed && flyoutState && (
@@ -670,7 +676,7 @@ export function DashboardSidebar() {
                 initial={{ opacity: 0.92, x: 8, scale: 0.94 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0.92, x: 8, scale: 0.94 }}
-                transition={{ duration: 0.16, ease: MOTION_EASE.premium }}
+                transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
                 style={{ top: flyoutState.top }}
                 onMouseEnter={() => {
                   if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
@@ -678,9 +684,9 @@ export function DashboardSidebar() {
                 onMouseLeave={() => {
                   setFlyoutState(null);
                 }}
-                className="absolute left-full ml-3 z-50 p-2 rounded-2xl bg-[#07100c]/95 backdrop-blur-2xl border border-emerald-400/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_20px_rgba(16,185,129,0.18)] min-w-[200px] space-y-1 select-none"
+                className="absolute left-full ml-3 z-50 p-2 rounded-2xl bg-[#07100c]/95 backdrop-blur-2xl border border-emerald-400/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_20px_rgba(16,185,129,0.18)] min-w-[190px] space-y-1 select-none"
               >
-                <p className="text-[10px] font-bold text-emerald-300/80 uppercase tracking-wider px-2.5 py-1 border-b border-white/[0.08]">
+                <p className="text-[9px] font-bold text-emerald-300/80 uppercase tracking-wider px-2 py-0.5 border-b border-white/[0.08]">
                   {flyoutState.item.label} Quick Access
                 </p>
                 {flyoutState.item.subItems?.map((sub, sIdx) => (
@@ -691,10 +697,10 @@ export function DashboardSidebar() {
                       sub.action();
                       setFlyoutState(null);
                     }}
-                    className="w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-emerald-500/18 transition-all flex items-center justify-between group/sub cursor-pointer"
+                    className="w-full text-left px-2 py-1 rounded-lg text-[11px] font-medium text-zinc-300 hover:text-white hover:bg-emerald-500/18 transition-all flex items-center justify-between group/sub cursor-pointer"
                   >
                     <span className="truncate">{sub.label}</span>
-                    <ArrowRight className="w-3 h-3 text-zinc-500 group-hover/sub:text-emerald-300 group-hover/sub:translate-x-0.5 transition-all" />
+                    <ArrowRight className="w-2.5 h-2.5 text-zinc-500 group-hover/sub:text-emerald-300 group-hover/sub:translate-x-0.5 transition-all" />
                   </button>
                 ))}
               </motion.div>
@@ -704,22 +710,13 @@ export function DashboardSidebar() {
       </motion.aside>
 
       {/* ─────────────────────────────────────────────────────────────
-          MOBILE NAVIGATION TABS V10 FLOATING CAPSULE (REFERENCE 03)
-          Features:
-          1. Floating Liquid Glass capsule dock (rounded-full, obsidian blur)
-          2. Active tab expands horizontally with icon + text label
-          3. Sliding emerald highlight pill via Framer Motion layoutId="v10ActiveTabPill"
-          4. Inactive tabs display clean, minimal outline icons
-          5. Companion floating circular glass button for Quick Hub / More Navigation
-          6. Red notification badges and live unread indicators
-          7. Safe-area padding and responsive viewport adaptation (320px-768px)
+          MOBILE NAVIGATION TABS (TOUCH VIEWPORTS ONLY < sm)
           ───────────────────────────────────────────────────────────── */}
       <nav
         aria-label="Mobile dashboard navigation"
         className="sm:hidden fixed bottom-3 inset-x-0 z-40 px-3 flex justify-center items-center pointer-events-none pb-[env(safe-area-inset-bottom)]"
       >
         <div className="flex items-center gap-2.5 max-w-[420px] w-full justify-center">
-          {/* 1. Primary V10 Floating Liquid Glass Navigation Capsule */}
           <div className="pointer-events-auto flex-1 min-w-0 glass-capsule-nav rounded-full p-1.5 flex items-center justify-around relative shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(16,185,129,0.12)] border border-white/[0.14] select-none">
             {mobileCoreTabs.map((tab) => {
               const isActive = activeSection === tab.id;
@@ -733,13 +730,12 @@ export function DashboardSidebar() {
                   onClick={() => setActiveSection(tab.id)}
                   whileTap={prefersReduced ? undefined : { scale: 0.92 }}
                   className={cn(
-                    "relative flex items-center justify-center rounded-full transition-colors cursor-pointer select-none py-2",
+                    "relative flex items-center justify-center rounded-full transition-colors cursor-pointer select-none py-1.5",
                     isActive
-                      ? "px-3.5 text-white font-semibold"
-                      : "px-2.5 text-zinc-400 hover:text-zinc-200"
+                      ? "px-3 text-white font-semibold"
+                      : "px-2 text-zinc-400 hover:text-zinc-200"
                   )}
                 >
-                  {/* V10 Active Sliding Pill (layoutId) */}
                   {isActive && (
                     <motion.div
                       layoutId="v10ActiveTabPill"
@@ -748,19 +744,15 @@ export function DashboardSidebar() {
                     />
                   )}
 
-                  {/* Icon */}
                   <div className="relative flex items-center justify-center flex-shrink-0">
                     <span className={cn("transition-colors", isActive ? "text-emerald-300" : "text-zinc-400")}>
                       {tab.icon}
                     </span>
-
-                    {/* Notification ping on inactive icon */}
                     {!isActive && tab.badge !== undefined && (
                       <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                     )}
                   </div>
 
-                  {/* Label expands when active */}
                   <AnimatePresence initial={false}>
                     {isActive && (
                       <motion.span
@@ -779,25 +771,22 @@ export function DashboardSidebar() {
             })}
           </div>
 
-          {/* 2. V10 Floating Companion Circular Glass Button */}
           <motion.button
             type="button"
             onClick={() => setIsMobileMoreOpen(true)}
             whileHover={prefersReduced ? undefined : { scale: 1.08 }}
             whileTap={prefersReduced ? undefined : { scale: 0.92 }}
-            aria-label="Open full dashboard navigation and quick hub"
+            aria-label="Open full dashboard navigation"
             className={cn(
-              "pointer-events-auto w-12 h-12 rounded-full glass-capsule-nav border flex items-center justify-center relative cursor-pointer flex-shrink-0 shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_20px_rgba(16,185,129,0.1)] transition-colors select-none",
+              "pointer-events-auto w-11 h-11 rounded-full glass-capsule-nav border flex items-center justify-center relative cursor-pointer flex-shrink-0 shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_20px_rgba(16,185,129,0.1)] transition-colors select-none",
               isSecondaryActive
                 ? "bg-emerald-500/25 border-emerald-400/50 text-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.35)]"
                 : "border-white/[0.14] text-zinc-300 hover:text-white"
             )}
           >
-            <Menu className="w-5 h-5" />
-
-            {/* Red notification count badge pill matching reference */}
+            <Menu className="w-4 h-4" />
             {(unreadConversationsCount > 0 || activeWorkflowsCount > 0) && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white border-2 border-[#09120f] text-[9px] font-extrabold rounded-full flex items-center justify-center shadow-md leading-none">
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-500 text-white border-2 border-[#09120f] text-[8px] font-extrabold rounded-full flex items-center justify-center shadow-md leading-none">
                 {unreadConversationsCount || activeWorkflowsCount}
               </span>
             )}
@@ -812,7 +801,7 @@ export function DashboardSidebar() {
         title="Navigation Menu"
         side="bottom"
       >
-        <div className="grid grid-cols-3 gap-3 py-4 max-h-[70vh] overflow-y-auto">
+        <div className="grid grid-cols-3 gap-2 py-3 max-h-[70vh] overflow-y-auto">
           {menuItems.map((item) => (
             <button
               key={item.id}
@@ -822,16 +811,16 @@ export function DashboardSidebar() {
                 setIsMobileMoreOpen(false);
               }}
               className={cn(
-                "flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer",
+                "flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer",
                 activeSection === item.id
                   ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                   : "bg-white/[0.03] border-white/10 text-zinc-400 hover:text-white"
               )}
             >
-              <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center mb-1.5">
+              <div className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center mb-1">
                 {item.icon}
               </div>
-              <span className="text-xs font-medium truncate w-full">{item.label}</span>
+              <span className="text-[11px] font-medium truncate w-full">{item.label}</span>
             </button>
           ))}
         </div>
@@ -846,7 +835,7 @@ export function DashboardSidebar() {
     const isActive = activeSection === item.id;
 
     return (
-      <div key={item.id} className="relative">
+      <div key={item.id} className="relative flex-1 min-h-0 flex items-center">
         <button
           type="button"
           data-nav-item="true"
@@ -858,10 +847,10 @@ export function DashboardSidebar() {
           onMouseEnter={(e) => handleItemMouseEnter(item, e)}
           onMouseLeave={handleItemMouseLeave}
           className={cn(
-            "w-full flex items-center gap-3 rounded-2xl text-sm font-medium transition-all duration-200 relative group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 select-none",
-            isCollapsed ? "justify-center p-1.5" : "px-3 py-2",
+            "w-full h-full min-h-[24px] max-h-[30px] xl:max-h-[34px] flex items-center rounded-lg xl:rounded-xl font-medium transition-all duration-150 relative group cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400/70 select-none",
+            isCollapsed ? "justify-center p-0.5" : "gap-2 px-2 py-0.5",
             isActive
-              ? "text-white"
+              ? "text-white font-semibold"
               : "text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]"
           )}
         >
@@ -870,7 +859,7 @@ export function DashboardSidebar() {
             <motion.span
               layoutId="activeSidebarPill"
               transition={navPillSpring}
-              className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/25 via-emerald-500/12 to-emerald-500/5 border border-emerald-400/40 shadow-[0_0_20px_rgba(16,185,129,0.18),inset_0_1px_0_rgba(255,255,255,0.2)] -z-10"
+              className="absolute inset-0 rounded-lg xl:rounded-xl bg-gradient-to-r from-emerald-500/25 via-emerald-500/12 to-emerald-500/5 border border-emerald-400/40 shadow-[0_0_16px_rgba(16,185,129,0.18),inset_0_1px_0_rgba(255,255,255,0.18)] -z-10"
             />
           )}
 
@@ -879,24 +868,24 @@ export function DashboardSidebar() {
             <motion.span
               layoutId="activeDockDot"
               transition={navPillSpring}
-              className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-4 rounded-r-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+              className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1 h-3 rounded-r-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"
             />
           )}
 
           {/* Liquid Glass App Squircle Icon Container */}
           <div
             className={cn(
-              "w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 border transition-all duration-300 relative shadow-sm",
+              "w-6 h-6 xl:w-6.5 xl:h-6.5 rounded-md xl:rounded-lg flex items-center justify-center flex-shrink-0 border transition-all duration-200 relative shadow-sm",
               isActive
-                ? cn("bg-gradient-to-br shadow-[0_0_16px_rgba(16,185,129,0.3)]", item.squircleColor)
-                : "bg-white/[0.04] border-white/10 group-hover:border-white/25 group-hover:bg-white/[0.07] text-zinc-300 group-hover:text-white"
+                ? cn("bg-gradient-to-br shadow-[0_0_12px_rgba(16,185,129,0.3)]", item.squircleColor)
+                : "bg-white/[0.04] border-white/10 group-hover:border-white/20 group-hover:bg-white/[0.07] text-zinc-300 group-hover:text-white"
             )}
           >
             {item.icon}
 
-            {/* Notification Badge on Collapsed Dock Icon (top-right corner) */}
+            {/* Notification Badge on Collapsed Dock Icon */}
             {isCollapsed && item.badge !== undefined && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white border-2 border-[#09120f] text-[9px] font-extrabold rounded-full flex items-center justify-center shadow-md leading-none">
+              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 bg-red-500 text-white border border-[#09120f] text-[7px] font-extrabold rounded-full flex items-center justify-center shadow-md leading-none">
                 {item.badge}
               </span>
             )}
@@ -909,17 +898,17 @@ export function DashboardSidebar() {
                 initial={false}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0.92, x: -6 }}
-                transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
+                transition={{ duration: 0.12, ease: MOTION_EASE.premium }}
                 className="flex items-center justify-between flex-1 min-w-0"
               >
-                <span className="truncate text-[13px] font-semibold tracking-tight">
+                <span className="truncate text-[11.5px] xl:text-[12px] tracking-tight">
                   {item.label}
                 </span>
 
                 {item.badge !== undefined && (
                   <span
                     className={cn(
-                      "px-2 py-0.5 text-[10px] font-bold rounded-full ml-auto tabular-nums",
+                      "px-1.5 py-0.2 text-[8.5px] font-bold rounded-full ml-auto tabular-nums leading-tight",
                       typeof item.badge === "number"
                         ? "bg-red-500 text-white shadow-sm"
                         : "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40"

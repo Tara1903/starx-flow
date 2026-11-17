@@ -161,7 +161,7 @@ export function DashboardLayout() {
       <div 
         className={cn(
           "flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 pb-20 sm:pb-0 relative z-10",
-          isSidebarCollapsed ? "sm:pl-[96px]" : "sm:pl-[304px]"
+          isSidebarCollapsed ? "sm:pl-[72px]" : "sm:pl-[280px]"
         )}
       >
         {/* 3. TopBar Component */}
