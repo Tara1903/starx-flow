@@ -237,7 +237,7 @@
     .bg-\[\#041610\]\/80 { background-color: rgba(4, 22, 16, 0.8); }
     .bg-\[\#041710\]\/90 { background-color: rgba(4, 23, 16, 0.9); }
     .bg-\[\#061c14\]\/90 { background-color: rgba(6, 28, 20, 0.9); }
-    .bg-gradient-to-br { background-image: linear-gradient(to bottom right, #6ee7b7, #059669); }
+    /* .bg-gradient-to-br gradient direction handled natively by Tailwind v4 */
     .border-0 { border-width: 0; }
     .border { border: 1px solid rgba(110, 231, 183, 0.28); }
     .border-2 { border: 2px solid #03120c; }

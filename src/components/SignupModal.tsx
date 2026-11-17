@@ -390,14 +390,22 @@ export function SignupModal({
         aria-modal="true"
         aria-labelledby="auth-modal-title"
         className={cn(
-          "relative w-full max-w-[840px] bg-[#07130d]/92 backdrop-blur-3xl rounded-[32px] overflow-hidden border border-white/[0.14] shadow-[0_32px_100px_rgba(0,0,0,0.92),0_0_60px_rgba(16,185,129,0.12)] flex flex-col",
+          "relative w-full max-w-[800px] bg-[#0a100d]/92 backdrop-blur-3xl rounded-[28px] overflow-hidden border border-white/[0.14] shadow-[0_32px_100px_rgba(0,0,0,0.92),0_0_60px_rgba(16,185,129,0.10)] flex flex-col",
           isStandalone ? "mt-4 mb-12" : "my-auto"
         )}
       >
-        {/* Subtle Ambient Emerald Accent Spotlights */}
+        {/* Subtle Ambient Emerald Accent Spotlights with breathing animations */}
         <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/80 to-transparent z-30" />
-        <div className="absolute -top-32 -left-32 w-72 h-72 rounded-full bg-emerald-500/15 blur-[90px] pointer-events-none" />
-        <div className="absolute -bottom-32 -right-32 w-72 h-72 rounded-full bg-emerald-500/10 blur-[90px] pointer-events-none" />
+        <motion.div
+          animate={{ scale: [1, 1.08, 1], opacity: [0.15, 0.25, 0.15] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-32 -left-32 w-72 h-72 rounded-full bg-emerald-500/20 blur-[90px] pointer-events-none"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.12, 1], opacity: [0.1, 0.2, 0.1] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute -bottom-32 -right-32 w-72 h-72 rounded-full bg-emerald-500/15 blur-[90px] pointer-events-none"
+        />
 
         {/* Top Header Controls: ONLY on overlay modal (!isStandalone). On standalone /login and /signup, the floating top navbar already displays the brand logo and dashboard links */}
         {!isStandalone && (
@@ -437,8 +445,8 @@ export function SignupModal({
 
         {isStandalone && <div className="h-6 sm:h-8" />}
 
-        {/* Mobile Segmented Capsule Switcher (< 768px) */}
-        <div className="flex md:hidden px-6 pt-2 pb-1">
+        {/* Mobile Segmented Capsule Switcher (< 768px ONLY - Hidden on Desktop >= 768px) */}
+        <div className="md:hidden px-6 pt-2 pb-1">
           <div className="grid grid-cols-2 w-full p-1 bg-white/[0.04] border border-white/10 rounded-2xl relative">
             <button
               type="button"
@@ -503,30 +511,31 @@ export function SignupModal({
         )}
 
         {/* ─── DUAL-COLUMN SLIDING OVERLAY ARENA (DESKTOP >= 768px) ─── */}
-        <div className="relative min-h-[470px] overflow-hidden rounded-b-[32px]">
-          <div className="hidden md:block relative w-full h-[470px]">
-            {/* ─── LEFT COLUMN: LOGIN FORM (Exact Match to Video trans_015.png) ─── */}
+        <div className="relative min-h-[490px] overflow-hidden rounded-b-[32px]">
+          <div className="hidden md:block relative w-full h-[490px]">
+            {/* ─── LEFT COLUMN: LOGIN FORM (Exact Match to Video Glassy Login Form V2) ─── */}
             <motion.div
               initial={false}
               animate={{
-                opacity: authMode === "login" ? 1 : 0.15,
-                x: authMode === "login" ? 0 : -14,
-                scale: authMode === "login" ? 1 : 0.985,
+                opacity: authMode === "login" ? 1 : 0.08,
+                x: authMode === "login" ? 0 : -20,
+                scale: authMode === "login" ? 1 : 0.97,
+                filter: authMode === "login" ? "blur(0px)" : "blur(2px)",
               }}
               transition={{
                 duration: 0.45,
                 ease: [0.16, 1, 0.3, 1],
               }}
               className={cn(
-                "absolute top-0 left-0 w-1/2 h-full px-8 lg:px-10 py-7 flex flex-col justify-between",
+                "absolute top-0 left-0 w-1/2 h-full px-8 lg:px-10 py-7 flex flex-col justify-between transition-all",
                 authMode === "login"
                   ? "pointer-events-auto z-10"
                   : "pointer-events-none select-none z-0"
               )}
             >
               <div>
-                <h2 id="auth-modal-title" className="text-2xl font-extrabold text-white tracking-tight">
-                  Welcome Back
+                <h2 id="auth-modal-title" className="text-2xl font-bold text-white tracking-tight">
+                  Login
                 </h2>
                 <p className="text-xs text-zinc-400 mt-0.5 mb-3">
                   Sign in to access your dashboard
@@ -543,7 +552,7 @@ export function SignupModal({
                     if (error) setSubmitError(error);
                   }}
                   disabled={isSubmitting}
-                  className="w-full py-1.5 px-3 rounded-xl text-xs font-medium text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mb-2.5"
+                  className="w-full py-2 px-3 rounded-2xl text-xs font-medium text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mb-2.5"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -554,7 +563,7 @@ export function SignupModal({
                   <span>Continue with Google</span>
                 </button>
 
-                {/* Method Selector Tabs: Password vs 8-Digit OTP */}
+                {/* Method Selector Tabs: Password vs 8-Character OTP */}
                 <div className="grid grid-cols-2 p-1 bg-white/[0.04] border border-white/10 rounded-xl mb-3">
                   <button
                     type="button"
@@ -591,55 +600,49 @@ export function SignupModal({
                   </button>
                 </div>
 
-                <form onSubmit={handleLoginSubmit} className="space-y-3.5">
-                  {/* Underline Input 1: Username / Email */}
-                  <div>
-                    <div className="relative flex items-center border-b border-white/15 pb-2 group">
-                      <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors duration-200 mr-3 shrink-0" />
-                      <input
-                        type="email"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        placeholder="Email or Username"
-                        required
-                        className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none"
-                      />
-                      <span className="absolute bottom-[-1px] left-0 h-[1.5px] bg-gradient-to-r from-emerald-400 to-emerald-300 w-0 group-focus-within:w-full transition-all duration-300 ease-out" />
-                    </div>
+                <form onSubmit={handleLoginSubmit} className="space-y-3">
+                  {/* Glass Box Input 1: Username / Email matching Video */}
+                  <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                    <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
+                    <input
+                      type="email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="Email or Username"
+                      required
+                      className="w-full bg-transparent text-white placeholder:text-zinc-500 text-xs sm:text-sm outline-none"
+                    />
                   </div>
 
-                  {/* Underline Input 2: Password (or OTP notification) */}
+                  {/* Glass Box Input 2: Password (or OTP notification) matching Video */}
                   {loginMethod === "password" ? (
-                    <div>
-                      <div className="relative flex items-center border-b border-white/15 pb-2 group">
-                        <Lock size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors duration-200 mr-3 shrink-0" />
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                          placeholder="Password"
-                          required
-                          className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none pr-7"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-0 text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                        >
-                          {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                        </button>
-                        <span className="absolute bottom-[-1px] left-0 h-[1.5px] bg-gradient-to-r from-emerald-400 to-emerald-300 w-0 group-focus-within:w-full transition-all duration-300 ease-out" />
-                      </div>
+                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                      <Lock size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        placeholder="Password"
+                        required
+                        className="w-full bg-transparent text-white placeholder:text-zinc-500 text-xs sm:text-sm outline-none pr-7"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
                     </div>
                   ) : (
-                    <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
+                    <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
                       <KeyRound size={14} className="shrink-0 text-emerald-400" />
                       <span>An 8-character verification code will be sent to your email.</span>
                     </div>
                   )}
 
                   {/* Action Button: Rounded Glass Pill matching Video */}
-                  <div className="pt-3">
+                  <div className="pt-2">
                     <motion.button
                       whileHover={{ scale: 1.02, y: -1 }}
                       whileTap={{ scale: 0.98 }}
@@ -647,7 +650,7 @@ export function SignupModal({
                       type="submit"
                       data-testid="login-submit-btn"
                       disabled={isSubmitting}
-                      className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/25 hover:border-emerald-400 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.4)] disabled:opacity-50"
+                      className="w-full py-2.5 px-6 rounded-full text-xs sm:text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/20 hover:border-emerald-400 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.4)] disabled:opacity-50"
                     >
                       <span>{loginMethod === "otp" ? "Send Verification Code" : "Login"}</span>
                     </motion.button>
@@ -656,7 +659,7 @@ export function SignupModal({
               </div>
 
               {/* Bottom Navigation Links matching Video */}
-              <div className="space-y-2 text-center text-xs text-zinc-400 pt-4 border-t border-white/[0.06]">
+              <div className="space-y-1.5 text-center text-xs text-zinc-400 pt-3 border-t border-white/[0.06]">
                 <div>
                   Don&apos;t have an account?{" "}
                   <button
@@ -690,27 +693,28 @@ export function SignupModal({
             <motion.div
               initial={false}
               animate={{
-                opacity: authMode === "signup" ? 1 : 0.15,
-                x: authMode === "signup" ? 0 : 14,
-                scale: authMode === "signup" ? 1 : 0.985,
+                opacity: authMode === "signup" ? 1 : 0.08,
+                x: authMode === "signup" ? 0 : 20,
+                scale: authMode === "signup" ? 1 : 0.97,
+                filter: authMode === "signup" ? "blur(0px)" : "blur(2px)",
               }}
               transition={{
                 duration: 0.45,
                 ease: [0.16, 1, 0.3, 1],
               }}
               className={cn(
-                "absolute top-0 left-1/2 w-1/2 h-full px-10 py-8 flex flex-col justify-between",
+                "absolute top-0 left-1/2 w-1/2 h-full px-8 lg:px-10 py-7 flex flex-col justify-between transition-all",
                 authMode === "signup"
                   ? "pointer-events-auto z-10"
                   : "pointer-events-none select-none z-0"
               )}
             >
               <div>
-                <h2 id="auth-modal-title" className="text-2xl font-extrabold text-white tracking-tight">
+                <h2 id="auth-modal-title" className="text-2xl font-bold text-white tracking-tight">
                   Create Account
                 </h2>
                 <p className="text-xs text-zinc-400 mt-0.5 mb-3">
-                  Start your 14-day free trial &bull; No credit card required
+                  Start your 14-day free trial &bull; No card required
                 </p>
 
                 {/* Google OAuth Button */}
@@ -724,7 +728,7 @@ export function SignupModal({
                     if (error) setSubmitError(error);
                   }}
                   disabled={isSubmitting}
-                  className="w-full py-1.5 px-3 rounded-xl text-xs font-medium text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mb-3"
+                  className="w-full py-2 px-3 rounded-2xl text-xs font-medium text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mb-3"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -735,65 +739,56 @@ export function SignupModal({
                   <span>Continue with Google</span>
                 </button>
 
-                <form onSubmit={handleSignupSubmit} className="space-y-3.5">
-                  {/* Underline Input 1: Full Name */}
-                  <div>
-                    <div className="relative flex items-center border-b border-white/15 pb-2 group">
-                      <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors duration-200 mr-3 shrink-0" />
-                      <input
-                        type="text"
-                        value={signupName}
-                        onChange={(e) => setSignupName(e.target.value)}
-                        placeholder="Full Name"
-                        required
-                        className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none"
-                      />
-                      <span className="absolute bottom-[-1px] left-0 h-[1.5px] bg-gradient-to-r from-emerald-400 to-emerald-300 w-0 group-focus-within:w-full transition-all duration-300 ease-out" />
-                    </div>
+                <form onSubmit={handleSignupSubmit} className="space-y-3">
+                  {/* Glass Box Input 1: Full Name matching Video */}
+                  <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                    <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
+                    <input
+                      type="text"
+                      value={signupName}
+                      onChange={(e) => setSignupName(e.target.value)}
+                      placeholder="Full Name"
+                      required
+                      className="w-full bg-transparent text-white placeholder:text-zinc-500 text-xs sm:text-sm outline-none"
+                    />
                   </div>
 
-                  {/* Underline Input 2: Work Email */}
-                  <div>
-                    <div className="relative flex items-center border-b border-white/15 pb-2 group">
-                      <Mail size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors duration-200 mr-3 shrink-0" />
-                      <input
-                        type="email"
-                        value={signupEmail}
-                        onChange={(e) => setSignupEmail(e.target.value)}
-                        placeholder="Work Email"
-                        required
-                        className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none"
-                      />
-                      <span className="absolute bottom-[-1px] left-0 h-[1.5px] bg-gradient-to-r from-emerald-400 to-emerald-300 w-0 group-focus-within:w-full transition-all duration-300 ease-out" />
-                    </div>
+                  {/* Glass Box Input 2: Work Email matching Video */}
+                  <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                    <Mail size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
+                    <input
+                      type="email"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      placeholder="Work Email"
+                      required
+                      className="w-full bg-transparent text-white placeholder:text-zinc-500 text-xs sm:text-sm outline-none"
+                    />
                   </div>
 
-                  {/* Underline Input 3: Create Password */}
+                  {/* Glass Box Input 3: Create Password matching Video */}
                   {signupMethod === "password" ? (
-                    <div>
-                      <div className="relative flex items-center border-b border-white/15 pb-2 group">
-                        <Lock size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors duration-200 mr-3 shrink-0" />
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          value={signupPassword}
-                          onChange={(e) => setSignupPassword(e.target.value)}
-                          placeholder="Create Password"
-                          required
-                          minLength={6}
-                          className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none pr-7"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-0 text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                        >
-                          {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                        </button>
-                        <span className="absolute bottom-[-1px] left-0 h-[1.5px] bg-gradient-to-r from-emerald-400 to-emerald-300 w-0 group-focus-within:w-full transition-all duration-300 ease-out" />
-                      </div>
+                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                      <Lock size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
+                        placeholder="Create Password"
+                        required
+                        minLength={6}
+                        className="w-full bg-transparent text-white placeholder:text-zinc-500 text-xs sm:text-sm outline-none pr-7"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
                     </div>
                   ) : (
-                    <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
+                    <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
                       <KeyRound size={14} className="shrink-0 text-emerald-400" />
                       <span>An 8-character verification code will be sent to your email.</span>
                     </div>
@@ -823,7 +818,7 @@ export function SignupModal({
                       type="submit"
                       data-testid="signup-submit-btn"
                       disabled={isSubmitting}
-                      className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/25 hover:border-emerald-400 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.4)] disabled:opacity-50"
+                      className="w-full py-2.5 px-6 rounded-full text-xs sm:text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/20 hover:border-emerald-400 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.4)] disabled:opacity-50"
                     >
                       <span>{signupMethod === "otp" ? "Send Verification Code" : "Sign Up"}</span>
                     </motion.button>
@@ -832,7 +827,7 @@ export function SignupModal({
               </div>
 
               {/* Bottom Navigation Links matching Video */}
-              <div className="space-y-2 text-center text-xs text-zinc-400 pt-3 border-t border-white/[0.06]">
+              <div className="space-y-1.5 text-center text-xs text-zinc-400 pt-3 border-t border-white/[0.06]">
                 <div>
                   Already a Member?{" "}
                   <button
@@ -871,26 +866,37 @@ export function SignupModal({
                   ? { duration: 0.01 }
                   : {
                       type: "spring",
-                      stiffness: 220,
-                      damping: 27,
+                      stiffness: 200,
+                      damping: 24,
                       mass: 0.8,
                     }
               }
-              className="hidden md:flex absolute top-0 left-0 w-1/2 h-full z-20 flex-col justify-between p-10 overflow-hidden bg-gradient-to-br from-[#0c281b]/95 via-[#071912]/92 to-[#030906]/95 backdrop-blur-3xl border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_30px_rgba(16,185,129,0.16)]"
+              style={{
+                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(8, 14, 11, 0.55) 50%, rgba(255, 255, 255, 0.04) 100%)",
+              }}
+              className="hidden md:flex absolute top-0 left-0 w-1/2 h-full z-20 flex-col justify-between p-10 overflow-hidden backdrop-blur-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.25)]"
             >
-              {/* Dynamic Specular Edge Highlights with smooth crossfade */}
+              {/* Dynamic Specular Edge Highlights matching Video */}
               <motion.div
                 animate={{ opacity: authMode === "signup" ? 1 : 0 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-emerald-300 via-white/70 to-emerald-400/20 pointer-events-none shadow-[0_0_12px_rgba(52,211,153,0.5)]"
+                className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-transparent via-white/80 to-transparent pointer-events-none shadow-[0_0_12px_rgba(255,255,255,0.5)]"
               />
               <motion.div
                 animate={{ opacity: authMode === "login" ? 1 : 0 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-emerald-300 via-white/70 to-emerald-400/20 pointer-events-none shadow-[0_0_12px_rgba(52,211,153,0.5)]"
+                className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-transparent via-white/80 to-transparent pointer-events-none shadow-[0_0_12px_rgba(255,255,255,0.5)]"
               />
 
-              <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-emerald-500/20 blur-[70px] pointer-events-none" />
+              {/* Subtle Ambient Glass Refraction Flare */}
+              <motion.div
+                animate={{
+                  opacity: [0.3, 0.5, 0.3],
+                  scale: [1, 1.05, 1],
+                }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-24 -left-24 w-64 h-64 rounded-full bg-white/[0.04] blur-[50px] pointer-events-none"
+              />
 
               {/* Dynamic Content inside the Sliding Glass Panel */}
               <div className="relative z-10 w-full h-full">
@@ -905,8 +911,8 @@ export function SignupModal({
                       transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
                       className="absolute inset-0 flex flex-col justify-between"
                     >
-                      <div className="space-y-4 mt-6">
-                        <h3 className="text-3xl lg:text-4xl font-extrabold text-white tracking-wider leading-tight">
+                      <div className="space-y-3 mt-4">
+                        <h3 className="text-3xl lg:text-[34px] font-extrabold text-white tracking-wider leading-tight uppercase font-sans">
                           WELCOME BACK!
                         </h3>
                         <p className="text-xs lg:text-sm text-zinc-300/90 leading-relaxed max-w-[260px]">
@@ -914,7 +920,7 @@ export function SignupModal({
                         </p>
                       </div>
 
-                      <div className="mb-4">
+                      <div className="mb-2">
                         <motion.button
                           whileHover={{ scale: 1.04, y: -1 }}
                           whileTap={{ scale: 0.96 }}
@@ -925,10 +931,10 @@ export function SignupModal({
                             setAuthMode("login");
                             setSubmitError(null);
                           }}
-                          className="px-8 py-2.5 rounded-full border border-white/40 hover:border-emerald-400 hover:bg-emerald-500 hover:text-black text-white text-xs lg:text-sm font-bold uppercase tracking-wider transition-colors duration-200 shadow-[0_10px_30px_rgba(0,0,0,0.5)] cursor-pointer flex items-center gap-2 group"
+                          className="px-7 py-2.5 rounded-full border border-white/30 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs tracking-wider transition-all backdrop-blur-md shadow-lg flex items-center gap-2 group cursor-pointer"
                         >
                           <span>Sign In</span>
-                          <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+                          <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                         </motion.button>
                       </div>
                     </motion.div>
@@ -942,8 +948,8 @@ export function SignupModal({
                       transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
                       className="absolute inset-0 flex flex-col justify-between"
                     >
-                      <div className="space-y-4 mt-6">
-                        <h3 className="text-3xl lg:text-4xl font-extrabold text-white tracking-wider leading-tight">
+                      <div className="space-y-3 mt-4">
+                        <h3 className="text-3xl lg:text-[34px] font-extrabold text-white tracking-wider leading-tight uppercase font-sans">
                           HELLO, FRIEND!
                         </h3>
                         <p className="text-xs lg:text-sm text-zinc-300/90 leading-relaxed max-w-[260px]">
@@ -951,7 +957,7 @@ export function SignupModal({
                         </p>
                       </div>
 
-                      <div className="mb-4">
+                      <div className="mb-2">
                         <motion.button
                           whileHover={{ scale: 1.04, y: -1 }}
                           whileTap={{ scale: 0.96 }}
@@ -962,10 +968,10 @@ export function SignupModal({
                             setAuthMode("signup");
                             setSubmitError(null);
                           }}
-                          className="px-8 py-2.5 rounded-full border border-white/40 hover:border-emerald-400 hover:bg-emerald-500 hover:text-black text-white text-xs lg:text-sm font-bold uppercase tracking-wider transition-colors duration-200 shadow-[0_10px_30px_rgba(0,0,0,0.5)] cursor-pointer flex items-center gap-2 group"
+                          className="px-7 py-2.5 rounded-full border border-white/30 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs tracking-wider transition-all backdrop-blur-md shadow-lg flex items-center gap-2 group cursor-pointer"
                         >
                           <span>Create Account</span>
-                          <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+                          <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                         </motion.button>
                       </div>
                     </motion.div>
@@ -978,166 +984,201 @@ export function SignupModal({
           {/* ════════════════════════════════════════════════════════════════
              MOBILE VIEW (< 768px): SINGLE RESPONSIVE CARD
              ════════════════════════════════════════════════════════════════ */}
-          <div className="block md:hidden p-6">
-            {authMode === "signup" ? (
-              <div className="space-y-5">
-                <div>
-                  <h2 className="text-2xl font-extrabold text-white tracking-tight">
-                    Create Account
-                  </h2>
-                  <p className="text-xs text-zinc-400 mt-1">
-                    Start your 14-day free trial &bull; No credit card required
-                  </p>
-                </div>
-
-                <form onSubmit={handleSignupSubmit} className="space-y-4">
-                  <div className="sr-only">
-                    <button type="button" onClick={() => signInWithGoogle()}>Continue with Google</button>
-                  </div>
-                  <div className="relative flex items-center border-b border-white/20 focus-within:border-emerald-400 pb-2">
-                    <User size={16} className="text-zinc-400 mr-3 shrink-0" />
-                    <input
-                      type="text"
-                      value={signupName}
-                      onChange={(e) => setSignupName(e.target.value)}
-                      placeholder="Full Name"
-                      required
-                      className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none"
-                    />
+          <div className="block md:hidden p-6 overflow-hidden">
+            <AnimatePresence mode="wait" initial={false}>
+              {authMode === "signup" ? (
+                <motion.div
+                  key="mobile-signup-view"
+                  initial={{ opacity: 0, x: 24, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, x: -24, filter: "blur(4px)" }}
+                  transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <h2 className="text-2xl font-bold text-white tracking-tight">
+                      Create Account
+                    </h2>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Start your 14-day free trial &bull; No card required
+                    </p>
                   </div>
 
-                  <div className="relative flex items-center border-b border-white/20 focus-within:border-emerald-400 pb-2">
-                    <Mail size={16} className="text-zinc-400 mr-3 shrink-0" />
-                    <input
-                      type="email"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      placeholder="Work Email"
-                      required
-                      className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none"
-                    />
-                  </div>
+                  <form onSubmit={handleSignupSubmit} className="space-y-3">
+                    <div className="sr-only">
+                      <button type="button" onClick={() => signInWithGoogle()}>Continue with Google</button>
+                    </div>
 
-                  {signupMethod === "password" ? (
-                    <div className="relative flex items-center border-b border-white/20 focus-within:border-emerald-400 pb-2">
-                      <Lock size={16} className="text-zinc-400 mr-3 shrink-0" />
+                    {/* Glass Box Input 1: Full Name */}
+                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                      <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                       <input
-                        type={showPassword ? "text" : "password"}
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        placeholder="Create Password"
+                        type="text"
+                        value={signupName}
+                        onChange={(e) => setSignupName(e.target.value)}
+                        placeholder="Full Name"
                         required
-                        minLength={6}
-                        className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none pr-7"
+                        className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-0 text-zinc-400 hover:text-white cursor-pointer"
-                      >
-                        {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                      </button>
                     </div>
-                  ) : (
-                    <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300">
-                      An 8-character verification code will be sent to your email.
-                    </div>
-                  )}
 
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-400 text-black transition-all cursor-pointer"
-                  >
-                    <span>{signupMethod === "otp" ? "Send Verification Code" : "Sign Up"}</span>
-                  </button>
-                </form>
-
-                <div className="text-center text-xs text-zinc-400 pt-2">
-                  Already a Member?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setAuthMode("login")}
-                    className="text-emerald-400 underline font-semibold"
-                  >
-                    Login
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                <div>
-                  <h2 className="text-2xl font-extrabold text-white tracking-tight">
-                    Login
-                  </h2>
-                  <p className="text-xs text-zinc-400 mt-1">
-                    Sign in to access your dashboard
-                  </p>
-                </div>
-
-                <form onSubmit={handleLoginSubmit} className="space-y-4">
-                  <div className="sr-only">
-                    <button type="button" onClick={() => setLoginMethod("password")}>Password</button>
-                    <button type="button" onClick={() => setLoginMethod("otp")}>Verification Code</button>
-                  </div>
-                  <div className="relative flex items-center border-b border-white/20 focus-within:border-emerald-400 pb-2">
-                    <User size={16} className="text-zinc-400 mr-3 shrink-0" />
-                    <input
-                      type="email"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="Email or Username"
-                      required
-                      className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none"
-                    />
-                  </div>
-
-                  {loginMethod === "password" ? (
-                    <div className="relative flex items-center border-b border-white/20 focus-within:border-emerald-400 pb-2">
-                      <Lock size={16} className="text-zinc-400 mr-3 shrink-0" />
+                    {/* Glass Box Input 2: Work Email */}
+                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                      <Mail size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                       <input
-                        type={showPassword ? "text" : "password"}
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        placeholder="Password"
+                        type="email"
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
+                        placeholder="Work Email"
                         required
-                        className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none pr-7"
+                        className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-0 text-zinc-400 hover:text-white cursor-pointer"
+                    </div>
+
+                    {/* Glass Box Input 3: Create Password */}
+                    {signupMethod === "password" ? (
+                      <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                        <Lock size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={signupPassword}
+                          onChange={(e) => setSignupPassword(e.target.value)}
+                          placeholder="Create Password"
+                          required
+                          minLength={6}
+                          className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none pr-7"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                        >
+                          {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
+                        <KeyRound size={14} className="shrink-0 text-emerald-400" />
+                        <span>An 8-character verification code will be sent to your email.</span>
+                      </div>
+                    )}
+
+                    {/* Action Button: Rounded Glass Pill matching Video */}
+                    <div className="pt-1">
+                      <motion.button
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/20 hover:border-emerald-400 transition-all cursor-pointer shadow-md disabled:opacity-50"
                       >
-                        {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                      </button>
+                        <span>{signupMethod === "otp" ? "Send Verification Code" : "Sign Up"}</span>
+                      </motion.button>
                     </div>
-                  ) : (
-                    <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300">
-                      An 8-character verification code will be sent to your email.
+                  </form>
+
+                  <div className="text-center text-xs text-zinc-400 pt-2">
+                    Already a Member?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode("login")}
+                      className="text-emerald-400 underline font-semibold cursor-pointer"
+                    >
+                      Login
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="mobile-login-view"
+                  initial={{ opacity: 0, x: -24, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, x: 24, filter: "blur(4px)" }}
+                  transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <h2 className="text-2xl font-bold text-white tracking-tight">
+                      Login
+                    </h2>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Sign in to access your dashboard
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleLoginSubmit} className="space-y-3">
+                    <div className="sr-only">
+                      <button type="button" onClick={() => setLoginMethod("password")}>Password</button>
+                      <button type="button" onClick={() => setLoginMethod("otp")}>Verification Code</button>
                     </div>
-                  )}
 
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-400 text-black transition-all cursor-pointer"
-                  >
-                    <span>{loginMethod === "otp" ? "Send Verification Code" : "Login"}</span>
-                  </button>
-                </form>
+                    {/* Glass Box Input 1: Email or Username */}
+                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                      <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
+                      <input
+                        type="email"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        placeholder="Email or Username"
+                        required
+                        className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none"
+                      />
+                    </div>
 
-                <div className="text-center text-xs text-zinc-400 pt-2">
-                  Don&apos;t have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setAuthMode("signup")}
-                    className="text-emerald-400 underline font-semibold"
-                  >
-                    Sign Up
-                  </button>
-                </div>
-              </div>
-            )}
+                    {/* Glass Box Input 2: Password */}
+                    {loginMethod === "password" ? (
+                      <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                        <Lock size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          placeholder="Password"
+                          required
+                          className="w-full bg-transparent text-white placeholder:text-zinc-500 text-sm outline-none pr-7"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 text-zinc-400 hover:text-white cursor-pointer"
+                        >
+                          {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
+                        <KeyRound size={14} className="shrink-0 text-emerald-400" />
+                        <span>An 8-character verification code will be sent to your email.</span>
+                      </div>
+                    )}
+
+                    {/* Action Button: Rounded Glass Pill matching Video */}
+                    <div className="pt-1">
+                      <motion.button
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/20 hover:border-emerald-400 transition-all cursor-pointer shadow-md disabled:opacity-50"
+                      >
+                        <span>{loginMethod === "otp" ? "Send Verification Code" : "Login"}</span>
+                      </motion.button>
+                    </div>
+                  </form>
+
+                  <div className="text-center text-xs text-zinc-400 pt-2">
+                    Don&apos;t have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode("signup")}
+                      className="text-emerald-400 underline font-semibold cursor-pointer"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </motion.div>
