@@ -142,7 +142,7 @@ export function DashboardLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020a07] text-[#f0f5ef] font-sans flex overflow-x-clip relative selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="h-screen h-[100dvh] overflow-hidden bg-[#020a07] text-[#f0f5ef] font-sans flex relative selection:bg-emerald-500/30 selection:text-emerald-200">
       {/* Background Emerald Ambient Depth */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div
@@ -154,22 +154,24 @@ export function DashboardLayout() {
           style={{ background: "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)" }}
         />
       </div>
-      {/* 1. Sidebar component (Persistent on desktop, bottom navigation on mobile) */}
+      {/* 1. Sidebar component (Floating fixed dock on desktop, bottom navigation on mobile) */}
       <DashboardSidebar />
 
-      {/* 2. Main Content Wrapper */}
+      {/* 2. Main Content Scrollable Viewport (Scrolls smoothly while sidebar stays fixed) */}
       <div 
         className={cn(
-          "flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 pb-20 md:pb-0 relative z-10",
-          isSidebarCollapsed ? "md:pl-[72px]" : "md:pl-[280px]"
+          "flex-1 h-screen h-[100dvh] overflow-y-auto console-scroll flex flex-col min-w-0 transition-all duration-300 relative z-10 pb-20 md:pb-0",
+          isSidebarCollapsed ? "md:pl-[100px]" : "md:pl-[308px]"
         )}
       >
-        {/* 3. TopBar Component */}
-        <DashboardTopBar onNewWorkflowClick={handleOpenWorkflowWizard} />
+        {/* 3. TopBar Component (Sticky at top of scrollable area) */}
+        <div className="sticky top-0 z-30 bg-[#020a07]/80 backdrop-blur-xl border-b border-white/[0.05]">
+          <DashboardTopBar onNewWorkflowClick={handleOpenWorkflowWizard} />
+        </div>
         <NetworkStatusBanner onReconnectRetry={fetchInboxData} />
 
-        {/* 4. Section Render Area with safe bottom-padding for mobile bottom navbar */}
-        <div role="region" aria-label="Dashboard workspace" className="flex-1 overflow-y-auto px-4 py-5 sm:px-8 sm:py-8 pb-28 sm:pb-12 console-scroll relative z-10">
+        {/* 4. Section Render Area */}
+        <div role="region" aria-label="Dashboard workspace" className="flex-1 px-4 py-5 sm:px-8 sm:py-6 pb-28 sm:pb-12 relative z-10">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={activeSection}

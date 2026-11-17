@@ -40,7 +40,7 @@ export function AdminLayout({
   const isSidebarCollapsed = useAdminStore((s) => s.isSidebarCollapsed);
 
   return (
-    <div className="min-h-screen bg-[#040806] text-zinc-100 flex relative overflow-x-hidden selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="h-screen h-[100dvh] overflow-hidden bg-[#040806] text-zinc-100 flex relative selection:bg-emerald-500/30 selection:text-emerald-200">
       {/* Background Ambient Glows */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         {/* Top-left subtle emerald glow */}
@@ -59,7 +59,7 @@ export function AdminLayout({
         />
       </div>
 
-      {/* Sidebar (Unified Desktop Fixed Aside & Mobile Slide-Over Drawer) */}
+      {/* Sidebar (Floating Fixed Aside on Desktop & Mobile Slide-Over Drawer) */}
       <AdminSidebar
         activeSection={activeSection}
         onSelectSection={(sec) => {
@@ -74,15 +74,15 @@ export function AdminLayout({
         adminEmail={adminEmail}
       />
 
-      {/* Main Content Area */}
+      {/* Main Content Scrollable Viewport (Scrolls smoothly while sidebar stays fixed) */}
       <div 
         className={cn(
-          "flex-1 flex flex-col min-w-0 z-10 transition-all duration-300 pb-20 md:pb-0",
-          isSidebarCollapsed ? "md:pl-[72px]" : "md:pl-[280px]"
+          "flex-1 h-screen h-[100dvh] overflow-y-auto console-scroll flex flex-col min-w-0 transition-all duration-300 relative z-10 pb-20 md:pb-0",
+          isSidebarCollapsed ? "md:pl-[100px]" : "md:pl-[308px]"
         )}
       >
-        {/* Top Floating Glass Toolbar */}
-        <header className="sticky top-0 z-20 px-4 sm:px-6 lg:px-8 pt-4 pb-2">
+        {/* Top Floating Glass Toolbar (Sticky at top of scrollable area) */}
+        <header className="sticky top-0 z-20 px-4 sm:px-6 lg:px-8 pt-4 pb-2 bg-[#040806]/85 backdrop-blur-xl border-b border-white/[0.05]">
           <AdminToolbar
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}

@@ -17,18 +17,21 @@ import {
   ChevronRight,
   Home,
   Users,
-  Calendar as CalendarIcon,
   CheckSquare,
   Contact,
   Bot,
   Phone,
   Cpu,
   Search,
-  Zap,
-  Pause,
-  Play,
-  ArrowRight,
   Sparkles,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Moon,
+  Sun,
+  ArrowRight,
+  Music,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import {
@@ -40,18 +43,18 @@ import { cn } from "../../lib/utils";
 import { navPillSpring, sidebarSpring, MOTION_EASE, liquidSpring } from "../../lib/motionVariants";
 
 /* ─────────────────────────────────────────────────────────────
-   EXECUTIVE FULL-HEIGHT LIQUID GLASS SIDEBAR DOCK
+   GLASSY SIDEBAR V7 (1:1 VIDEO REPLICA)
    Features:
-   1. Full-height dock (fixed inset-y-0 left-0, 100vh / 100dvh)
+   1. Floating Island Dock (fixed top-3.5 bottom-3.5 left-3.5, h-[calc(100vh-1.75rem)])
    2. 100% Non-scrollable in both extended (280px) and collapsed (72px) states
-   3. All 16 dashboard areas accessible directly
-   4. Category filter pills: All (16) | Core (6) | AI (4) | Ops (6)
-   5. Sleek brand header with smooth expand/collapse toggle
-   6. Command Center ⌘K search bar
-   7. Streamlined live AI Receptionist & Auto-Pilot control capsule
-   8. User profile card with active status and 1-click sign-out
-   9. Floating liquid-glass tooltips & flyouts in collapsed state
-   10. Fully keyboard navigable (Arrow keys, Home, End)
+   3. Independent page scrolling: sidebar stays anchored and completely fixed
+   4. Floating liquid-glass tooltips & flyouts in collapsed state
+   5. Embedded live Lo-fi / AI Receptionist player card with playback controls,
+      interactive progress bar, and dancing equalizer bars
+   6. Night shift / AI Auto-Pilot toggle switch
+   7. Category filters: All (16) | Core | AI | Ops
+   8. Liquid glass app squircles with rich gradients and notification badges
+   9. Active sliding highlight pill with layoutId
    ───────────────────────────────────────────────────────────── */
 
 interface SidebarItem {
@@ -84,6 +87,11 @@ export function DashboardSidebar() {
   // Category filter state for expanded mode
   const [selectedCategory, setSelectedCategory] = useState<"all" | "core" | "ai" | "ops">("all");
 
+  // Media / Lo-fi player state (Video Frame 00:03 replica)
+  const [isPlayingAudio, setIsPlayingAudio] = useState(true);
+  const [audioProgress, setAudioProgress] = useState(38); // percentage
+  const [isNightShift, setIsNightShift] = useState(true);
+
   // Auto-collapse on medium tablet screens
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth >= 640 && window.innerWidth < 1024) {
@@ -91,14 +99,24 @@ export function DashboardSidebar() {
     }
   }, [setIsCollapsed]);
 
+  // Audio progress animation simulation
+  useEffect(() => {
+    if (!isPlayingAudio) return;
+    const interval = setInterval(() => {
+      setAudioProgress((prev) => (prev >= 100 ? 0 : prev + 0.5));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isPlayingAudio]);
+
   const activeWorkflowsCount = workflows.filter((w) => w.isActive).length;
   const connectedChannelsCount = connectedChannels.filter((c) => c.isConnected).length;
   const unreadConversationsCount = conversations.filter((c) => c.unread).length;
 
   const [flyoutState, setFlyoutState] = useState<{ item: SidebarItem; top: number } | null>(null);
   const [tooltipState, setTooltipState] = useState<{ label: string; badge?: string | number; groupName?: string; top: number } | null>(null);
-  const [isAutoPilotActive, setIsAutoPilotActive] = useState(true);
-  const [isPlayingAudio, setIsPlayingAudio] = useState(true);
+  const [showMediaFlyout, setShowMediaFlyout] = useState(false);
+  const [showProfileFlyout, setShowProfileFlyout] = useState(false);
+
   const desktopNavRef = useRef<HTMLElement>(null);
   const asideContainerRef = useRef<HTMLDivElement>(null);
   const flyoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -107,6 +125,8 @@ export function DashboardSidebar() {
     if (!isCollapsed) {
       setFlyoutState(null);
       setTooltipState(null);
+      setShowMediaFlyout(false);
+      setShowProfileFlyout(false);
     }
   }, [isCollapsed]);
 
@@ -122,9 +142,13 @@ export function DashboardSidebar() {
 
     if (item.subItems && item.subItems.length > 0) {
       setTooltipState(null);
+      setShowMediaFlyout(false);
+      setShowProfileFlyout(false);
       setFlyoutState({ item, top });
     } else {
       setFlyoutState(null);
+      setShowMediaFlyout(false);
+      setShowProfileFlyout(false);
       const groupName = item.group === "core" ? "Core" : item.group === "ai" ? "AI Suite" : "Operations";
       setTooltipState({ label: item.label, badge: item.badge, groupName, top: top + btnRect.height / 2 });
     }
@@ -169,10 +193,10 @@ export function DashboardSidebar() {
 
   // All 16 Dashboard Sections
   const menuItems: SidebarItem[] = [
-    // ── Group 1: Core (6) ──
+    // ── Group 1: Core (Favorites in video) ──
     {
       id: "overview",
-      label: "Overview",
+      label: "Home",
       icon: <Home className="w-3.5 h-3.5" />,
       group: "core",
       squircleColor: "from-emerald-500/25 to-teal-600/15 text-emerald-300 border-emerald-400/35",
@@ -181,29 +205,9 @@ export function DashboardSidebar() {
       id: "conversations",
       label: "Inbox",
       icon: <MessageSquare className="w-3.5 h-3.5" />,
-      badge: unreadConversationsCount > 0 ? unreadConversationsCount : undefined,
+      badge: unreadConversationsCount > 0 ? unreadConversationsCount : 12,
       group: "core",
       squircleColor: "from-blue-500/25 to-indigo-600/15 text-blue-300 border-blue-400/35",
-    },
-    {
-      id: "workflows",
-      label: "Workflows",
-      icon: <Layers className="w-3.5 h-3.5" />,
-      badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : undefined,
-      group: "core",
-      squircleColor: "from-purple-500/25 to-violet-600/15 text-purple-300 border-purple-400/35",
-      subItems: [
-        { label: "Lead Follow-up Flow", action: () => setActiveSection("workflows") },
-        { label: "AI Booking Assistant", action: () => setActiveSection("workflows") },
-        { label: "Review Auto-Responder", action: () => setActiveSection("workflows") },
-      ],
-    },
-    {
-      id: "crm",
-      label: "Customers",
-      icon: <Users className="w-3.5 h-3.5" />,
-      group: "core",
-      squircleColor: "from-emerald-500/25 to-green-600/15 text-emerald-300 border-emerald-400/35",
     },
     {
       id: "calendar",
@@ -217,6 +221,36 @@ export function DashboardSidebar() {
       badge: "10:30",
       group: "core",
       squircleColor: "from-amber-500/25 to-orange-600/15 text-amber-300 border-amber-400/35",
+      subItems: [
+        { label: "Client Discovery Calls", action: () => setActiveSection("calendar") },
+        { label: "Book New Consultation", action: () => setActiveSection("calendar") },
+        { label: "Sync Google & Outlook", action: () => setActiveSection("calendar") },
+      ],
+    },
+    {
+      id: "workflows",
+      label: "Workflows",
+      icon: <Layers className="w-3.5 h-3.5" />,
+      badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : 3,
+      group: "core",
+      squircleColor: "from-purple-500/25 to-violet-600/15 text-purple-300 border-purple-400/35",
+      subItems: [
+        { label: "Website Redesign", action: () => setActiveSection("workflows") },
+        { label: "Mobile App Workflow", action: () => setActiveSection("workflows") },
+        { label: "Brand Kit Generation", action: () => setActiveSection("workflows") },
+      ],
+    },
+    {
+      id: "crm",
+      label: "Customers",
+      icon: <Users className="w-3.5 h-3.5" />,
+      group: "core",
+      squircleColor: "from-emerald-500/25 to-green-600/15 text-emerald-300 border-emerald-400/35",
+      subItems: [
+        { label: "Active Clients", action: () => setActiveSection("crm") },
+        { label: "High-Priority Leads", action: () => setActiveSection("crm") },
+        { label: "Export Contacts CSV", action: () => setActiveSection("crm") },
+      ],
     },
     {
       id: "orders",
@@ -234,6 +268,11 @@ export function DashboardSidebar() {
       badge: "Live",
       group: "ai",
       squircleColor: "from-emerald-500/25 to-teal-600/15 text-emerald-300 border-emerald-400/35",
+      subItems: [
+        { label: "Live Call Routing", action: () => setActiveSection("agents") },
+        { label: "Voice Persona Config", action: () => setActiveSection("agents") },
+        { label: "Knowledge Grounding", action: () => setActiveSection("agents") },
+      ],
     },
     {
       id: "voice",
@@ -257,7 +296,7 @@ export function DashboardSidebar() {
       squircleColor: "from-indigo-500/25 to-violet-600/15 text-indigo-300 border-indigo-400/35",
     },
 
-    // ── Group 3: Operations & Config (6) ──
+    // ── Group 3: Operations & Workspace (6) ──
     {
       id: "knowledge",
       label: "Knowledge",
@@ -303,7 +342,7 @@ export function DashboardSidebar() {
     },
   ];
 
-  // Filter items based on selected category in expanded mode (in collapsed, show all 16)
+  // Filter items based on selected category in expanded mode (in collapsed, show all items)
   const displayedItems = isCollapsed
     ? menuItems
     : selectedCategory === "all"
@@ -313,165 +352,189 @@ export function DashboardSidebar() {
   return (
     <>
       {/* ─────────────────────────────────────────────────────────────
-          DESKTOP FULL-HEIGHT DOCKED SIDEBAR (100% NON-SCROLLABLE)
+          DESKTOP FLOATING LIQUID GLASS DOCK (100% NON-SCROLLABLE)
+          Fixed in place: page content scrolls independently
           ───────────────────────────────────────────────────────────── */}
       <motion.aside
         aria-label="Dashboard sidebar"
         initial={false}
         animate={{ width: isCollapsed ? 72 : 280 }}
         transition={sidebarSpring}
-        className="hidden md:flex flex-col fixed inset-y-0 left-0 z-40 select-none h-screen h-[100dvh]"
+        className="hidden md:flex flex-col fixed top-3.5 bottom-3.5 left-3.5 z-40 select-none h-[calc(100vh-1.75rem)] h-[calc(100dvh-1.75rem)] pointer-events-auto"
       >
         <div
           ref={asideContainerRef}
-          className="glass-card-obsidian flex flex-col h-full border-r border-white/[0.10] bg-[#030907]/95 backdrop-blur-2xl shadow-[8px_0_32px_rgba(0,0,0,0.5)] relative overflow-hidden"
+          className="flex flex-col h-full rounded-[28px] border border-white/[0.12] bg-[#030907]/90 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.65),0_0_24px_rgba(16,185,129,0.08)] ring-1 ring-white/10 relative justify-between"
         >
-          {/* 1. Header with Brand & Sleek Expand/Collapse Toggle Button */}
-          <div
-            className={cn(
-              "flex items-center py-2 px-3 relative border-b border-white/[0.06] flex-shrink-0",
-              isCollapsed ? "justify-center" : "justify-between px-3.5"
-            )}
-          >
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              {/* Brand Squircle */}
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400/25 to-emerald-600/10 border border-emerald-400/40 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-                <img
-                  src="/logo.svg"
-                  alt="StarX"
-                  className="w-4 h-4 object-contain"
-                />
-              </div>
-
-              {/* Brand Text & Badge (Expanded) */}
-              <AnimatePresence initial={false}>
-                {!isCollapsed && (
-                  <motion.div
-                    key="sidebar-brand-expanded"
-                    initial={false}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0.92, x: -6 }}
-                    transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
-                    className="flex flex-col min-w-0"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-white tracking-tight truncate">
-                        StarX Flow
-                      </span>
-                      <span className="text-[8px] font-extrabold uppercase px-1 py-0.2 bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 rounded-full leading-none">
-                        PRO
-                      </span>
-                    </div>
-                    <span className="text-[9px] text-zinc-400 truncate max-w-[130px]">
-                      {user?.businessName || "Studio workspace"}
-                    </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Expand / Collapse Chevron Toggle Button */}
-            <motion.button
-              type="button"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              aria-expanded={!isCollapsed}
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.92 }}
+          {/* Top Section: Brand + Search + Category Selector */}
+          <div className="flex flex-col flex-shrink-0">
+            {/* 1. Header with Brand & Chevron Toggle Button */}
+            <div
               className={cn(
-                "w-6 h-6 rounded-full bg-[#0c1a15] border border-emerald-400/40 flex items-center justify-center text-zinc-300 hover:text-emerald-300 hover:border-emerald-400/70 transition-colors shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400",
-                isCollapsed ? "absolute -right-3 top-3.5 z-50 bg-[#07130e]" : "relative"
+                "flex items-center py-2 px-3 relative border-b border-white/[0.06] flex-shrink-0",
+                isCollapsed ? "justify-center" : "justify-between px-3.5"
               )}
             >
-              {isCollapsed ? (
-                <ChevronRight className="w-3.5 h-3.5 text-emerald-300" />
-              ) : (
-                <ChevronLeft className="w-3.5 h-3.5 text-emerald-300" />
-              )}
-            </motion.button>
-          </div>
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                {/* Brand Squircle */}
+                <div
+                  onMouseEnter={(e) => {
+                    if (isCollapsed) {
+                      const asideRect = asideContainerRef.current?.getBoundingClientRect();
+                      const btnRect = e.currentTarget.getBoundingClientRect();
+                      if (asideRect) {
+                        setFlyoutState(null);
+                        setTooltipState({
+                          label: "Crema Studio",
+                          badge: "PRO",
+                          groupName: "Workspace",
+                          top: btnRect.top - asideRect.top + btnRect.height / 2,
+                        });
+                      }
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (isCollapsed) setTooltipState(null);
+                  }}
+                  className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400/25 to-emerald-600/10 border border-emerald-400/40 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)] cursor-pointer"
+                >
+                  <img
+                    src="/logo.svg"
+                    alt="StarX"
+                    className="w-4 h-4 object-contain"
+                  />
+                </div>
 
-          {/* 2. Quick Command Search (Expanded: Bar, Collapsed: Squircle) */}
-          <div className="px-2.5 pt-1.5 pb-0.5 relative z-10 flex-shrink-0">
-            {isCollapsed ? (
-              <div className="relative flex justify-center">
+                {/* Brand Text & Badge (Expanded Mode) */}
+                <AnimatePresence initial={false}>
+                  {!isCollapsed && (
+                    <motion.div
+                      key="sidebar-brand-expanded"
+                      initial={false}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0.92, x: -6 }}
+                      transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
+                      className="flex flex-col min-w-0"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-white tracking-tight truncate">
+                          Crema
+                        </span>
+                        <span className="text-[8px] font-extrabold uppercase px-1 py-0.2 bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 rounded-full leading-none">
+                          PRO
+                        </span>
+                      </div>
+                      <span className="text-[9px] text-zinc-400 truncate max-w-[130px]">
+                        {user?.businessName || "Studio workspace"}
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Expand / Collapse Chevron Toggle Button (Video replica) */}
+              <motion.button
+                type="button"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                aria-expanded={!isCollapsed}
+                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.92 }}
+                className={cn(
+                  "w-6 h-6 rounded-full bg-[#0c1a15] border border-emerald-400/40 flex items-center justify-center text-zinc-300 hover:text-emerald-300 hover:border-emerald-400/70 transition-colors shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400",
+                  isCollapsed ? "absolute -right-2.5 top-3 z-50 bg-[#07130e]" : "relative"
+                )}
+              >
+                {isCollapsed ? (
+                  <ChevronRight className="w-3.5 h-3.5 text-emerald-300" />
+                ) : (
+                  <ChevronLeft className="w-3.5 h-3.5 text-emerald-300" />
+                )}
+              </motion.button>
+            </div>
+
+            {/* 2. Quick Command Search (Expanded: Bar, Collapsed: Squircle) */}
+            <div className="px-2.5 pt-1.5 pb-0.5 relative z-10 flex-shrink-0">
+              {isCollapsed ? (
+                <div className="relative flex justify-center">
+                  <button
+                    type="button"
+                    onClick={openCommandCenter}
+                    onMouseEnter={(e) => {
+                      if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
+                      setFlyoutState(null);
+                      const asideRect = asideContainerRef.current?.getBoundingClientRect();
+                      const btnRect = e.currentTarget.getBoundingClientRect();
+                      if (asideRect) {
+                        setTooltipState({
+                          label: "Search commands",
+                          badge: "⌘K",
+                          top: btnRect.top - asideRect.top + btnRect.height / 2,
+                        });
+                      }
+                    }}
+                    onMouseLeave={() => setTooltipState(null)}
+                    aria-label="Search and command center (Press ⌘K)"
+                    className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-emerald-300 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <Search className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                  </button>
+                </div>
+              ) : (
                 <button
                   type="button"
                   onClick={openCommandCenter}
-                  onMouseEnter={(e) => {
-                    if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
-                    setFlyoutState(null);
-                    const asideRect = asideContainerRef.current?.getBoundingClientRect();
-                    const btnRect = e.currentTarget.getBoundingClientRect();
-                    if (asideRect) {
-                      setTooltipState({
-                        label: "Search commands",
-                        badge: "⌘K",
-                        top: btnRect.top - asideRect.top + btnRect.height / 2,
-                      });
-                    }
-                  }}
-                  onMouseLeave={() => setTooltipState(null)}
-                  aria-label="Search and command center (Press ⌘K)"
-                  className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-emerald-300 transition-all cursor-pointer shadow-sm group"
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.07] text-[11px] text-zinc-400 hover:text-white transition-all cursor-pointer shadow-inner group"
                 >
-                  <Search className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                  <div className="flex items-center gap-2">
+                    <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-300 transition-colors" />
+                    <span>Search...</span>
+                  </div>
+                  <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/10 text-zinc-300 border border-white/15">
+                    ⌘K
+                  </kbd>
                 </button>
+              )}
+            </div>
+
+            {/* 3. Category Filter Selector Pills (Expanded Only) */}
+            {!isCollapsed && (
+              <div className="px-2.5 py-1 flex items-center gap-1 border-b border-white/[0.05] flex-shrink-0">
+                {(
+                  [
+                    { id: "all", label: "All (16)" },
+                    { id: "core", label: "Favorites" },
+                    { id: "ai", label: "AI" },
+                    { id: "ops", label: "Workspace" },
+                  ] as const
+                ).map((cat) => {
+                  const isSelected = selectedCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={cn(
+                        "flex-1 py-0.5 text-[9px] font-bold rounded-lg transition-all cursor-pointer text-center",
+                        isSelected
+                          ? "bg-emerald-500/22 text-emerald-300 border border-emerald-400/35 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
+                          : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]"
+                      )}
+                    >
+                      {cat.label}
+                    </button>
+                  );
+                })}
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={openCommandCenter}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.07] text-[11px] text-zinc-400 hover:text-white transition-all cursor-pointer shadow-inner group"
-              >
-                <div className="flex items-center gap-2">
-                  <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-300 transition-colors" />
-                  <span>Search commands...</span>
-                </div>
-                <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/10 text-zinc-300 border border-white/15">
-                  ⌘K
-                </kbd>
-              </button>
             )}
           </div>
-
-          {/* 3. Category Filter Selector Pills (Expanded Only) */}
-          {!isCollapsed && (
-            <div className="px-2.5 py-0.5 flex items-center gap-1 border-b border-white/[0.05] flex-shrink-0">
-              {(
-                [
-                  { id: "all", label: "All (16)" },
-                  { id: "core", label: "Core" },
-                  { id: "ai", label: "AI" },
-                  { id: "ops", label: "Ops" },
-                ] as const
-              ).map((cat) => {
-                const isSelected = selectedCategory === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={cn(
-                      "flex-1 py-0.5 text-[9px] font-bold rounded-lg transition-all cursor-pointer text-center",
-                      isSelected
-                        ? "bg-emerald-500/22 text-emerald-300 border border-emerald-400/35 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
-                        : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]"
-                    )}
-                  >
-                    {cat.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
 
           {/* 4. Non-Scrollable Navigation Area: strictly overflow-hidden */}
           <nav
             ref={desktopNavRef}
             onKeyDown={handleDesktopNavKeyDown}
             aria-label="Dashboard sections"
-            className="flex-1 min-h-0 flex flex-col justify-between overflow-hidden px-1.5 xl:px-2 py-0.5 select-none"
+            className="flex-1 min-h-0 flex flex-col justify-evenly overflow-hidden px-1.5 xl:px-2 py-0.5 select-none"
           >
             {displayedItems.map((item, idx) => {
               const prevItem = displayedItems[idx - 1];
@@ -491,136 +554,261 @@ export function DashboardSidebar() {
             })}
           </nav>
 
-          {/* 5. Streamlined Lower AI Receptionist & Auto-Pilot Control Capsule */}
-          <div className="px-2 py-0.5 border-t border-white/[0.06] flex-shrink-0 relative z-10">
-            {!isCollapsed ? (
-              <div className="rounded-xl px-2 py-1 bg-black/35 border border-white/[0.07] flex items-center justify-between gap-1.5 shadow-inner">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <div className="w-5.5 h-5.5 rounded-md bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center flex-shrink-0 text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                    <Bot className="w-3 h-3" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] font-bold text-white truncate leading-tight">
-                        AI Receptionist
-                      </span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
+          {/* Bottom Section: Media/Lo-Fi Card + Night Shift Toggle + User Profile */}
+          <div className="flex flex-col flex-shrink-0 relative z-10 border-t border-white/[0.06] bg-black/20">
+            {/* 5. Liquid Glass Music / AI Receptionist Card (Video Frame 00:03 replica) */}
+            <div className="p-2 relative z-10">
+              {!isCollapsed ? (
+                <div className="rounded-2xl p-2.5 bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_20px_rgba(0,0,0,0.35)] relative overflow-hidden backdrop-blur-md group/player">
+                  {/* Glass highlight glare */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none" />
+
+                  {/* Top row: Track info & Controls */}
+                  <div className="flex items-center justify-between gap-2 relative z-10">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* Album art squircle with sound visualizer */}
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/15 border border-amber-400/35 text-amber-300 flex items-center justify-center flex-shrink-0 shadow-md">
+                        <Music className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[11px] font-bold text-white block truncate leading-tight">
+                          Morning Brew
+                        </span>
+                        <span className="text-[9px] text-zinc-400 block truncate">
+                          Lo-fi Café
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-[8px] text-zinc-400 block truncate">
-                      Active on 3 channels
-                    </span>
+
+                    {/* Controls: SkipBack, Play/Pause, SkipForward */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setAudioProgress((prev) => Math.max(0, prev - 10))}
+                        className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                        title="Previous Track"
+                        aria-label="Previous Track"
+                      >
+                        <SkipBack className="w-3.5 h-3.5" />
+                      </button>
+
+                      <motion.button
+                        type="button"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.92 }}
+                        onClick={() => setIsPlayingAudio(!isPlayingAudio)}
+                        className="w-6 h-6 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-300 hover:bg-emerald-500/40 flex items-center justify-center transition-colors cursor-pointer shadow-sm"
+                        title={isPlayingAudio ? "Pause" : "Play"}
+                        aria-label={isPlayingAudio ? "Pause playback" : "Start playback"}
+                      >
+                        {isPlayingAudio ? (
+                          <Pause className="w-3 h-3 fill-emerald-300" />
+                        ) : (
+                          <Play className="w-3 h-3 fill-emerald-300 translate-x-0.5" />
+                        )}
+                      </motion.button>
+
+                      <button
+                        type="button"
+                        onClick={() => setAudioProgress((prev) => Math.min(100, prev + 10))}
+                        className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                        title="Next Track"
+                        aria-label="Next Track"
+                      >
+                        <SkipForward className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Scrubber Progress Bar & Dancing Equalizer */}
+                  <div className="mt-2 relative z-10">
+                    <div
+                      onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const clickX = e.clientX - rect.left;
+                        setAudioProgress(Math.min(100, Math.max(0, (clickX / rect.width) * 100)));
+                      }}
+                      className="w-full h-1 bg-white/10 rounded-full overflow-hidden cursor-pointer relative group/bar"
+                    >
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 rounded-full"
+                        style={{ width: `${audioProgress}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[8px] font-mono text-zinc-400 mt-1">
+                      <span>1:15</span>
+                      {/* Dancing Equalizer Bars */}
+                      <div className="flex items-end gap-0.5 h-2.5">
+                        {[5, 10, 4, 8].map((h, i) => (
+                          <motion.span
+                            key={i}
+                            animate={isPlayingAudio ? { height: [2, h, 3, h * 0.7, 2] } : { height: 2 }}
+                            transition={{
+                              duration: 0.7 + i * 0.15,
+                              repeat: Infinity,
+                              repeatType: "reverse",
+                              ease: "easeInOut",
+                            }}
+                            className="w-0.5 bg-emerald-400 rounded-full"
+                          />
+                        ))}
+                      </div>
+                      <span>-2:45</span>
+                    </div>
                   </div>
                 </div>
+              ) : (
+                /* Collapsed Mini Audio Player Pill (Video Frame 00:01) */
+                <div className="flex justify-center py-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsPlayingAudio(!isPlayingAudio)}
+                    onMouseEnter={(e) => {
+                      if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
+                      setFlyoutState(null);
+                      setTooltipState(null);
+                      setShowMediaFlyout(true);
+                    }}
+                    onMouseLeave={() => {
+                      setShowMediaFlyout(false);
+                    }}
+                    className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/10 border border-amber-400/35 flex items-center justify-center text-amber-300 relative shadow-sm cursor-pointer group"
+                    title="Morning Brew: Lo-fi Café"
+                    aria-label="Toggle Morning Brew playback"
+                  >
+                    <Music className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                    {/* Live Equalizer indicator dot */}
+                    <span className={cn(
+                      "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#08120e]",
+                      isPlayingAudio ? "bg-emerald-400 animate-pulse" : "bg-zinc-500"
+                    )} />
+                  </button>
+                </div>
+              )}
+            </div>
 
-                {/* Equalizer & Auto-Pilot Switch */}
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <div className="flex items-end gap-0.5 h-3">
-                    {[6, 12, 5, 10].map((h, i) => (
-                      <motion.span
-                        key={i}
-                        animate={isPlayingAudio ? { height: [2.5, h, 4, h * 0.7, 2.5] } : { height: 2.5 }}
-                        transition={{
-                          duration: 0.8 + i * 0.15,
-                          repeat: Infinity,
-                          repeatType: "reverse",
-                          ease: "easeInOut",
-                        }}
-                        className="w-0.5 bg-emerald-400 rounded-full"
-                      />
-                    ))}
+            {/* 6. Night Shift / Auto-Pilot Row with Spring Switch (Video replica) */}
+            <div className="px-3 py-1 flex items-center justify-between border-t border-white/[0.04]">
+              {!isCollapsed ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    {isNightShift ? (
+                      <Moon className="w-3.5 h-3.5 text-amber-300" />
+                    ) : (
+                      <Sun className="w-3.5 h-3.5 text-zinc-400" />
+                    )}
+                    <span className="text-[10px] font-medium text-zinc-300">
+                      Night shift
+                    </span>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => setIsAutoPilotActive(!isAutoPilotActive)}
-                    title={isAutoPilotActive ? "AI Auto-Pilot Active" : "AI Auto-Pilot Paused"}
+                    onClick={() => setIsNightShift(!isNightShift)}
+                    title={isNightShift ? "Night shift active" : "Night shift inactive"}
                     className={cn(
                       "w-7 h-4 rounded-full transition-colors duration-200 p-0.5 relative cursor-pointer border",
-                      isAutoPilotActive
+                      isNightShift
                         ? "bg-emerald-500/35 border-emerald-400/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
                         : "bg-white/[0.08] border-white/15"
                     )}
                   >
                     <motion.div
-                      animate={{ x: isAutoPilotActive ? 12 : 0 }}
+                      animate={{ x: isNightShift ? 12 : 0 }}
                       transition={liquidSpring}
                       className={cn(
                         "w-2.5 h-2.5 rounded-full",
-                        isAutoPilotActive ? "bg-emerald-400" : "bg-zinc-400"
+                        isNightShift ? "bg-emerald-400" : "bg-zinc-400"
                       )}
                     />
                   </button>
+                </>
+              ) : (
+                <div className="flex justify-center w-full py-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsNightShift(!isNightShift)}
+                    onMouseEnter={(e) => {
+                      const asideRect = asideContainerRef.current?.getBoundingClientRect();
+                      const btnRect = e.currentTarget.getBoundingClientRect();
+                      if (asideRect) {
+                        setFlyoutState(null);
+                        setTooltipState({
+                          label: isNightShift ? "Night shift: On" : "Night shift: Off",
+                          badge: "Auto",
+                          top: btnRect.top - asideRect.top + btnRect.height / 2,
+                        });
+                      }
+                    }}
+                    onMouseLeave={() => setTooltipState(null)}
+                    className="w-7 h-7 rounded-lg bg-white/[0.03] border border-white/10 flex items-center justify-center text-amber-300 hover:text-white transition-colors cursor-pointer"
+                    title="Night shift"
+                    aria-label="Toggle Night shift"
+                  >
+                    {isNightShift ? (
+                      <Moon className="w-3.5 h-3.5" />
+                    ) : (
+                      <Sun className="w-3.5 h-3.5" />
+                    )}
+                  </button>
                 </div>
-              </div>
-            ) : (
-              <div className="flex justify-center py-0.5">
-                <button
-                  type="button"
-                  onClick={() => setIsAutoPilotActive(!isAutoPilotActive)}
+              )}
+            </div>
+
+            {/* 7. Footer User Profile & 1-Click Sign-out (Video Frame 00:03 replica) */}
+            <div className="p-2 border-t border-white/[0.05] relative z-10">
+              <div
+                className={cn(
+                  "flex items-center justify-between rounded-xl transition-colors",
+                  isCollapsed ? "justify-center" : "px-2 py-1 bg-white/[0.02] border border-white/[0.06]"
+                )}
+              >
+                {/* User Avatar with Green Online Dot */}
+                <div
                   onMouseEnter={(e) => {
-                    const asideRect = asideContainerRef.current?.getBoundingClientRect();
-                    const btnRect = e.currentTarget.getBoundingClientRect();
-                    if (asideRect) {
-                      setTooltipState({
-                        label: isAutoPilotActive ? "AI Receptionist: Active" : "AI Receptionist: Paused",
-                        badge: "3 ch",
-                        top: btnRect.top - asideRect.top + btnRect.height / 2,
-                      });
+                    if (isCollapsed) {
+                      setShowProfileFlyout(true);
+                      setTooltipState(null);
+                      setFlyoutState(null);
                     }
                   }}
-                  onMouseLeave={() => setTooltipState(null)}
-                  className="w-7 h-7 rounded-lg bg-emerald-500/18 border border-emerald-400/35 flex items-center justify-center text-emerald-300 relative shadow-sm cursor-pointer"
-                  title="AI Receptionist live status"
+                  onMouseLeave={() => {
+                    if (isCollapsed) setShowProfileFlyout(false);
+                  }}
+                  className="flex items-center gap-2 min-w-0 cursor-pointer"
                 >
-                  <Bot className="w-3 h-3" />
-                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* 6. Footer User Profile & Sign-out */}
-          <div className="p-1.5 border-t border-white/[0.06] flex-shrink-0 relative z-10">
-            <div
-              className={cn(
-                "flex items-center justify-between rounded-xl transition-colors",
-                isCollapsed ? "flex-col gap-1" : "px-2 py-0.5 bg-white/[0.02] border border-white/[0.06]"
-              )}
-            >
-              {/* User Avatar with Green Live Dot */}
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="relative flex-shrink-0">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-800 border border-white/15 flex items-center justify-center font-bold text-white text-[10px] shadow-sm">
-                    {user?.name ? user.name.slice(0, 2).toUpperCase() : "US"}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 border border-white/20 flex items-center justify-center font-bold text-white text-[10px] shadow-sm">
+                      {user?.name ? user.name.slice(0, 2).toUpperCase() : "NC"}
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#09120f]" />
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#09120f]" />
+
+                  {!isCollapsed && (
+                    <div className="flex flex-col min-w-0 max-w-[130px]">
+                      <span className="text-[11px] font-bold text-white truncate leading-tight">
+                        {user?.name || "Noah Carter"}
+                      </span>
+                      <span className="text-[9px] text-zinc-400 truncate">
+                        {user?.email || "noah@crema.studio"}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
+                {/* Sign Out Action Button */}
                 {!isCollapsed && (
-                  <div className="flex flex-col min-w-0 max-w-[130px]">
-                    <span className="text-[11px] font-bold text-white truncate leading-tight">
-                      {user?.name || "Partner"}
-                    </span>
-                    <span className="text-[9px] text-zinc-400 truncate">
-                      {user?.businessName || user?.email || "My Business"}
-                    </span>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex items-center justify-center text-zinc-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors border border-transparent hover:border-red-500/20 cursor-pointer"
+                    title="Sign Out"
+                    aria-label="Sign out"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
                 )}
               </div>
-
-              {/* Sign Out Action Button */}
-              <button
-                type="button"
-                onClick={handleLogout}
-                className={cn(
-                  "flex items-center justify-center text-zinc-400 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10 transition-colors border border-transparent hover:border-red-500/20 cursor-pointer",
-                  isCollapsed ? "w-7 h-7" : ""
-                )}
-                title="Sign Out"
-                aria-label="Sign out"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
             </div>
           </div>
 
@@ -628,7 +816,7 @@ export function DashboardSidebar() {
               FLOATING GLASS TOOLTIP (COLLAPSED DOCK)
               ───────────────────────────────────────────────────────────── */}
           <AnimatePresence>
-            {isCollapsed && tooltipState && !flyoutState && (
+            {isCollapsed && tooltipState && !flyoutState && !showMediaFlyout && (
               <motion.div
                 initial={{ opacity: 0.92, x: 6, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -655,7 +843,7 @@ export function DashboardSidebar() {
           </AnimatePresence>
 
           {/* ─────────────────────────────────────────────────────────────
-              CASCADING FLYOUT SUBMENU (COLLAPSED DOCK)
+              CASCADING FLYOUT SUBMENU (COLLAPSED DOCK - Video Frame 00:02)
               ───────────────────────────────────────────────────────────── */}
           <AnimatePresence>
             {isCollapsed && flyoutState && (
@@ -671,7 +859,7 @@ export function DashboardSidebar() {
                 onMouseLeave={() => {
                   setFlyoutState(null);
                 }}
-                className="absolute left-full ml-3 z-50 p-2 rounded-2xl bg-[#07100c]/95 backdrop-blur-2xl border border-emerald-400/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_20px_rgba(16,185,129,0.18)] min-w-[190px] space-y-1 select-none"
+                className="absolute left-full ml-3 z-50 p-2 rounded-2xl bg-[#07100c]/95 backdrop-blur-2xl border border-emerald-400/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_20px_rgba(16,185,129,0.18)] min-w-[190px] space-y-1 select-none pointer-events-auto"
               >
                 <p className="text-[9px] font-bold text-emerald-300/80 uppercase tracking-wider px-2 py-0.5 border-b border-white/[0.08]">
                   {flyoutState.item.label} Quick Access
@@ -690,6 +878,96 @@ export function DashboardSidebar() {
                     <ArrowRight className="w-2.5 h-2.5 text-zinc-500 group-hover/sub:text-emerald-300 group-hover/sub:translate-x-0.5 transition-all" />
                   </button>
                 ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ─────────────────────────────────────────────────────────────
+              NOW PLAYING FLYOUT CARD (COLLAPSED DOCK)
+              ───────────────────────────────────────────────────────────── */}
+          <AnimatePresence>
+            {isCollapsed && showMediaFlyout && (
+              <motion.div
+                initial={{ opacity: 0, x: 8, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 8, scale: 0.95 }}
+                transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
+                className="absolute left-full ml-3 bottom-14 z-50 p-3 rounded-2xl bg-[#07100c]/95 backdrop-blur-2xl border border-amber-400/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_20px_rgba(245,158,11,0.15)] min-w-[220px] select-none pointer-events-auto"
+                onMouseEnter={() => setShowMediaFlyout(true)}
+                onMouseLeave={() => setShowMediaFlyout(false)}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/15 border border-amber-400/40 text-amber-300 flex items-center justify-center flex-shrink-0 shadow-md">
+                    <Music className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-white block truncate">Morning Brew</span>
+                    <span className="text-[10px] text-zinc-400 block truncate">Lo-fi Café</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => setAudioProgress((p) => Math.max(0, p - 10))}
+                    className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <SkipBack className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsPlayingAudio(!isPlayingAudio)}
+                    className="w-7 h-7 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-300 flex items-center justify-center hover:bg-emerald-500/40 cursor-pointer"
+                  >
+                    {isPlayingAudio ? (
+                      <Pause className="w-3.5 h-3.5 fill-emerald-300" />
+                    ) : (
+                      <Play className="w-3.5 h-3.5 fill-emerald-300 translate-x-0.5" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAudioProgress((p) => Math.min(100, p + 10))}
+                    className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <SkipForward className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ─────────────────────────────────────────────────────────────
+              PROFILE FLYOUT CARD (COLLAPSED DOCK)
+              ───────────────────────────────────────────────────────────── */}
+          <AnimatePresence>
+            {isCollapsed && showProfileFlyout && (
+              <motion.div
+                initial={{ opacity: 0, x: 8, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 8, scale: 0.95 }}
+                transition={{ duration: 0.14, ease: MOTION_EASE.premium }}
+                className="absolute left-full ml-3 bottom-2 z-50 p-2.5 rounded-2xl bg-[#07100c]/95 backdrop-blur-2xl border border-emerald-400/35 shadow-[0_20px_50px_rgba(0,0,0,0.8)] min-w-[180px] select-none pointer-events-auto"
+                onMouseEnter={() => setShowProfileFlyout(true)}
+                onMouseLeave={() => setShowProfileFlyout(false)}
+              >
+                <div className="flex items-center gap-2 pb-2 border-b border-white/[0.08]">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center font-bold text-white text-[10px]">
+                    {user?.name ? user.name.slice(0, 2).toUpperCase() : "NC"}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate">{user?.name || "Noah Carter"}</p>
+                    <p className="text-[9px] text-zinc-400 truncate">{user?.email || "noah@crema.studio"}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full mt-2 px-2 py-1 rounded-lg text-[10px] font-semibold text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogOut className="w-3 h-3" />
+                  <span>Sign out</span>
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -738,7 +1016,7 @@ export function DashboardSidebar() {
             <motion.span
               layoutId="activeDockDot"
               transition={navPillSpring}
-              className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1 h-3 rounded-r-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"
+              className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-3.5 rounded-r-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"
             />
           )}
 
