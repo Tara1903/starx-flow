@@ -1063,3 +1063,22 @@
       animation: none !important;
       transition: none !important;
     }
+
+    /* ========================================================================= */
+    /* RESPONSIVE NAVIGATION VISIBILITY GUARDS (STRICT DESKTOP HIDING)           */
+    /* ========================================================================= */
+    @media (min-width: 768px) {
+      [data-navbar-mobile],
+      .mobile-bottom-nav,
+      [data-mobile-nav="bottom"],
+      nav[aria-label="Mobile quick navigation"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
+      }
+    }
+

@@ -239,7 +239,7 @@ export function Navbar() {
         <nav
           aria-label="Primary navigation"
           className={cn(
-            "pointer-events-auto max-w-7xl mx-auto px-4 lg:px-5 h-14 md:h-16 rounded-full flex items-center justify-between transition-all duration-300",
+            "pointer-events-auto max-w-[1380px] mx-auto px-3.5 sm:px-5 lg:px-6 h-14 md:h-16 rounded-full flex items-center justify-between transition-all duration-300 gap-2 sm:gap-4",
             scrolled ? "glass-navbar-scrolled" : "glass-navbar-floating"
           )}
         >
@@ -260,12 +260,12 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Center Desktop Navigation: Video 04 Topmost Horizontal Glass Capsule */}
-          <div className="hidden lg:flex items-center p-1.5 rounded-full bg-[#07120c]/75 backdrop-blur-2xl border border-white/[0.14] shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.2)] gap-1 select-none flex-shrink-0">
+          {/* Center Desktop Navigation: Sleek Typographic Horizontal Glass Capsule */}
+          <div className="hidden lg:flex items-center p-1 sm:p-1.5 rounded-full bg-[#07120c]/75 backdrop-blur-2xl border border-white/[0.14] shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.2)] gap-0.5 sm:gap-1 select-none flex-shrink-0">
             <Link
               href="/"
               className={cn(
-                "relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium transition-colors duration-200 select-none group",
+                "relative inline-flex items-center px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-medium transition-colors duration-200 select-none group",
                 isHomeActive
                   ? "text-white font-bold"
                   : "text-zinc-300 hover:text-white hover:bg-white/[0.05]"
@@ -278,12 +278,10 @@ export function Navbar() {
                   className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10"
                 />
               )}
-              <Home className={cn("w-4 h-4 transition-colors", isHomeActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")} />
               <span>Home</span>
             </Link>
             <GlassDropdown
               triggerLabel="Product"
-              triggerIcon={<Cpu className="w-4 h-4" />}
               items={productItems}
               isActive={isProductActive}
               activeLayoutId="navbar-active-pill"
@@ -291,7 +289,6 @@ export function Navbar() {
             />
             <GlassDropdown
               triggerLabel="Solutions"
-              triggerIcon={<Bot className="w-4 h-4" />}
               items={solutionsItems}
               isActive={isSolutionsActive}
               activeLayoutId="navbar-active-pill"
@@ -299,7 +296,6 @@ export function Navbar() {
             />
             <GlassDropdown
               triggerLabel="Industries"
-              triggerIcon={<Building2 className="w-4 h-4" />}
               items={industriesItems}
               isActive={isIndustriesActive}
               activeLayoutId="navbar-active-pill"
@@ -307,7 +303,6 @@ export function Navbar() {
             />
             <GlassDropdown
               triggerLabel="Resources"
-              triggerIcon={<BookOpen className="w-4 h-4" />}
               items={resourcesItems}
               isActive={isResourcesActive}
               activeLayoutId="navbar-active-pill"
@@ -316,7 +311,7 @@ export function Navbar() {
             <Link
               href="/pricing"
               className={cn(
-                "relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium transition-colors duration-200 select-none group",
+                "relative inline-flex items-center px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-medium transition-colors duration-200 select-none group",
                 isPricingActive
                   ? "text-white font-bold"
                   : "text-zinc-300 hover:text-white hover:bg-white/[0.05]"
@@ -329,28 +324,27 @@ export function Navbar() {
                   className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10"
                 />
               )}
-              <Sparkles className={cn("w-4 h-4 transition-colors", isPricingActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")} />
               <span>Pricing</span>
             </Link>
           </div>
 
           {/* Right Auth & CTA */}
-          <div className="hidden md:flex items-center gap-2.5 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-2 xl:gap-2.5 flex-shrink-0">
             <button
               type="button"
               onClick={openCommandCenter}
-              aria-label="Open command center search (Ctrl+K)"
-              className="hidden xl:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs text-zinc-400 hover:text-white bg-white/[0.03] border border-white/10 hover:border-emerald-400/35 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
+              aria-label="Open quick jump command center (Ctrl+K)"
+              className="hidden xl:inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full text-xs text-zinc-400 hover:text-white bg-white/[0.03] border border-white/10 hover:border-emerald-400/35 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
             >
               <Search className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Quick jump</span>
-              <kbd className="px-1.5 py-0.5 text-[10px] font-mono rounded bg-white/[0.06] border border-white/10 text-zinc-300">
+              <span className="hidden 2xl:inline">Quick jump</span>
+              <kbd className="hidden 2xl:inline-block px-1.5 py-0.5 text-[10px] font-mono rounded bg-white/[0.06] border border-white/10 text-zinc-300">
                 ⌘K
               </kbd>
             </button>
             {isLoading ? (
               /* Stable subtle skeleton while session resolves — prevents CTA flicker */
-              <div className="w-[124px] h-[38px] rounded-full bg-white/[0.04] border border-white/10 animate-pulse flex-shrink-0" />
+              <div className="w-[100px] h-[34px] rounded-full bg-white/[0.04] border border-white/10 animate-pulse flex-shrink-0" />
             ) : isLoggedIn ? (
               <>
                 <button
@@ -360,7 +354,7 @@ export function Navbar() {
                     router.push("/");
                   }}
                   data-cursor-invert="secondary"
-                  className="px-3.5 py-2 rounded-full text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
+                  className="px-3 py-1.5 rounded-full text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
                 >
                   Logout
                 </button>
@@ -369,10 +363,10 @@ export function Navbar() {
                   variant="primary"
                   magneticStrength="low"
                   onClick={() => router.push(dashboardHref)}
-                  className="px-4.5 py-2 text-sm whitespace-nowrap flex-shrink-0"
+                  className="px-3.5 xl:px-4.5 py-1.5 text-xs xl:text-sm whitespace-nowrap flex-shrink-0"
                 >
-                  Go to Dashboard
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  Dashboard
+                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
                 </GlassButton>
               </>
             ) : (
@@ -380,7 +374,7 @@ export function Navbar() {
                 <Link
                   href="/dashboard"
                   data-cursor-invert="secondary"
-                  className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold text-emerald-300 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all cursor-pointer whitespace-nowrap flex-shrink-0 shadow-[0_0_15px_rgba(40,223,160,0.18)]"
+                  className="hidden xl:inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-300 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all cursor-pointer whitespace-nowrap flex-shrink-0 shadow-[0_0_12px_rgba(40,223,160,0.18)]"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
                   <span>Dashboard</span>
@@ -393,7 +387,7 @@ export function Navbar() {
                   }}
                   data-cursor-invert="secondary"
                   className={cn(
-                    "px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer whitespace-nowrap flex-shrink-0",
+                    "px-3 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-medium transition-all cursor-pointer whitespace-nowrap flex-shrink-0",
                     pathname === "/login"
                       ? "text-emerald-300 bg-white/[0.08] border border-emerald-400/40"
                       : "text-zinc-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-emerald-400/40 hover:text-white"
@@ -409,17 +403,17 @@ export function Navbar() {
                     if (pathname === "/signup") return;
                     openSignup();
                   }}
-                  className="px-5 py-2 text-sm font-bold whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(40,223,160,0.35)]"
+                  className="px-3.5 xl:px-4.5 py-1.5 text-xs xl:text-sm font-bold whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(40,223,160,0.35)]"
                 >
                   Get Started
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
                 </GlassButton>
               </>
             )}
           </div>
 
           {/* Mobile Right Quick Action + Menu */}
-          <div className="flex md:hidden items-center gap-2">
+          <div data-navbar-mobile className="flex md:hidden items-center gap-2">
             {isLoading ? (
               <div className="w-[84px] h-[30px] rounded-full bg-white/[0.04] border border-white/10 animate-pulse" />
             ) : isLoggedIn ? (

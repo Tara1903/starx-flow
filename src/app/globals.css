@@ -1118,6 +1118,13 @@ input[type=range]::-moz-range-thumb {
   position: relative;
 }
 
+/* Ensure mobile navbar controls are strictly hidden on desktop/tablet (>= 768px) */
+@media (min-width: 768px) {
+  [data-navbar-mobile] {
+    display: none !important;
+  }
+}
+
 /* Mobile Floating Navigation Capsule */
 .glass-capsule-nav {
   background: linear-gradient(

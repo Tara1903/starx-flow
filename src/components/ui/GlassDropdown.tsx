@@ -106,7 +106,7 @@ export function GlassDropdown({
           setOpen((prev) => !prev);
         }}
         className={cn(
-          "relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 cursor-pointer select-none group",
+          "relative inline-flex items-center gap-1 xl:gap-1.5 px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 cursor-pointer select-none group",
           isActive
             ? "text-white font-bold"
             : open
@@ -125,14 +125,14 @@ export function GlassDropdown({
           <span className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10" />
         )}
         {triggerIcon && (
-          <span className={cn("transition-colors", isActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")}>
+          <span className={cn("transition-colors flex-shrink-0", isActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")}>
             {triggerIcon}
           </span>
         )}
         <span>{triggerLabel}</span>
         <ChevronDown
           className={cn(
-            "w-3.5 h-3.5 transition-transform duration-200 text-zinc-400",
+            "w-3 h-3 xl:w-3.5 xl:h-3.5 transition-transform duration-200 text-zinc-400 flex-shrink-0",
             open && "rotate-180 text-emerald-400"
           )}
         />

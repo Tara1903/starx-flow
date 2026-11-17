@@ -79,7 +79,7 @@ export function MobileFloatingNavigation() {
       <nav
         aria-label="Mobile quick navigation"
         data-mobile-nav="bottom"
-        className="mobile-bottom-nav fixed bottom-3 inset-x-0 z-40 px-4 flex justify-center pointer-events-none pb-[env(safe-area-inset-bottom)] md:!hidden"
+        className="mobile-bottom-nav fixed bottom-3 inset-x-0 z-40 px-4 flex justify-center pointer-events-none pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         <div className="pointer-events-auto glass-capsule-nav rounded-full p-1.5 flex items-center justify-between gap-1 w-full max-w-[360px]">
           {tabs.map((tab) => {
