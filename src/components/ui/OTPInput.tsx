@@ -290,6 +290,7 @@ export function OTPInput({
                   spellCheck={false}
                   autoComplete={idx === 0 ? "one-time-code" : "off"}
                   aria-label={`Character ${idx + 1} of 8`}
+                  aria-describedby={`${inputGroupId}-hint`}
                   maxLength={8}
                   disabled={disabled || isVerifying || success}
                   value={digit}
@@ -312,6 +313,11 @@ export function OTPInput({
       <p id={`${inputGroupId}-hint`} className="sr-only">
         Enter your 8-character verification code. Focus moves forward automatically.
       </p>
+
+      {/* Screen Reader Live Region for Dynamic Verification Status */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {errorMessage || (success ? "Verification code verified successfully." : isVerifying ? "Verifying code..." : "")}
+      </div>
 
       {/* Error Message Announcement */}
       {errorMessage && (

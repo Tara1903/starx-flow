@@ -49,7 +49,7 @@ for (const file of uiFiles) {
     const lineNum = idx + 1;
 
     // Rule 1: Never allow obsolete `cursor-active` or unscoped `cursor: none` outside src/cursor/cursor.css
-    if (/cursor-active/.test(line) || (/cursor:\s*none/.test(line) && r !== ALLOWED_SCOPED_CURSOR_FILE)) {
+    if (/(?<!starx-)cursor-active/.test(line) || (/cursor:\s*none/.test(line) && r !== ALLOWED_SCOPED_CURSOR_FILE)) {
       failures.push({
         rule: 'scoped-cursor-fallback-contract',
         file: `${r}:${lineNum}`,

@@ -23,7 +23,7 @@ export function CapabilityDialog({ open, title, eyebrow, description, onClose, o
   return (
     <dialog ref={dialogRef} id="starx-modal-backdrop" aria-labelledby="modal-title" aria-describedby="modal-subtitle"
       className="sx-capability-dialog fixed inset-0 m-0 w-full h-full max-w-none max-h-none items-center justify-center p-4 text-emerald-50"
-      style={{ background: 'rgba(2, 10, 7, 0.78)', backdropFilter: 'blur(10px)' }}
+      style={{ background: 'rgba(2, 10, 7, 0.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
       onCancel={onClose} onClose={onClose} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="relative w-full max-w-md rounded-2xl p-6 shadow-2xl"
         style={{ background: 'linear-gradient(155deg, rgba(16, 48, 35, 0.96), rgba(5, 18, 13, 0.98))', border: '1px solid rgba(110, 231, 183, 0.45)', boxShadow: '0 0 50px rgba(16, 185, 129, 0.25)' }}>

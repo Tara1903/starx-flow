@@ -47,7 +47,7 @@ export function SpatialAtmosphere({
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            className="absolute top-[20%] -left-[100px] w-[600px] h-[600px] rounded-full blur-[100px] opacity-40"
+            className="absolute top-[20%] -left-[100px] w-[600px] h-[600px] rounded-full opacity-40"
             style={{
               background:
                 "radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, transparent 65%)",
@@ -66,7 +66,7 @@ export function SpatialAtmosphere({
               ease: "easeInOut",
               delay: 3,
             }}
-            className="absolute top-[45%] -right-[150px] w-[650px] h-[650px] rounded-full blur-[110px] opacity-35"
+            className="absolute top-[45%] -right-[150px] w-[650px] h-[650px] rounded-full opacity-35"
             style={{
               background:
                 "radial-gradient(circle, rgba(52, 211, 153, 0.14) 0%, transparent 65%)",

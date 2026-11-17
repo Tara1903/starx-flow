@@ -44,11 +44,20 @@ export function AdminLayout({
       {/* Background Ambient Glows */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         {/* Top-left subtle emerald glow */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-emerald-600/10 blur-[130px]" />
+        <div
+          className="absolute -top-40 -left-40 w-96 h-96 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(5, 150, 105, 0.12) 0%, transparent 70%)" }}
+        />
         {/* Top-right teal ambient glow */}
-        <div className="absolute top-1/4 -right-40 w-96 h-96 rounded-full bg-teal-600/8 blur-[140px]" />
+        <div
+          className="absolute top-1/4 -right-40 w-96 h-96 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(13, 148, 136, 0.10) 0%, transparent 70%)" }}
+        />
         {/* Bottom center deep glow */}
-        <div className="absolute -bottom-40 left-1/3 w-[500px] h-[500px] rounded-full bg-emerald-950/20 blur-[150px]" />
+        <div
+          className="absolute -bottom-40 left-1/3 w-[500px] h-[500px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(6, 78, 59, 0.22) 0%, transparent 70%)" }}
+        />
         {/* Subtle grid pattern */}
         <div
           className="absolute inset-0 opacity-[0.02]"

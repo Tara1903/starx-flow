@@ -3,6 +3,7 @@ import fs from 'fs';
 
 async function testProtectedRoutesRegression() {
   console.log('=== STARTING PROTECTED ROUTES REGRESSION SUITE ===');
+  const baseUrl = process.env.APP_URL || 'http://localhost:3001';
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
@@ -14,11 +15,11 @@ async function testProtectedRoutesRegression() {
 
   // 1. Unauthenticated /dashboard test (Auth Guard)
   console.log('1. Testing Unauthenticated /dashboard Auth Guard...');
-  await page.goto('http://localhost:3000/dashboard', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.goto(`${baseUrl}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForTimeout(1500);
   const currentUrl = page.url();
   console.log('Unauthenticated /dashboard redirected to:', currentUrl);
-  const isRedirectedToHome = currentUrl.endsWith('/') || currentUrl.includes(':3000');
+  const isRedirectedToHome = currentUrl.endsWith('/') || currentUrl.includes(new URL(baseUrl).port);
   if (!isRedirectedToHome) throw new Error('Unauthenticated /dashboard failed to redirect');
   console.log('✓ Auth guard redirect confirmed');
 
@@ -34,7 +35,7 @@ async function testProtectedRoutesRegression() {
       tier: 'pro'
     }));
   });
-  await page.goto('http://localhost:3000/dashboard', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.goto(`${baseUrl}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForTimeout(1500);
   const dashContent = await page.$('aside, main, nav, [data-testid="sidebar"]');
   if (!dashContent) throw new Error('Authenticated Dashboard layout not found');
@@ -43,7 +44,7 @@ async function testProtectedRoutesRegression() {
 
   // 3. Admin Login page (/admin/login)
   console.log('3. Testing /admin/login...');
-  const adminLoginResp = await page.goto('http://localhost:3000/admin/login', { waitUntil: 'domcontentloaded' });
+  const adminLoginResp = await page.goto(`${baseUrl}/admin/login`, { waitUntil: 'domcontentloaded' });
   if (adminLoginResp?.status() !== 200) throw new Error('/admin/login returned non-200');
   await page.waitForTimeout(1000);
   const adminLoginForm = await page.$('form, input[type="email"], input[type="password"]');
@@ -53,14 +54,14 @@ async function testProtectedRoutesRegression() {
 
   // 4. Admin Centre (/admin)
   console.log('4. Testing /admin...');
-  const adminResp = await page.goto('http://localhost:3000/admin', { waitUntil: 'domcontentloaded' });
+  const adminResp = await page.goto(`${baseUrl}/admin`, { waitUntil: 'domcontentloaded' });
   if (adminResp?.status() !== 200) throw new Error('/admin returned non-200');
   await page.waitForTimeout(1200);
   await page.screenshot({ path: `${screenshotDir}/qa-protected-admin.png` });
 
   // 5. Pricing (/pricing)
   console.log('5. Testing /pricing...');
-  const pricingResp = await page.goto('http://localhost:3000/pricing', { waitUntil: 'domcontentloaded' });
+  const pricingResp = await page.goto(`${baseUrl}/pricing`, { waitUntil: 'domcontentloaded' });
   if (pricingResp?.status() !== 200) throw new Error('/pricing returned non-200');
   await page.waitForTimeout(1000);
   const pricingCards = await page.$$('.rounded-3xl, [class*="pricing"], [class*="border-emerald"]');
@@ -69,16 +70,17 @@ async function testProtectedRoutesRegression() {
 
   // 6. Features (/features)
   console.log('6. Testing /features...');
-  const featuresResp = await page.goto('http://localhost:3000/features', { waitUntil: 'domcontentloaded' });
+  const featuresResp = await page.goto(`${baseUrl}/features`, { waitUntil: 'domcontentloaded' });
   if (featuresResp?.status() !== 200) throw new Error('/features returned non-200');
   await page.waitForTimeout(1000);
   await page.screenshot({ path: `${screenshotDir}/qa-protected-features.png` });
 
   // 7. Final confirmation on Homepage Desktop (/)
-  console.log('7. Final confirmation on Homepage Desktop (http://localhost:3000)...');
-  await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' });
+  console.log(`7. Final confirmation on Homepage Desktop (${baseUrl})...`);
+  await page.goto(`${baseUrl}`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: `${screenshotDir}/qa-final-homepage-desktop.png` });
+  console.log('✓ Final desktop homepage screenshot saved');
   console.log('✓ Final desktop homepage screenshot saved');
 
   await browser.close();

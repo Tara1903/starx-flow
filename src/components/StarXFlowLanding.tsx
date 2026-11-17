@@ -1441,7 +1441,7 @@ export function StarXFlowLanding() {
           {/* Top-Right 4 Workflow Pill Tabs (left: 599, top: 1308, w: 760, h: 55) */}
           <div
             className="pos flex items-center justify-between rounded-full"
-            style={{ '--x': 599, '--y': 1308, '--w': 760, '--h': 55, padding: 'calc(4.5 * var(--u))', background: 'rgba(7, 24, 17, 0.68)', border: 'calc(1.2 * var(--u)) solid rgba(110, 231, 183, 0.26)', backdropFilter: 'blur(8px)' } as React.CSSProperties}
+            style={{ '--x': 599, '--y': 1308, '--w': 760, '--h': 55, padding: 'calc(4.5 * var(--u))', background: 'rgba(7, 24, 17, 0.68)', border: 'calc(1.2 * var(--u)) solid rgba(110, 231, 183, 0.26)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' } as React.CSSProperties}
           >
             <button
               type="button"
@@ -2805,7 +2805,7 @@ export function StarXFlowLanding() {
   <div
     id="studio-inspector-bar"
     className="hidden md:flex fixed bottom-3 right-3 z-50 flex-wrap items-center gap-2 rounded-full px-3.5 py-2 text-xs shadow-2xl"
-    style={{ background: 'rgba(4, 20, 14, 0.9)', border: '1px solid rgba(110, 231, 183, 0.4)', backdropFilter: 'blur(12px)' } as React.CSSProperties}
+    style={{ background: 'rgba(4, 20, 14, 0.9)', border: '1px solid rgba(110, 231, 183, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' } as React.CSSProperties}
   >
     <span className="font-semibold text-emerald-300 flex items-center gap-1.5">
       <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
@@ -2852,7 +2852,7 @@ export function StarXFlowLanding() {
   <div
     id="live-status-toast"
     className="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-3 rounded-full px-4 py-2 text-xs font-medium text-emerald-50 shadow-2xl transition-all"
-    style={{ background: 'rgba(6, 28, 20, 0.92)', border: '1px solid rgba(110, 231, 183, 0.55)', backdropFilter: 'blur(12px)' } as React.CSSProperties}
+    style={{ background: 'rgba(6, 28, 20, 0.92)', border: '1px solid rgba(110, 231, 183, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' } as React.CSSProperties}
   >
     <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
     <span id="live-status-toast-text">Connected Operation Active</span>
@@ -2865,7 +2865,7 @@ export function StarXFlowLanding() {
   <div
     id="starx-modal-backdrop"
     className="fixed inset-0 z-50 hidden items-center justify-center p-4"
-    style={{ background: 'rgba(2, 10, 7, 0.78)', backdropFilter: 'blur(10px)' } as React.CSSProperties}
+    style={{ background: 'rgba(2, 10, 7, 0.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' } as React.CSSProperties}
     onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
   >
     <div

@@ -3,6 +3,7 @@ import { getPageMeta, SEO_CONFIG } from '@/lib/seoConfig';
 import { softwareApplicationSchema, howToSchema } from '@/components/seo/SchemaMarkup';
 import { AIContent } from '@/components/seo/AIContent';
 import { StarXFlowLanding } from '@/components/StarXFlowLanding';
+import { VisitorWelcomeOverlay } from '@/components/ui/VisitorWelcomeOverlay';
 
 export async function generateMetadata(): Promise<Metadata> {
   const pageMeta = getPageMeta('/');
@@ -55,6 +56,9 @@ export default function Home() {
 
       {/* Verified Pixel-Perfect Studio Stage Implementation */}
       <StarXFlowLanding />
+
+      {/* Lightweight Visitor Welcome Overlay */}
+      <VisitorWelcomeOverlay />
 
       {/* AI Discovery Engine & Semantic Structured Content (Preserved for SEO crawlers) */}
       <div className="sr-only" aria-hidden="true">
