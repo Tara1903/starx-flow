@@ -10,7 +10,6 @@ import {
   Layers,
   DollarSign,
   Menu,
-  X,
   ArrowRight,
   Sparkles,
   BookOpen,
@@ -47,10 +46,8 @@ import {
   Utensils,
   GraduationCap,
   ChevronRight,
-  Check,
 } from "lucide-react";
 import { GlassSheet } from "./ui/GlassSheet";
-import { GlassButton } from "./ui/GlassButton";
 import { useUIStore } from "../store/uiStore";
 import { useAuthStore } from "../store/authStore";
 import { useDashboardStore, type DashboardSection } from "../store/dashboardStore";
