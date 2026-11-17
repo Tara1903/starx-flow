@@ -126,22 +126,7 @@ export async function PATCH(req: NextRequest) {
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 
     if (!isUuid(orderId)) {
-      // Non-UUID IDs correspond to demo/seed orders (e.g. ord-101 owned by demo-sarah-jenkins)
-      if (tenantId !== 'demo-sarah-jenkins') {
-        return NextResponse.json(
-          { error: 'Forbidden: You do not have permission to modify orders in this tenant' },
-          { status: 403 }
-        );
-      }
-      return NextResponse.json({
-        order: {
-          id: orderId,
-          user_id: tenantId,
-          status: status || 'pending',
-          payment_status: paymentStatus || 'unpaid',
-          updated_at: new Date().toISOString(),
-        },
-      });
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
     if (isSupabaseAdminConfigured) {

@@ -72,131 +72,8 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString();
 }
 
-export const DEFAULT_ADMIN_CLIENTS: Client[] = [
-  {
-    id: "client-1",
-    businessName: "Apex Physiotherapy & Wellness",
-    businessType: "Healthcare & Wellness",
-    ownerName: "Dr. Sarah Jenkins",
-    email: "sarah@apexphysio.co.uk",
-    phone: "+44 7911 123456",
-    plan: "Growth Autopilot",
-    status: "Active",
-    role: "owner",
-    signupDate: "2026-09-14",
-    lastActive: "10 min ago",
-    totalWorkflows: 6,
-    totalExecutions: 1420,
-  },
-  {
-    id: "client-2",
-    businessName: "Mayfair Aesthetic Clinic",
-    businessType: "Cosmetics & Dermatology",
-    ownerName: "Dr. Julian Thorne",
-    email: "julian@mayfairclinic.co.uk",
-    phone: "+44 7822 987654",
-    plan: "Scale / Pro",
-    status: "Active",
-    role: "owner",
-    signupDate: "2026-08-02",
-    lastActive: "2 min ago",
-    totalWorkflows: 9,
-    totalExecutions: 3840,
-  },
-  {
-    id: "client-3",
-    businessName: "Vanguard Corporate Legal",
-    businessType: "Legal Services",
-    ownerName: "Marcus Vance",
-    email: "marcus@vanguardlegal.com",
-    phone: "+44 7700 900123",
-    plan: "Starter",
-    status: "Active",
-    role: "owner",
-    signupDate: "2026-10-18",
-    lastActive: "1 hour ago",
-    totalWorkflows: 3,
-    totalExecutions: 480,
-  },
-  {
-    id: "client-4",
-    businessName: "Lumina Dental Studio",
-    businessType: "Dental Care",
-    ownerName: "Elena Rostova",
-    email: "elena@luminadental.co.uk",
-    phone: "+44 7450 112233",
-    plan: "Growth Autopilot",
-    status: "Active",
-    role: "owner",
-    signupDate: "2026-10-01",
-    lastActive: "15 min ago",
-    totalWorkflows: 5,
-    totalExecutions: 910,
-  },
-  {
-    id: "client-5",
-    businessName: "Kensington Real Estate Partners",
-    businessType: "Property & Real Estate",
-    ownerName: "Arthur Sterling",
-    email: "arthur@kensingtonpartners.co.uk",
-    phone: "+44 7900 556677",
-    plan: "Scale / Pro",
-    status: "Active",
-    role: "owner",
-    signupDate: "2026-07-20",
-    lastActive: "4 min ago",
-    totalWorkflows: 11,
-    totalExecutions: 5240,
-  },
-];
-
-export const DEFAULT_DEMO_LEADS: DemoLead[] = [
-  {
-    id: "lead-1",
-    fullName: "Oliver Croft",
-    workEmail: "oliver@croftarchitects.com",
-    phone: "+44 7933 445566",
-    businessName: "Croft Architectural Studio",
-    businessType: "Architecture & Design",
-    businessSize: "11-50 employees",
-    primaryNeed: "Inbound consultation qualification and automated project booking",
-    preferredContact: "email",
-    website: "https://croftarchitects.com",
-    notes: "High interest in WhatsApp integration and multi-calendar sync",
-    status: "new",
-    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-  },
-  {
-    id: "lead-2",
-    fullName: "Sophie Moreau",
-    workEmail: "sophie@parissalonspa.fr",
-    phone: "+33 6 12 34 56 78",
-    businessName: "L'Atelier Beauté Paris",
-    businessType: "Salons & Spas",
-    businessSize: "1-10 employees",
-    primaryNeed: "Instagram DM booking autopilot and cancellation recovery",
-    preferredContact: "whatsapp",
-    website: "https://latelierbeaute.fr",
-    notes: "Requested live demo for multi-language French/English receptionist",
-    status: "contacted",
-    createdAt: new Date(Date.now() - 3600000 * 26).toISOString(),
-  },
-  {
-    id: "lead-3",
-    fullName: "David Chen",
-    workEmail: "david@chenconsulting.sg",
-    phone: "+65 9123 4567",
-    businessName: "Apex FinTech Advisory",
-    businessType: "Financial Services",
-    businessSize: "51-200 employees",
-    primaryNeed: "Compliance-first autonomous customer intake and CRM synchronization",
-    preferredContact: "phone",
-    website: "https://apexfinadvisory.sg",
-    notes: "Evaluating Enterprise plan with dedicated deployment",
-    status: "scheduled",
-    createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-  },
-];
+export const DEFAULT_ADMIN_CLIENTS: Client[] = [];
+export const DEFAULT_DEMO_LEADS: DemoLead[] = [];
 
 let adminRealtimeChannel: any = null;
 
@@ -206,8 +83,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   isRealtimeConnected: false,
   activeSection: 'overview',
   setActiveSection: (section) => set({ activeSection: section }),
-  clients: DEFAULT_ADMIN_CLIENTS,
-  demoLeads: DEFAULT_DEMO_LEADS,
+  clients: [],
+  demoLeads: [],
   isSidebarCollapsed: false,
   setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
 
@@ -436,17 +313,13 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           totalExecutions: Number(row.total_executions) || 0,
         }));
 
-        if (clients.length > 0) {
-          set({ clients, isLoading: false });
-        } else {
-          set({ clients: get().clients.length > 0 ? get().clients : DEFAULT_ADMIN_CLIENTS, isLoading: false });
-        }
+        set({ clients: clients || [], isLoading: false });
       } else {
-        set({ clients: get().clients.length > 0 ? get().clients : DEFAULT_ADMIN_CLIENTS, isLoading: false });
+        set({ clients: [], isLoading: false });
       }
     } catch (e) {
       console.error('[Admin] Fetch clients exception:', e);
-      set({ clients: get().clients.length > 0 ? get().clients : DEFAULT_ADMIN_CLIENTS, isLoading: false });
+      set({ clients: [], isLoading: false });
     }
   },
 
@@ -557,15 +430,11 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           createdAt: row.created_at || '',
         }));
 
-        if (demoLeads.length > 0) {
-          set({ demoLeads });
-        } else {
-          set({ demoLeads: get().demoLeads.length > 0 ? get().demoLeads : DEFAULT_DEMO_LEADS });
-        }
+        set({ demoLeads: demoLeads || [] });
       }
     } catch (err) {
       console.error('[Admin] Fetch demo leads exception:', err);
-      set({ demoLeads: get().demoLeads.length > 0 ? get().demoLeads : DEFAULT_DEMO_LEADS });
+      set({ demoLeads: [] });
     }
   },
 

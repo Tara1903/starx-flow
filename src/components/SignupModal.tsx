@@ -95,33 +95,6 @@ export function SignupModal({
     if (onClose) onClose();
   };
 
-  // Immediate entry into the actual live inner dashboard
-  const enterGuestDashboard = () => {
-    const demoUser = {
-      id: "demo-sarah-jenkins",
-      name: "Dr. Sarah Jenkins",
-      email: "sarah@apexphysio.co.uk",
-      businessName: "Apex Physiotherapy & Wellness",
-      businessType: "Healthcare & Wellness",
-      role: "owner",
-      onboardingComplete: true,
-      plan: "Growth Autopilot",
-    };
-    useAuthStore.setState({
-      isLoggedIn: true,
-      isLoading: false,
-      user: demoUser,
-    });
-    try {
-      localStorage.setItem("starx_auth_user_v1", JSON.stringify(demoUser));
-      localStorage.setItem("starx_auth_prompt_dismissed_v1", "true");
-    } catch {
-      // Storage unavailable
-    }
-    if (onClose) onClose();
-    router.push(returnUrl || "/dashboard");
-  };
-
   // Close on Escape key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -421,15 +394,6 @@ export function SignupModal({
             </div>
 
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={enterGuestDashboard}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 transition-all cursor-pointer shadow-[0_0_12px_rgba(40,223,160,0.15)]"
-              >
-                <Compass size={12} />
-                <span>Explore Live Dashboard</span>
-              </button>
-
               <button
                 type="button"
                 onClick={dismissGuest}

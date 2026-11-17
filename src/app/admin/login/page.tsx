@@ -212,39 +212,7 @@ export default function AdminLogin() {
               {loading ? "Verifying Credentials…" : "Authenticate & Sign In"}
             </button>
 
-            <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-white/10"></div>
-              <span className="flex-shrink mx-3 text-[11px] text-zinc-500 uppercase tracking-widest font-mono">or</span>
-              <div className="flex-grow border-t border-white/10"></div>
-            </div>
 
-            <button
-              type="button"
-              onClick={async () => {
-                setLoading(true);
-                const demoAdmin = {
-                  id: "admin-master",
-                  name: "StarX System Administrator",
-                  email: "admin@starxflow.com",
-                  role: "super_admin",
-                };
-                try {
-                  localStorage.setItem("starx_admin_auth_v1", JSON.stringify(demoAdmin));
-                  localStorage.setItem("starx_auth_user_v1", JSON.stringify(demoAdmin));
-                } catch {}
-                useAuthStore.setState({
-                  isLoggedIn: true,
-                  user: demoAdmin as any,
-                });
-                await loginAdmin();
-                setLoading(false);
-                router.push("/admin");
-              }}
-              className="w-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-300 font-semibold text-xs py-3 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.15)] cursor-pointer"
-            >
-              <Shield className="w-4 h-4 text-emerald-400" />
-              <span>Instant Admin Demo Console</span>
-            </button>
 
             <div className="pt-2 text-center">
               <span className="text-[10px] text-zinc-600 block leading-normal">

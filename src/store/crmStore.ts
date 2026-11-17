@@ -22,71 +22,10 @@ interface CrmState {
   setSourceFilter: (source: string) => void;
 }
 
-const SAMPLE_LEADS: Lead[] = [
-  {
-    id: 'lead-1',
-    user_id: 'demo-sarah-jenkins',
-    name: 'Sarah Jenkins',
-    email: 'sarah.j@gmail.com',
-    phone: '+44 7700 900123',
-    status: 'qualified',
-    source: 'whatsapp',
-    score: 92,
-    tags: ['VIP', 'WhatsApp', 'Massage'],
-    last_contact_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    notes: 'Requested deep tissue massage for back pain. Converted from WhatsApp chat.',
-    created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'lead-2',
-    user_id: 'demo-sarah-jenkins',
-    name: 'Marcus Vance',
-    email: 'marcus.v@outlook.com',
-    phone: '+44 7700 900456',
-    status: 'contacted',
-    source: 'instagram',
-    score: 78,
-    tags: ['Instagram', 'Fitness'],
-    last_contact_at: new Date(Date.now() - 3600000 * 8).toISOString(),
-    notes: 'Direct message inquiry about fitness consultation and training packages.',
-    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'lead-3',
-    user_id: 'demo-sarah-jenkins',
-    name: 'Elena Rostova',
-    email: 'elena.rostova@techcorp.io',
-    phone: '+44 7700 900789',
-    status: 'converted',
-    source: 'sms',
-    score: 95,
-    tags: ['Regular', 'Sports Recovery'],
-    last_contact_at: new Date(Date.now() - 86400000).toISOString(),
-    notes: 'Regular sports recovery client. Automated reminder confirmed.',
-    created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'lead-4',
-    user_id: 'demo-sarah-jenkins',
-    name: 'David Chen',
-    email: 'david.chen@consulting.co',
-    phone: '+44 7700 900321',
-    status: 'new',
-    source: 'web_chat',
-    score: 65,
-    tags: ['Corporate', 'Web Chat'],
-    last_contact_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-    notes: 'Inquired through web chat widget about weekend appointment availability.',
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-];
+const SAMPLE_LEADS: Lead[] = [];
 
 export const useCrmStore = create<CrmState>((set, get) => ({
-  leads: SAMPLE_LEADS,
+  leads: [],
   isLoading: false,
   error: null,
   searchQuery: '',
@@ -96,18 +35,16 @@ export const useCrmStore = create<CrmState>((set, get) => ({
   fetchLeads: async () => {
     const user = useAuthStore.getState().user;
     if (!user) {
-      set({ leads: SAMPLE_LEADS, isLoading: false, error: null });
+      set({ leads: [], isLoading: false, error: null });
       return;
     }
 
-    // If demo session or non-UUID, keep sample data without querying DB
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
     if (!isUuid || !isSupabaseConfigured) {
-      set({ leads: get().leads.length > 0 ? get().leads : SAMPLE_LEADS, isLoading: false, error: null });
+      set({ leads: [], isLoading: false, error: null });
       return;
     }
 
-    // Stale-while-revalidate: only show skeleton if no data is present yet
     if (get().leads.length === 0) {
       set({ isLoading: true, error: null });
     }
@@ -119,14 +56,10 @@ export const useCrmStore = create<CrmState>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      if (data && data.length > 0) {
-        set({ leads: (data as Lead[]), error: null });
-      } else {
-        set({ leads: isUuid ? [] : SAMPLE_LEADS, error: null });
-      }
+      set({ leads: (data as Lead[]) || [], error: null });
     } catch (err: unknown) {
       set({
-        leads: isUuid ? [] : SAMPLE_LEADS,
+        leads: [],
         error: null,
       });
     } finally {

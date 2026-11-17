@@ -126,165 +126,16 @@ const INITIAL_NUDGES: SmartNudge[] = [
   }
 ];
 
-const SAMPLE_CONVERSATIONS: ConversationThread[] = [
-  {
-    id: 'conv-1',
-    customerName: 'Sarah Jenkins',
-    channel: 'WhatsApp',
-    status: 'active',
-    lastMessage: 'Perfect, I will take the 2:00 PM slot with therapist Sarah tomorrow!',
-    lastMessageAt: '12:44',
-    unread: true,
-    priority: 'high',
-    messages: [
-      {
-        id: 'm1',
-        sender: 'user',
-        text: 'Hi! Do you have any slots for a deep tissue massage tomorrow afternoon?',
-        timestamp: '12:42',
-      },
-      {
-        id: 'm2',
-        sender: 'ai',
-        text: 'Hi Sarah! We have openings at 10:30 AM and 2:00 PM with therapist Sarah tomorrow. Would you like me to reserve the 2:00 PM slot for you?',
-        timestamp: '12:43',
-      },
-      {
-        id: 'm3',
-        sender: 'user',
-        text: 'Perfect, I will take the 2:00 PM slot with therapist Sarah tomorrow!',
-        timestamp: '12:44',
-      },
-      {
-        id: 'm4',
-        sender: 'ai',
-        text: 'Done! Your appointment is confirmed for tomorrow at 2:00 PM. A calendar invite has been sent to your email. See you tomorrow!',
-        timestamp: '12:44',
-      }
-    ]
-  },
-  {
-    id: 'conv-2',
-    customerName: 'Marcus Vance',
-    channel: 'Instagram',
-    status: 'active',
-    lastMessage: 'How much is the initial fitness consultation?',
-    lastMessageAt: '11:15',
-    unread: false,
-    priority: 'medium',
-    messages: [
-      {
-        id: 'm5',
-        sender: 'user',
-        text: 'Hey there! Saw your reel on mobility workouts. How much is an initial consultation?',
-        timestamp: '11:12',
-      },
-      {
-        id: 'm6',
-        sender: 'ai',
-        text: 'Hey Marcus! Our comprehensive 60-minute initial consultation is €65, which includes full postural assessment and custom training roadmap.',
-        timestamp: '11:13',
-      },
-      {
-        id: 'm7',
-        sender: 'user',
-        text: 'How much is the initial fitness consultation?',
-        timestamp: '11:15',
-      }
-    ]
-  },
-  {
-    id: 'conv-3',
-    customerName: 'Elena Rostova',
-    channel: 'SMS',
-    status: 'resolved',
-    lastMessage: 'Appointment confirmed: Sarah K., Deep Tissue, tomorrow at 2:00 PM.',
-    lastMessageAt: 'Yesterday',
-    unread: false,
-    priority: 'low',
-    messages: [
-      {
-        id: 'm8',
-        sender: 'ai',
-        text: 'Reminder: You have an upcoming session tomorrow at 2:00 PM. Reply YES to confirm or CANCEL to reschedule.',
-        timestamp: 'Yesterday',
-      },
-      {
-        id: 'm9',
-        sender: 'user',
-        text: 'YES',
-        timestamp: 'Yesterday',
-      },
-      {
-        id: 'm10',
-        sender: 'ai',
-        text: 'Thank you Elena! Your booking is locked.',
-        timestamp: 'Yesterday',
-      }
-    ]
-  },
-  {
-    id: 'conv-4',
-    customerName: 'David Chen',
-    channel: 'Web',
-    status: 'needs_attention',
-    lastMessage: 'Do you offer corporate wellness packages for teams of 20+?',
-    lastMessageAt: '09:30',
-    unread: true,
-    priority: 'urgent',
-    messages: [
-      {
-        id: 'm11',
-        sender: 'user',
-        text: 'Do you offer corporate wellness packages for teams of 20+?',
-        timestamp: '09:30',
-      }
-    ]
-  }
-];
-
-const SAMPLE_ACTIVITY_FEED: ActivityFeedEntry[] = [
-  {
-    id: 'act-1',
-    channel: 'WhatsApp',
-    type: 'success',
-    message: 'New Appointment Booked: Sarah Jenkins booked Deep Tissue Massage for 2:00 PM tomorrow.',
-    timestamp: '2 mins ago',
-    timeAgo: '2m'
-  },
-  {
-    id: 'act-2',
-    channel: 'Instagram',
-    type: 'info',
-    message: 'Inbound Lead Qualified: Marcus Vance asked about consultation pricing via Instagram DM.',
-    timestamp: '15 mins ago',
-    timeAgo: '15m'
-  },
-  {
-    id: 'act-3',
-    channel: 'SMS',
-    type: 'success',
-    message: 'Automated 24h Reminder Dispatched: Elena Rostova confirmed booking for tomorrow at 2:00 PM.',
-    timestamp: '1 hour ago',
-    timeAgo: '1h'
-  },
-  {
-    id: 'act-4',
-    channel: 'Reviews',
-    type: 'success',
-    message: '5-Star Google Review Collected: James Thornton left a 5-star review: "Autonomous booking was so easy!"',
-    timestamp: '3 hours ago',
-    timeAgo: '3h'
-  }
-];
+const SAMPLE_CONVERSATIONS: ConversationThread[] = [];
+const SAMPLE_ACTIVITY_FEED: ActivityFeedEntry[] = [];
 
 let realtimeSubscription: any = null;
 
 export const useDashboardStore = create<DashboardState>((set, get) => ({
   activeSection: 'overview',
-  conversations: SAMPLE_CONVERSATIONS,
-  selectedConversationId: 'conv-1',
-  activityFeed: SAMPLE_ACTIVITY_FEED,
+  conversations: [],
+  selectedConversationId: null,
+  activityFeed: [],
   smartNudges: INITIAL_NUDGES,
   isSidebarCollapsed: false,
   isLoading: false,
@@ -444,10 +295,9 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     const user = useAuthStore.getState().user;
     if (!user) return;
 
-    // If demo session or non-UUID, keep sample data without querying DB
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
     if (!isUuid || !isSupabaseConfigured) {
-      set({ conversations: get().conversations.length > 0 ? get().conversations : SAMPLE_CONVERSATIONS, isLoading: false });
+      set({ conversations: [], isLoading: false });
       return;
     }
     
@@ -501,10 +351,11 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
         set({ conversations: mappedConvos });
       } else {
-        set({ conversations: isUuid ? [] : SAMPLE_CONVERSATIONS });
+        set({ conversations: [] });
       }
     } catch (err) {
       console.error("Error fetching inbox data:", err);
+      set({ conversations: [] });
     } finally {
       set({ isLoading: false });
     }

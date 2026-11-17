@@ -272,12 +272,12 @@ function dbRowToBusinessGoal(row: Record<string, unknown>): BusinessGoal {
    ────────────────────────────────────────────── */
 
 const DEFAULT_CHANNELS: ConnectedChannel[] = [
-  { id: 'chan-1', channelKey: 'whatsapp', isConnected: true, credentials: { phone: '+44 7700 900123' }, lastSynced: 'Just now' },
-  { id: 'chan-2', channelKey: 'instagram', isConnected: true, credentials: { handle: '@apexphysio' }, lastSynced: '5 mins ago' },
-  { id: 'chan-3', channelKey: 'google_calendar', isConnected: true, credentials: { account: 'sarah@apexphysio.co.uk' }, lastSynced: '1 min ago' },
-  { id: 'chan-4', channelKey: 'stripe', isConnected: true, credentials: { mode: 'Live' }, lastSynced: 'Active' },
+  { id: 'chan-1', channelKey: 'whatsapp', isConnected: false, credentials: {}, lastSynced: null },
+  { id: 'chan-2', channelKey: 'instagram', isConnected: false, credentials: {}, lastSynced: null },
+  { id: 'chan-3', channelKey: 'google_calendar', isConnected: false, credentials: {}, lastSynced: null },
+  { id: 'chan-4', channelKey: 'stripe', isConnected: false, credentials: {}, lastSynced: null },
   { id: 'chan-5', channelKey: 'sms', isConnected: false, credentials: {}, lastSynced: null },
-  { id: 'chan-6', channelKey: 'resend', isConnected: true, credentials: {}, lastSynced: 'Active' }
+  { id: 'chan-6', channelKey: 'resend', isConnected: false, credentials: {}, lastSynced: null }
 ];
 
 const DEFAULT_WORKFLOWS: Workflow[] = [
@@ -290,10 +290,10 @@ const DEFAULT_WORKFLOWS: Workflow[] = [
     isActive: true,
     channel: 'WhatsApp',
     aiTone: 'Professional',
-    customPrompt: 'You are the receptionist for Apex Physiotherapy. Be warm, professional, verify injuries, check calendar availability, and confirm bookings.',
-    executionsCount: 842,
-    successRate: 99.4,
-    savedHours: 42.5
+    customPrompt: 'You are the AI receptionist for our business. Be warm, professional, verify client requirements, check calendar availability, and confirm bookings.',
+    executionsCount: 0,
+    successRate: 100,
+    savedHours: 0
   },
   {
     id: 'wf-2',
@@ -304,10 +304,10 @@ const DEFAULT_WORKFLOWS: Workflow[] = [
     isActive: true,
     channel: 'Instagram',
     aiTone: 'Friendly',
-    customPrompt: 'Answer questions about services and pricing, and guide the prospect to schedule an initial consultation.',
-    executionsCount: 318,
-    successRate: 98.1,
-    savedHours: 18.0
+    customPrompt: 'Answer questions about our services and pricing, and guide the prospect to schedule an initial consultation.',
+    executionsCount: 0,
+    successRate: 100,
+    savedHours: 0
   },
   {
     id: 'wf-3',
@@ -318,10 +318,10 @@ const DEFAULT_WORKFLOWS: Workflow[] = [
     isActive: true,
     channel: 'WhatsApp',
     aiTone: 'Friendly',
-    customPrompt: 'Send appointment reminder with time, clinic location, therapist name, and cancel/reschedule option.',
-    executionsCount: 524,
+    customPrompt: 'Send appointment reminder with time, location, staff member name, and cancel/reschedule option.',
+    executionsCount: 0,
     successRate: 100,
-    savedHours: 26.2
+    savedHours: 0
   },
   {
     id: 'wf-4',
@@ -333,9 +333,9 @@ const DEFAULT_WORKFLOWS: Workflow[] = [
     channel: 'Reviews',
     aiTone: 'Friendly',
     customPrompt: 'Thank the client for visiting and ask if they would take 30 seconds to share their experience on Google.',
-    executionsCount: 196,
-    successRate: 96.8,
-    savedHours: 12.0
+    executionsCount: 0,
+    successRate: 100,
+    savedHours: 0
   }
 ];
 
@@ -348,13 +348,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   workflows: DEFAULT_WORKFLOWS,
   connectedChannels: DEFAULT_CHANNELS,
   chartData: [
-    { day: "Mon", value: 34 },
-    { day: "Tue", value: 48 },
-    { day: "Wed", value: 52 },
-    { day: "Thu", value: 68 },
-    { day: "Fri", value: 61 },
-    { day: "Sat", value: 43 },
-    { day: "Sun", value: 29 },
+    { day: "Mon", value: 0 },
+    { day: "Tue", value: 0 },
+    { day: "Wed", value: 0 },
+    { day: "Thu", value: 0 },
+    { day: "Fri", value: 0 },
+    { day: "Sat", value: 0 },
+    { day: "Sun", value: 0 },
   ],
   logs: [],
   selectedWorkflowId: null,

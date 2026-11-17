@@ -18,57 +18,22 @@ interface TaskState {
   deleteTask: (id: string) => Promise<{ error: string | null }>;
 }
 
-export const DEFAULT_TASKS: Task[] = [
-  {
-    id: "task-1",
-    user_id: "demo-sarah-jenkins",
-    title: "Review Dr. Sarah Jenkins initial patient intake notes",
-    description: "Verify medical history flags and physiotherapy clearance before Thursday treatment.",
-    priority: "high",
-    status: "todo",
-    due_date: new Date(Date.now() + 86400000 * 2).toISOString(),
-    created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-    updated_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-  },
-  {
-    id: "task-2",
-    user_id: "demo-sarah-jenkins",
-    title: "Verify hydrotherapy room equipment calibration",
-    description: "Check water temperature telemetry sensors and update compliance log.",
-    priority: "medium",
-    status: "in_progress",
-    due_date: new Date(Date.now() + 86400000 * 3).toISOString(),
-    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-    updated_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-  },
-  {
-    id: "task-3",
-    user_id: "demo-sarah-jenkins",
-    title: "Approve Instagram DM bot updated FAQ answers",
-    description: "Add new weekend clinic hours and emergency contact escalation rules.",
-    priority: "urgent",
-    status: "completed",
-    due_date: new Date().toISOString(),
-    created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
-    updated_at: new Date(Date.now() - 3600000 * 1).toISOString(),
-  },
-];
+export const DEFAULT_TASKS: Task[] = [];
 
 export const useTaskStore = create<TaskState>((set, get) => ({
-  tasks: DEFAULT_TASKS,
+  tasks: [],
   isLoading: false,
 
   fetchTasks: async () => {
     const user = useAuthStore.getState().user;
     if (!user) {
-      set({ tasks: DEFAULT_TASKS, isLoading: false });
+      set({ tasks: [], isLoading: false });
       return;
     }
 
-    // If demo session or non-UUID, keep sample data without querying DB
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
     if (!isUuid || !isSupabaseConfigured) {
-      set({ tasks: get().tasks.length > 0 ? get().tasks : DEFAULT_TASKS, isLoading: false });
+      set({ tasks: [], isLoading: false });
       return;
     }
 
@@ -83,14 +48,10 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      if (data && data.length > 0) {
-        set({ tasks: (data as Task[]) });
-      } else {
-        set({ tasks: isUuid ? [] : DEFAULT_TASKS });
-      }
+      set({ tasks: (data as Task[]) || [] });
     } catch (err: any) {
       console.warn('[TaskStore] fetchTasks failed:', err.message);
-      set({ tasks: isUuid ? [] : DEFAULT_TASKS });
+      set({ tasks: [] });
     } finally {
       set({ isLoading: false });
     }
