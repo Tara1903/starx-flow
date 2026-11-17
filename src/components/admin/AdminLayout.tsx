@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { AdminSidebar, type AdminSection } from "./AdminSidebar";
 import { AdminToolbar } from "./AdminToolbar";
+import { useAdminStore } from "../../store/adminStore";
+import { cn } from "../../lib/utils";
 
 interface AdminLayoutProps {
   activeSection: AdminSection;
@@ -35,6 +37,8 @@ export function AdminLayout({
   const prefersReduced = useReducedMotion();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const isSidebarCollapsed = useAdminStore((s) => s.isSidebarCollapsed);
+
   return (
     <div className="min-h-screen bg-[#040806] text-zinc-100 flex relative overflow-x-hidden selection:bg-emerald-500/30 selection:text-emerald-200">
       {/* Background Ambient Glows */}
@@ -55,9 +59,6 @@ export function AdminLayout({
         />
       </div>
 
-      {/* Sidebar Spacer for Desktop Fixed Aside */}
-      <div className="hidden lg:block w-[280px] flex-shrink-0" />
-
       {/* Sidebar (Unified Desktop Fixed Aside & Mobile Slide-Over Drawer) */}
       <AdminSidebar
         activeSection={activeSection}
@@ -69,10 +70,17 @@ export function AdminLayout({
         newLeadsCount={newLeadsCount}
         isOpenMobile={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
+        onLogout={onLogout}
+        adminEmail={adminEmail}
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 z-10">
+      <div 
+        className={cn(
+          "flex-1 flex flex-col min-w-0 z-10 transition-all duration-300",
+          isSidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-[280px]"
+        )}
+      >
         {/* Top Floating Glass Toolbar */}
         <header className="sticky top-0 z-20 px-4 sm:px-6 lg:px-8 pt-4 pb-2">
           <AdminToolbar

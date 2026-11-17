@@ -39,6 +39,8 @@ interface AdminState {
   isRealtimeConnected: boolean;
   clients: Client[];
   demoLeads: DemoLead[];
+  isSidebarCollapsed: boolean;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   loginAdmin: () => Promise<boolean>;
   logoutAdmin: () => void;
   subscribeToAdminRealtime: () => () => void;
@@ -200,6 +202,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   isRealtimeConnected: false,
   clients: DEFAULT_ADMIN_CLIENTS,
   demoLeads: DEFAULT_DEMO_LEADS,
+  isSidebarCollapsed: false,
+  setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
 
   /* ─── REAL-TIME SUBSCRIPTION TO SUPABASE BACKEND ─── */
   subscribeToAdminRealtime: () => {
