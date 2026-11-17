@@ -309,7 +309,7 @@ export function AdminSidebar({
         initial={false}
         animate={{ width: isCollapsed ? 72 : 280 }}
         transition={sidebarSpring}
-        className="hidden lg:flex flex-col fixed inset-y-0 left-0 z-40 select-none h-screen h-[100dvh]"
+        className="hidden md:flex flex-col fixed inset-y-0 left-0 z-40 select-none h-screen h-[100dvh]"
       >
         <div
           ref={asideContainerRef}

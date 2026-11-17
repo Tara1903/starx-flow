@@ -77,8 +77,8 @@ export function AdminLayout({
       {/* Main Content Area */}
       <div 
         className={cn(
-          "flex-1 flex flex-col min-w-0 z-10 transition-all duration-300",
-          isSidebarCollapsed ? "lg:pl-[72px]" : "lg:pl-[280px]"
+          "flex-1 flex flex-col min-w-0 z-10 transition-all duration-300 pb-20 md:pb-0",
+          isSidebarCollapsed ? "md:pl-[72px]" : "md:pl-[280px]"
         )}
       >
         {/* Top Floating Glass Toolbar */}

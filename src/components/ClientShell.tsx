@@ -43,7 +43,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
   const isHomePage = pathname === '/';
   const showNavbar = !isAppRoute;
   const showGlobalChrome = !isAppRoute && !isHomePage;
-  const showMobileBottomNav = !isAppRoute && !isAuthRoute;
+  const showMobileBottomNav = !isAuthRoute;
 
   const isSignupOpen = useUIStore((state) => state.isSignupOpen);
   const closeSignup = useUIStore((state) => state.closeSignup);

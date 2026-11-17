@@ -160,8 +160,8 @@ export function DashboardLayout() {
       {/* 2. Main Content Wrapper */}
       <div 
         className={cn(
-          "flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 pb-20 sm:pb-0 relative z-10",
-          isSidebarCollapsed ? "sm:pl-[72px]" : "sm:pl-[280px]"
+          "flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 pb-20 md:pb-0 relative z-10",
+          isSidebarCollapsed ? "md:pl-[72px]" : "md:pl-[280px]"
         )}
       >
         {/* 3. TopBar Component */}

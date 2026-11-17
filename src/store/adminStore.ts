@@ -33,10 +33,14 @@ export interface DemoLead {
   createdAt: string;
 }
 
+export type AdminSection = "overview" | "clients" | "leads" | "analytics" | "plans" | "settings";
+
 interface AdminState {
   isAdmin: boolean;
   isLoading: boolean;
   isRealtimeConnected: boolean;
+  activeSection: AdminSection;
+  setActiveSection: (section: AdminSection) => void;
   clients: Client[];
   demoLeads: DemoLead[];
   isSidebarCollapsed: boolean;
@@ -200,6 +204,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   isAdmin: false,
   isLoading: false,
   isRealtimeConnected: false,
+  activeSection: 'overview',
+  setActiveSection: (section) => set({ activeSection: section }),
   clients: DEFAULT_ADMIN_CLIENTS,
   demoLeads: DEFAULT_DEMO_LEADS,
   isSidebarCollapsed: false,

@@ -29,8 +29,8 @@ export default function AdminPage() {
   const updateClientPlan = useAdminStore((s) => s.updateClientPlan);
   const updateDemoLeadStatus = useAdminStore((s) => s.updateDemoLeadStatus);
   const deleteClient = useAdminStore((s) => s.deleteClient);
-
-  const [activeSection, setActiveSection] = useState<AdminSection>("overview");
+  const activeSection = useAdminStore((s) => s.activeSection);
+  const setActiveSection = useAdminStore((s) => s.setActiveSection);
   const [globalSearch, setGlobalSearch] = useState("");
   const [isChecking, setIsChecking] = useState(true);
 

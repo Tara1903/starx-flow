@@ -15,7 +15,6 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Menu,
   Home,
   Users,
   Calendar as CalendarIcon,
@@ -38,7 +37,6 @@ import {
 } from "../../store/dashboardStore";
 import { useUIStore } from "../../store/uiStore";
 import { cn } from "../../lib/utils";
-import { GlassSheet } from "../ui/GlassSheet";
 import { navPillSpring, sidebarSpring, MOTION_EASE, liquidSpring } from "../../lib/motionVariants";
 
 /* ─────────────────────────────────────────────────────────────
@@ -101,7 +99,6 @@ export function DashboardSidebar() {
   const [tooltipState, setTooltipState] = useState<{ label: string; badge?: string | number; groupName?: string; top: number } | null>(null);
   const [isAutoPilotActive, setIsAutoPilotActive] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(true);
-  const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
   const desktopNavRef = useRef<HTMLElement>(null);
   const asideContainerRef = useRef<HTMLDivElement>(null);
   const flyoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -313,16 +310,6 @@ export function DashboardSidebar() {
       ? menuItems
       : menuItems.filter((i) => i.group === selectedCategory);
 
-  const mobileCoreTabs = [
-    { id: "overview" as DashboardSection, label: "Home", icon: <Home className="w-4 h-4" /> },
-    { id: "crm" as DashboardSection, label: "Leads", icon: <Users className="w-4 h-4" /> },
-    { id: "conversations" as DashboardSection, label: "Inbox", icon: <MessageSquare className="w-4 h-4" />, badge: unreadConversationsCount > 0 ? unreadConversationsCount : undefined },
-    { id: "workflows" as DashboardSection, label: "Flows", icon: <Layers className="w-4 h-4" />, badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : undefined },
-  ];
-
-  const isCoreActive = mobileCoreTabs.some((t) => t.id === activeSection);
-  const isSecondaryActive = !isCoreActive;
-
   return (
     <>
       {/* ─────────────────────────────────────────────────────────────
@@ -333,7 +320,7 @@ export function DashboardSidebar() {
         initial={false}
         animate={{ width: isCollapsed ? 72 : 280 }}
         transition={sidebarSpring}
-        className="hidden sm:flex flex-col fixed inset-y-0 left-0 z-40 select-none h-screen h-[100dvh]"
+        className="hidden md:flex flex-col fixed inset-y-0 left-0 z-40 select-none h-screen h-[100dvh]"
       >
         <div
           ref={asideContainerRef}
@@ -708,123 +695,6 @@ export function DashboardSidebar() {
           </AnimatePresence>
         </div>
       </motion.aside>
-
-      {/* ─────────────────────────────────────────────────────────────
-          MOBILE NAVIGATION TABS (TOUCH VIEWPORTS ONLY < sm)
-          ───────────────────────────────────────────────────────────── */}
-      <nav
-        aria-label="Mobile dashboard navigation"
-        className="sm:hidden fixed bottom-3 inset-x-0 z-40 px-3 flex justify-center items-center pointer-events-none pb-[env(safe-area-inset-bottom)]"
-      >
-        <div className="flex items-center gap-2.5 max-w-[420px] w-full justify-center">
-          <div className="pointer-events-auto flex-1 min-w-0 glass-capsule-nav rounded-full p-1.5 flex items-center justify-around relative shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(16,185,129,0.12)] border border-white/[0.14] select-none">
-            {mobileCoreTabs.map((tab) => {
-              const isActive = activeSection === tab.id;
-              return (
-                <motion.button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  aria-label={tab.label}
-                  onClick={() => setActiveSection(tab.id)}
-                  whileTap={prefersReduced ? undefined : { scale: 0.92 }}
-                  className={cn(
-                    "relative flex items-center justify-center rounded-full transition-colors cursor-pointer select-none py-1.5",
-                    isActive
-                      ? "px-3 text-white font-semibold"
-                      : "px-2 text-zinc-400 hover:text-zinc-200"
-                  )}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="v10ActiveTabPill"
-                      transition={prefersReduced ? { duration: 0 } : navPillSpring}
-                      className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/30 via-emerald-500/20 to-emerald-400/10 border border-emerald-400/50 shadow-[0_0_18px_rgba(16,185,129,0.32),inset_0_1px_0_rgba(255,255,255,0.22)] -z-10"
-                    />
-                  )}
-
-                  <div className="relative flex items-center justify-center flex-shrink-0">
-                    <span className={cn("transition-colors", isActive ? "text-emerald-300" : "text-zinc-400")}>
-                      {tab.icon}
-                    </span>
-                    {!isActive && tab.badge !== undefined && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    )}
-                  </div>
-
-                  <AnimatePresence initial={false}>
-                    {isActive && (
-                      <motion.span
-                        initial={{ opacity: 0, width: 0, x: -4 }}
-                        animate={{ opacity: 1, width: "auto", x: 0 }}
-                        exit={{ opacity: 0, width: 0, x: -4 }}
-                        transition={prefersReduced ? { duration: 0 } : { duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                        className="text-xs font-bold text-white tracking-tight overflow-hidden whitespace-nowrap ml-1.5"
-                      >
-                        {tab.label}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
-              );
-            })}
-          </div>
-
-          <motion.button
-            type="button"
-            onClick={() => setIsMobileMoreOpen(true)}
-            whileHover={prefersReduced ? undefined : { scale: 1.08 }}
-            whileTap={prefersReduced ? undefined : { scale: 0.92 }}
-            aria-label="Open full dashboard navigation"
-            className={cn(
-              "pointer-events-auto w-11 h-11 rounded-full glass-capsule-nav border flex items-center justify-center relative cursor-pointer flex-shrink-0 shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_20px_rgba(16,185,129,0.1)] transition-colors select-none",
-              isSecondaryActive
-                ? "bg-emerald-500/25 border-emerald-400/50 text-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.35)]"
-                : "border-white/[0.14] text-zinc-300 hover:text-white"
-            )}
-          >
-            <Menu className="w-4 h-4" />
-            {(unreadConversationsCount > 0 || activeWorkflowsCount > 0) && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-500 text-white border-2 border-[#09120f] text-[8px] font-extrabold rounded-full flex items-center justify-center shadow-md leading-none">
-                {unreadConversationsCount || activeWorkflowsCount}
-              </span>
-            )}
-          </motion.button>
-        </div>
-      </nav>
-
-      {/* Mobile More Sheet */}
-      <GlassSheet
-        open={isMobileMoreOpen}
-        onClose={() => setIsMobileMoreOpen(false)}
-        title="Navigation Menu"
-        side="bottom"
-      >
-        <div className="grid grid-cols-3 gap-2 py-3 max-h-[70vh] overflow-y-auto">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                setActiveSection(item.id);
-                setIsMobileMoreOpen(false);
-              }}
-              className={cn(
-                "flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer",
-                activeSection === item.id
-                  ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-                  : "bg-white/[0.03] border-white/10 text-zinc-400 hover:text-white"
-              )}
-            >
-              <div className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center mb-1">
-                {item.icon}
-              </div>
-              <span className="text-[11px] font-medium truncate w-full">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </GlassSheet>
     </>
   );
 
