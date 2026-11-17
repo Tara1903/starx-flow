@@ -19,9 +19,9 @@ export function WelcomeHeader() {
   return (
     <div
       data-cursor-spotlight="true"
-      className="glass-hero rounded-3xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 select-none relative overflow-hidden"
+      className="glass-hero rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 select-none relative overflow-hidden"
     >
-      {/* Internal emerald aurora wash (static pre-feathered radial gradient, zero nested blur) */}
+      {/* Internal emerald aurora wash */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-20 -right-12 w-72 h-72 rounded-full opacity-55"
@@ -31,18 +31,20 @@ export function WelcomeHeader() {
         }}
       />
 
-      <div className="relative z-10">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/14 border border-emerald-400/25 text-[11px] font-bold text-emerald-300 uppercase tracking-widest shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-          <span>Operational Hub</span>
+      <div className="relative z-10 flex-1">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/14 border border-emerald-400/25 text-[10px] font-bold text-emerald-300 uppercase tracking-widest shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
+            <Sparkles className="w-3 h-3 text-emerald-300" />
+            <span>Operational Hub</span>
+          </div>
+
+          <h2 suppressHydrationWarning className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            {getGreeting()},{" "}
+            <span className="text-gradient-green">{user?.name || "Partner"}</span>
+          </h2>
         </div>
 
-        <h2 suppressHydrationWarning className="text-2xl font-bold text-white tracking-tight mt-2.5 sm:text-3xl">
-          {getGreeting()},{" "}
-          <span className="text-gradient-green">{user?.name || "Partner"}</span>
-        </h2>
-
-        <p className="text-xs text-zinc-300/80 mt-1.5 max-w-[500px] leading-relaxed">
+        <p className="text-xs text-zinc-300/80 mt-1 max-w-[650px] leading-relaxed">
           Managing automations for{" "}
           <span className="text-white font-semibold">
             {user?.businessName || "My Business"}
@@ -52,26 +54,11 @@ export function WelcomeHeader() {
         </p>
       </div>
 
-      {/* Security Status Pill */}
-      <motion.div
-        whileHover={{ y: -4 }}
-        transition={liquidSpring}
-        className="relative z-10 bg-emerald-950/55 rounded-2xl flex items-center gap-3.5 px-4 py-3.5 border border-emerald-400/30 max-w-xs md:self-center shadow-[0_12px_32px_rgba(0,0,0,0.45),0_0_24px_rgba(16,185,129,0.15)]"
-      >
-        <div className="relative w-10 h-10 rounded-xl bg-emerald-500/18 border border-emerald-400/35 flex items-center justify-center text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.28),inset_0_1px_0_rgba(255,255,255,0.25)]">
-          <span className="absolute inset-0 rounded-xl bg-emerald-400/20 animate-ping opacity-40" />
-          <ShieldCheck className="w-5 h-5 relative z-10" />
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-bold text-white">AI Agent Shield</p>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-          </div>
-          <p className="text-[11px] text-emerald-200/80 mt-0.5">
-            Security &amp; credentials 100% active
-          </p>
-        </div>
-      </motion.div>
+      {/* Realtime System Telemetry Pill */}
+      <div className="relative z-10 self-start md:self-center flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-xs text-emerald-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
+        <span className="font-semibold text-[11px] uppercase tracking-wider">All Systems Operational</span>
+      </div>
     </div>
   );
 }

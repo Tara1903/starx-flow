@@ -3,8 +3,7 @@
 import React from "react";
 import { motion } from "motion/react";
 import { WelcomeHeader } from "../../components/dashboard/WelcomeHeader";
-import { SetupBanner } from "../../components/setup/SetupBanner";
-import { SmartNudges } from "../../components/dashboard/SmartNudge";
+import { DashboardNotifications } from "../../components/dashboard/DashboardNotifications";
 import { QuickActions } from "../../components/dashboard/QuickActions";
 import { KPIGrid } from "../../components/dashboard/KPIGrid";
 import { GlassyDashboardV30Showcase } from "../../components/dashboard/GlassyDashboardV30Showcase";
@@ -33,14 +32,9 @@ export function OverviewSection({
         <WelcomeHeader />
       </motion.div>
 
-      {/* Incomplete setup banner alert */}
+      {/* 4 Compact Dashboard Notifications in a Single Horizontal Line */}
       <motion.div variants={liquidCardEntrance}>
-        <SetupBanner />
-      </motion.div>
-
-      {/* Dynamic Recommendation Banner */}
-      <motion.div variants={liquidCardEntrance}>
-        <SmartNudges />
+        <DashboardNotifications />
       </motion.div>
 
       {/* Shortcut Action Cards */}
