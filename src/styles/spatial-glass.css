@@ -260,3 +260,15 @@
     border-color: rgba(110, 231, 183, 0.35) !important;
   }
 }
+
+/* ==========================================================================
+   DASHBOARD CONTENT CLEARANCE FOR FIXED SIDEBAR DOCK
+   ========================================================================== */
+@media (min-width: 768px) {
+  .dashboard-content-collapsed {
+    padding-left: 96px !important;
+  }
+  .dashboard-content-expanded {
+    padding-left: 304px !important;
+  }
+}

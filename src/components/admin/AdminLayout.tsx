@@ -74,11 +74,20 @@ export function AdminLayout({
         adminEmail={adminEmail}
       />
 
+      {/* Dynamic desktop clearance style for fixed floating dock */}
+      <style>{`
+        @media (min-width: 768px) {
+          .admin-viewport-clearance {
+            padding-left: ${isSidebarCollapsed ? "96px" : "304px"} !important;
+          }
+        }
+      `}</style>
+
       {/* Main Content Scrollable Viewport (Scrolls smoothly while sidebar stays fixed) */}
       <div 
         className={cn(
-          "flex-1 h-screen h-[100dvh] overflow-y-auto console-scroll flex flex-col min-w-0 transition-all duration-300 relative z-10 pb-20 md:pb-0",
-          isSidebarCollapsed ? "md:pl-[100px]" : "md:pl-[308px]"
+          "flex-1 h-screen h-[100dvh] overflow-y-auto console-scroll flex flex-col min-w-0 transition-all duration-300 relative z-10 pb-20 md:pb-0 admin-viewport-clearance",
+          isSidebarCollapsed ? "dashboard-content-collapsed md:pl-24" : "dashboard-content-expanded md:pl-[304px]"
         )}
       >
         {/* Top Floating Glass Toolbar (Sticky at top of scrollable area) */}

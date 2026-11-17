@@ -154,24 +154,33 @@ export function DashboardLayout() {
           style={{ background: "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)" }}
         />
       </div>
+      {/* Dynamic desktop clearance style for fixed floating dock */}
+      <style>{`
+        @media (min-width: 768px) {
+          .dashboard-viewport-clearance {
+            padding-left: ${isSidebarCollapsed ? "96px" : "304px"} !important;
+          }
+        }
+      `}</style>
+
       {/* 1. Sidebar component (Floating fixed dock on desktop, bottom navigation on mobile) */}
       <DashboardSidebar />
 
       {/* 2. Main Content Scrollable Viewport (Scrolls smoothly while sidebar stays fixed) */}
       <div 
         className={cn(
-          "flex-1 h-screen h-[100dvh] overflow-y-auto console-scroll flex flex-col min-w-0 transition-all duration-300 relative z-10 pb-20 md:pb-0",
-          isSidebarCollapsed ? "md:pl-[100px]" : "md:pl-[308px]"
+          "flex-1 h-screen h-[100dvh] overflow-y-auto console-scroll flex flex-col min-w-0 transition-all duration-300 relative z-10 pb-20 md:pb-0 dashboard-viewport-clearance",
+          isSidebarCollapsed ? "dashboard-content-collapsed md:pl-24" : "dashboard-content-expanded md:pl-[304px]"
         )}
       >
         {/* 3. TopBar Component (Sticky at top of scrollable area) */}
-        <div className="sticky top-0 z-30 bg-[#020a07]/80 backdrop-blur-xl border-b border-white/[0.05]">
+        <div className="sticky top-0 z-30 bg-[#020a07]/85 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
           <DashboardTopBar onNewWorkflowClick={handleOpenWorkflowWizard} />
         </div>
         <NetworkStatusBanner onReconnectRetry={fetchInboxData} />
 
         {/* 4. Section Render Area */}
-        <div role="region" aria-label="Dashboard workspace" className="flex-1 px-4 py-5 sm:px-8 sm:py-6 pb-28 sm:pb-12 relative z-10">
+        <div role="region" aria-label="Dashboard workspace" className="flex-1 px-4 py-5 sm:px-6 lg:px-8 py-6 pb-28 sm:pb-12 max-w-[1680px] w-full mx-auto relative z-10">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={activeSection}

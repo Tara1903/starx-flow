@@ -43,18 +43,15 @@ import { cn } from "../../lib/utils";
 import { navPillSpring, sidebarSpring, MOTION_EASE, liquidSpring } from "../../lib/motionVariants";
 
 /* ─────────────────────────────────────────────────────────────
-   GLASSY SIDEBAR V7 (1:1 VIDEO REPLICA)
-   Features:
-   1. Floating Island Dock (fixed top-3.5 bottom-3.5 left-3.5, h-[calc(100vh-1.75rem)])
-   2. 100% Non-scrollable in both extended (280px) and collapsed (72px) states
-   3. Independent page scrolling: sidebar stays anchored and completely fixed
-   4. Floating liquid-glass tooltips & flyouts in collapsed state
-   5. Embedded live Lo-fi / AI Receptionist player card with playback controls,
-      interactive progress bar, and dancing equalizer bars
-   6. Night shift / AI Auto-Pilot toggle switch
-   7. Category filters: All (16) | Core | AI | Ops
-   8. Liquid glass app squircles with rich gradients and notification badges
-   9. Active sliding highlight pill with layoutId
+   REFINED GLASSY COMMAND CENTER SIDEBAR
+   Improvements:
+   1. Icon sizing: Increased to comfortable w-4 / w-4.5 inside w-7.5 squircles
+   2. Reduced visual clutter: Subtle grouping dividers, refined vertical rhythm
+   3. Smooth active sliding pill with layoutId & soft emerald glass highlight
+   4. Floating liquid-glass tooltips & unclipped cascading flyouts
+   5. Lo-fi / AI Receptionist mini-player with balanced padding and controls
+   6. 100% Non-scrollable in both expanded and collapsed states
+   7. Retains all 16 navigation destinations without alteration
    ───────────────────────────────────────────────────────────── */
 
 interface SidebarItem {
@@ -87,14 +84,14 @@ export function DashboardSidebar() {
   // Category filter state for expanded mode
   const [selectedCategory, setSelectedCategory] = useState<"all" | "core" | "ai" | "ops">("all");
 
-  // Media / Lo-fi player state (Video Frame 00:03 replica)
+  // Media / Lo-fi player state
   const [isPlayingAudio, setIsPlayingAudio] = useState(true);
-  const [audioProgress, setAudioProgress] = useState(38); // percentage
+  const [audioProgress, setAudioProgress] = useState(38);
   const [isNightShift, setIsNightShift] = useState(true);
 
-  // Auto-collapse on medium tablet screens
+  // Auto-collapse on medium tablet and small laptop screens
   useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth >= 640 && window.innerWidth < 1024) {
+    if (typeof window !== "undefined" && window.innerWidth >= 640 && window.innerWidth <= 1024) {
       setIsCollapsed(true);
     }
   }, [setIsCollapsed]);
@@ -149,7 +146,7 @@ export function DashboardSidebar() {
       setFlyoutState(null);
       setShowMediaFlyout(false);
       setShowProfileFlyout(false);
-      const groupName = item.group === "core" ? "Core" : item.group === "ai" ? "AI Suite" : "Operations";
+      const groupName = item.group === "core" ? "Favorites" : item.group === "ai" ? "AI Specialists" : "Operations";
       setTooltipState({ label: item.label, badge: item.badge, groupName, top: top + btnRect.height / 2 });
     }
   };
@@ -191,20 +188,20 @@ export function DashboardSidebar() {
     router.push("/");
   };
 
-  // All 16 Dashboard Sections
+  // All 16 Dashboard Sections with Refined Icon Sizing (w-4 / w-4.5)
   const menuItems: SidebarItem[] = [
-    // ── Group 1: Core (Favorites in video) ──
+    // ── Group 1: Favorites / Core ──
     {
       id: "overview",
       label: "Home",
-      icon: <Home className="w-3.5 h-3.5" />,
+      icon: <Home className="w-4 h-4" />,
       group: "core",
       squircleColor: "from-emerald-500/25 to-teal-600/15 text-emerald-300 border-emerald-400/35",
     },
     {
       id: "conversations",
       label: "Inbox",
-      icon: <MessageSquare className="w-3.5 h-3.5" />,
+      icon: <MessageSquare className="w-4 h-4" />,
       badge: unreadConversationsCount > 0 ? unreadConversationsCount : 12,
       group: "core",
       squircleColor: "from-blue-500/25 to-indigo-600/15 text-blue-300 border-blue-400/35",
@@ -214,8 +211,8 @@ export function DashboardSidebar() {
       label: "Calendar",
       icon: (
         <div className="flex flex-col items-center justify-center leading-none">
-          <span className="text-[6px] font-bold text-amber-300 tracking-tighter">{dayName}</span>
-          <span className="text-[9px] font-extrabold text-white leading-none">{dayNum}</span>
+          <span className="text-[7px] font-bold text-amber-300 tracking-tighter uppercase">{dayName}</span>
+          <span className="text-[10px] font-extrabold text-white leading-none mt-0.5">{dayNum}</span>
         </div>
       ),
       badge: "10:30",
@@ -230,7 +227,7 @@ export function DashboardSidebar() {
     {
       id: "workflows",
       label: "Workflows",
-      icon: <Layers className="w-3.5 h-3.5" />,
+      icon: <Layers className="w-4 h-4" />,
       badge: activeWorkflowsCount > 0 ? activeWorkflowsCount : 3,
       group: "core",
       squircleColor: "from-purple-500/25 to-violet-600/15 text-purple-300 border-purple-400/35",
@@ -243,7 +240,7 @@ export function DashboardSidebar() {
     {
       id: "crm",
       label: "Customers",
-      icon: <Users className="w-3.5 h-3.5" />,
+      icon: <Users className="w-4 h-4" />,
       group: "core",
       squircleColor: "from-emerald-500/25 to-green-600/15 text-emerald-300 border-emerald-400/35",
       subItems: [
@@ -255,16 +252,16 @@ export function DashboardSidebar() {
     {
       id: "orders",
       label: "Orders",
-      icon: <ShoppingBag className="w-3.5 h-3.5" />,
+      icon: <ShoppingBag className="w-4 h-4" />,
       group: "core",
       squircleColor: "from-rose-500/25 to-pink-600/15 text-rose-300 border-rose-400/35",
     },
 
-    // ── Group 2: AI Suite (4) ──
+    // ── Group 2: AI Specialists ──
     {
       id: "agents",
       label: "AI Receptionist",
-      icon: <Bot className="w-3.5 h-3.5" />,
+      icon: <Bot className="w-4 h-4" />,
       badge: "Live",
       group: "ai",
       squircleColor: "from-emerald-500/25 to-teal-600/15 text-emerald-300 border-emerald-400/35",
@@ -277,58 +274,58 @@ export function DashboardSidebar() {
     {
       id: "voice",
       label: "Voice AI",
-      icon: <Phone className="w-3.5 h-3.5" />,
+      icon: <Phone className="w-4 h-4" />,
       group: "ai",
       squircleColor: "from-cyan-500/25 to-blue-600/15 text-cyan-300 border-cyan-400/35",
     },
     {
       id: "playground",
       label: "AI Playground",
-      icon: <Brain className="w-3.5 h-3.5" />,
+      icon: <Brain className="w-4 h-4" />,
       group: "ai",
       squircleColor: "from-purple-500/25 to-fuchsia-600/15 text-purple-300 border-purple-400/35",
     },
     {
       id: "os",
       label: "Business OS",
-      icon: <Cpu className="w-3.5 h-3.5" />,
+      icon: <Cpu className="w-4 h-4" />,
       group: "ai",
       squircleColor: "from-indigo-500/25 to-violet-600/15 text-indigo-300 border-indigo-400/35",
     },
 
-    // ── Group 3: Operations & Workspace (6) ──
+    // ── Group 3: Operations & Workspace ──
     {
       id: "knowledge",
       label: "Knowledge",
-      icon: <BookOpen className="w-3.5 h-3.5" />,
+      icon: <BookOpen className="w-4 h-4" />,
       group: "ops",
       squircleColor: "from-sky-500/25 to-cyan-600/15 text-sky-300 border-sky-400/35",
     },
     {
       id: "tasks",
       label: "Tasks",
-      icon: <CheckSquare className="w-3.5 h-3.5" />,
+      icon: <CheckSquare className="w-4 h-4" />,
       group: "ops",
       squircleColor: "from-amber-500/25 to-yellow-600/15 text-amber-300 border-amber-400/35",
     },
     {
       id: "team",
       label: "Team",
-      icon: <Contact className="w-3.5 h-3.5" />,
+      icon: <Contact className="w-4 h-4" />,
       group: "ops",
       squircleColor: "from-teal-500/25 to-emerald-600/15 text-teal-300 border-teal-400/35",
     },
     {
       id: "analytics",
       label: "Analytics",
-      icon: <BarChart3 className="w-3.5 h-3.5" />,
+      icon: <BarChart3 className="w-4 h-4" />,
       group: "ops",
       squircleColor: "from-cyan-500/25 to-teal-600/15 text-cyan-300 border-cyan-400/35",
     },
     {
       id: "channels",
       label: "Channels",
-      icon: <Radio className="w-3.5 h-3.5" />,
+      icon: <Radio className="w-4 h-4" />,
       badge: connectedChannelsCount > 0 ? connectedChannelsCount : undefined,
       group: "ops",
       squircleColor: "from-blue-500/25 to-sky-600/15 text-blue-300 border-blue-400/35",
@@ -336,13 +333,13 @@ export function DashboardSidebar() {
     {
       id: "settings",
       label: "Settings",
-      icon: <Settings className="w-3.5 h-3.5" />,
+      icon: <Settings className="w-4 h-4" />,
       group: "ops",
       squircleColor: "from-zinc-500/25 to-zinc-600/15 text-zinc-300 border-zinc-400/35",
     },
   ];
 
-  // Filter items based on selected category in expanded mode (in collapsed, show all items)
+  // Filter items based on selected category in expanded mode
   const displayedItems = isCollapsed
     ? menuItems
     : selectedCategory === "all"
@@ -353,7 +350,7 @@ export function DashboardSidebar() {
     <>
       {/* ─────────────────────────────────────────────────────────────
           DESKTOP FLOATING LIQUID GLASS DOCK (100% NON-SCROLLABLE)
-          Fixed in place: page content scrolls independently
+          Anchored in place: page content scrolls independently
           ───────────────────────────────────────────────────────────── */}
       <motion.aside
         aria-label="Dashboard sidebar"
@@ -371,7 +368,7 @@ export function DashboardSidebar() {
             {/* 1. Header with Brand & Chevron Toggle Button */}
             <div
               className={cn(
-                "flex items-center py-2 px-3 relative border-b border-white/[0.06] flex-shrink-0",
+                "flex items-center py-2.5 px-3 relative border-b border-white/[0.06] flex-shrink-0",
                 isCollapsed ? "justify-center" : "justify-between px-3.5"
               )}
             >
@@ -396,12 +393,12 @@ export function DashboardSidebar() {
                   onMouseLeave={() => {
                     if (isCollapsed) setTooltipState(null);
                   }}
-                  className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400/25 to-emerald-600/10 border border-emerald-400/40 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)] cursor-pointer"
+                  className="w-8.5 h-8.5 rounded-xl bg-gradient-to-br from-emerald-400/25 to-emerald-600/10 border border-emerald-400/40 flex items-center justify-center flex-shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)] cursor-pointer"
                 >
                   <img
                     src="/logo.svg"
                     alt="StarX"
-                    className="w-4 h-4 object-contain"
+                    className="w-4.5 h-4.5 object-contain"
                   />
                 </div>
 
@@ -420,7 +417,7 @@ export function DashboardSidebar() {
                         <span className="text-xs font-bold text-white tracking-tight truncate">
                           Crema
                         </span>
-                        <span className="text-[8px] font-extrabold uppercase px-1 py-0.2 bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 rounded-full leading-none">
+                        <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.2 bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 rounded-full leading-none">
                           PRO
                         </span>
                       </div>
@@ -432,7 +429,7 @@ export function DashboardSidebar() {
                 </AnimatePresence>
               </div>
 
-              {/* Expand / Collapse Chevron Toggle Button (Video replica) */}
+              {/* Expand / Collapse Chevron Toggle Button */}
               <motion.button
                 type="button"
                 onClick={() => setIsCollapsed(!isCollapsed)}
@@ -454,7 +451,7 @@ export function DashboardSidebar() {
             </div>
 
             {/* 2. Quick Command Search (Expanded: Bar, Collapsed: Squircle) */}
-            <div className="px-2.5 pt-1.5 pb-0.5 relative z-10 flex-shrink-0">
+            <div className="px-2.5 pt-2 pb-1 relative z-10 flex-shrink-0">
               {isCollapsed ? (
                 <div className="relative flex justify-center">
                   <button
@@ -475,9 +472,9 @@ export function DashboardSidebar() {
                     }}
                     onMouseLeave={() => setTooltipState(null)}
                     aria-label="Search and command center (Press ⌘K)"
-                    className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-emerald-300 transition-all cursor-pointer shadow-sm group"
+                    className="w-8.5 h-8.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-emerald-400/40 hover:bg-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-emerald-300 transition-all cursor-pointer shadow-sm group"
                   >
-                    <Search className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                    <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
                   </button>
                 </div>
               ) : (
@@ -490,7 +487,7 @@ export function DashboardSidebar() {
                     <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-300 transition-colors" />
                     <span>Search...</span>
                   </div>
-                  <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-white/10 text-zinc-300 border border-white/15">
+                  <kbd className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-zinc-300 border border-white/15">
                     ⌘K
                   </kbd>
                 </button>
@@ -515,7 +512,7 @@ export function DashboardSidebar() {
                       type="button"
                       onClick={() => setSelectedCategory(cat.id)}
                       className={cn(
-                        "flex-1 py-0.5 text-[9px] font-bold rounded-lg transition-all cursor-pointer text-center",
+                        "flex-1 py-1 text-[9.5px] font-bold rounded-lg transition-all cursor-pointer text-center",
                         isSelected
                           ? "bg-emerald-500/22 text-emerald-300 border border-emerald-400/35 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
                           : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]"
@@ -534,7 +531,7 @@ export function DashboardSidebar() {
             ref={desktopNavRef}
             onKeyDown={handleDesktopNavKeyDown}
             aria-label="Dashboard sections"
-            className="flex-1 min-h-0 flex flex-col justify-evenly overflow-hidden px-1.5 xl:px-2 py-0.5 select-none"
+            className="flex-1 min-h-0 flex flex-col justify-evenly overflow-hidden px-1.5 xl:px-2 py-1 select-none"
           >
             {displayedItems.map((item, idx) => {
               const prevItem = displayedItems[idx - 1];
@@ -546,7 +543,7 @@ export function DashboardSidebar() {
               return (
                 <React.Fragment key={item.id}>
                   {showGroupDivider && (
-                    <div className="my-px border-t border-white/[0.05] flex-shrink-0" />
+                    <div className="my-0.5 border-t border-white/[0.06] mx-1 flex-shrink-0" />
                   )}
                   {renderNavItem(item)}
                 </React.Fragment>
@@ -555,18 +552,13 @@ export function DashboardSidebar() {
           </nav>
 
           {/* Bottom Section: Media/Lo-Fi Card + Night Shift Toggle + User Profile */}
-          <div className="flex flex-col flex-shrink-0 relative z-10 border-t border-white/[0.06] bg-black/20">
-            {/* 5. Liquid Glass Music / AI Receptionist Card (Video Frame 00:03 replica) */}
+          <div className="flex flex-col flex-shrink-0 relative z-10 border-t border-white/[0.06] bg-black/25">
+            {/* 5. Liquid Glass Music / AI Receptionist Card */}
             <div className="p-2 relative z-10">
               {!isCollapsed ? (
                 <div className="rounded-2xl p-2.5 bg-white/[0.03] border border-white/[0.08] shadow-[0_8px_20px_rgba(0,0,0,0.35)] relative overflow-hidden backdrop-blur-md group/player">
-                  {/* Glass highlight glare */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none" />
-
-                  {/* Top row: Track info & Controls */}
                   <div className="flex items-center justify-between gap-2 relative z-10">
                     <div className="flex items-center gap-2 min-w-0">
-                      {/* Album art squircle with sound visualizer */}
                       <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/15 border border-amber-400/35 text-amber-300 flex items-center justify-center flex-shrink-0 shadow-md">
                         <Music className="w-4 h-4" />
                       </div>
@@ -580,7 +572,6 @@ export function DashboardSidebar() {
                       </div>
                     </div>
 
-                    {/* Controls: SkipBack, Play/Pause, SkipForward */}
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button
                         type="button"
@@ -637,7 +628,6 @@ export function DashboardSidebar() {
                     </div>
                     <div className="flex items-center justify-between text-[8px] font-mono text-zinc-400 mt-1">
                       <span>1:15</span>
-                      {/* Dancing Equalizer Bars */}
                       <div className="flex items-end gap-0.5 h-2.5">
                         {[5, 10, 4, 8].map((h, i) => (
                           <motion.span
@@ -658,12 +648,12 @@ export function DashboardSidebar() {
                   </div>
                 </div>
               ) : (
-                /* Collapsed Mini Audio Player Pill (Video Frame 00:01) */
+                /* Collapsed Mini Audio Player Pill */
                 <div className="flex justify-center py-0.5">
                   <button
                     type="button"
                     onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                    onMouseEnter={(e) => {
+                    onMouseEnter={() => {
                       if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
                       setFlyoutState(null);
                       setTooltipState(null);
@@ -672,12 +662,11 @@ export function DashboardSidebar() {
                     onMouseLeave={() => {
                       setShowMediaFlyout(false);
                     }}
-                    className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/10 border border-amber-400/35 flex items-center justify-center text-amber-300 relative shadow-sm cursor-pointer group"
+                    className="w-8.5 h-8.5 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/10 border border-amber-400/35 flex items-center justify-center text-amber-300 relative shadow-sm cursor-pointer group"
                     title="Morning Brew: Lo-fi Café"
                     aria-label="Toggle Morning Brew playback"
                   >
-                    <Music className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                    {/* Live Equalizer indicator dot */}
+                    <Music className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className={cn(
                       "absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#08120e]",
                       isPlayingAudio ? "bg-emerald-400 animate-pulse" : "bg-zinc-500"
@@ -687,7 +676,7 @@ export function DashboardSidebar() {
               )}
             </div>
 
-            {/* 6. Night Shift / Auto-Pilot Row with Spring Switch (Video replica) */}
+            {/* 6. Night Shift / Auto-Pilot Row */}
             <div className="px-3 py-1 flex items-center justify-between border-t border-white/[0.04]">
               {!isCollapsed ? (
                 <>
@@ -741,21 +730,21 @@ export function DashboardSidebar() {
                       }
                     }}
                     onMouseLeave={() => setTooltipState(null)}
-                    className="w-7 h-7 rounded-lg bg-white/[0.03] border border-white/10 flex items-center justify-center text-amber-300 hover:text-white transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-amber-300 hover:text-white transition-colors cursor-pointer"
                     title="Night shift"
                     aria-label="Toggle Night shift"
                   >
                     {isNightShift ? (
-                      <Moon className="w-3.5 h-3.5" />
+                      <Moon className="w-4 h-4" />
                     ) : (
-                      <Sun className="w-3.5 h-3.5" />
+                      <Sun className="w-4 h-4" />
                     )}
                   </button>
                 </div>
               )}
             </div>
 
-            {/* 7. Footer User Profile & 1-Click Sign-out (Video Frame 00:03 replica) */}
+            {/* 7. Footer User Profile & 1-Click Sign-out */}
             <div className="p-2 border-t border-white/[0.05] relative z-10">
               <div
                 className={cn(
@@ -765,7 +754,7 @@ export function DashboardSidebar() {
               >
                 {/* User Avatar with Green Online Dot */}
                 <div
-                  onMouseEnter={(e) => {
+                  onMouseEnter={() => {
                     if (isCollapsed) {
                       setShowProfileFlyout(true);
                       setTooltipState(null);
@@ -778,7 +767,7 @@ export function DashboardSidebar() {
                   className="flex items-center gap-2 min-w-0 cursor-pointer"
                 >
                   <div className="relative flex-shrink-0">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 border border-white/20 flex items-center justify-center font-bold text-white text-[10px] shadow-sm">
+                    <div className="w-7.5 h-7.5 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 border border-white/20 flex items-center justify-center font-bold text-white text-[10px] shadow-sm">
                       {user?.name ? user.name.slice(0, 2).toUpperCase() : "NC"}
                     </div>
                     <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#09120f]" />
@@ -843,7 +832,7 @@ export function DashboardSidebar() {
           </AnimatePresence>
 
           {/* ─────────────────────────────────────────────────────────────
-              CASCADING FLYOUT SUBMENU (COLLAPSED DOCK - Video Frame 00:02)
+              CASCADING FLYOUT SUBMENU (COLLAPSED DOCK)
               ───────────────────────────────────────────────────────────── */}
           <AnimatePresence>
             {isCollapsed && flyoutState && (
@@ -952,7 +941,7 @@ export function DashboardSidebar() {
                 onMouseLeave={() => setShowProfileFlyout(false)}
               >
                 <div className="flex items-center gap-2 pb-2 border-b border-white/[0.08]">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center font-bold text-white text-[10px]">
+                  <div className="w-7.5 h-7.5 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center font-bold text-white text-[10px]">
                     {user?.name ? user.name.slice(0, 2).toUpperCase() : "NC"}
                   </div>
                   <div className="min-w-0">
@@ -995,8 +984,8 @@ export function DashboardSidebar() {
           onMouseEnter={(e) => handleItemMouseEnter(item, e)}
           onMouseLeave={handleItemMouseLeave}
           className={cn(
-            "w-full h-full min-h-[24px] max-h-[30px] xl:max-h-[34px] flex items-center rounded-lg xl:rounded-xl font-medium transition-all duration-150 relative group cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400/70 select-none",
-            isCollapsed ? "justify-center p-0.5" : "gap-2 px-2 py-0.5",
+            "w-full h-full min-h-[28px] max-h-[34px] xl:max-h-[38px] flex items-center rounded-xl font-medium transition-all duration-150 relative group cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400/70 select-none",
+            isCollapsed ? "justify-center p-0.5" : "gap-2.5 px-2.5 py-1",
             isActive
               ? "text-white font-semibold"
               : "text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]"
@@ -1007,7 +996,7 @@ export function DashboardSidebar() {
             <motion.span
               layoutId="activeSidebarPill"
               transition={navPillSpring}
-              className="absolute inset-0 rounded-lg xl:rounded-xl bg-gradient-to-r from-emerald-500/25 via-emerald-500/12 to-emerald-500/5 border border-emerald-400/40 shadow-[0_0_16px_rgba(16,185,129,0.18),inset_0_1px_0_rgba(255,255,255,0.18)] -z-10"
+              className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-500/22 via-emerald-500/10 to-transparent border border-emerald-400/35 shadow-[0_0_16px_rgba(16,185,129,0.16),inset_0_1px_0_rgba(255,255,255,0.15)] -z-10"
             />
           )}
 
@@ -1016,14 +1005,14 @@ export function DashboardSidebar() {
             <motion.span
               layoutId="activeDockDot"
               transition={navPillSpring}
-              className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-3.5 rounded-r-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"
+              className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-4 rounded-r-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"
             />
           )}
 
-          {/* Liquid Glass App Squircle Icon Container */}
+          {/* Liquid Glass App Squircle Icon Container (w-7.5 h-7.5 with w-4 icon) */}
           <div
             className={cn(
-              "w-6 h-6 xl:w-6.5 xl:h-6.5 rounded-md xl:rounded-lg flex items-center justify-center flex-shrink-0 border transition-all duration-200 relative shadow-sm",
+              "w-7.5 h-7.5 xl:w-8 xl:h-8 rounded-xl flex items-center justify-center flex-shrink-0 border transition-all duration-200 relative shadow-sm",
               isActive
                 ? cn("bg-gradient-to-br shadow-[0_0_12px_rgba(16,185,129,0.3)]", item.squircleColor)
                 : "bg-white/[0.04] border-white/10 group-hover:border-white/20 group-hover:bg-white/[0.07] text-zinc-300 group-hover:text-white"
@@ -1033,9 +1022,15 @@ export function DashboardSidebar() {
 
             {/* Notification Badge on Collapsed Dock Icon */}
             {isCollapsed && item.badge !== undefined && (
-              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 bg-red-500 text-white border border-[#09120f] text-[7px] font-extrabold rounded-full flex items-center justify-center shadow-md leading-none">
-                {item.badge}
-              </span>
+              typeof item.badge === "number" ? (
+                <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white border border-[#09120f] text-[7.5px] font-extrabold rounded-full flex items-center justify-center shadow-md leading-none">
+                  {item.badge}
+                </span>
+              ) : item.badge === "Live" ? (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-[#09120f] shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+              ) : (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 border border-[#09120f] shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
+              )
             )}
           </div>
 
@@ -1049,14 +1044,14 @@ export function DashboardSidebar() {
                 transition={{ duration: 0.12, ease: MOTION_EASE.premium }}
                 className="flex items-center justify-between flex-1 min-w-0"
               >
-                <span className="truncate text-[11.5px] xl:text-[12px] tracking-tight">
+                <span className="truncate text-[12px] xl:text-[12.5px] font-medium tracking-tight text-zinc-200 group-hover:text-white">
                   {item.label}
                 </span>
 
                 {item.badge !== undefined && (
                   <span
                     className={cn(
-                      "px-1.5 py-0.2 text-[8.5px] font-bold rounded-full ml-auto tabular-nums leading-tight",
+                      "px-2 py-0.5 text-[8.5px] font-bold rounded-full ml-auto tabular-nums leading-tight",
                       typeof item.badge === "number"
                         ? "bg-red-500 text-white shadow-sm"
                         : "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40"

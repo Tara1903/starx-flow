@@ -36,7 +36,7 @@ export function QuickActions({ onNewWorkflowClick }: QuickActionsProps) {
       section: "workflows",
       ctaText: "Add Workflow",
       colorClass: "text-emerald-300 bg-emerald-500/18 border-emerald-400/30 shadow-[0_0_20px_rgba(16,185,129,0.22),inset_0_1px_0_rgba(255,255,255,0.25)]",
-      hoverColorClass: "group-hover:border-emerald-300/60 group-hover:bg-emerald-500/28 group-hover:scale-110"
+      hoverColorClass: "group-hover:border-emerald-300/60 group-hover:bg-emerald-500/28 group-hover:scale-105"
     },
     {
       title: "Test AI Sandbox",
@@ -45,7 +45,7 @@ export function QuickActions({ onNewWorkflowClick }: QuickActionsProps) {
       section: "playground",
       ctaText: "AI Lab",
       colorClass: "text-purple-300 bg-purple-500/18 border-purple-400/30 shadow-[0_0_20px_rgba(168,85,247,0.22),inset_0_1px_0_rgba(255,255,255,0.25)]",
-      hoverColorClass: "group-hover:border-purple-300/60 group-hover:bg-purple-500/28 group-hover:scale-110"
+      hoverColorClass: "group-hover:border-purple-300/60 group-hover:bg-purple-500/28 group-hover:scale-105"
     },
     {
       title: "Triage Live Inbox",
@@ -54,7 +54,7 @@ export function QuickActions({ onNewWorkflowClick }: QuickActionsProps) {
       section: "conversations",
       ctaText: "View Chats",
       colorClass: "text-pink-300 bg-pink-500/18 border-pink-400/30 shadow-[0_0_20px_rgba(236,72,153,0.22),inset_0_1px_0_rgba(255,255,255,0.25)]",
-      hoverColorClass: "group-hover:border-pink-300/60 group-hover:bg-pink-500/28 group-hover:scale-110"
+      hoverColorClass: "group-hover:border-pink-300/60 group-hover:bg-pink-500/28 group-hover:scale-105"
     },
     {
       title: "Setup Integrations",
@@ -63,7 +63,7 @@ export function QuickActions({ onNewWorkflowClick }: QuickActionsProps) {
       section: "channels",
       ctaText: "Connections",
       colorClass: "text-cyan-300 bg-cyan-500/18 border-cyan-400/30 shadow-[0_0_20px_rgba(34,211,238,0.22),inset_0_1px_0_rgba(255,255,255,0.25)]",
-      hoverColorClass: "group-hover:border-cyan-300/60 group-hover:bg-cyan-500/28 group-hover:scale-110"
+      hoverColorClass: "group-hover:border-cyan-300/60 group-hover:bg-cyan-500/28 group-hover:scale-105"
     }
   ];
 
@@ -77,8 +77,13 @@ export function QuickActions({ onNewWorkflowClick }: QuickActionsProps) {
 
   return (
     <div className="space-y-3 select-none">
-      <div>
-        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Quick Actions</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+          Quick Actions
+        </h3>
+        <span className="text-[10px] font-mono text-zinc-500">
+          4 Fast Shortcuts
+        </span>
       </div>
       <motion.div
         variants={liquidStaggerGrid}
@@ -96,22 +101,24 @@ export function QuickActions({ onNewWorkflowClick }: QuickActionsProps) {
             whileHover={liquidHoverLift}
             whileTap={liquidTapPress}
             onClick={() => handleAction(item)}
-            className="text-left group cursor-pointer liquid-glass glass-card-obsidian glass-interactive rounded-2xl p-4.5 flex flex-col justify-between min-h-[136px] border border-white/[0.14] hover:border-emerald-400/45"
+            className="text-left group cursor-pointer glass-card-obsidian rounded-2xl p-5 flex flex-col justify-between min-h-[148px] border border-white/[0.12] hover:border-emerald-400/40 relative overflow-hidden transition-all duration-200 shadow-[0_8px_24px_rgba(0,0,0,0.32)]"
           >
-            {/* Header Icon */}
+            {/* Header Icon & Navigation Cue */}
             <div className="flex items-center justify-between w-full relative z-10">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-300 ${item.colorClass} ${item.hoverColorClass}`}>
                 {item.icon}
               </div>
-              <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-emerald-300 group-hover:translate-x-1 transition-all duration-300" />
+              <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center group-hover:border-emerald-400/35 group-hover:bg-emerald-500/10 transition-colors">
+                <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-300 group-hover:translate-x-0.5 transition-all duration-300" />
+              </div>
             </div>
 
-            {/* Description */}
-            <div className="mt-3 relative z-10">
-              <h4 className="text-xs font-bold text-white leading-tight group-hover:text-emerald-200 transition-colors">
+            {/* Description with balanced bottom clearance */}
+            <div className="mt-4 pt-1 pb-1 relative z-10">
+              <h4 className="text-[13px] font-bold text-white leading-snug group-hover:text-emerald-200 transition-colors">
                 {item.title}
               </h4>
-              <p className="text-[11px] text-zinc-300/80 mt-1 leading-normal">
+              <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed line-clamp-2">
                 {item.desc}
               </p>
             </div>
