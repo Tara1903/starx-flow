@@ -239,7 +239,7 @@ export function Navbar() {
         <nav
           aria-label="Primary navigation"
           className={cn(
-            "pointer-events-auto max-w-[1380px] mx-auto px-3.5 sm:px-5 lg:px-6 h-14 md:h-16 rounded-full flex items-center justify-between transition-all duration-300 gap-2 sm:gap-4",
+            "pointer-events-auto max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-14 md:h-16 rounded-full flex items-center justify-between transition-all duration-300 gap-2 sm:gap-4",
             scrolled ? "glass-navbar-scrolled" : "glass-navbar-floating"
           )}
         >
@@ -260,12 +260,12 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Center Desktop Navigation: Sleek Typographic Horizontal Glass Capsule */}
-          <div className="hidden lg:flex items-center p-1 sm:p-1.5 rounded-full bg-[#07120c]/75 backdrop-blur-2xl border border-white/[0.14] shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.2)] gap-0.5 sm:gap-1 select-none flex-shrink-0">
+          {/* Center Desktop Navigation: Sleek Typographic & Icon Horizontal Glass Capsule */}
+          <div className="hidden lg:flex items-center p-1 sm:p-1.5 rounded-full bg-[#07120c]/75 backdrop-blur-2xl border border-white/[0.14] shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.2)] gap-0.5 xl:gap-1 select-none flex-shrink-0">
             <Link
               href="/"
               className={cn(
-                "relative inline-flex items-center px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-medium transition-colors duration-200 select-none group",
+                "relative inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-3 py-1.5 rounded-full text-[11px] xl:text-[13px] font-medium transition-colors duration-200 select-none group",
                 isHomeActive
                   ? "text-white font-bold"
                   : "text-zinc-300 hover:text-white hover:bg-white/[0.05]"
@@ -278,10 +278,12 @@ export function Navbar() {
                   className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10"
                 />
               )}
+              <Home className={cn("w-3.5 h-3.5 transition-colors flex-shrink-0", isHomeActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")} />
               <span>Home</span>
             </Link>
             <GlassDropdown
               triggerLabel="Product"
+              triggerIcon={<Cpu className="w-3.5 h-3.5" />}
               items={productItems}
               isActive={isProductActive}
               activeLayoutId="navbar-active-pill"
@@ -289,6 +291,7 @@ export function Navbar() {
             />
             <GlassDropdown
               triggerLabel="Solutions"
+              triggerIcon={<Bot className="w-3.5 h-3.5" />}
               items={solutionsItems}
               isActive={isSolutionsActive}
               activeLayoutId="navbar-active-pill"
@@ -296,6 +299,7 @@ export function Navbar() {
             />
             <GlassDropdown
               triggerLabel="Industries"
+              triggerIcon={<Building2 className="w-3.5 h-3.5" />}
               items={industriesItems}
               isActive={isIndustriesActive}
               activeLayoutId="navbar-active-pill"
@@ -303,6 +307,7 @@ export function Navbar() {
             />
             <GlassDropdown
               triggerLabel="Resources"
+              triggerIcon={<BookOpen className="w-3.5 h-3.5" />}
               items={resourcesItems}
               isActive={isResourcesActive}
               activeLayoutId="navbar-active-pill"
@@ -311,7 +316,7 @@ export function Navbar() {
             <Link
               href="/pricing"
               className={cn(
-                "relative inline-flex items-center px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-medium transition-colors duration-200 select-none group",
+                "relative inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-3 py-1.5 rounded-full text-[11px] xl:text-[13px] font-medium transition-colors duration-200 select-none group",
                 isPricingActive
                   ? "text-white font-bold"
                   : "text-zinc-300 hover:text-white hover:bg-white/[0.05]"
@@ -324,12 +329,13 @@ export function Navbar() {
                   className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10"
                 />
               )}
+              <Sparkles className={cn("w-3.5 h-3.5 transition-colors flex-shrink-0", isPricingActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")} />
               <span>Pricing</span>
             </Link>
           </div>
 
           {/* Right Auth & CTA */}
-          <div className="hidden md:flex items-center gap-2 xl:gap-2.5 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-1.5 xl:gap-2 flex-shrink-0">
             <button
               type="button"
               onClick={openCommandCenter}
@@ -363,7 +369,7 @@ export function Navbar() {
                   variant="primary"
                   magneticStrength="low"
                   onClick={() => router.push(dashboardHref)}
-                  className="px-3.5 xl:px-4.5 py-1.5 text-xs xl:text-sm whitespace-nowrap flex-shrink-0"
+                  className="px-3.5 xl:px-4 py-1.5 text-xs xl:text-sm whitespace-nowrap flex-shrink-0"
                 >
                   Dashboard
                   <ArrowRight className="w-3.5 h-3.5 ml-1" />
@@ -374,7 +380,7 @@ export function Navbar() {
                 <Link
                   href="/dashboard"
                   data-cursor-invert="secondary"
-                  className="hidden xl:inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-300 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all cursor-pointer whitespace-nowrap flex-shrink-0 shadow-[0_0_12px_rgba(40,223,160,0.18)]"
+                  className="hidden 2xl:inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-300 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all cursor-pointer whitespace-nowrap flex-shrink-0 shadow-[0_0_12px_rgba(40,223,160,0.18)]"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
                   <span>Dashboard</span>
@@ -403,7 +409,7 @@ export function Navbar() {
                     if (pathname === "/signup") return;
                     openSignup();
                   }}
-                  className="px-3.5 xl:px-4.5 py-1.5 text-xs xl:text-sm font-bold whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(40,223,160,0.35)]"
+                  className="px-3.5 xl:px-4 py-1.5 text-xs xl:text-sm font-bold whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(40,223,160,0.35)]"
                 >
                   Get Started
                   <ArrowRight className="w-3.5 h-3.5 ml-1" />

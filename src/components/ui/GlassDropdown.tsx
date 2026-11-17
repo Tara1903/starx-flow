@@ -106,7 +106,7 @@ export function GlassDropdown({
           setOpen((prev) => !prev);
         }}
         className={cn(
-          "relative inline-flex items-center gap-1 xl:gap-1.5 px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 cursor-pointer select-none group",
+          "relative inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-3 py-1.5 rounded-full text-[11px] xl:text-[13px] font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 cursor-pointer select-none group",
           isActive
             ? "text-white font-bold"
             : open

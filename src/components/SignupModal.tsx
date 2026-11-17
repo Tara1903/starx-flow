@@ -258,11 +258,11 @@ export function SignupModal({
     }
   };
 
-  // Submit & Verify 8-Digit Numeric OTP
+  // Submit & Verify 8-Character Alphanumeric OTP
   const triggerVerification = async (codeToVerify?: string) => {
-    const code = (codeToVerify || otpChars.join("")).replace(/\D/g, "");
+    const code = (codeToVerify || otpChars.join("")).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
     if (code.length !== 8) {
-      setSubmitError("Please enter all 8 digits of your verification code.");
+      setSubmitError("Please enter all 8 characters of your verification code.");
       return;
     }
 
@@ -587,7 +587,7 @@ export function SignupModal({
                     )}
                   >
                     <KeyRound size={12} />
-                    <span>8-Digit OTP</span>
+                    <span>Email Code</span>
                   </button>
                 </div>
 
@@ -634,7 +634,7 @@ export function SignupModal({
                   ) : (
                     <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
                       <KeyRound size={14} className="shrink-0 text-emerald-400" />
-                      <span>An 8-digit verification code will be sent to your email.</span>
+                      <span>An 8-character verification code will be sent to your email.</span>
                     </div>
                   )}
 
@@ -649,7 +649,7 @@ export function SignupModal({
                       disabled={isSubmitting}
                       className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/25 hover:border-emerald-400 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.4)] disabled:opacity-50"
                     >
-                      <span>{loginMethod === "otp" ? "Send 8-Digit Verification Code" : "Login"}</span>
+                      <span>{loginMethod === "otp" ? "Send Verification Code" : "Login"}</span>
                     </motion.button>
                   </div>
                 </form>
@@ -680,7 +680,7 @@ export function SignupModal({
                     }}
                     className="text-zinc-500 hover:text-zinc-300 text-[11px] transition-colors cursor-pointer"
                   >
-                    {loginMethod === "password" ? "Prefer 8-Digit Numeric OTP?" : "Use Password Instead"}
+                    {loginMethod === "password" ? "Prefer Email Verification Code?" : "Use Password Instead"}
                   </button>
                 </div>
               </div>
@@ -795,7 +795,7 @@ export function SignupModal({
                   ) : (
                     <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
                       <KeyRound size={14} className="shrink-0 text-emerald-400" />
-                      <span>An 8-digit verification code will be sent to your email.</span>
+                      <span>An 8-character verification code will be sent to your email.</span>
                     </div>
                   )}
 
@@ -825,7 +825,7 @@ export function SignupModal({
                       disabled={isSubmitting}
                       className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/25 hover:border-emerald-400 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.4)] disabled:opacity-50"
                     >
-                      <span>{signupMethod === "otp" ? "Send 8-Digit OTP" : "Sign Up"}</span>
+                      <span>{signupMethod === "otp" ? "Send Verification Code" : "Sign Up"}</span>
                     </motion.button>
                   </div>
                 </form>
@@ -856,7 +856,7 @@ export function SignupModal({
                     }}
                     className="text-zinc-500 hover:text-zinc-300 text-[11px] transition-colors cursor-pointer"
                   >
-                    {signupMethod === "password" ? "Prefer 8-Digit Numeric OTP?" : "Use Password Instead"}
+                    {signupMethod === "password" ? "Prefer Email Verification Code?" : "Use Password Instead"}
                   </button>
                 </div>
               </div>
@@ -1040,7 +1040,7 @@ export function SignupModal({
                     </div>
                   ) : (
                     <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300">
-                      An 8-digit verification code will be sent to your email.
+                      An 8-character verification code will be sent to your email.
                     </div>
                   )}
 
@@ -1049,7 +1049,7 @@ export function SignupModal({
                     disabled={isSubmitting}
                     className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-400 text-black transition-all cursor-pointer"
                   >
-                    <span>{signupMethod === "otp" ? "Send 8-Digit OTP" : "Sign Up"}</span>
+                    <span>{signupMethod === "otp" ? "Send Verification Code" : "Sign Up"}</span>
                   </button>
                 </form>
 
@@ -1078,7 +1078,7 @@ export function SignupModal({
                 <form onSubmit={handleLoginSubmit} className="space-y-4">
                   <div className="sr-only">
                     <button type="button" onClick={() => setLoginMethod("password")}>Password</button>
-                    <button type="button" onClick={() => setLoginMethod("otp")}>8-Digit OTP</button>
+                    <button type="button" onClick={() => setLoginMethod("otp")}>Verification Code</button>
                   </div>
                   <div className="relative flex items-center border-b border-white/20 focus-within:border-emerald-400 pb-2">
                     <User size={16} className="text-zinc-400 mr-3 shrink-0" />
@@ -1113,7 +1113,7 @@ export function SignupModal({
                     </div>
                   ) : (
                     <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300">
-                      An 8-digit verification code will be sent to your email.
+                      An 8-character verification code will be sent to your email.
                     </div>
                   )}
 
@@ -1122,7 +1122,7 @@ export function SignupModal({
                     disabled={isSubmitting}
                     className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-400 text-black transition-all cursor-pointer"
                   >
-                    <span>{loginMethod === "otp" ? "Send 8-Digit OTP" : "Login"}</span>
+                    <span>{loginMethod === "otp" ? "Send Verification Code" : "Login"}</span>
                   </button>
                 </form>
 

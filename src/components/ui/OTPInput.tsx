@@ -51,12 +51,15 @@ export function OTPInput({
     return typeof raw === "string" ? raw.slice(0, 1) : String(raw).slice(0, 1);
   });
 
-  // Auto-focus first input on mount if requested
+  // Auto-focus first input on mount if requested (once only)
+  const hasAutoFocused = useRef(false);
   useEffect(() => {
+    if (hasAutoFocused.current) return;
     if (autoFocus && !disabled && !isVerifying && !success) {
+      hasAutoFocused.current = true;
       const timer = setTimeout(() => {
         inputRefs.current[0]?.focus();
-      }, 100);
+      }, 50);
       return () => clearTimeout(timer);
     }
   }, [autoFocus, disabled, isVerifying, success]);
@@ -65,14 +68,14 @@ export function OTPInput({
   const handleCellChange = (index: number, raw: string) => {
     if (disabled || isVerifying || success) return;
 
-    // Strictly numeric: strip anything that is not 0-9
-    const digitsOnly = raw.replace(/\D/g, "");
+    // Alphanumeric: allow letters and digits, automatically capitalized
+    const cleanChars = raw.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
 
-    // Multi-digit paste or autofill event
-    if (digitsOnly.length > 1) {
+    // Multi-character paste or autofill event
+    if (cleanChars.length > 1) {
       const next = [...chars];
-      const startIdx = digitsOnly.length >= 8 ? 0 : index;
-      const slice = digitsOnly.slice(0, 8 - startIdx);
+      const startIdx = cleanChars.length >= 8 ? 0 : index;
+      const slice = cleanChars.slice(0, 8 - startIdx);
 
       for (let i = 0; i < slice.length; i++) {
         next[startIdx + i] = slice[i];
@@ -81,6 +84,7 @@ export function OTPInput({
 
       const nextFocus = Math.min(startIdx + slice.length, 7);
       inputRefs.current[nextFocus]?.focus();
+      inputRefs.current[nextFocus]?.select();
 
       const fullCode = next.join("");
       if (fullCode.length === 8 && onComplete) {
@@ -89,18 +93,22 @@ export function OTPInput({
       return;
     }
 
-    // Single digit input
-    const nextDigit = digitsOnly.slice(-1);
+    // Single character input
+    const nextChar = cleanChars.slice(-1);
     const next = [...chars];
-    next[index] = nextDigit;
+    next[index] = nextChar;
     onChange(next);
 
-    if (nextDigit && index < 7) {
-      inputRefs.current[index + 1]?.focus();
+    if (nextChar && index < 7) {
+      const nextInput = inputRefs.current[index + 1];
+      if (nextInput) {
+        nextInput.focus();
+        nextInput.select();
+      }
     }
 
     const fullCode = next.join("");
-    if (nextDigit && fullCode.length === 8 && onComplete) {
+    if (nextChar && fullCode.length === 8 && onComplete) {
       onComplete(fullCode);
     }
   };
@@ -135,13 +143,13 @@ export function OTPInput({
     if (disabled || isVerifying || success) return;
 
     const pastedText = e.clipboardData.getData("text");
-    const digitsOnly = pastedText.replace(/\D/g, "");
-    if (!digitsOnly) return;
+    const cleanChars = pastedText.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    if (!cleanChars) return;
 
-    // If 8 or more digits pasted, distribute from slot 0 for optimal user convenience
-    const startIdx = digitsOnly.length >= 8 ? 0 : index;
+    // If 8 or more characters pasted, distribute from slot 0 for optimal user convenience
+    const startIdx = cleanChars.length >= 8 ? 0 : index;
     const next = [...chars];
-    const slice = digitsOnly.slice(0, 8 - startIdx);
+    const slice = cleanChars.slice(0, 8 - startIdx);
 
     for (let i = 0; i < slice.length; i++) {
       next[startIdx + i] = slice[i];
@@ -162,7 +170,7 @@ export function OTPInput({
       {/* 8-Cell Input Grid */}
       <motion.div
         role="group"
-        aria-label="8-digit numeric verification code"
+        aria-label="8-character verification code"
         aria-describedby={`${inputGroupId}-hint`}
         animate={error && !prefersReduced ? { x: [0, -10, 10, -8, 8, -4, 4, 0] } : undefined}
         transition={{ duration: 0.42, ease: "easeInOut" }}
@@ -276,10 +284,12 @@ export function OTPInput({
                   }}
                   id={`${inputGroupId}-cell-${idx}`}
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  inputMode="text"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
                   autoComplete={idx === 0 ? "one-time-code" : "off"}
-                  aria-label={`Digit ${idx + 1} of 8`}
+                  aria-label={`Character ${idx + 1} of 8`}
                   maxLength={8}
                   disabled={disabled || isVerifying || success}
                   value={digit}
@@ -300,7 +310,7 @@ export function OTPInput({
       </motion.div>
 
       <p id={`${inputGroupId}-hint`} className="sr-only">
-        Enter your 8-digit numeric verification code. Preserves leading zeroes. Focus moves forward automatically.
+        Enter your 8-character verification code. Focus moves forward automatically.
       </p>
 
       {/* Error Message Announcement */}
@@ -405,7 +415,7 @@ export function LiquidGlassOTPModalView({
                 Verifying your code
               </h3>
               <p className="text-sm text-emerald-400/80 font-mono mt-1">
-                Validating 8-digit security key...
+                Validating 8-character security key...
               </p>
             </motion.div>
           ) : (
@@ -421,7 +431,7 @@ export function LiquidGlassOTPModalView({
               </h3>
               <p className="text-sm text-zinc-400 leading-relaxed max-w-sm mx-auto mt-1">
                 {subtitle ||
-                  "We've sent an 8-digit code to your email. It'll auto-verify once entered."}
+                  "We've sent an 8-character code to your email. It'll auto-verify once entered."}
               </p>
               {email && (
                 <p className="text-xs font-semibold text-emerald-400 font-mono pt-1 break-all">
