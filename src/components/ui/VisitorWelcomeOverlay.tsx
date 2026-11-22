@@ -3,11 +3,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, X, Calendar, MessageSquare, ShieldCheck, HelpCircle } from "lucide-react";
+import { Cpu, ArrowRight, X, Calendar, MessageSquare, ShieldCheck, HelpCircle } from "lucide-react";
 import { liquidSpring } from "@/lib/motionVariants";
 
 const STORAGE_KEY = "starx_welcome_dismissed_v1";
-const DISMISSAL_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export function VisitorWelcomeOverlay() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,25 +14,9 @@ export function VisitorWelcomeOverlay() {
   const cardRef = useRef<HTMLDivElement>(null);
   const primaryButtonRef = useRef<HTMLAnchorElement>(null);
 
+  // Auto-modal disabled to maintain luxury, non-intrusive visitor experience.
   useEffect(() => {
-    // Check if dismissed recently in localStorage
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const timestamp = parseInt(stored, 10);
-        if (!isNaN(timestamp) && Date.now() - timestamp < DISMISSAL_EXPIRY_MS) {
-          return; // Still within dismissal cooldown
-        }
-      }
-      // Small 800ms delay after load so visitor sees the site first
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 750);
-      return () => clearTimeout(timer);
-    } catch {
-      // In private browsing mode or SSR, default to showing
-      setIsOpen(true);
-    }
+    // Intentional no-op: let visitors experience the volumetric hero and interface directly
   }, []);
 
   // Keyboard accessibility: Escape to dismiss
@@ -87,10 +70,10 @@ export function VisitorWelcomeOverlay() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 8 }}
             transition={liquidSpring}
-            className="w-full max-w-lg rounded-3xl p-6 sm:p-8 bg-[#040e0a]/95 border border-emerald-500/30 text-white shadow-[0_24px_64px_rgba(0,0,0,0.85),0_0_36px_rgba(16,185,129,0.18)] relative overflow-hidden select-none"
+            className="w-full max-w-lg rounded-3xl p-6 sm:p-8 bg-[#07130e]/95 border border-white/[0.08] text-white shadow-2xl relative overflow-hidden select-none"
           >
-            {/* Top decorative gradient ambient line */}
-            <div className="absolute top-0 inset-x-8 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/80 to-transparent shadow-[0_0_12px_rgba(52,211,153,0.8)]" />
+            {/* Top hairline */}
+            <div className="absolute top-0 inset-x-8 h-px bg-white/[0.08]" />
 
             {/* Dismiss Close Icon */}
             <button
@@ -104,14 +87,14 @@ export function VisitorWelcomeOverlay() {
 
             {/* Header Badge & Title */}
             <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-400/30 shadow-[0_0_14px_rgba(16,185,129,0.2)]">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                <span>AI Operating System</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium text-emerald-300 bg-emerald-500/10 border border-emerald-400/20">
+                <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-mono">AI Operating System</span>
               </span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 status-live" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             </div>
 
-            <h2 id="welcome-modal-title" className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+            <h2 id="welcome-modal-title" className="text-2xl sm:text-3xl font-normal font-serif tracking-tight text-white">
               Welcome to StarX Flow
             </h2>
 
@@ -160,7 +143,7 @@ export function VisitorWelcomeOverlay() {
                 ref={primaryButtonRef}
                 href="/demo"
                 onClick={handleDismiss}
-                className="w-full sm:flex-1 py-3 px-5 rounded-xl text-xs font-bold text-[#041a10] bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 transition-all text-center flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(16,185,129,0.35)] cursor-pointer"
+                className="w-full sm:flex-1 py-3 px-5 rounded-xl text-xs font-semibold text-[#041f13] bg-[#28dfa0] hover:bg-[#22c78f] transition-colors text-center flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Explore Live Platform</span>
                 <ArrowRight className="w-3.5 h-3.5" />

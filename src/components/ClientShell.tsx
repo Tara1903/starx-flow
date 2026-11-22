@@ -63,24 +63,10 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     return cleanup;
   }, [initSession]);
 
-  // First-visit optional authentication invitation (disabled on homepage and auth pages to preserve spatial composition)
+  // First-visit auto-popups disabled to maintain premium, non-intrusive luxury UX
   useEffect(() => {
-    if (!mounted || isAppRoute || isHomePage || isAuthRoute || isLoggedIn) return;
-    try {
-      const dismissed = localStorage.getItem('starx_auth_prompt_dismissed_v1');
-      if (!dismissed) {
-        const timer = setTimeout(() => {
-          const checkAgain = localStorage.getItem('starx_auth_prompt_dismissed_v1');
-          if (!checkAgain && !useAuthStore.getState().isLoggedIn) {
-            openFirstVisitPrompt();
-          }
-        }, 1000);
-        return () => clearTimeout(timer);
-      }
-    } catch {
-      // LocalStorage unavailable
-    }
-  }, [mounted, isAppRoute, isHomePage, isAuthRoute, isLoggedIn, openFirstVisitPrompt]);
+    // No-op: do not hijack visitor screens with unsolicited auth popups
+  }, []);
 
   useEffect(() => {
     if (theme === 'dark') {
