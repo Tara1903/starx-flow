@@ -1951,7 +1951,7 @@ export function StarXFlowLanding() {
 
         {/* Right: AI Receptionist Massage Demo Widget */}
         <div className="lg:col-span-6">
-          <div className="rounded-3xl p-6 sm:p-7 relative overflow-hidden border border-white/[0.08] bg-[#05140e]/85 backdrop-blur-xl shadow-2xl">
+          <div className="rounded-3xl p-6 sm:p-7 relative overflow-hidden volumetric-glass-card shadow-2xl">
             <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 font-semibold text-sm">
@@ -2013,7 +2013,7 @@ export function StarXFlowLanding() {
       </div>
 
       {/* Scene 01C: Verified Platform Integrations & Security Architecture Bar */}
-      <div id="scene-integrations" className="mt-14 rounded-3xl p-6 sm:p-8 border border-white/[0.08] bg-[#04100b]/80 backdrop-blur-xl shadow-xl">
+      <div id="scene-integrations" className="mt-14 rounded-3xl p-6 sm:p-8 volumetric-glass-card shadow-xl">
         <div className="text-center max-w-3xl mx-auto">
           <div className="text-xs font-mono text-emerald-400">Verified Integrations &amp; Security Architecture</div>
           <p className="text-sm text-zinc-400 mt-2">

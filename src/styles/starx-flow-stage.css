@@ -254,7 +254,7 @@
     .border-emerald-500\/20 { border-color: rgba(16, 185, 129, 0.2); }
     .border-emerald-500\/25 { border-color: rgba(16, 185, 129, 0.25); }
     .border-emerald-500\/30 { border-color: rgba(16, 185, 129, 0.3); }
-    .backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .backdrop-blur-md { -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
     .accent-emerald-400 { accent-color: #34d399; }
     .max-w-\[85\%\] { max-width: 85%; }
     .max-w-\[88\%\] { max-width: 88%; }
@@ -401,8 +401,8 @@
       box-shadow:
         0 calc(5 * var(--u)) calc(18 * var(--u)) rgba(0, 0, 0, 0.48),
         inset 0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
       transition: all 0.22s ease;
       cursor: pointer;
     }
@@ -415,33 +415,42 @@
       transform: translateY(calc(-1.5 * var(--u)));
     }
 
-    /* Interactive Glass Card Surface */
+    /* Interactive Volumetric 3D Glass Card Surface (Low-Blur Spec) */
     .glass-shell {
       transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .mode-pure-css .glass-shell {
-      background: linear-gradient(145deg, rgba(24, 68, 50, 0.54) 0%, rgba(8, 26, 19, 0.78) 100%);
-      border: calc(1.4 * var(--u)) solid rgba(134, 239, 172, 0.36);
+      background:
+        radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.16) 0%, transparent 60%),
+        linear-gradient(145deg, rgba(20, 56, 42, 0.45) 0%, rgba(6, 20, 15, 0.72) 100%);
+      border: calc(1.4 * var(--u)) solid rgba(143, 255, 208, 0.32);
       box-shadow:
-        0 calc(16 * var(--u)) calc(38 * var(--u)) rgba(0, 0, 0, 0.62),
-        0 0 calc(22 * var(--u)) rgba(52, 211, 153, 0.15),
-        inset 0 calc(1.5 * var(--u)) calc(2.5 * var(--u)) rgba(255, 255, 255, 0.22);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+        0 calc(16 * var(--u)) calc(38 * var(--u)) rgba(0, 0, 0, 0.75),
+        inset 0 calc(1.5 * var(--u)) calc(1 * var(--u)) rgba(255, 255, 255, 0.75),
+        inset calc(1.5 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.45),
+        inset -calc(2 * var(--u)) -calc(2 * var(--u)) calc(5 * var(--u)) rgba(0, 0, 0, 0.75);
+      -webkit-backdrop-filter: blur(5px) saturate(180%) contrast(105%);
+      backdrop-filter: blur(5px) saturate(180%) contrast(105%);
     }
     .mode-hybrid .glass-shell {
-      background: linear-gradient(145deg, rgba(7, 26, 19, 0.84) 0%, rgba(3, 14, 10, 0.93) 100%);
-      border: calc(1.2 * var(--u)) solid rgba(110, 231, 183, 0.35);
+      background:
+        radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 85% 65% at 50% 40%, rgba(20, 52, 38, 0.28) 0%, rgba(8, 20, 15, 0.62) 60%, rgba(3, 9, 7, 0.82) 100%),
+        linear-gradient(145deg, rgba(22, 58, 44, 0.42) 0%, rgba(6, 18, 13, 0.75) 100%);
+      border: calc(1.2 * var(--u)) solid rgba(143, 255, 208, 0.32);
       box-shadow:
-        0 calc(18 * var(--u)) calc(44 * var(--u)) -calc(4 * var(--u)) rgba(0, 0, 0, 0.78),
-        0 0 calc(24 * var(--u)) rgba(16, 185, 129, 0.14),
-        inset 0 calc(1.2 * var(--u)) calc(1.8 * var(--u)) rgba(255, 255, 255, 0.24);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
+        0 calc(18 * var(--u)) calc(44 * var(--u)) -calc(4 * var(--u)) rgba(0, 0, 0, 0.82),
+        0 0 calc(24 * var(--u)) rgba(40, 223, 160, 0.14),
+        inset 0 calc(1.5 * var(--u)) calc(1 * var(--u)) rgba(255, 255, 255, 0.80),
+        inset calc(1.5 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.50),
+        inset -calc(2.5 * var(--u)) -calc(2.5 * var(--u)) calc(6 * var(--u)) rgba(0, 0, 0, 0.82),
+        inset 0 0 calc(24 * var(--u)) calc(3 * var(--u)) rgba(2, 12, 8, 0.70);
+      -webkit-backdrop-filter: blur(5px) saturate(185%) contrast(106%);
+      backdrop-filter: blur(5px) saturate(185%) contrast(106%);
     }
     .glass-shell:hover {
-      border-color: rgba(134, 239, 172, 0.5);
-      box-shadow: 0 0 calc(26 * var(--u)) rgba(74, 222, 128, 0.24);
+      border-color: rgba(143, 255, 208, 0.5);
+      box-shadow: 0 0 calc(26 * var(--u)) rgba(40, 223, 160, 0.20);
     }
 
     /* Interactive Slot Pill inside WhatsApp Cards */
@@ -582,20 +591,24 @@
     }
 
     .spatial-glass-card {
-      background: linear-gradient(155deg, rgba(18, 54, 39, 0.56) 0%, rgba(6, 22, 16, 0.82) 100%);
-      border: 1px solid rgba(110, 231, 183, 0.26);
+      background:
+        radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.16) 0%, transparent 60%),
+        radial-gradient(ellipse 85% 65% at 50% 40%, rgba(20, 52, 38, 0.28) 0%, rgba(8, 20, 15, 0.62) 60%, rgba(3, 9, 7, 0.82) 100%),
+        linear-gradient(155deg, rgba(24, 58, 42, 0.38) 0%, rgba(9, 22, 16, 0.55) 55%, rgba(4, 11, 8, 0.76) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.65),
-        0 0 28px rgba(52, 211, 153, 0.08),
-        inset 0 0 12px -3px rgba(143, 255, 208, 0.12),
-        inset 1.5px 2px 1px -1px rgba(255, 255, 255, 0.65),
-        inset -1.5px -2px 1px -1px rgba(143, 255, 208, 0.35),
-        inset 0 2px 4px -1px rgba(0, 0, 0, 0.35),
-        inset 2px 1px 4px -1px rgba(110, 231, 183, 0.18),
-        inset -2px -1px 4px -1px rgba(16, 185, 129, 0.14),
-        inset 0 0.5px 2px 0 rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(16px) brightness(1.04) contrast(1.02) saturate(175%);
-      -webkit-backdrop-filter: blur(16px) brightness(1.04) contrast(1.02) saturate(175%);
+        0 20px 50px -10px rgba(0, 0, 0, 0.85),
+        0 8px 20px -4px rgba(0, 0, 0, 0.55),
+        0 0 36px rgba(40, 223, 160, 0.16),
+        inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.80),
+        inset 1.5px 2px 2px -0.5px rgba(255, 255, 255, 0.50),
+        inset 2.5px 1.5px 6px -1px rgba(0, 217, 255, 0.22),
+        inset 1.5px 2.5px 10px -2px rgba(143, 255, 208, 0.32),
+        inset -2.5px -3px 8px -1px rgba(0, 0, 0, 0.85),
+        inset -1.5px -1.5px 3px 0 rgba(40, 223, 160, 0.28),
+        inset 0 0 28px 3px rgba(2, 12, 8, 0.75);
+      -webkit-backdrop-filter: blur(5px) brightness(1.05) contrast(1.05) saturate(185%);
+      backdrop-filter: blur(5px) brightness(1.05) contrast(1.05) saturate(185%);
       transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
     }
@@ -617,17 +630,18 @@
       z-index: 1;
     }
     .spatial-glass-card:hover {
-      border-color: rgba(134, 239, 172, 0.52);
+      border-color: rgba(143, 255, 208, 0.40);
       box-shadow:
-        0 24px 58px rgba(0, 0, 0, 0.72),
-        0 0 34px rgba(74, 222, 128, 0.18),
-        inset 0 0 16px -2px rgba(143, 255, 208, 0.22),
-        inset 2px 2.5px 1.5px -1px rgba(255, 255, 255, 0.80),
-        inset -2px -2.5px 1.5px -1px rgba(143, 255, 208, 0.45),
-        inset 0 2.5px 5px -1px rgba(0, 0, 0, 0.40),
-        inset 2.5px 1.5px 5px -1px rgba(110, 231, 183, 0.25),
-        inset -2.5px -1.5px 5px -1px rgba(16, 185, 129, 0.20),
-        inset 0 0.5px 2px 0 rgba(255, 255, 255, 0.35);
+        0 26px 64px -10px rgba(0, 0, 0, 0.92),
+        0 10px 24px -4px rgba(0, 0, 0, 0.65),
+        0 0 45px rgba(40, 223, 160, 0.22),
+        inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
+        inset 2px 2.5px 2px -0.5px rgba(255, 255, 255, 0.70),
+        inset 3px 2px 8px -1px rgba(0, 217, 255, 0.28),
+        inset 2px 3.5px 14px -2px rgba(143, 255, 208, 0.42),
+        inset -2.5px -3px 8px -1px rgba(0, 0, 0, 0.90),
+        inset -1.5px -1.5px 3px 0 rgba(40, 223, 160, 0.35),
+        inset 0 0 32px 4px rgba(2, 12, 8, 0.82);
     }
 
     .spatial-pedestal-line {
@@ -685,16 +699,24 @@
       }
     }
 
-    /* 2. Scene 1 — Hero Floating 3D Interface Panels (Refined Physical Glass Materials & Stable Amplitudes) */
+    /* 2. Scene 1 — Hero Floating 3D Interface Panels (Volumetric 3D Liquid Glass with Low-Blur Optics) */
     #hero-whatsapp-card {
-      background: linear-gradient(150deg, rgba(8, 30, 22, 0.88) 0%, rgba(3, 16, 11, 0.95) 100%);
-      border: calc(1.3 * var(--u)) solid rgba(110, 231, 183, 0.45);
+      background:
+        radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.22) 0%, transparent 60%),
+        radial-gradient(ellipse 85% 65% at 50% 40%, rgba(20, 52, 38, 0.32) 0%, rgba(8, 20, 15, 0.65) 60%, rgba(3, 9, 7, 0.85) 100%),
+        linear-gradient(150deg, rgba(24, 60, 44, 0.45) 0%, rgba(6, 20, 14, 0.75) 100%);
+      border: calc(1.3 * var(--u)) solid rgba(143, 255, 208, 0.35);
       box-shadow:
-        0 calc(24 * var(--u)) calc(54 * var(--u)) -calc(6 * var(--u)) rgba(0, 0, 0, 0.82),
-        0 0 calc(28 * var(--u)) rgba(16, 185, 129, 0.18),
-        inset 0 calc(1.4 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(24px) saturate(190%);
-      -webkit-backdrop-filter: blur(24px) saturate(190%);
+        0 calc(24 * var(--u)) calc(54 * var(--u)) -calc(6 * var(--u)) rgba(0, 0, 0, 0.85),
+        0 0 calc(28 * var(--u)) rgba(40, 223, 160, 0.16),
+        inset 0 calc(1.5 * var(--u)) calc(1 * var(--u)) 0 rgba(255, 255, 255, 0.85),
+        inset calc(1.5 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) -calc(0.5 * var(--u)) rgba(255, 255, 255, 0.55),
+        inset calc(2.5 * var(--u)) calc(1.5 * var(--u)) calc(6 * var(--u)) -calc(1 * var(--u)) rgba(0, 217, 255, 0.22),
+        inset calc(1.5 * var(--u)) calc(2.5 * var(--u)) calc(10 * var(--u)) -calc(2 * var(--u)) rgba(143, 255, 208, 0.32),
+        inset -calc(2.5 * var(--u)) -calc(3 * var(--u)) calc(8 * var(--u)) -calc(1 * var(--u)) rgba(0, 0, 0, 0.85),
+        inset 0 0 calc(28 * var(--u)) calc(3 * var(--u)) rgba(2, 12, 8, 0.75);
+      -webkit-backdrop-filter: blur(5px) saturate(190%) contrast(106%) brightness(1.05);
+      backdrop-filter: blur(5px) saturate(190%) contrast(106%) brightness(1.05);
       z-index: 18;
       animation: heroFloatWhatsApp 5.2s infinite ease-in-out;
       will-change: transform;
@@ -709,14 +731,20 @@
     }
 
     #hero-bookings-tablet {
-      background: linear-gradient(155deg, rgba(6, 22, 16, 0.88) 0%, rgba(2, 12, 9, 0.95) 100%);
-      border: calc(1.3 * var(--u)) solid rgba(110, 231, 183, 0.32);
+      background:
+        radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 85% 65% at 50% 40%, rgba(18, 48, 35, 0.28) 0%, rgba(6, 18, 13, 0.65) 60%, rgba(2, 8, 6, 0.88) 100%),
+        linear-gradient(155deg, rgba(20, 54, 38, 0.42) 0%, rgba(5, 16, 11, 0.78) 100%);
+      border: calc(1.3 * var(--u)) solid rgba(143, 255, 208, 0.30);
       border-radius: calc(26 * var(--u));
       box-shadow:
-        0 calc(20 * var(--u)) calc(48 * var(--u)) rgba(0, 0, 0, 0.75),
-        inset 0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
+        0 calc(20 * var(--u)) calc(48 * var(--u)) rgba(0, 0, 0, 0.80),
+        inset 0 calc(1.5 * var(--u)) calc(1 * var(--u)) rgba(255, 255, 255, 0.75),
+        inset calc(1.5 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) rgba(255, 255, 255, 0.45),
+        inset -calc(2.5 * var(--u)) -calc(2.5 * var(--u)) calc(6 * var(--u)) rgba(0, 0, 0, 0.80),
+        inset 0 0 calc(24 * var(--u)) calc(3 * var(--u)) rgba(2, 12, 8, 0.72);
+      -webkit-backdrop-filter: blur(5px) saturate(185%) contrast(105%);
+      backdrop-filter: blur(5px) saturate(185%) contrast(105%);
       z-index: 16;
       animation: heroFloatTablet 6.4s -1.2s infinite ease-in-out;
       will-change: transform;
@@ -732,13 +760,16 @@
 
     /* Supporting Side Panels (Quiet, elegant secondary hierarchy) */
     #hero-ai-card {
-      background: linear-gradient(150deg, rgba(6, 22, 16, 0.84) 0%, rgba(2, 12, 8, 0.92) 100%);
-      border: calc(1 * var(--u)) solid rgba(110, 231, 183, 0.18);
+      background:
+        radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
+        linear-gradient(150deg, rgba(16, 44, 32, 0.40) 0%, rgba(4, 14, 10, 0.75) 100%);
+      border: calc(1 * var(--u)) solid rgba(143, 255, 208, 0.24);
       box-shadow:
         0 calc(14 * var(--u)) calc(36 * var(--u)) rgba(0, 0, 0, 0.75),
-        inset 0 calc(1 * var(--u)) calc(1.5 * var(--u)) rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(18px) saturate(160%);
-      -webkit-backdrop-filter: blur(18px) saturate(160%);
+        inset 0 calc(1.5 * var(--u)) calc(1 * var(--u)) rgba(255, 255, 255, 0.65),
+        inset -calc(2 * var(--u)) -calc(2 * var(--u)) calc(4 * var(--u)) rgba(0, 0, 0, 0.70);
+      -webkit-backdrop-filter: blur(4px) saturate(175%) contrast(104%);
+      backdrop-filter: blur(4px) saturate(175%) contrast(104%);
       z-index: 15;
       animation: heroFloatAiCard 5.6s -2.1s infinite ease-in-out;
       will-change: transform;
@@ -753,13 +784,16 @@
     }
 
     #hero-customer-card {
-      background: linear-gradient(150deg, rgba(6, 22, 16, 0.84) 0%, rgba(2, 12, 8, 0.92) 100%);
-      border: calc(1 * var(--u)) solid rgba(110, 231, 183, 0.18);
+      background:
+        radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.15) 0%, transparent 60%),
+        linear-gradient(150deg, rgba(16, 44, 32, 0.40) 0%, rgba(4, 14, 10, 0.75) 100%);
+      border: calc(1 * var(--u)) solid rgba(143, 255, 208, 0.24);
       box-shadow:
         0 calc(14 * var(--u)) calc(36 * var(--u)) rgba(0, 0, 0, 0.75),
-        inset 0 calc(1 * var(--u)) calc(1.5 * var(--u)) rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(18px) saturate(160%);
-      -webkit-backdrop-filter: blur(18px) saturate(160%);
+        inset 0 calc(1.5 * var(--u)) calc(1 * var(--u)) rgba(255, 255, 255, 0.65),
+        inset -calc(2 * var(--u)) -calc(2 * var(--u)) calc(4 * var(--u)) rgba(0, 0, 0, 0.70);
+      -webkit-backdrop-filter: blur(4px) saturate(175%) contrast(104%);
+      backdrop-filter: blur(4px) saturate(175%) contrast(104%);
       z-index: 15;
       animation: heroFloatCustomerCard 6.0s -0.7s infinite ease-in-out;
       will-change: transform;

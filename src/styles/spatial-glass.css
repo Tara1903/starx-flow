@@ -23,10 +23,10 @@
   --spatial-emerald-specular: rgba(143, 255, 208, 0.65);
   --spatial-emerald-beam: rgba(40, 223, 160, 0.32);
 
-  /* Optical Vibrancy & Chromatic Specular Bevels (Glassy UI Integration) */
-  --glass-vibrancy-frost: blur(16px) brightness(1.04) contrast(1.02) saturate(175%);
-  --glass-vibrancy-crystal: blur(20px) brightness(1.06) contrast(1.03) saturate(185%);
-  --glass-vibrancy-subtle: blur(12px) brightness(1.03) contrast(1.01) saturate(160%);
+  /* Optical Vibrancy & Chromatic Specular Bevels (Volumetric 3D Low-Blur Spec) */
+  --glass-vibrancy-frost: blur(5px) brightness(1.05) contrast(1.05) saturate(185%);
+  --glass-vibrancy-crystal: blur(6px) brightness(1.06) contrast(1.06) saturate(190%);
+  --glass-vibrancy-subtle: blur(4px) brightness(1.04) contrast(1.04) saturate(170%);
 
   --glass-optical-bevel:
     inset 0 0 12px -3px rgba(143, 255, 208, 0.12),
@@ -59,24 +59,24 @@
   /* Glass Tier 1: Architectural Glass (Backdrop / Arch / Podiums) */
   --glass-arch-bg: linear-gradient(135deg, rgba(8, 32, 20, 0.45) 0%, rgba(2, 12, 8, 0.75) 100%);
   --glass-arch-border: 1px solid rgba(40, 223, 160, 0.15);
-  --glass-arch-blur: 24px;
+  --glass-arch-blur: 7px;
 
   /* Glass Tier 2: Primary Interface Glass (Calendar Slab, Pricing Cards) */
   --glass-primary-bg: linear-gradient(145deg, rgba(12, 40, 25, 0.65) 0%, rgba(4, 16, 10, 0.82) 100%);
   --glass-primary-border: 1px solid rgba(40, 223, 160, 0.22);
-  --glass-primary-blur: 16px;
+  --glass-primary-blur: 5px;
   --glass-primary-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.8), var(--glass-optical-bevel);
 
   /* Glass Tier 3: Secondary Contextual Glass (Capability Cards, Problem Shards) */
   --glass-secondary-bg: linear-gradient(160deg, rgba(10, 28, 18, 0.50) 0%, rgba(4, 14, 9, 0.75) 100%);
   --glass-secondary-border: 1px solid rgba(40, 223, 160, 0.14);
-  --glass-secondary-blur: 12px;
+  --glass-secondary-blur: 4px;
   --glass-secondary-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), var(--glass-optical-bevel-input);
 
   /* Glass Tier 4: Crystal Glass (Badges, WhatsApp Card, Floating Capsules) */
   --glass-crystal-bg: linear-gradient(135deg, rgba(16, 50, 32, 0.60) 0%, rgba(8, 26, 16, 0.75) 100%);
   --glass-crystal-border: 1px solid rgba(143, 255, 208, 0.32);
-  --glass-crystal-blur: 20px;
+  --glass-crystal-blur: 6px;
   --glass-crystal-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 16px rgba(40, 223, 160, 0.18), var(--glass-optical-bevel-intense);
 
   /* Tier 5: Reflective Platform Sheen */
@@ -156,20 +156,38 @@
 }
 
 .glass-panel {
-  background: linear-gradient(145deg, rgba(10, 28, 20, 0.65) 0%, rgba(4, 14, 10, 0.85) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: var(--glass-vibrancy-frost);
+  position: relative;
+  background:
+    radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.16) 0%, transparent 60%),
+    radial-gradient(ellipse 85% 65% at 50% 40%, rgba(20, 52, 38, 0.28) 0%, rgba(8, 20, 15, 0.62) 60%, rgba(3, 9, 7, 0.82) 100%),
+    linear-gradient(155deg, rgba(24, 58, 42, 0.38) 0%, rgba(9, 22, 16, 0.55) 55%, rgba(4, 11, 8, 0.76) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   -webkit-backdrop-filter: var(--glass-vibrancy-frost);
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.85);
+  backdrop-filter: var(--glass-vibrancy-frost);
+  box-shadow:
+    0 18px 48px -8px rgba(0, 0, 0, 0.82),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.80),
+    inset 1.5px 2px 2px -0.5px rgba(255, 255, 255, 0.48),
+    inset 2.5px 1.5px 6px -1px rgba(0, 217, 255, 0.20),
+    inset -2.5px -2.5px 6px -1px rgba(0, 0, 0, 0.80),
+    inset 0 0 24px 3px rgba(2, 12, 8, 0.72);
   border-radius: 1.25rem;
+  overflow: hidden;
 }
 
 .glass-panel-hover {
-  transition: border-color 0.22s ease, box-shadow 0.22s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 .glass-panel-hover:hover {
-  border-color: rgba(143, 255, 208, 0.28);
-  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.95);
+  border-color: rgba(143, 255, 208, 0.35);
+  box-shadow:
+    0 24px 60px -10px rgba(0, 0, 0, 0.90),
+    0 0 36px rgba(40, 223, 160, 0.18),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.92),
+    inset 2px 2.5px 2px -0.5px rgba(255, 255, 255, 0.65),
+    inset 3px 2px 8px -1px rgba(0, 217, 255, 0.28),
+    inset -2.5px -3px 8px -1px rgba(0, 0, 0, 0.88),
+    inset 0 0 28px 4px rgba(2, 12, 8, 0.78);
 }
 
 .spatial-pill-badge {
@@ -178,14 +196,21 @@
   gap: 0.5rem;
   padding: 0.35rem 0.85rem;
   border-radius: 9999px;
-  background: rgba(9, 24, 17, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(ellipse 100% 90% at 50% -20%, rgba(255, 255, 255, 0.18) 0%, transparent 60%),
+    linear-gradient(160deg, rgba(16, 44, 30, 0.70) 0%, rgba(6, 16, 12, 0.85) 100%);
+  -webkit-backdrop-filter: blur(4px) saturate(175%);
+  backdrop-filter: blur(4px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: normal;
   color: #a7f3d0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.50),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.60);
 }
 
 .spatial-btn-primary {

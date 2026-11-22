@@ -250,13 +250,13 @@ export function StarXFlowMobileStage({
         {/* ======================================================================= */}
         <div className="mt-8 w-full max-w-[360px] mx-auto relative">
           {/* Architectural Glass Showcase Base */}
-          <div className="rounded-3xl p-4 sm:p-5 relative bg-gradient-to-b from-[#0a261c]/90 via-[#04150f]/95 to-[#020b08] border border-emerald-500/35 shadow-[0_20px_50px_rgba(0,0,0,0.85),0_0_30px_rgba(40,223,160,0.15)]">
+          <div className="rounded-3xl p-4 sm:p-5 relative volumetric-glass-card shadow-[0_20px_50px_rgba(0,0,0,0.85)]">
             
             {/* Top Specular Edge Glow */}
             <div className="absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent via-emerald-300/60 to-transparent" />
 
             {/* 1. Primary WhatsApp Chat Surface */}
-            <div className="rounded-2xl p-3.5 bg-[#051a11]/90 border border-emerald-400/30 shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
+            <div className="rounded-2xl p-3.5 volumetric-glass-card border border-emerald-400/30 shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
               {/* WhatsApp Header */}
               <div className="flex items-center justify-between pb-3 border-b border-emerald-500/20">
                 <div className="flex items-center gap-2.5">

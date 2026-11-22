@@ -51,11 +51,11 @@ nextjs-portal,
   --sx-spotlight-color: rgba(16, 185, 129, 0.16);
   --sx-spotlight-opacity: 0.16;
 
-  /* --- Glass Blur Tiers --- */
-  --glass-blur-mist: 6px;
-  --glass-blur-panel: 12px;
-  --glass-blur-focus: 14px;
-  --glass-blur-hero: 16px;
+  /* --- Glass Blur Tiers (Volumetric 3D Low-Blur Spec) --- */
+  --glass-blur-mist: 3px;
+  --glass-blur-panel: 5px;
+  --glass-blur-focus: 6px;
+  --glass-blur-hero: 7px;
 
   /* --- Glass Tint --- */
   --glass-tint-mist: rgba(255, 255, 255, 0.01);
@@ -221,22 +221,22 @@ h3 {
 }
 
 .surface-elevated {
-  background: rgba(10, 10, 10, 0.8);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  background: rgba(8, 20, 15, 0.75);
+  -webkit-backdrop-filter: blur(5px) saturate(180%) contrast(105%);
+  backdrop-filter: blur(5px) saturate(180%) contrast(105%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 
 .surface-floating {
-  background: rgba(12, 12, 12, 0.9);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(6, 18, 13, 0.82);
+  -webkit-backdrop-filter: blur(6px) saturate(185%) contrast(105%);
+  backdrop-filter: blur(6px) saturate(185%) contrast(105%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 24px 60px rgba(0, 0, 0, 0.85),
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.6),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.6);
 }
 
 /* ============================================
@@ -1074,8 +1074,8 @@ input[type=range]::-moz-range-thumb {
   transform-style: preserve-3d;
   will-change: transform, box-shadow;
   border-radius: 9999px;
-  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(106%) brightness(1.06);
-  backdrop-filter: blur(24px) saturate(190%) contrast(106%) brightness(1.06);
+  -webkit-backdrop-filter: blur(6px) saturate(190%) contrast(106%) brightness(1.06);
+  backdrop-filter: blur(6px) saturate(190%) contrast(106%) brightness(1.06);
   transition:
     background 0.35s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
@@ -1197,8 +1197,8 @@ input[type=range]::-moz-range-thumb {
   background:
     radial-gradient(ellipse 100% 90% at 50% -20%, rgba(255, 255, 255, 0.14) 0%, transparent 60%),
     linear-gradient(160deg, rgba(16, 44, 30, 0.60) 0%, rgba(6, 16, 12, 0.82) 100%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(5px) saturate(180%);
+  backdrop-filter: blur(5px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.65),
@@ -1220,8 +1220,8 @@ input[type=range]::-moz-range-thumb {
     rgba(40, 223, 160, 0.18) 50%,
     rgba(16, 185, 129, 0.08) 100%
   );
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.50);
   box-shadow:
     0 6px 20px rgba(16, 185, 129, 0.35),
@@ -1251,8 +1251,8 @@ input[type=range]::-moz-range-thumb {
     radial-gradient(ellipse 85% 65% at 50% 40%, rgba(22, 58, 42, 0.35) 0%, rgba(9, 22, 17, 0.72) 65%, rgba(3, 10, 7, 0.90) 100%),
     /* Deep physical refraction foundation */
     linear-gradient(155deg, rgba(26, 64, 46, 0.48) 0%, rgba(9, 22, 16, 0.65) 55%, rgba(4, 11, 8, 0.85) 100%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(106%) brightness(1.06);
-  backdrop-filter: blur(24px) saturate(190%) contrast(106%) brightness(1.06);
+  -webkit-backdrop-filter: blur(6px) saturate(190%) contrast(106%) brightness(1.06);
+  backdrop-filter: blur(6px) saturate(190%) contrast(106%) brightness(1.06);
   border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
     /* Deep ground contact ambient occlusion shadow */
@@ -1332,8 +1332,8 @@ input[type=range]::-moz-range-thumb {
     /* Beer-Lambert volumetric body */
     radial-gradient(circle at 50% 50%, rgba(24, 62, 44, 0.42) 0%, rgba(8, 20, 15, 0.82) 75%, rgba(2, 9, 6, 0.95) 100%),
     linear-gradient(155deg, rgba(28, 68, 48, 0.52) 0%, rgba(9, 22, 16, 0.72) 55%, rgba(3, 10, 7, 0.90) 100%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(106%) brightness(1.06);
-  backdrop-filter: blur(24px) saturate(190%) contrast(106%) brightness(1.06);
+  -webkit-backdrop-filter: blur(6px) saturate(190%) contrast(106%) brightness(1.06);
+  backdrop-filter: blur(6px) saturate(190%) contrast(106%) brightness(1.06);
   border: 1px solid rgba(255, 255, 255, 0.26);
   box-shadow:
     0 20px 48px -6px rgba(0, 0, 0, 0.90),
@@ -1542,25 +1542,48 @@ input[type=range]::-moz-range-thumb {
   z-index: 1;
 }
 
-/* Reusable Liquid Glass Panel with cursor specular tracking */
-.liquid-glass {
-  background: linear-gradient(
-    145deg,
-    rgba(28, 56, 44, 0.42) 0%,
-    rgba(11, 22, 17, 0.52) 55%,
-    rgba(6, 13, 10, 0.64) 100%
-  );
-  -webkit-backdrop-filter: blur(16px) saturate(145%);
-  backdrop-filter: blur(16px) saturate(145%);
-  border: 1px solid rgba(52, 211, 153, 0.28);
-  box-shadow:
-    0 20px 52px rgba(0, 0, 0, 0.52),
-    0 0 36px rgba(16, 185, 129, 0.12),
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.28),
-    inset 1px 0 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.42);
+/* Reusable Volumetric 3D Liquid Glass with Low Optical Blur */
+.liquid-glass,
+.volumetric-glass-card {
   position: relative;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  background:
+    radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 85% 65% at 50% 40%, rgba(20, 52, 38, 0.28) 0%, rgba(8, 20, 15, 0.62) 60%, rgba(3, 9, 7, 0.82) 100%),
+    linear-gradient(155deg, rgba(24, 58, 42, 0.38) 0%, rgba(9, 22, 16, 0.55) 55%, rgba(4, 11, 8, 0.76) 100%);
+  -webkit-backdrop-filter: blur(5px) saturate(185%) contrast(106%) brightness(1.05);
+  backdrop-filter: blur(5px) saturate(185%) contrast(106%) brightness(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 20px 52px -10px rgba(0, 0, 0, 0.85),
+    0 8px 20px -4px rgba(0, 0, 0, 0.55),
+    0 0 36px rgba(40, 223, 160, 0.16),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.85),
+    inset 1.5px 2px 2px -0.5px rgba(255, 255, 255, 0.55),
+    inset 2.5px 1.5px 6px -1px rgba(0, 217, 255, 0.22),
+    inset 1.5px 2.5px 10px -2px rgba(143, 255, 208, 0.32),
+    inset -2.5px -3px 8px -1px rgba(0, 0, 0, 0.85),
+    inset -1.5px -1.5px 3px 0 rgba(40, 223, 160, 0.28),
+    inset 0 0 28px 3px rgba(2, 12, 8, 0.75);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
   overflow: hidden;
+}
+
+.liquid-glass:hover,
+.volumetric-glass-card:hover {
+  border-color: rgba(143, 255, 208, 0.35);
+  box-shadow:
+    0 26px 64px -10px rgba(0, 0, 0, 0.92),
+    0 10px 24px -4px rgba(0, 0, 0, 0.65),
+    0 0 45px rgba(40, 223, 160, 0.22),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
+    inset 2px 2.5px 2px -0.5px rgba(255, 255, 255, 0.70),
+    inset 3px 2px 8px -1px rgba(0, 217, 255, 0.28),
+    inset 2px 3.5px 14px -2px rgba(143, 255, 208, 0.42),
+    inset -2.5px -3px 8px -1px rgba(0, 0, 0, 0.90),
+    inset -1.5px -1.5px 3px 0 rgba(40, 223, 160, 0.35),
+    inset 0 0 32px 4px rgba(2, 12, 8, 0.82);
 }
 
 .liquid-glass::before {
@@ -1799,7 +1822,7 @@ input[type=range]::-moz-range-thumb {
   z-index: 2;
 }
 
-/* Harmonize legacy glass tiers with Obsidian-Emerald Liquid Glass */
+/* Harmonize glass tiers with Volumetric 3D Liquid Glass (Low-Blur Optics) */
 .glass-subtle {
   background: linear-gradient(
     145deg,
@@ -1807,8 +1830,8 @@ input[type=range]::-moz-range-thumb {
     rgba(16, 185, 129, 0.02) 50%,
     rgba(4, 10, 8, 0.45) 100%
   );
-  -webkit-backdrop-filter: blur(8px) saturate(125%);
-  backdrop-filter: blur(8px) saturate(125%);
+  -webkit-backdrop-filter: blur(4px) saturate(160%) contrast(104%);
+  backdrop-filter: blur(4px) saturate(160%) contrast(104%);
   border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow:
     0 4px 18px rgba(0, 0, 0, 0.28),
@@ -1817,41 +1840,52 @@ input[type=range]::-moz-range-thumb {
 }
 
 .glass-card {
-  background: linear-gradient(150deg, rgba(22, 44, 35, 0.36) 0%, rgba(8, 16, 13, 0.54) 100%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(135%);
-  backdrop-filter: blur(12px) saturate(135%);
+  background:
+    radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.14) 0%, transparent 60%),
+    linear-gradient(150deg, rgba(22, 54, 40, 0.40) 0%, rgba(8, 18, 14, 0.65) 100%) !important;
+  -webkit-backdrop-filter: blur(5px) saturate(180%) contrast(105%);
+  backdrop-filter: blur(5px) saturate(180%) contrast(105%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
-    0 14px 40px rgba(0, 0, 0, 0.45),
-    0 0 24px rgba(16, 185, 129, 0.07),
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.22),
-    inset 1px 0 0 rgba(255, 255, 255, 0.08);
+    0 16px 44px -8px rgba(0, 0, 0, 0.75),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.75),
+    inset 1.5px 2px 2px -0.5px rgba(255, 255, 255, 0.45),
+    inset -2px -2px 5px -1px rgba(0, 0, 0, 0.75),
+    inset 0 0 20px 2px rgba(2, 12, 8, 0.65);
   position: relative;
 }
 
 .glass-panel {
-  background: linear-gradient(155deg, rgba(24, 46, 37, 0.40) 0%, rgba(8, 15, 12, 0.56) 100%);
-  -webkit-backdrop-filter: blur(14px) saturate(135%);
-  backdrop-filter: blur(14px) saturate(135%);
+  background:
+    radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.16) 0%, transparent 60%),
+    linear-gradient(155deg, rgba(24, 56, 42, 0.42) 0%, rgba(8, 18, 14, 0.68) 100%);
+  -webkit-backdrop-filter: blur(5px) saturate(180%) contrast(105%);
+  backdrop-filter: blur(5px) saturate(180%) contrast(105%);
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.48),
-    0 0 30px rgba(16, 185, 129, 0.09),
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.24),
-    inset 1px 0 0 rgba(255, 255, 255, 0.09);
+    0 18px 48px -8px rgba(0, 0, 0, 0.80),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.80),
+    inset 1.5px 2px 2px -0.5px rgba(255, 255, 255, 0.48),
+    inset -2.5px -2.5px 6px -1px rgba(0, 0, 0, 0.80),
+    inset 0 0 24px 3px rgba(2, 12, 8, 0.70);
   position: relative;
 }
 
 .glass-hero {
-  background: linear-gradient(155deg, rgba(28, 56, 45, 0.46) 0%, rgba(9, 18, 14, 0.60) 100%);
-  -webkit-backdrop-filter: blur(18px) saturate(145%);
-  backdrop-filter: blur(18px) saturate(145%);
-  border: 1px solid rgba(52, 211, 153, 0.36);
+  background:
+    radial-gradient(ellipse 110% 80% at 50% -20%, rgba(255, 255, 255, 0.22) 0%, transparent 60%),
+    linear-gradient(155deg, rgba(28, 64, 48, 0.48) 0%, rgba(9, 20, 15, 0.72) 100%);
+  -webkit-backdrop-filter: blur(6px) saturate(185%) contrast(106%);
+  backdrop-filter: blur(6px) saturate(185%) contrast(106%);
+  border: 1px solid rgba(143, 255, 208, 0.28);
   box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.65),
-    0 0 48px rgba(16, 185, 129, 0.18),
-    inset 0 2px 0 rgba(255, 255, 255, 0.32),
-    inset 1px 0 0 rgba(255, 255, 255, 0.14);
+    0 24px 64px -10px rgba(0, 0, 0, 0.88),
+    0 0 36px rgba(40, 223, 160, 0.18),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.90),
+    inset 2px 2.5px 2px -0.5px rgba(255, 255, 255, 0.65),
+    inset 3px 2px 8px -1px rgba(0, 217, 255, 0.25),
+    inset -2.5px -3px 8px -1px rgba(0, 0, 0, 0.85),
+    inset 0 0 28px 4px rgba(2, 12, 8, 0.78);
   position: relative;
 }
 
@@ -1870,17 +1904,28 @@ input[type=range]::-moz-range-thumb {
   animation: subtle-breathe 6s ease-in-out infinite;
 }
 
-/* Mobile Hardware Performance Guard */
+/* Mobile Volumetric Low-Blur Baseline */
 @media (max-width: 768px) {
   .glass-hero,
   .glass-focus,
   .glass-card-obsidian,
   .glass-dock,
-  .liquid-glass {
-    -webkit-backdrop-filter: blur(18px) saturate(145%);
-    backdrop-filter: blur(18px) saturate(145%);
+  .liquid-glass,
+  .volumetric-glass-card {
+    -webkit-backdrop-filter: blur(5px) saturate(180%) contrast(105%);
+    backdrop-filter: blur(5px) saturate(180%) contrast(105%);
   }
 }
+
+/* Volumetric 3D Low-Blur Utility Overrides for Tailwind CSS */
+.backdrop-blur-none { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.backdrop-blur-sm { -webkit-backdrop-filter: blur(3px) saturate(175%) contrast(104%); backdrop-filter: blur(3px) saturate(175%) contrast(104%); }
+.backdrop-blur { -webkit-backdrop-filter: blur(5px) saturate(180%) contrast(105%); backdrop-filter: blur(5px) saturate(180%) contrast(105%); }
+.backdrop-blur-md { -webkit-backdrop-filter: blur(5px) saturate(180%) contrast(105%); backdrop-filter: blur(5px) saturate(180%) contrast(105%); }
+.backdrop-blur-lg { -webkit-backdrop-filter: blur(6px) saturate(185%) contrast(105%); backdrop-filter: blur(6px) saturate(185%) contrast(105%); }
+.backdrop-blur-xl { -webkit-backdrop-filter: blur(6px) saturate(185%) contrast(106%); backdrop-filter: blur(6px) saturate(185%) contrast(106%); }
+.backdrop-blur-2xl { -webkit-backdrop-filter: blur(7px) saturate(190%) contrast(106%); backdrop-filter: blur(7px) saturate(190%) contrast(106%); }
+.backdrop-blur-3xl { -webkit-backdrop-filter: blur(8px) saturate(190%) contrast(106%); backdrop-filter: blur(8px) saturate(190%) contrast(106%); }
 
 /* Safe area utility for floating bottom nav clearance */
 .pb-mobile-nav {

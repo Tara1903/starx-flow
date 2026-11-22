@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer className="relative pt-16 pb-12 mt-16 z-10 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
-        <div className="p-8 md:p-12 rounded-3xl border border-white/[0.08] bg-[#040e0a]/90 backdrop-blur-xl shadow-2xl">
+        <div className="p-8 md:p-12 rounded-3xl volumetric-glass-card shadow-2xl relative overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-12 mb-12">
             {/* Brand block */}
             <div className="lg:col-span-2 space-y-4">

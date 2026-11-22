@@ -87,15 +87,15 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
     };
 
     const variants = {
-      default: "glass-panel",
-      obsidian: "glass-card-obsidian",
+      default: "volumetric-glass-card",
+      obsidian: "volumetric-glass-card",
       focus: "glass-focus",
-      hero: "glass-hero",
+      hero: "volumetric-glass-card",
       mist: "glass-mist",
-      liquid: "liquid-glass",
+      liquid: "volumetric-glass-card",
       subtle: "glass-subtle",
-      premium: "glass-card-obsidian",
-      focal: "glass-hero",
+      premium: "volumetric-glass-card",
+      focal: "volumetric-glass-card",
     };
 
     const paddings = {
