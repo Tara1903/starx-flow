@@ -118,11 +118,11 @@ export function GlassDropdown({
           <motion.span
             layoutId={prefersReduced ? undefined : activeLayoutId}
             transition={navPillSpring}
-            className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10"
+            className="glass-lens-active-pill"
           />
         )}
         {isActive && !activeLayoutId && (
-          <span className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10" />
+          <span className="glass-lens-active-pill" />
         )}
         {triggerIcon && (
           <span className={cn("transition-colors flex-shrink-0", isActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")}>

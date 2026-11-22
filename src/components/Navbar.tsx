@@ -233,13 +233,28 @@ export function Navbar() {
   const isPricingActive = pathname === "/pricing";
   const isHomeActive = pathname === "/";
 
+  const handleNavMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    e.currentTarget.style.setProperty("--glass-light-x", `${x.toFixed(1)}%`);
+    e.currentTarget.style.setProperty("--glass-light-y", `${y.toFixed(1)}%`);
+  };
+
+  const handleNavMouseLeave = (e: React.MouseEvent<HTMLElement>) => {
+    e.currentTarget.style.setProperty("--glass-light-x", "50%");
+    e.currentTarget.style.setProperty("--glass-light-y", "25%");
+  };
+
   return (
     <>
       <header className="fixed top-0 inset-x-0 z-50 px-3 sm:px-6 pt-3 pointer-events-none">
         <nav
           aria-label="Primary navigation"
+          onMouseMove={handleNavMouseMove}
+          onMouseLeave={handleNavMouseLeave}
           className={cn(
-            "pointer-events-auto max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-14 md:h-16 rounded-full flex items-center justify-between transition-all duration-300 gap-2 sm:gap-4",
+            "pointer-events-auto max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-14 md:h-16 rounded-full flex items-center justify-between transition-all duration-300 gap-2 sm:gap-4 select-none",
             scrolled ? "glass-navbar-scrolled" : "glass-navbar-floating"
           )}
         >
@@ -261,7 +276,7 @@ export function Navbar() {
           </Link>
 
           {/* Center Desktop Navigation: Sleek Typographic & Icon Horizontal Glass Capsule */}
-          <div className="hidden lg:flex items-center p-1 sm:p-1.5 rounded-full bg-[#07120c]/75 backdrop-blur-2xl border border-white/[0.14] shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.2)] gap-0.5 xl:gap-1 select-none flex-shrink-0">
+          <div className="hidden lg:flex items-center p-1 sm:p-1.5 rounded-full glass-lens-inner-capsule gap-0.5 xl:gap-1 select-none flex-shrink-0">
             <Link
               href="/"
               className={cn(
@@ -275,7 +290,7 @@ export function Navbar() {
                 <motion.span
                   layoutId={prefersReduced ? undefined : "navbar-active-pill"}
                   transition={navPillSpring}
-                  className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10"
+                  className="glass-lens-active-pill"
                 />
               )}
               <Home className={cn("w-3.5 h-3.5 transition-colors flex-shrink-0", isHomeActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")} />
@@ -326,7 +341,7 @@ export function Navbar() {
                 <motion.span
                   layoutId={prefersReduced ? undefined : "navbar-active-pill"}
                   transition={navPillSpring}
-                  className="absolute inset-0 rounded-full bg-gradient-to-b from-white/22 via-white/12 to-white/5 backdrop-blur-xl border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.65),0_0_20px_rgba(16,185,129,0.25)] -z-10"
+                  className="glass-lens-active-pill"
                 />
               )}
               <Sparkles className={cn("w-3.5 h-3.5 transition-colors flex-shrink-0", isPricingActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")} />
@@ -444,7 +459,7 @@ export function Navbar() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-              className="p-2 rounded-full text-zinc-300 hover:text-white bg-white/[0.04] border border-white/10 hover:border-white/20 transition-colors cursor-pointer"
+              className="p-2 rounded-full text-zinc-300 hover:text-white bg-[#030907]/80 hover:bg-emerald-500/15 border border-white/[0.14] hover:border-emerald-400/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.45),0_4px_12px_rgba(0,0,0,0.6)] transition-all cursor-pointer active:scale-95 flex items-center justify-center"
             >
               {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>

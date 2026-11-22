@@ -285,6 +285,19 @@ export function MobileFloatingNavigation() {
     }
   };
 
+  const handleCapsulePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    e.currentTarget.style.setProperty("--glass-light-x", `${x.toFixed(1)}%`);
+    e.currentTarget.style.setProperty("--glass-light-y", `${y.toFixed(1)}%`);
+  };
+
+  const handleCapsulePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.style.setProperty("--glass-light-x", "50%");
+    e.currentTarget.style.setProperty("--glass-light-y", "30%");
+  };
+
   return (
     <>
       {/* ─────────────────────────────────────────────────────────────
@@ -298,7 +311,11 @@ export function MobileFloatingNavigation() {
       >
         <div className="flex items-center gap-2 max-w-[420px] w-full justify-center">
           {/* ── 1. Capsule Dock ── */}
-          <div className="pointer-events-auto flex-1 min-w-0 glass-capsule-nav rounded-full p-1.5 flex items-center justify-around relative shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(16,185,129,0.12)] border border-white/[0.14] bg-[#030907]/90 backdrop-blur-2xl">
+          <div
+            onPointerMove={handleCapsulePointerMove}
+            onPointerLeave={handleCapsulePointerLeave}
+            className="pointer-events-auto flex-1 min-w-0 glass-capsule-nav rounded-full p-1.5 flex items-center justify-around relative"
+          >
             {/* Dashboard Mode Capsule */}
             {isDashboard &&
               dashboardCapsuleTabs.map((tab) => {
@@ -324,7 +341,7 @@ export function MobileFloatingNavigation() {
                       <motion.div
                         layoutId="ultimateMobileActivePill"
                         transition={prefersReduced ? { duration: 0 } : navPillSpring}
-                        className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/30 via-emerald-500/20 to-emerald-400/10 border border-emerald-400/50 shadow-[0_0_18px_rgba(16,185,129,0.32),inset_0_1px_0_rgba(255,255,255,0.22)] -z-10"
+                        className="glass-lens-mobile-active-pill"
                       />
                     )}
 
@@ -382,7 +399,7 @@ export function MobileFloatingNavigation() {
                       <motion.div
                         layoutId="ultimateMobileActivePill"
                         transition={prefersReduced ? { duration: 0 } : navPillSpring}
-                        className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/30 via-emerald-500/20 to-emerald-400/10 border border-emerald-400/50 shadow-[0_0_18px_rgba(16,185,129,0.32),inset_0_1px_0_rgba(255,255,255,0.22)] -z-10"
+                        className="glass-lens-mobile-active-pill"
                       />
                     )}
 
@@ -432,7 +449,7 @@ export function MobileFloatingNavigation() {
                       <motion.div
                         layoutId="ultimateMobileActivePill"
                         transition={prefersReduced ? { duration: 0 } : navPillSpring}
-                        className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/30 via-emerald-500/20 to-emerald-400/10 border border-emerald-400/50 shadow-[0_0_18px_rgba(16,185,129,0.32),inset_0_1px_0_rgba(255,255,255,0.22)] -z-10"
+                        className="glass-lens-mobile-active-pill"
                       />
                     )}
 
@@ -466,10 +483,10 @@ export function MobileFloatingNavigation() {
             whileTap={prefersReduced ? undefined : { scale: 0.92 }}
             aria-label="Open ultimate navigation and menu"
             className={cn(
-              "pointer-events-auto w-11 h-11 sm:w-12 sm:h-12 rounded-full glass-capsule-nav border flex items-center justify-center relative cursor-pointer flex-shrink-0 shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(16,185,129,0.12)] transition-all select-none",
+              "pointer-events-auto w-11 h-11 sm:w-12 sm:h-12 rounded-full glass-lens-circular-button flex items-center justify-center relative cursor-pointer flex-shrink-0 transition-all select-none",
               isMasterMenuOpen || isSecondaryActive
-                ? "bg-emerald-500/25 border-emerald-400/50 text-emerald-300 shadow-[0_0_18px_rgba(16,185,129,0.35)]"
-                : "border-white/[0.14] text-zinc-300 hover:text-white bg-[#030907]/90 backdrop-blur-2xl"
+                ? "border-emerald-400/60 text-emerald-300 shadow-[0_0_24px_rgba(16,185,129,0.45)]"
+                : "text-zinc-300 hover:text-white"
             )}
           >
             <Menu className="w-4 h-4" />
