@@ -11,7 +11,6 @@ import {
   DollarSign,
   Menu,
   ArrowRight,
-  Sparkles,
   BookOpen,
   ShieldCheck,
   Building2,
@@ -156,7 +155,7 @@ export function MobileFloatingNavigation() {
   const adminCapsuleTabs = [
     { id: "overview" as AdminSection, label: "Overview", icon: Activity },
     { id: "clients" as AdminSection, label: "Clients", icon: Users, badge: totalClientsCount > 0 ? totalClientsCount : undefined },
-    { id: "leads" as AdminSection, label: "Inquiries", icon: Sparkles, badge: newLeadsCount > 0 ? newLeadsCount : undefined },
+    { id: "leads" as AdminSection, label: "Inquiries", icon: Contact, badge: newLeadsCount > 0 ? newLeadsCount : undefined },
     { id: "analytics" as AdminSection, label: "Analytics", icon: BarChart3 },
   ];
 
@@ -221,7 +220,7 @@ export function MobileFloatingNavigation() {
         { label: "WhatsApp AI Chatbot", href: "/whatsapp-ai-chatbot", icon: MessageSquare, desc: "Instant replies & booking capture 24/7" },
         { label: "Instagram AI Automation", href: "/instagram-ai-automation", icon: Instagram, desc: "Convert DM & story replies into leads" },
         { label: "AI Customer Support", href: "/ai-customer-support", icon: Headphones, desc: "Zero wait times across communication channels" },
-        { label: "Autonomous AI Agents", href: "/ai-agents", icon: Sparkles, desc: "Custom tools, handoffs & knowledge base" },
+        { label: "Autonomous AI Agents", href: "/ai-agents", icon: Cpu, desc: "Custom tools, handoffs & knowledge base" },
         { label: "Business Workflow Automation", href: "/business-workflow-automation", icon: Calendar, desc: "Triggers, follow-ups & CRM pipelines" },
       ],
     },
@@ -258,7 +257,7 @@ export function MobileFloatingNavigation() {
   const adminMenuItems = [
     { id: "overview" as AdminSection, label: "Overview", icon: Activity, desc: "Platform telemetry and operational health" },
     { id: "clients" as AdminSection, label: "Clients", icon: Users, badge: totalClientsCount > 0 ? totalClientsCount : undefined, desc: "Manage registered enterprise clients" },
-    { id: "leads" as AdminSection, label: "Demo Inquiries", icon: Sparkles, badge: newLeadsCount > 0 ? newLeadsCount : undefined, desc: "Inbound prospective client inquiries" },
+    { id: "leads" as AdminSection, label: "Demo Inquiries", icon: Contact, badge: newLeadsCount > 0 ? newLeadsCount : undefined, desc: "Inbound prospective client inquiries" },
     { id: "analytics" as AdminSection, label: "Analytics", icon: BarChart3, desc: "Usage metrics and system conversion" },
     { id: "plans" as AdminSection, label: "Plans & Tiers", icon: CreditCard, desc: "Subscription tiers and pricing limits" },
     { id: "settings" as AdminSection, label: "Settings & Audit", icon: Shield, desc: "Platform security and system logs" },
@@ -353,7 +352,7 @@ export function MobileFloatingNavigation() {
                         </span>
                       )}
                       {!isActive && tab.hasActiveDot && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400" />
                       )}
                     </div>
 
@@ -485,7 +484,7 @@ export function MobileFloatingNavigation() {
             className={cn(
               "pointer-events-auto w-11 h-11 sm:w-12 sm:h-12 rounded-full glass-lens-circular-button flex items-center justify-center relative cursor-pointer flex-shrink-0 transition-all select-none",
               isMasterMenuOpen || isSecondaryActive
-                ? "border-emerald-400/60 text-emerald-300 shadow-[0_0_24px_rgba(16,185,129,0.45)]"
+                ? "border-emerald-400/60 text-emerald-300 shadow-md"
                 : "text-zinc-300 hover:text-white"
             )}
           >
@@ -556,7 +555,7 @@ export function MobileFloatingNavigation() {
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-bold text-white">AI Receptionist</span>
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                       </div>
                       <span className="text-[10px] text-zinc-400">Active on 3 channels</span>
                     </div>
@@ -584,7 +583,7 @@ export function MobileFloatingNavigation() {
                 {/* AI Auto-Pilot Switch */}
                 <div className="flex items-center justify-between pt-1.5 border-t border-white/[0.06]">
                   <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    <Cpu className="w-3.5 h-3.5 text-emerald-400" />
                     <span className="text-xs font-semibold text-zinc-200">AI Auto-Pilot</span>
                   </div>
                   <button
@@ -594,7 +593,7 @@ export function MobileFloatingNavigation() {
                     aria-checked={isAutoPilotActive}
                     className={cn(
                       "w-10 h-5 rounded-full p-0.5 transition-colors relative cursor-pointer",
-                      isAutoPilotActive ? "bg-emerald-500/80 shadow-[0_0_10px_rgba(16,185,129,0.4)]" : "bg-zinc-800"
+                      isAutoPilotActive ? "bg-emerald-500" : "bg-zinc-800"
                     )}
                   >
                     <motion.div
@@ -626,7 +625,7 @@ export function MobileFloatingNavigation() {
                             className={cn(
                               "flex items-center gap-2 p-2 rounded-xl border text-left transition-all cursor-pointer relative",
                               isActive
-                                ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.22)]"
+                                ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-sm"
                                 : "bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.06]"
                             )}
                           >
@@ -634,7 +633,7 @@ export function MobileFloatingNavigation() {
                               className={cn(
                                 "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 border shadow-sm",
                                 isActive
-                                  ? cn("bg-gradient-to-br shadow-[0_0_10px_rgba(16,185,129,0.3)]", item.color)
+                                  ? cn("bg-gradient-to-br shadow-sm", item.color)
                                   : "bg-white/[0.04] border-white/10 text-zinc-300"
                               )}
                             >
@@ -670,7 +669,7 @@ export function MobileFloatingNavigation() {
               {/* 3. Live Database Status */}
               <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   <span className="font-medium text-zinc-300">Live DB Node (Supabase EU-Central)</span>
                 </div>
                 <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/30 text-[9px] font-extrabold text-emerald-300">
@@ -726,7 +725,7 @@ export function MobileFloatingNavigation() {
                       className={cn(
                         "flex items-center justify-between p-3 rounded-xl border text-left transition-all cursor-pointer",
                         isActive
-                          ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.22)]"
+                          ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-sm"
                           : "bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.06]"
                       )}
                     >
@@ -753,7 +752,7 @@ export function MobileFloatingNavigation() {
               {/* Supabase Status */}
               <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   <span className="font-medium text-zinc-300">Live DB Node (Supabase EU-Central)</span>
                 </div>
                 <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/30 text-[9px] font-extrabold text-emerald-300">
@@ -789,9 +788,9 @@ export function MobileFloatingNavigation() {
                     setIsMasterMenuOpen(false);
                     openSignup();
                   }}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#28dfa0] hover:bg-[#34e7a8] text-[#041f13] font-semibold text-xs shadow-md border border-white/20 transition-all cursor-pointer"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5" />
                   <span>Start Free Trial</span>
                 </button>
 
@@ -837,7 +836,7 @@ export function MobileFloatingNavigation() {
                           className={cn(
                             "flex items-center justify-between p-2.5 rounded-xl border text-left transition-all",
                             isActive
-                              ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.2)]"
+                              ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300 shadow-sm"
                               : "bg-white/[0.03] border-white/[0.06] text-zinc-300 hover:text-white hover:bg-white/[0.06]"
                           )}
                         >

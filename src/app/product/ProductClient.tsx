@@ -13,7 +13,6 @@ import {
   Shield,
   MessageSquare,
   Lock,
-  Sparkles,
 } from "lucide-react";
 import { useUIStore } from "../../store/uiStore";
 
@@ -45,16 +44,16 @@ export function ProductClient() {
         {/* Header Hero */}
         <div className="text-center max-w-4xl mx-auto mb-16 lg:mb-24">
           <div className="spatial-pill-badge mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-            The Autonomous Front Desk OS
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Autonomous Front Desk Architecture
           </div>
-          <h1 className="font-editorial text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white mb-8 leading-[1.08]">
+          <h1 className="font-editorial text-4xl sm:text-6xl md:text-7xl font-normal tracking-tight text-white mb-8 leading-[1.08]">
             Your complete AI front desk <br className="hidden md:block" />
-            <span className="text-gradient-emerald">
+            <span className="text-zinc-100">
               operating system.
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-[#b8c9bd] leading-relaxed max-w-3xl mx-auto mb-10 font-normal">
+          <p className="text-lg md:text-xl text-zinc-400 leading-relaxed max-w-3xl mx-auto mb-10 font-normal">
             Stop losing bookings to busy phone lines. Deploy 24/7 WhatsApp AI receptionists, sync multi-staff calendars, and aggregate patient and client details into a high-converting private CRM.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -77,29 +76,29 @@ export function ProductClient() {
         </div>
 
         {/* Dashboard Preview UI */}
-        <div className="w-full max-w-5xl mx-auto glass-panel rounded-[2rem] overflow-hidden mb-32 relative shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_35px_rgba(40,223,160,0.15)] border-emerald-400/30">
+        <div className="w-full max-w-5xl mx-auto glass-panel rounded-[2rem] overflow-hidden mb-32 relative shadow-2xl border border-white/[0.08]">
           {/* Mac window header */}
-          <div className="bg-[#010a05] px-5 py-3.5 border-b border-emerald-500/20 flex items-center justify-between">
+          <div className="bg-[#010a05] px-5 py-3.5 border-b border-white/[0.06] flex items-center justify-between">
             <div className="flex gap-2">
               <div className="w-3 h-3 rounded-full bg-red-500/70" />
               <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
               <div className="w-3 h-3 rounded-full bg-emerald-500/70" />
             </div>
-            <div className="bg-[#061a12] border border-emerald-500/25 text-[#b8c9bd] font-mono text-xs px-4 py-1 rounded-full flex items-center gap-2">
+            <div className="bg-[#061a12] border border-white/[0.08] text-zinc-400 font-mono text-xs px-4 py-1 rounded-full flex items-center gap-2">
               <Lock className="w-3 h-3 text-emerald-400" /> starx-flow.runs-on.dev/dashboard
             </div>
             <div className="w-12 text-right">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shadow-[0_0_8px_#34d399]" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
             </div>
           </div>
 
           {/* Interactive UI for Dashboard Mockup */}
           <div className="flex flex-col md:flex-row h-auto md:h-[500px] bg-[#020d08]">
             {/* Sidebar */}
-            <div className="w-full md:w-60 border-r border-emerald-500/20 p-5 flex flex-col gap-2 bg-[#010804]">
-              <div className="w-full h-9 bg-emerald-500/10 border border-emerald-400/25 rounded-xl mb-4 flex items-center px-3 gap-2">
-                <span className="w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_6px_#34d399]" />
-                <span className="text-xs text-white font-mono font-bold tracking-wider">StarX Flow OS</span>
+            <div className="w-full md:w-60 border-r border-white/[0.06] p-5 flex flex-col gap-2 bg-[#010804]">
+              <div className="w-full h-9 bg-emerald-500/10 border border-white/[0.08] rounded-xl mb-4 flex items-center px-3 gap-2">
+                <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+                <span className="text-xs text-white font-mono font-medium">StarX Flow OS</span>
               </div>
               <div className="w-full h-9 bg-emerald-500/20 border border-emerald-400/40 rounded-xl text-xs font-semibold text-emerald-300 flex items-center px-3 gap-2.5">
                 <Calendar size={14} className="text-emerald-400" /> Bookings &amp; Schedule
@@ -131,33 +130,33 @@ export function ProductClient() {
 
               {/* 3 Metric Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-emerald-500/20">
-                  <span className="text-[11px] text-[#b8c9bd] font-mono uppercase tracking-wider">Total Bookings</span>
-                  <span className="text-3xl font-extrabold text-white font-mono mt-2">1,248</span>
+                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-white/[0.08]">
+                  <span className="text-xs text-zinc-400 font-mono">Total Bookings</span>
+                  <span className="text-3xl font-light text-white font-mono mt-2">1,248</span>
                 </div>
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-emerald-500/20">
-                  <span className="text-[11px] text-[#b8c9bd] font-mono uppercase tracking-wider">Missed Calls Recovered</span>
-                  <span className="text-3xl font-extrabold text-white font-mono mt-2">284</span>
+                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-white/[0.08]">
+                  <span className="text-xs text-zinc-400 font-mono">Missed Calls Recovered</span>
+                  <span className="text-3xl font-light text-white font-mono mt-2">284</span>
                 </div>
-                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-emerald-400/40 shadow-[0_0_20px_rgba(40,223,160,0.12)]">
-                  <span className="text-[11px] text-emerald-300 font-mono uppercase tracking-wider">No-Show Prevention</span>
-                  <span className="text-3xl font-extrabold text-[#8fffd0] font-mono mt-2">98.8%</span>
+                <div className="glass-panel p-5 rounded-2xl flex flex-col justify-between border-white/[0.08] shadow-lg">
+                  <span className="text-xs text-emerald-400 font-mono">No-Show Prevention</span>
+                  <span className="text-3xl font-light text-[#8fffd0] font-mono mt-2">98.8%</span>
                 </div>
               </div>
 
               {/* Live Activity Row */}
-              <div className="glass-panel p-5 rounded-2xl border-emerald-500/20 flex-1 flex flex-col justify-center gap-3">
-                <div className="text-xs font-mono text-emerald-300 uppercase tracking-wider mb-1 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+              <div className="glass-panel p-5 rounded-2xl border-white/[0.08] flex-1 flex flex-col justify-center gap-3">
+                <div className="text-xs font-mono text-emerald-400 mb-1 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   Recent Automated Actions
                 </div>
-                <div className="flex items-center justify-between text-xs text-[#b8c9bd] p-2.5 rounded-lg bg-black/40 border border-emerald-500/15">
+                <div className="flex items-center justify-between text-xs text-zinc-300 p-2.5 rounded-lg bg-black/40 border border-white/[0.06]">
                   <span>Confirmed 60m Deep Tissue • Elena Rostova</span>
                   <span className="font-mono text-emerald-300">Just now</span>
                 </div>
-                <div className="flex items-center justify-between text-xs text-[#b8c9bd] p-2.5 rounded-lg bg-black/40 border border-emerald-500/15">
+                <div className="flex items-center justify-between text-xs text-zinc-300 p-2.5 rounded-lg bg-black/40 border border-white/[0.06]">
                   <span>Google Review request sent • Marcus Vance</span>
-                  <span className="font-mono text-[#b8c9bd]/70">4m ago</span>
+                  <span className="font-mono text-zinc-500">4m ago</span>
                 </div>
               </div>
             </div>
@@ -167,17 +166,17 @@ export function ProductClient() {
         {/* Features Grid: 4 Core Modules */}
         <div className="mb-32">
           <div className="text-center mb-16">
-            <h2 className="font-editorial text-3xl sm:text-5xl font-bold text-white mb-4 tracking-tight">
-              Core <span className="text-gradient-emerald">Modules</span>
+            <h2 className="font-editorial text-3xl sm:text-5xl font-normal text-white mb-4 tracking-tight">
+              Core Modules
             </h2>
-            <p className="text-[#b8c9bd] max-w-2xl mx-auto font-normal text-lg">
+            <p className="text-zinc-400 max-w-2xl mx-auto font-normal text-lg">
               Everything required to automate bookings and capture client details without manual admin work.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
-            <div className="glass-panel glass-panel-hover p-8 md:p-10 rounded-[2rem] flex flex-col items-start gap-6 border-emerald-500/20">
-              <div className="w-14 h-14 bg-emerald-500/15 border border-emerald-400/30 rounded-2xl flex items-center justify-center text-emerald-300 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
+            <div className="glass-panel glass-panel-hover p-8 md:p-10 rounded-[2rem] flex flex-col items-start gap-6 border-white/[0.08]">
+              <div className="w-14 h-14 bg-emerald-500/10 border border-white/[0.08] rounded-2xl flex items-center justify-center text-emerald-300 shadow-sm">
                 <MessageSquare size={24} />
               </div>
               <div className="flex-1">
@@ -202,15 +201,15 @@ export function ProductClient() {
               </div>
             </div>
 
-            <div className="glass-panel glass-panel-hover p-8 md:p-10 rounded-[2rem] flex flex-col items-start gap-6 border-emerald-500/20">
-              <div className="w-14 h-14 bg-emerald-500/15 border border-emerald-400/30 rounded-2xl flex items-center justify-center text-emerald-300 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
+            <div className="glass-panel glass-panel-hover p-8 md:p-10 rounded-[2rem] flex flex-col items-start gap-6 border-white/[0.08]">
+              <div className="w-14 h-14 bg-emerald-500/10 border border-white/[0.08] rounded-2xl flex items-center justify-center text-emerald-300 shadow-sm">
                 <Users size={24} />
               </div>
               <div className="flex-1">
                 <h3 className="font-editorial text-2xl font-bold text-white mb-3">
                   Unified Customer CRM
                 </h3>
-                <p className="text-[#b8c9bd] leading-relaxed mb-6 font-normal text-sm sm:text-base">
+                <p className="text-zinc-400 leading-relaxed mb-6 font-normal text-sm sm:text-base">
                   Own your client profiles. Gather session histories, staff preferences, payment tags, and contact details in a single dashboard to maximize direct client retention without aggregator fees.
                 </p>
                 <ul className="space-y-3 mb-2 text-sm">
@@ -228,15 +227,15 @@ export function ProductClient() {
               </div>
             </div>
 
-            <div className="glass-panel glass-panel-hover p-8 md:p-10 rounded-[2rem] flex flex-col items-start gap-6 border-emerald-500/20">
-              <div className="w-14 h-14 bg-emerald-500/15 border border-emerald-400/30 rounded-2xl flex items-center justify-center text-emerald-300 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
+            <div className="glass-panel glass-panel-hover p-8 md:p-10 rounded-[2rem] flex flex-col items-start gap-6 border-white/[0.08]">
+              <div className="w-14 h-14 bg-emerald-500/10 border border-white/[0.08] rounded-2xl flex items-center justify-center text-emerald-300 shadow-sm">
                 <BarChart2 size={24} />
               </div>
               <div className="flex-1">
                 <h3 className="font-editorial text-2xl font-bold text-white mb-3">
                   Operational Insights
                 </h3>
-                <p className="text-[#b8c9bd] leading-relaxed mb-6 font-normal text-sm sm:text-base">
+                <p className="text-zinc-400 leading-relaxed mb-6 font-normal text-sm sm:text-base">
                   Make data-driven staff and capacity decisions. Instantly track monthly leads captured, booking rates, staff utilization grids, and unrecovered call revenues.
                 </p>
                 <ul className="space-y-3 mb-2 text-sm">
@@ -254,8 +253,8 @@ export function ProductClient() {
               </div>
             </div>
 
-            <div className="glass-panel glass-panel-hover p-8 md:p-10 rounded-[2rem] flex flex-col items-start gap-6 border-emerald-500/20">
-              <div className="w-14 h-14 bg-emerald-500/15 border border-emerald-400/30 rounded-2xl flex items-center justify-center text-emerald-300 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
+            <div className="glass-panel glass-panel-hover p-8 md:p-10 rounded-[2rem] flex flex-col items-start gap-6 border-white/[0.08]">
+              <div className="w-14 h-14 bg-emerald-500/10 border border-white/[0.08] rounded-2xl flex items-center justify-center text-emerald-300 shadow-sm">
                 <RefreshCw size={24} />
               </div>
               <div className="flex-1">
@@ -325,48 +324,48 @@ export function ProductClient() {
             </div>
 
             <div className="order-1 lg:order-2">
-              <h2 className="font-editorial text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight leading-tight">
-                Front desk automation that <span className="text-gradient-emerald">syncs with real workflows.</span>
+              <h2 className="font-editorial text-3xl md:text-5xl font-normal text-white mb-6 tracking-tight leading-tight">
+                Front desk automation that <span className="text-zinc-100">syncs with real workflows.</span>
               </h2>
-              <p className="text-[#b8c9bd] leading-relaxed mb-10 font-normal text-base sm:text-lg">
+              <p className="text-zinc-400 leading-relaxed mb-10 font-normal text-base sm:text-lg">
                 Establish custom rules to collect digital waivers before visits, route specific booking types to specific staff, and trigger review requests via WhatsApp after appointments close.
               </p>
               <ul className="space-y-6 text-sm">
                 <li className="flex gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(40,223,160,0.12)]">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-white/[0.08] flex items-center justify-center shrink-0 shadow-sm">
                     <Zap className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div>
-                    <h4 className="text-white font-bold mb-1 text-base sm:text-lg font-editorial">
+                    <h4 className="text-white font-medium mb-1 text-base sm:text-lg font-editorial">
                       Event-Based Triggers
                     </h4>
-                    <p className="text-sm text-[#b8c9bd] font-normal leading-relaxed">
+                    <p className="text-sm text-zinc-400 font-normal leading-relaxed">
                       Instantly text pre-appointment waivers or post-visit review requests automatically.
                     </p>
                   </div>
                 </li>
                 <li className="flex gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(40,223,160,0.12)]">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-white/[0.08] flex items-center justify-center shrink-0 shadow-sm">
                     <Globe className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div>
-                    <h4 className="text-white font-bold mb-1 text-base sm:text-lg font-editorial">
+                    <h4 className="text-white font-medium mb-1 text-base sm:text-lg font-editorial">
                       Multi-Staff Rosters
                     </h4>
-                    <p className="text-sm text-[#b8c9bd] font-normal leading-relaxed">
+                    <p className="text-sm text-zinc-400 font-normal leading-relaxed">
                       Manage calendars for dozens of personal trainers, therapists, or stylists from a single dashboard.
                     </p>
                   </div>
                 </li>
                 <li className="flex gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(40,223,160,0.12)]">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-white/[0.08] flex items-center justify-center shrink-0 shadow-sm">
                     <Shield className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div>
-                    <h4 className="text-white font-bold mb-1 text-base sm:text-lg font-editorial">
+                    <h4 className="text-white font-medium mb-1 text-base sm:text-lg font-editorial">
                       Enterprise Encryption &amp; RLS
                     </h4>
-                    <p className="text-sm text-[#b8c9bd] font-normal leading-relaxed">
+                    <p className="text-sm text-zinc-400 font-normal leading-relaxed">
                       Secure client details, intake waivers, and health questionnaires natively with TLS 1.3 and PostgreSQL isolation.
                     </p>
                   </div>
@@ -377,11 +376,11 @@ export function ProductClient() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="glass-panel max-w-5xl mx-auto rounded-[2.5rem] p-10 sm:p-16 text-center mb-8 border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.15)]">
-          <h2 className="font-editorial text-3xl sm:text-5xl font-bold text-white mb-5 tracking-tight leading-tight">
+        <div className="glass-panel max-w-5xl mx-auto rounded-[2.5rem] p-10 sm:p-16 text-center mb-8 border border-white/[0.08] shadow-2xl">
+          <h2 className="font-editorial text-3xl sm:text-5xl font-normal text-white mb-5 tracking-tight leading-tight">
             Ready to scale your business capacity?
           </h2>
-          <p className="text-lg text-[#b8c9bd] mb-9 max-w-2xl mx-auto leading-relaxed font-normal">
+          <p className="text-lg text-zinc-400 mb-9 max-w-2xl mx-auto leading-relaxed font-normal">
             Join thousands of service businesses who have automated their scheduling and front desk workflows.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

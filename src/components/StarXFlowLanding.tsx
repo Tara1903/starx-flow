@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { StarXCoreCanvas } from "./spatial/StarXCoreCanvas";
 import { useMagneticButton } from "@/lib/motion/MagneticController";
 import { StarXFlowMobileStage } from "./StarXFlowMobileStage";
+import { Footer } from "./Footer";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    STATIC DATA DEFINITIONS FROM STARX FLOW RUNTIME
@@ -872,10 +873,10 @@ export function StarXFlowLanding() {
           {/* Eyebrow */}
           <div
             id="hero-eyebrow"
-            className="pos-auto uppercase"
-            style={{ '--x': 72, '--y': 174, fontSize: 'calc(12.6 * var(--u))', fontWeight: 600, letterSpacing: 'calc(2 * var(--u))', color: '#6ee7a8', whiteSpace: 'nowrap' } as React.CSSProperties}
+            className="pos-auto font-mono"
+            style={{ '--x': 72, '--y': 174, fontSize: 'calc(12 * var(--u))', fontWeight: 500, letterSpacing: 'calc(0.5 * var(--u))', color: '#86efac', whiteSpace: 'nowrap' } as React.CSSProperties}
           >
-            THE INTELLIGENT BUSINESS ENVIRONMENT
+            Autonomous WhatsApp Receptionist &amp; Booking Infrastructure
           </div>
 
           {/* Editorial Main Headline */}
@@ -1293,7 +1294,7 @@ export function StarXFlowLanding() {
             style={{ '--x': 1049, '--y': 962, '--w': 135, '--h': 148 } as React.CSSProperties}
             title="Click to synchronize all connected operations"
           >
-            <span className="block w-full h-full rounded-full group-hover:shadow-[0_0_45px_rgba(110,231,183,0.7)] transition-shadow"></span>
+            <span className="block w-full h-full rounded-full group-hover:shadow-[0_0_24px_rgba(110,231,183,0.3)] transition-shadow"></span>
           </button>
 
           {/* 6 ORBITAL NODES */}
@@ -1896,62 +1897,38 @@ export function StarXFlowLanding() {
   {/* =========================================================================== */}
   <div id="starx-extended-scenes" className="emerald-sanctuary-ext text-emerald-50">
 
-    {/* Sticky Scene Jump Bar for Rapid Inspection of All 12 Restored Scenes */}
-    <div id="starx-scene-jump-bar" className="sticky top-0 z-40 border-b border-emerald-500/20 bg-[#020c08]/85 backdrop-blur-md overflow-x-auto no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-2 text-xs flex-nowrap min-w-max md:min-w-0 md:flex-wrap">
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-          <span className="font-semibold text-emerald-300 uppercase tracking-wider">12-Scene Story:</span>
-        </div>
-        <div className="flex items-center gap-1.5 flex-nowrap md:flex-wrap shrink-0">
-          <a href="#hero-section" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">01 Hero</a>
-          <a href="#scene-legacy-hero-bridge" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">01B Autopilot &amp; Integrations</a>
-          <a href="#scene-revenue-leakage" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">02 $48,590 Leakage &amp; ROI</a>
-          <a href="#challenge-section" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">03 Connected Hub</a>
-          <a href="#scene-onboarding" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">04 10-Min Onboarding</a>
-          <a href="#action-section" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">05 Live Workflows</a>
-          <a href="#scene-operational-excellence" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">06 Operational Excellence</a>
-          <a href="#scene-customer-segments" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">07 Solo vs. Groups</a>
-          <a href="#scene-guarantees" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">08 &amp; 10 Guarantees</a>
-          <a href="#scene-pricing-comparison" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">09 Full Pricing ($29/$59/$99)</a>
-          <a href="#scene-faq" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">11 FAQ</a>
-          <a href="#scene-final-cta-footer" className="px-2.5 py-1 rounded-full hover:bg-emerald-500/20 text-emerald-100/85 hover:text-white transition-colors">12 Footer</a>
-        </div>
-      </div>
-    </div>
-
     {/* ========================================================================= */}
-    {/* SCENE 01B & 01C: LEGACY HERO POSITIONING, SARAH K. DEMO & INTEGRATIONS    */}
+    {/* SCENE 01B: LIVE WHATSAPP CONVERSATION & SCHEDULING SIMULATION            */}
     {/* ========================================================================= */}
-    <section id="scene-legacy-hero-bridge"  className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14">
+    <section id="scene-legacy-hero-bridge" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        {/* Left: Restored Legacy Hero Messaging & Social Proof */}
+        {/* Left: Conversational Intelligence Overview & Real Proof */}
         <div className="lg:col-span-6 space-y-5">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-emerald-400/35 bg-emerald-950/60 text-xs font-semibold text-emerald-300 tracking-wider uppercase">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Autonomous Front Desk</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/[0.08] bg-[#071912]/80 text-xs font-mono font-medium text-emerald-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>Live WhatsApp Simulation</span>
           </div>
 
           <h2 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-normal text-white leading-tight tracking-tight">
-            Autonomous Front Desk,<br/>
+            Experience the autonomous receptionist,<br/>
             <span className="text-emerald-300">live in action.</span>
           </h2>
 
-          <p className="text-base text-emerald-100/80 leading-relaxed max-w-xl">
-            Automate bookings, capture leads, and reply to every customer instantly — 24/7 on WhatsApp.
+          <p className="text-base text-zinc-300 leading-relaxed max-w-xl">
+            Test how StarX Flow converts client inquiries, handles scheduling questions, and confirms appointments inside WhatsApp in under two seconds.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2">
             <button
               type="button"
               onClick={() => openModal('signup', '14-Day Free Trial')}
-              className="px-6 py-3 rounded-full font-semibold text-xs text-emerald-950 bg-emerald-400 hover:bg-emerald-300 transition-colors cursor-pointer"
+              className="px-6 py-3 rounded-full font-semibold text-xs text-emerald-950 bg-emerald-400 hover:bg-emerald-300 transition-colors cursor-pointer shadow-lg"
             >
               Start Free Trial →
             </button>
             <a
               href="#scene-onboarding"
-              className="px-5 py-3 rounded-full font-medium text-xs text-emerald-200/80 hover:text-white border border-emerald-500/25 hover:border-emerald-400/40 transition-colors"
+              className="px-5 py-3 rounded-full font-medium text-xs text-zinc-300 hover:text-white border border-white/[0.1] hover:border-white/[0.2] bg-white/[0.02] transition-colors"
             >
               See 10-Minute Setup
             </a>
@@ -1960,46 +1937,46 @@ export function StarXFlowLanding() {
           {/* Social Proof Strip: Trusted by 3,000+ service businesses */}
           <div className="flex items-center gap-3.5 pt-3">
             <div className="flex -space-x-2.5">
-              <div className="w-9 h-9 rounded-full border-2 border-[#03120c] bg-gradient-to-br from-emerald-300 to-emerald-700 flex items-center justify-center text-xs font-bold text-emerald-950">SK</div>
-              <div className="w-9 h-9 rounded-full border-2 border-[#03120c] bg-gradient-to-br from-teal-200 to-teal-600 flex items-center justify-center text-xs font-bold text-emerald-950">MR</div>
-              <div className="w-9 h-9 rounded-full border-2 border-[#03120c] bg-gradient-to-br from-green-300 to-emerald-800 flex items-center justify-center text-xs font-bold text-emerald-950">AL</div>
-              <div className="w-9 h-9 rounded-full border-2 border-[#03120c] bg-gradient-to-br from-emerald-200 to-green-600 flex items-center justify-center text-xs font-bold text-emerald-950">JD</div>
+              <div className="w-9 h-9 rounded-full border-2 border-[#03120c] bg-zinc-800 flex items-center justify-center text-xs font-medium text-emerald-300">SK</div>
+              <div className="w-9 h-9 rounded-full border-2 border-[#03120c] bg-zinc-800 flex items-center justify-center text-xs font-medium text-emerald-300">MR</div>
+              <div className="w-9 h-9 rounded-full border-2 border-[#03120c] bg-zinc-800 flex items-center justify-center text-xs font-medium text-emerald-300">AL</div>
+              <div className="w-9 h-9 rounded-full border-2 border-[#03120c] bg-zinc-800 flex items-center justify-center text-xs font-medium text-emerald-300">JD</div>
             </div>
             <div>
-              <div className="text-sm font-semibold text-white">Trusted by 3,000+ service businesses</div>
-              <div className="text-xs text-emerald-300/80">Clinics, salons, gyms, spas &amp; solo practitioners worldwide</div>
+              <div className="text-sm font-medium text-white">Trusted by 3,000+ service businesses</div>
+              <div className="text-xs text-zinc-400">Clinics, salons, gyms, spas &amp; solo practitioners worldwide</div>
             </div>
           </div>
         </div>
 
-        {/* Right: Restored AI Receptionist Massage Demo Widget */}
+        {/* Right: AI Receptionist Massage Demo Widget */}
         <div className="lg:col-span-6">
-          <div className="spatial-glass-card rounded-3xl p-6 sm:p-7 relative overflow-hidden">
-            <div className="flex items-center justify-between pb-4 border-b border-emerald-500/20">
+          <div className="rounded-3xl p-6 sm:p-7 relative overflow-hidden border border-white/[0.08] bg-[#05140e]/85 backdrop-blur-xl shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-300 to-emerald-600 flex items-center justify-center text-emerald-950 font-bold text-sm shadow-[0_0_16px_rgba(74,222,128,0.6)]">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 font-semibold text-sm">
                   AI
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-white">AI Receptionist</div>
-                  <div className="text-xs text-emerald-300 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <div className="text-xs text-emerald-400 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                     <span>Online • Operating normally</span>
                   </div>
                 </div>
               </div>
-              <span className="text-[11px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300">
+              <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-emerald-300">
                 Sub-2s Response
               </span>
             </div>
 
             {/* Conversation Thread */}
             <div id="sarah-demo-thread" className="space-y-3.5 my-5 text-sm">
-              <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#061c14]/90 border border-emerald-500/25 px-4 py-3 text-emerald-50">
+              <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#071d15] border border-white/[0.06] px-4 py-3 text-zinc-200">
                 Hi, do you have any slots for a deep tissue massage tomorrow?
               </div>
 
-              <div className="max-w-[88%] ml-auto rounded-2xl rounded-tr-sm bg-emerald-900/50 border border-emerald-400/40 px-4 py-3 text-white shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+              <div className="max-w-[88%] ml-auto rounded-2xl rounded-tr-sm bg-[#0e3324] border border-emerald-500/30 px-4 py-3 text-white shadow-lg">
                 Hi! We have openings at <strong>10:30 AM</strong> and <strong>2:00 PM</strong> with therapist Sarah. Want me to book one?
               </div>
             </div>
@@ -2010,7 +1987,7 @@ export function StarXFlowLanding() {
                 id="sarah-demo-input"
                 type="text"
                 placeholder="Message AI Receptionist... (e.g. Book 2:00 PM please)"
-                className="flex-1 rounded-full bg-[#04150f]/90 border border-emerald-500/30 px-4 py-2.5 text-xs text-white placeholder-emerald-200/45 focus:outline-none focus:border-emerald-400"
+                className="flex-1 rounded-full bg-[#030d09] border border-white/[0.1] px-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 transition-colors"
               />
               <button
                 type="submit"
@@ -2023,50 +2000,50 @@ export function StarXFlowLanding() {
             {/* Confirmed Appointment Toast Strip inside Widget */}
             <div
               id="sarah-demo-confirmed-banner"
-              className="mt-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/45 px-4 py-2.5 flex items-center justify-between text-xs text-emerald-100"
+              className="mt-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 px-4 py-2.5 flex items-center justify-between text-xs text-zinc-200"
             >
               <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-emerald-400 text-emerald-950 font-bold inline-flex items-center justify-center">✓</span>
+                <span className="w-5 h-5 rounded-full bg-emerald-400 text-emerald-950 font-bold inline-flex items-center justify-center text-xs">✓</span>
                 <span id="sarah-demo-confirmed-text" className="font-medium text-white">Appointment confirmed — Sarah K., Deep Tissue, 2:00 PM</span>
               </div>
-              <span className="text-[11px] text-emerald-300 font-mono">Synced</span>
+              <span className="text-[11px] text-emerald-400 font-mono">Synced</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Scene 01C: Verified Platform Integrations & Security Architecture Bar */}
-      <div id="scene-integrations" className="mt-14 spatial-glass-card rounded-3xl p-6 sm:p-8">
+      <div id="scene-integrations" className="mt-14 rounded-3xl p-6 sm:p-8 border border-white/[0.08] bg-[#04100b]/80 backdrop-blur-xl shadow-xl">
         <div className="text-center max-w-3xl mx-auto">
-          <div className="eyebrow-emerald">Engineered for Independent Service &amp; Appointment Businesses</div>
-          <p className="text-sm text-emerald-100/80 mt-2">
-            Verified platform integrations include Meta WhatsApp Cloud API, Google Calendar, Microsoft Graph Calendar, Instagram Graph API, Stripe, and Supabase.
+          <div className="text-xs font-mono text-emerald-400">Verified Integrations &amp; Security Architecture</div>
+          <p className="text-sm text-zinc-400 mt-2">
+            Direct API integrations with Meta WhatsApp Cloud API, Google Calendar, Microsoft Graph Calendar, Instagram Graph API, Stripe, and Supabase.
           </p>
         </div>
 
         {/* 6 Verified Integration Pills */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6">
-          <div className="rounded-xl bg-[#041610]/80 border border-emerald-500/25 px-3.5 py-2.5 text-center text-xs font-medium text-emerald-100">Meta WhatsApp Cloud API</div>
-          <div className="rounded-xl bg-[#041610]/80 border border-emerald-500/25 px-3.5 py-2.5 text-center text-xs font-medium text-emerald-100">Google Calendar API</div>
-          <div className="rounded-xl bg-[#041610]/80 border border-emerald-500/25 px-3.5 py-2.5 text-center text-xs font-medium text-emerald-100">Microsoft Graph Calendar</div>
-          <div className="rounded-xl bg-[#041610]/80 border border-emerald-500/25 px-3.5 py-2.5 text-center text-xs font-medium text-emerald-100">Instagram Graph API</div>
-          <div className="rounded-xl bg-[#041610]/80 border border-emerald-500/25 px-3.5 py-2.5 text-center text-xs font-medium text-emerald-100">Stripe Hosted Checkout</div>
-          <div className="rounded-xl bg-[#041610]/80 border border-emerald-500/25 px-3.5 py-2.5 text-center text-xs font-medium text-emerald-100">Supabase Row Level Security</div>
+          <div className="rounded-xl bg-[#061811] border border-white/[0.07] px-3.5 py-2.5 text-center text-xs font-mono text-zinc-300">Meta WhatsApp</div>
+          <div className="rounded-xl bg-[#061811] border border-white/[0.07] px-3.5 py-2.5 text-center text-xs font-mono text-zinc-300">Google Calendar</div>
+          <div className="rounded-xl bg-[#061811] border border-white/[0.07] px-3.5 py-2.5 text-center text-xs font-mono text-zinc-300">Microsoft Graph</div>
+          <div className="rounded-xl bg-[#061811] border border-white/[0.07] px-3.5 py-2.5 text-center text-xs font-mono text-zinc-300">Instagram API</div>
+          <div className="rounded-xl bg-[#061811] border border-white/[0.07] px-3.5 py-2.5 text-center text-xs font-mono text-zinc-300">Stripe Checkout</div>
+          <div className="rounded-xl bg-[#061811] border border-white/[0.07] px-3.5 py-2.5 text-center text-xs font-mono text-zinc-300">Supabase RLS</div>
         </div>
 
         {/* 4 Core Security & Commercial Trust Badges */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-4 border-t border-emerald-500/20">
-          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-300">
-            <span>✦</span><span>0% Booking Commission</span>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-4 border-t border-white/[0.06]">
+          <div className="flex items-center justify-center gap-2 text-xs font-medium text-zinc-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>0% Booking Commission</span>
           </div>
-          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-300">
-            <span>✦</span><span>Concurrency Exclusion Locks</span>
+          <div className="flex items-center justify-center gap-2 text-xs font-medium text-zinc-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>Concurrency Exclusion Locks</span>
           </div>
-          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-300">
-            <span>✦</span><span>100% Direct Client Ownership</span>
+          <div className="flex items-center justify-center gap-2 text-xs font-medium text-zinc-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>100% Direct Client Ownership</span>
           </div>
-          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-300">
-            <span>✦</span><span>TLS 1.3 &amp; At-Rest Encryption</span>
+          <div className="flex items-center justify-center gap-2 text-xs font-medium text-zinc-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>TLS 1.3 &amp; At-Rest Encryption</span>
           </div>
         </div>
       </div>
@@ -2127,22 +2104,22 @@ export function StarXFlowLanding() {
         {/* Right 5 Cols: $48,590 Monument Card + Interactive ROI Recovery Calculator */}
         <div className="lg:col-span-5 space-y-6">
           {/* $48,590 Verified Statistic Monument */}
-          <div className="spatial-glass-card rounded-3xl p-7 text-center border-emerald-400/45 relative overflow-hidden">
-            <div className="eyebrow-emerald">Verified Industry Impact</div>
-            <div className="font-editorial text-6xl sm:text-7xl font-bold text-white mt-2 tracking-tight drop-shadow-[0_0_25px_rgba(74,222,128,0.45)]">
+          <div className="rounded-3xl p-7 text-center border border-white/[0.08] bg-[#04120c]/85 backdrop-blur-xl shadow-xl relative overflow-hidden">
+            <div className="text-xs font-mono text-emerald-400">Industry Loss Metric</div>
+            <div className="font-editorial text-6xl sm:text-7xl font-light text-white mt-2 tracking-tight tabular-nums">
               $48,590
             </div>
-            <p className="text-sm text-emerald-200/90 mt-2 font-medium">
-              Average annual revenue lost to missed calls and no-shows
+            <p className="text-sm text-zinc-400 mt-2 font-normal">
+              Average annual revenue lost to missed inquiries and unconfirmed bookings
             </p>
           </div>
 
           {/* Interactive Lead & Time Recovery ROI Calculator (from /pricing) */}
-          <div className="spatial-glass-card rounded-3xl p-6 space-y-4">
+          <div className="rounded-3xl p-6 space-y-4 border border-white/[0.08] bg-[#04120c]/85 backdrop-blur-xl shadow-xl">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-emerald-300">Lead &amp; Time Recovery ROI Calculator</div>
-              <p className="text-xs text-emerald-100/75 mt-1">
-                Estimate how much revenue and admin time StarX Flow will reclaim for you.
+              <div className="text-xs font-mono font-medium text-emerald-400">Lead &amp; Time Recovery Calculator</div>
+              <p className="text-xs text-zinc-400 mt-1">
+                Estimate how much revenue and administrative time StarX Flow reclaims each month.
               </p>
             </div>
 
@@ -2557,7 +2534,7 @@ export function StarXFlowLanding() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-lg font-semibold text-white">Growth</span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-400 text-emerald-950">Most Popular</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-400 text-emerald-950">Most Popular</span>
             </div>
             <p className="text-xs text-emerald-200/80 mt-1">Best for established gyms, clinics, and multi-staff salons/spas.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
@@ -2576,7 +2553,7 @@ export function StarXFlowLanding() {
           <button
             type="button"
             onClick={() => openModal('signup', 'Growth — $59/month')}
-            className="mt-7 w-full py-3 rounded-full text-xs font-semibold text-emerald-950 bg-emerald-300 hover:bg-emerald-200 transition-colors cursor-pointer shadow-[0_0_24px_rgba(74,222,128,0.4)]"
+            className="mt-7 w-full py-3 rounded-full text-xs font-semibold text-emerald-950 bg-emerald-400 hover:bg-emerald-300 transition-colors cursor-pointer shadow-md"
           >
             Start 14-Day Trial →
           </button>
@@ -2714,136 +2691,11 @@ export function StarXFlowLanding() {
         </button>
       </div>
 
-      {/* Explore StarX-Flow Quick Links Strip */}
-      <div className="mt-14 pt-8 border-t border-emerald-500/20 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-emerald-200/85">
-        <span className="text-emerald-400 uppercase tracking-wider font-semibold">Explore StarX-Flow:</span>
-        <a href="#hero-section" className="hover:text-white transition-colors">Product Overview</a>
-        <a href="#scene-operational-excellence" className="hover:text-white transition-colors">All Features</a>
-        <a href="#scene-pricing-comparison" className="hover:text-white transition-colors">Pricing Plans</a>
-        <a href="#scene-faq" className="hover:text-white transition-colors">Resources &amp; Guides</a>
-        <a href="#scene-legacy-hero-bridge" className="hover:text-white transition-colors">Our Story</a>
-        <a href="#scene-customer-segments" className="hover:text-white transition-colors">Comparisons</a>
-      </div>
-
-      {/* Complete 4-Column Footer */}
-      <footer className="mt-12 pt-10 border-t border-emerald-500/20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 text-xs">
-        <div className="lg:col-span-2 space-y-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-emerald-400 text-lg">✦</span>
-            <span className="text-base font-semibold text-white">StarX Flow</span>
-          </div>
-          <p className="text-emerald-100/75 leading-relaxed max-w-sm">
-            The premier AI Operating System and WhatsApp Automation Platform for Local Service &amp; Appointment-Driven Businesses. Put your front desk on autopilot with zero booking commissions.
-          </p>
-          <div className="pt-1 text-emerald-300 font-medium">
-            Official Support: <a href="mailto:support@starxflow.com" className="underline hover:text-white">support@starxflow.com</a>
-          </div>
-        </div>
-
-        <div>
-          <div className="font-semibold text-white uppercase tracking-wider mb-3">Industries</div>
-          <ul className="space-y-2 text-emerald-100/75">
-            <li><a href="#scene-customer-segments" className="hover:text-white transition-colors">Gyms &amp; Fitness</a></li>
-            <li><a href="#scene-customer-segments" className="hover:text-white transition-colors">Dental &amp; Clinics</a></li>
-            <li><a href="#scene-customer-segments" className="hover:text-white transition-colors">Salons &amp; Beauty</a></li>
-            <li><a href="#scene-customer-segments" className="hover:text-white transition-colors">Spas &amp; Wellness</a></li>
-            <li><a href="#scene-customer-segments" className="hover:text-white transition-colors">Education &amp; Tutors</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <div className="font-semibold text-white uppercase tracking-wider mb-3">Architecture</div>
-          <ul className="space-y-2 text-emerald-100/75">
-            <li><a href="#scene-onboarding" className="hover:text-white transition-colors">How It Works</a></li>
-            <li><a href="#scene-guarantees" className="hover:text-white transition-colors">Security &amp; Privacy</a></li>
-            <li><a href="#scene-integrations" className="hover:text-white transition-colors">Verified Integrations</a></li>
-            <li><a href="#hero-section" className="hover:text-white transition-colors">Product Overview</a></li>
-            <li><a href="#scene-operational-excellence" className="hover:text-white transition-colors">Features Directory</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <div className="font-semibold text-white uppercase tracking-wider mb-3">Company</div>
-          <ul className="space-y-2 text-emerald-100/75">
-            <li><a href="#scene-legacy-hero-bridge" className="hover:text-white transition-colors">About Us</a></li>
-            <li><a href="#scene-pricing-comparison" className="hover:text-white transition-colors">Pricing &amp; Plans</a></li>
-            <li><a href="#scene-faq" className="hover:text-white transition-colors">Resources</a></li>
-            <li><button type="button" onClick={() => openModal('capability', 'Privacy Policy & GDPR Architecture', 'StarX Flow isolates tenant data with PostgreSQL Row-Level Security [RLS] and provides full GDPR export and deletion endpoints.')} className="hover:text-white transition-colors bg-transparent border-0 p-0 text-inherit cursor-pointer">Privacy Policy</button></li>
-            <li><button type="button" onClick={() => openModal('capability', 'Terms of Service', 'Flat-rate monthly software subscription [$29 to $99/mo] with 0% booking commissions and 100% direct client ownership.')} className="hover:text-white transition-colors bg-transparent border-0 p-0 text-inherit cursor-pointer">Terms of Service</button></li>
-          </ul>
-        </div>
-      </footer>
-
-      {/* Legal & Encryption Bar */}
-      <div className="mt-10 pt-6 border-t border-emerald-500/15 flex flex-wrap items-center justify-between gap-4 text-[11px] text-emerald-200/65">
-        <div>© 2026 StarX Flow (StarX Alpha Labs). All rights reserved.</div>
-        <div className="flex flex-wrap items-center gap-4">
-          <Link href="/dashboard" className="text-emerald-300 font-semibold hover:text-white flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Live Dashboard
-          </Link>
-          <span>•</span>
-          <Link href="/admin/login" className="hover:text-emerald-300">Admin Login</Link>
-          <span>•</span>
-          <span className="font-mono">Canonical Host: starx-flow.runs-on.dev</span>
-          <span>•</span>
-          <span className="text-emerald-300">TLS 1.3 Transport &amp; At-Rest Encryption</span>
-        </div>
+      {/* Standard Unified Footer */}
+      <div className="mt-14">
+        <Footer />
       </div>
     </section>
-  </div>
-
-
-  {/* =========================================================================== */}
-  {/* FLOATING STUDIO INSPECTOR BAR (Mode Switcher & X-Ray Reference Diff Slider) */}
-  {/* =========================================================================== */}
-  {/* =========================================================================== */}
-  {/* APPROVED TWO-ELEMENT CUSTOM EMERALD SPATIAL CURSOR                          */}
-  {/* Handled globally by <CustomCursor /> with 3-layer refraction glow & spring dynamics */}
-  {/* =========================================================================== */}
-
-  <div
-    id="studio-inspector-bar"
-    className="hidden md:flex fixed bottom-3 right-3 z-50 flex-wrap items-center gap-2 rounded-full px-3.5 py-2 text-xs shadow-2xl"
-    style={{ background: 'rgba(4, 20, 14, 0.9)', border: '1px solid rgba(110, 231, 183, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' } as React.CSSProperties}
-  >
-    <span className="font-semibold text-emerald-300 flex items-center gap-1.5">
-      <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-      <span>StarX Studio:</span>
-    </span>
-
-    <button
-      id="mode-btn-hybrid"
-      type="button"
-      onClick={() => setRenderMode('hybrid')}
-      className="px-2.5 py-1 rounded-full font-medium transition-colors bg-emerald-500/25 text-emerald-200 border border-emerald-400/50"
-    >
-      3D Sanctuary + Live DOM
-    </button>
-
-    <button
-      id="mode-btn-pure"
-      type="button"
-      onClick={() => setRenderMode('pure-css')}
-      className="px-2.5 py-1 rounded-full font-medium transition-colors text-emerald-100/75 hover:text-white border border-transparent"
-    >
-      Pure CSS/SVG
-    </button>
-
-    <div className="flex items-center gap-1.5 pl-2 border-l border-emerald-500/30">
-      <label htmlFor="xray-slider" className="text-emerald-200/80 cursor-pointer">Compare Original:</label>
-      <input
-        id="xray-slider"
-        type="range"
-        min="0"
-        max="100"
-        value="0"
-        onChange={(e: any) => updateXrayOpacity(e.target.value)} onInput={(e: any) => updateXrayOpacity(e.target.value)}
-        className="w-20 accent-emerald-400 cursor-pointer"
-        title="Slide to overlay reference layout and verify alignment"
-      />
-      <span id="xray-pct" className="text-emerald-300 font-mono w-8 text-right">0%</span>
-    </div>
   </div>
 
   {/* =========================================================================== */}
@@ -2870,19 +2722,19 @@ export function StarXFlowLanding() {
   >
     <div
       className="relative w-full max-w-md rounded-2xl p-6 text-emerald-50 shadow-2xl"
-      style={{ background: 'linear-gradient(155deg, rgba(16, 48, 35, 0.96) 0%, rgba(5, 18, 13, 0.98) 100%)', border: '1px solid rgba(110, 231, 183, 0.45)', boxShadow: '0 0 50px rgba(16, 185, 129, 0.25)' } as React.CSSProperties}
+      style={{ background: '#040e0a', border: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 24px 64px -12px rgba(0, 0, 0, 0.85)' } as React.CSSProperties}
     >
       <button
         type="button"
         onClick={closeModal}
         aria-label="Close modal"
-        className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-emerald-300 hover:bg-emerald-800/40 hover:text-white transition-colors"
+        className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:bg-white/[0.06] hover:text-white transition-colors"
       >
         ✕
       </button>
 
-      <div id="modal-eyebrow" className="text-[11px] font-semibold uppercase tracking-widest text-emerald-400">
-        STARX FLOW ENVIRONMENT
+      <div id="modal-eyebrow" className="text-xs font-mono font-medium text-emerald-400">
+        StarX Flow Platform
       </div>
       <h3 id="modal-title" className="font-editorial text-3xl font-normal text-white mt-1">
         Start Your Connected Flow

@@ -129,7 +129,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
                 <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                   <ShieldCheck className="w-8 h-8 text-emerald-400" />
                 </div>
-                <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-[#0a0a0a] rounded-full animate-pulse" />
+                <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-[#0a0a0a] rounded-full" />
               </div>
               <div className="space-y-1">
                 <h4 className="text-white font-bold text-base">Meta API Connected</h4>
@@ -158,7 +158,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
             
             <a 
               href={`/api/meta/auth?userId=${user?.id}`}
-              className="w-full bg-[#1877F2] hover:bg-[#1864D9] text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(24,119,242,0.3)] flex items-center justify-center gap-2"
+              className="w-full bg-[#1877F2] hover:bg-[#1864D9] text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
             >
               <Facebook className="w-5 h-5 fill-current" />
               Continue with Facebook
@@ -180,7 +180,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
                 <div className="w-16 h-16 rounded-full bg-pink-500/10 border border-pink-500/20 flex items-center justify-center">
                   <ShieldCheck className="w-8 h-8 text-pink-400" />
                 </div>
-                <span className="absolute bottom-0 right-0 w-4 h-4 bg-pink-500 border-2 border-[#0a0a0a] rounded-full animate-pulse" />
+                <span className="absolute bottom-0 right-0 w-4 h-4 bg-pink-500 border-2 border-[#0a0a0a] rounded-full" />
               </div>
               <div className="space-y-1">
                 <h4 className="text-white font-bold text-base">Instagram Connected</h4>
@@ -206,7 +206,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
             
             <a 
               href={`/api/meta/auth?userId=${user?.id}`}
-              className="w-full bg-[#1877F2] hover:bg-[#1864D9] text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(24,119,242,0.3)] flex items-center justify-center gap-2"
+              className="w-full bg-[#1877F2] hover:bg-[#1864D9] text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
             >
               <Facebook className="w-5 h-5 fill-current" />
               Continue with Facebook
@@ -361,7 +361,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] flex items-center justify-center gap-2"
+                    className="w-full bg-[#28dfa0] hover:bg-[#34e7a8] text-[#041f13] font-semibold text-sm py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 border border-white/20"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {loading ? 'Saving...' : (channelKey === 'Web' ? 'Mark as Embedded' : 'Save & Connect')}

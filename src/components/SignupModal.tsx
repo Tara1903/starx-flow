@@ -12,7 +12,6 @@ import {
   User,
   Eye,
   EyeOff,
-  Sparkles,
   KeyRound,
   Compass,
 } from "lucide-react";
@@ -384,13 +383,11 @@ export function SignupModal({
         {!isStandalone && (
           <div className="relative z-30 flex items-center justify-between px-6 sm:px-8 pt-5 pb-2">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-                <Sparkles size={14} />
-              </div>
-              <span className="text-sm font-extrabold tracking-tight text-white">
-                StarX <span className="text-emerald-400">Flow</span>
+              <img src="/logo.svg" alt="" className="w-6 h-6 rounded-md object-contain" />
+              <span className="text-sm font-semibold tracking-tight text-white">
+                StarX Flow
               </span>
-              <span className="sr-only">Welcome to StarX Flow!</span>
+              <span className="sr-only">Welcome to StarX Flow</span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -426,7 +423,7 @@ export function SignupModal({
               {authMode === "login" && (
                 <motion.div
                   layoutId="mobile-auth-tab"
-                  className="absolute inset-0 bg-emerald-500/20 border border-emerald-500/40 rounded-xl -z-10 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                  className="absolute inset-0 bg-emerald-500/20 border border-emerald-400/40 rounded-xl -z-10 shadow-sm"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
@@ -447,7 +444,7 @@ export function SignupModal({
               {authMode === "signup" && (
                 <motion.div
                   layoutId="mobile-auth-tab"
-                  className="absolute inset-0 bg-emerald-500/20 border border-emerald-500/40 rounded-xl -z-10 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                  className="absolute inset-0 bg-emerald-500/20 border border-emerald-400/40 rounded-xl -z-10 shadow-sm"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
@@ -538,7 +535,7 @@ export function SignupModal({
                     className={cn(
                       "py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5",
                       loginMethod === "password"
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
                         : "text-zinc-400 hover:text-zinc-200"
                     )}
                   >
@@ -555,7 +552,7 @@ export function SignupModal({
                     className={cn(
                       "py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5",
                       loginMethod === "otp"
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
                         : "text-zinc-400 hover:text-zinc-200"
                     )}
                   >
@@ -566,7 +563,7 @@ export function SignupModal({
 
                 <form onSubmit={handleLoginSubmit} className="space-y-3">
                   {/* Glass Box Input 1: Username / Email matching Video */}
-                  <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                  <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                     <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                     <input
                       type="email"
@@ -580,7 +577,7 @@ export function SignupModal({
 
                   {/* Glass Box Input 2: Password (or OTP notification) matching Video */}
                   {loginMethod === "password" ? (
-                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                       <Lock size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                       <input
                         type={showPassword ? "text" : "password"}
@@ -705,7 +702,7 @@ export function SignupModal({
 
                 <form onSubmit={handleSignupSubmit} className="space-y-3">
                   {/* Glass Box Input 1: Full Name matching Video */}
-                  <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                  <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                     <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                     <input
                       type="text"
@@ -718,7 +715,7 @@ export function SignupModal({
                   </div>
 
                   {/* Glass Box Input 2: Work Email matching Video */}
-                  <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                  <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                     <Mail size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                     <input
                       type="email"
@@ -732,7 +729,7 @@ export function SignupModal({
 
                   {/* Glass Box Input 3: Create Password matching Video */}
                   {signupMethod === "password" ? (
-                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                       <Lock size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                       <input
                         type={showPassword ? "text" : "password"}
@@ -974,7 +971,7 @@ export function SignupModal({
                     </div>
 
                     {/* Glass Box Input 1: Full Name */}
-                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                       <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                       <input
                         type="text"
@@ -987,7 +984,7 @@ export function SignupModal({
                     </div>
 
                     {/* Glass Box Input 2: Work Email */}
-                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                       <Mail size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                       <input
                         type="email"
@@ -1001,7 +998,7 @@ export function SignupModal({
 
                     {/* Glass Box Input 3: Create Password */}
                     {signupMethod === "password" ? (
-                      <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                      <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                         <Lock size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                         <input
                           type={showPassword ? "text" : "password"}
@@ -1077,7 +1074,7 @@ export function SignupModal({
                     </div>
 
                     {/* Glass Box Input 1: Email or Username */}
-                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                    <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                       <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                       <input
                         type="email"
@@ -1091,7 +1088,7 @@ export function SignupModal({
 
                     {/* Glass Box Input 2: Password */}
                     {loginMethod === "password" ? (
-                      <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/50 focus-within:bg-white/[0.08] focus-within:shadow-[0_0_15px_rgba(16,185,129,0.18)] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
+                      <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                         <Lock size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
                         <input
                           type={showPassword ? "text" : "password"}

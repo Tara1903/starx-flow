@@ -171,17 +171,17 @@ export function StarXFlowMobileStage({
         className="relative scroll-mt-24 pt-24 pb-12 px-4 sm:px-6 flex flex-col items-center text-center"
       >
         {/* Brand/Product Eyebrow */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/30 mb-4 shadow-[0_0_15px_rgba(40,223,160,0.15)]">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
-          <span className="text-[11px] font-semibold tracking-[0.2em] text-emerald-300 uppercase">
-            THE INTELLIGENT BUSINESS ENVIRONMENT
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#051910] border border-white/[0.08] mb-4 shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span className="text-[11px] font-mono font-medium text-emerald-300">
+            Autonomous WhatsApp &amp; Booking Infrastructure
           </span>
         </div>
 
         {/* Editorial Main Headline */}
         <h1 className="font-editorial text-[38px] sm:text-[44px] font-normal leading-[1.04] tracking-tight text-[#f3fbf7] max-w-[360px] mx-auto m-0">
           Run Your Business <br />
-          on <span className="font-semibold text-white drop-shadow-[0_0_20px_rgba(74,222,128,0.4)]">One Flow</span>
+          on <span className="font-semibold text-white">One Flow</span>
         </h1>
 
         {/* Supporting Value Proposition */}
@@ -194,11 +194,10 @@ export function StarXFlowMobileStage({
           <button
             type="button"
             onClick={() => onOpenModal('signup', 'Full Suite')}
-            className="w-full h-12 rounded-full font-semibold text-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.98] cursor-pointer shadow-[0_4px_24px_rgba(74,222,128,0.45),inset_0_1.5px_2px_rgba(255,255,255,0.75)]"
+            className="w-full h-12 rounded-full font-semibold text-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.98] cursor-pointer shadow-lg border border-white/20"
             style={{
-              background: 'linear-gradient(180deg, #bcf8db 0%, #73dfaa 48%, #47ba82 100%)',
-              color: '#042115',
-              border: '1.2px solid rgba(210, 255, 232, 0.85)',
+              background: '#28dfa0',
+              color: '#041f13',
             }}
           >
             <span>Get Started</span>
@@ -261,7 +260,7 @@ export function StarXFlowMobileStage({
               {/* WhatsApp Header */}
               <div className="flex items-center justify-between pb-3 border-b border-emerald-500/20">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center text-white shadow-[0_0_12px_rgba(74,222,128,0.5)] flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                       <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2Z"/>
                     </svg>
@@ -269,7 +268,7 @@ export function StarXFlowMobileStage({
                   <div className="text-left">
                     <div className="text-sm font-semibold text-white leading-tight">StarX AI Receptionist</div>
                     <div className="text-[11px] text-emerald-300 font-medium flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                       <span>Online • Instant Reply</span>
                     </div>
                   </div>
@@ -303,7 +302,7 @@ export function StarXFlowMobileStage({
                           className={cn(
                             "w-full py-1.5 px-3 rounded-full text-xs font-medium flex items-center justify-between transition-all cursor-pointer",
                             isActive
-                              ? "bg-gradient-to-r from-emerald-400 to-mint-bright text-[#042115] font-semibold shadow-[0_0_14px_rgba(74,222,128,0.6)]"
+                              ? "bg-emerald-400 text-[#042115] font-semibold shadow-sm"
                               : "bg-[#061e14] text-emerald-200 hover:bg-[#0a2e1f] border border-emerald-500/30"
                           )}
                         >
@@ -372,7 +371,7 @@ export function StarXFlowMobileStage({
                       className={cn(
                         "h-6 rounded-full flex items-center justify-center font-medium transition-all cursor-pointer",
                         isSel
-                          ? "bg-emerald-400 text-black font-bold shadow-[0_0_10px_#34d399]"
+                          ? "bg-emerald-400 text-black font-semibold shadow-sm"
                           : "text-emerald-100/90 hover:bg-emerald-500/20"
                       )}
                     >
@@ -392,7 +391,7 @@ export function StarXFlowMobileStage({
           onClick={() => onScrollToSection('challenge-mobile-section')}
           className="mt-8 flex flex-col items-center gap-1.5 text-emerald-300/80 hover:text-emerald-200 transition-colors group cursor-pointer"
         >
-          <span className="text-[10.5px] font-semibold tracking-[0.2em] uppercase">SCROLL TO EXPLORE</span>
+          <span className="text-[10.5px] font-mono text-zinc-400">Scroll to explore</span>
           <svg className="w-4 h-4 group-hover:translate-y-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="6 9 12 15 18 9"/>
           </svg>
@@ -408,8 +407,8 @@ export function StarXFlowMobileStage({
       >
         {/* Top Eyebrow & Headline: The Challenge */}
         <div className="text-left mb-6">
-          <div className="text-xs font-semibold tracking-[0.2em] text-[#5eead4] uppercase mb-1.5">
-            THE DAILY CHALLENGE
+          <div className="text-xs font-mono font-medium text-emerald-400 mb-1.5">
+            Operational Friction
           </div>
           <h2 className="font-editorial text-[32px] sm:text-[36px] font-normal leading-[1.06] text-[#f4fbf7] m-0">
             Running a business <br />
@@ -432,7 +431,7 @@ export function StarXFlowMobileStage({
                 className={cn(
                   "p-3.5 rounded-2xl flex flex-col items-start text-left transition-all cursor-pointer border min-h-[110px]",
                   isAct
-                    ? "bg-[#0b2b1d] border-emerald-400 shadow-[0_0_20px_rgba(74,222,128,0.35)] scale-[1.02]"
+                    ? "bg-[#0b2b1d] border-emerald-400 shadow-md scale-[1.01]"
                     : "bg-[#061911]/85 border-emerald-500/25 hover:border-emerald-400/50"
                 )}
               >
@@ -469,18 +468,18 @@ export function StarXFlowMobileStage({
 
         {/* Transition Conduit */}
         <div className="my-8 flex flex-col items-center justify-center">
-          <div className="h-8 w-[1.5px] bg-gradient-to-b from-emerald-400 to-transparent animate-pulse" />
-          <div className="px-3 py-1 rounded-full bg-[#082216] border border-emerald-400/40 text-[11px] font-semibold text-emerald-300 shadow-[0_0_15px_rgba(40,223,160,0.25)] flex items-center gap-1.5">
+          <div className="h-8 w-[1.5px] bg-emerald-500/30" />
+          <div className="px-3 py-1 rounded-full bg-[#051810] border border-white/[0.08] text-[11px] font-mono text-emerald-300 shadow-sm flex items-center gap-1.5">
             <span>Synchronized Autopilot</span>
             <span className="text-emerald-400 font-bold">↓</span>
           </div>
-          <div className="h-8 w-[1.5px] bg-gradient-to-t from-emerald-400 to-transparent animate-pulse" />
+          <div className="h-8 w-[1.5px] bg-emerald-500/30" />
         </div>
 
         {/* The StarX Flow Way: Connected Operations */}
         <div className="text-left mb-6">
-          <div className="text-xs font-semibold tracking-[0.2em] text-[#6ee7a8] uppercase mb-1.5">
-            THE STARX FLOW WAY
+          <div className="text-xs font-mono font-medium text-emerald-400 mb-1.5">
+            Connected Ecosystem
           </div>
           <h2 className="font-editorial text-[32px] sm:text-[36px] font-normal leading-[1.06] text-[#f4fbf7] m-0">
             From scattered tasks to <br />
@@ -489,22 +488,21 @@ export function StarXFlowMobileStage({
         </div>
 
         {/* Central Core Sphere Interactive Trigger */}
-        <div className="rounded-3xl p-5 bg-gradient-to-b from-[#061e14]/90 via-[#03130d]/95 to-[#010a06] border border-emerald-500/35 relative text-center">
-          <div className="relative mx-auto w-24 h-24 mb-4">
+        <div className="rounded-3xl p-5 bg-[#04120c]/90 border border-white/[0.08] relative text-center">
+          <div className="relative mx-auto w-20 h-20 mb-4">
             <button
               type="button"
               onClick={onPulseAllNodes}
-              className="w-full h-full rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-400 to-mint-bright shadow-[0_0_40px_rgba(74,222,128,0.7)] flex items-center justify-center cursor-pointer transition-transform active:scale-95 border-2 border-emerald-200"
+              className="w-full h-full rounded-full bg-[#28dfa0] shadow-xl flex items-center justify-center cursor-pointer transition-transform active:scale-95 border border-white/30"
               title="Click to synchronize all connected operations"
             >
-              <svg className="w-10 h-10 text-[#042115] fill-current animate-pulse" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 text-[#041f13] fill-current" viewBox="0 0 24 24">
                 <path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"/>
               </svg>
             </button>
-            <div className="absolute -inset-2 rounded-full border border-emerald-400/40 animate-ping pointer-events-none" />
           </div>
-          <div className="text-xs font-semibold text-white tracking-wide uppercase">StarX Flow Core Intelligence</div>
-          <div className="text-[11px] text-emerald-300/80 mt-0.5">Tap sphere to synchronize all 6 operational nodes</div>
+          <div className="text-xs font-medium text-white tracking-wide">StarX Core Engine</div>
+          <div className="text-[11px] text-zinc-400 mt-0.5">Tap sphere to synchronize all 6 operational nodes</div>
 
           {/* 6 Connected Operations Grid */}
           <div className="mt-5 grid grid-cols-3 gap-2">
@@ -518,8 +516,8 @@ export function StarXFlowMobileStage({
                   className={cn(
                     "p-2.5 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer border",
                     isNodeAct
-                      ? "bg-emerald-500/25 border-emerald-300 shadow-[0_0_15px_rgba(74,222,128,0.4)] scale-105"
-                      : "bg-[#071d14]/70 border-emerald-500/25 hover:border-emerald-400/40"
+                      ? "bg-emerald-500/20 border-emerald-400/50 shadow-sm scale-105"
+                      : "bg-[#071d14]/70 border-white/[0.06] hover:border-emerald-400/30"
                   )}
                 >
                   <div className={cn("w-7 h-7 rounded-full flex items-center justify-center mb-1", isNodeAct ? "text-emerald-200" : "text-emerald-400")}>
@@ -596,11 +594,11 @@ export function StarXFlowMobileStage({
                 className={cn(
                   "px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 flex items-center gap-1.5 border",
                   isTabAct
-                    ? "bg-gradient-to-r from-emerald-500 to-emerald-400 text-[#042115] border-emerald-200 shadow-[0_0_15px_rgba(74,222,128,0.5)]"
-                    : "bg-[#061e14]/75 text-emerald-200/90 hover:text-white border-emerald-500/30"
+                    ? "bg-emerald-400 text-[#041f13] border-white/20 shadow-sm font-semibold"
+                    : "bg-[#061e14]/75 text-emerald-200/90 hover:text-white border-white/[0.08]"
                 )}
               >
-                {isTabAct && <span className="w-1.5 h-1.5 rounded-full bg-[#042115]" />}
+                {isTabAct && <span className="w-1.5 h-1.5 rounded-full bg-[#041f13]" />}
                 <span>{tab.label}</span>
               </button>
             );
@@ -666,7 +664,7 @@ export function StarXFlowMobileStage({
                       className={cn(
                         "w-full py-1 px-2.5 rounded-full text-[11px] font-medium flex items-center justify-between cursor-pointer",
                         isAct
-                          ? "bg-emerald-400 text-black font-semibold shadow-[0_0_10px_#34d399]"
+                          ? "bg-emerald-400 text-black font-semibold shadow-sm"
                           : "bg-[#06180f] text-emerald-200 border border-emerald-500/30"
                       )}
                     >
@@ -831,8 +829,8 @@ export function StarXFlowMobileStage({
           </div>
 
           {/* Plan 2: Multi-Provider Group */}
-          <div className="rounded-2xl p-5 bg-[#082418]/95 border-2 border-emerald-400/50 text-left relative shadow-[0_8px_32px_rgba(74,222,128,0.25)]">
-            <div className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-400 text-[#042115] text-[10px] font-bold uppercase tracking-wider mb-2">
+          <div className="rounded-2xl p-5 bg-[#082418]/95 border border-emerald-400/50 text-left relative shadow-xl">
+            <div className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-400 text-[#041f13] text-[11px] font-medium mb-2">
               Most Popular Clinic Choice
             </div>
             <div className="text-sm font-semibold text-white">Multi-Provider Group</div>

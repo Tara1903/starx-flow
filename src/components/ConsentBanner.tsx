@@ -97,7 +97,7 @@ export function ConsentBanner() {
                   id="consent-accept-all"
                   type="button"
                   onClick={handleAcceptAll}
-                  className="rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 px-4 py-2 min-h-[38px] text-xs font-bold text-[#02120c] transition-all hover:brightness-105 shadow-[0_0_16px_rgba(16,185,129,0.3)] cursor-pointer"
+                  className="rounded-full bg-emerald-400 px-4 py-2 min-h-[38px] text-xs font-semibold text-[#02120c] transition-colors hover:bg-emerald-300 shadow-md cursor-pointer border border-white/20"
                 >
                   Accept All
                 </button>

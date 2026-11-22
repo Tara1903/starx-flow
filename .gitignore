@@ -18,6 +18,7 @@ coverage/
 
 # Agent-specific files
 .agents/
+.gravitas/
 scratch/
 skills-lock.json
 

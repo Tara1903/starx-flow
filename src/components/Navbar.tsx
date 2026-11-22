@@ -12,7 +12,7 @@ import {
   Bot,
   MessageSquare,
   Calendar,
-  Sparkles,
+  CreditCard,
   Workflow,
   ShieldCheck,
   Layers,
@@ -123,7 +123,7 @@ export function Navbar() {
     {
       label: "Autonomous AI Agents",
       description: "Custom tools, handoffs & knowledge base",
-      icon: <Sparkles className="w-4 h-4" />,
+      icon: <Cpu className="w-4 h-4" />,
       href: "/ai-agents",
     },
     {
@@ -344,7 +344,7 @@ export function Navbar() {
                   className="glass-lens-active-pill"
                 />
               )}
-              <Sparkles className={cn("w-3.5 h-3.5 transition-colors flex-shrink-0", isPricingActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")} />
+              <CreditCard className={cn("w-3.5 h-3.5 transition-colors flex-shrink-0", isPricingActive ? "text-emerald-300" : "text-zinc-400 group-hover:text-zinc-200")} />
               <span>Pricing</span>
             </Link>
           </div>
@@ -395,9 +395,9 @@ export function Navbar() {
                 <Link
                   href="/dashboard"
                   data-cursor-invert="secondary"
-                  className="hidden 2xl:inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-300 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all cursor-pointer whitespace-nowrap flex-shrink-0 shadow-[0_0_12px_rgba(40,223,160,0.18)]"
+                  className="hidden 2xl:inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full text-xs font-medium text-emerald-300 hover:text-white bg-emerald-500/10 hover:bg-emerald-500/20 border border-white/[0.08] transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   <span>Dashboard</span>
                 </Link>
                 <button
@@ -424,7 +424,7 @@ export function Navbar() {
                     if (pathname === "/signup") return;
                     openSignup();
                   }}
-                  className="px-3.5 xl:px-4 py-1.5 text-xs xl:text-sm font-bold whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(40,223,160,0.35)]"
+                  className="px-3.5 xl:px-4 py-1.5 text-xs xl:text-sm font-semibold whitespace-nowrap flex-shrink-0 shadow-md"
                 >
                   Get Started
                   <ArrowRight className="w-3.5 h-3.5 ml-1" />

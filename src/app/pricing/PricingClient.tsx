@@ -10,7 +10,6 @@ import {
   Calculator,
   Hourglass,
   DollarSign,
-  Sparkles,
 } from "lucide-react";
 import { useUIStore } from "../../store/uiStore";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
@@ -97,16 +96,16 @@ export function PricingClient() {
         {/* Header */}
         <ScrollReveal direction="up" className="text-center max-w-4xl mx-auto mb-14 lg:mb-18">
           <div className="spatial-pill-badge mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             Transparent Subscriptions
           </div>
-          <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.08]">
+          <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight text-white mb-6 leading-[1.08]">
             Flat subscriptions.{" "}
-            <span className="block text-gradient-emerald">
+            <span className="block text-zinc-100">
               No booking commissions.
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-[#b8c9bd] max-w-2xl mx-auto font-normal leading-relaxed">
+          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto font-normal leading-relaxed">
             Choose a plan that matches your booking volume. Save time, recover missed calls, and run a modern autonomous front desk.
           </p>
         </ScrollReveal>
@@ -115,14 +114,14 @@ export function PricingClient() {
         <ScrollReveal direction="up" delay={0.1}>
           <div className="glass-panel max-w-4xl mx-auto p-6 sm:p-8 md:p-12 mb-20 relative overflow-hidden">
             <div className="flex items-center gap-3.5 mb-10">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0 shadow-[0_0_15px_rgba(40,223,160,0.18)]">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-white/[0.08] flex items-center justify-center text-emerald-300 flex-shrink-0">
                 <Calculator size={22} />
               </div>
               <div>
-                <h2 className="font-editorial text-2xl font-bold text-white tracking-tight">
-                  Lead &amp; Time Recovery ROI Calculator
+                <h2 className="font-editorial text-2xl font-normal text-white tracking-tight">
+                  Lead &amp; Time Recovery Calculator
                 </h2>
-                <p className="text-[#b8c9bd] text-sm font-normal mt-0.5">
+                <p className="text-zinc-400 text-sm font-normal mt-0.5">
                   Estimate how much revenue and admin time StarX Flow will reclaim for you each month.
                 </p>
               </div>
@@ -132,11 +131,11 @@ export function PricingClient() {
               {/* Left Sliders */}
               <div className="space-y-8">
                 <div className="space-y-3">
-                  <div className="flex justify-between font-bold text-sm">
-                    <span className="text-[#b8c9bd] uppercase tracking-wider text-xs font-mono">
+                  <div className="flex justify-between font-normal text-sm">
+                    <span className="text-zinc-400 text-xs font-mono">
                       Average Ticket Value
                     </span>
-                    <span className="text-emerald-300 bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-mono">
+                    <span className="text-emerald-300 bg-[#061911] border border-white/[0.08] px-3 py-1 rounded-full text-xs font-mono">
                       ${ticketValue}
                     </span>
                   </div>
@@ -158,11 +157,11 @@ export function PricingClient() {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex justify-between font-bold text-sm">
-                    <span className="text-[#b8c9bd] uppercase tracking-wider text-xs font-mono">
+                  <div className="flex justify-between font-normal text-sm">
+                    <span className="text-zinc-400 text-xs font-mono">
                       Est. Missed Calls / Month
                     </span>
-                    <span className="text-emerald-300 bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-mono">
+                    <span className="text-emerald-300 bg-[#061911] border border-white/[0.08] px-3 py-1 rounded-full text-xs font-mono">
                       {missedLeads} inquiries
                     </span>
                   </div>
@@ -186,36 +185,36 @@ export function PricingClient() {
 
               {/* Right Outputs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
-                <div className="rounded-2xl bg-emerald-500/10 border border-emerald-400/30 p-6 flex flex-col justify-between shadow-[0_0_20px_rgba(40,223,160,0.1)]">
+                <div className="rounded-2xl bg-[#061911] border border-white/[0.08] p-6 flex flex-col justify-between shadow-lg">
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <p className="text-[11px] text-emerald-300 font-bold uppercase tracking-wider font-mono">
+                    <p className="text-xs text-emerald-400 font-mono">
                       Est. Monthly Recovery
                     </p>
-                    <div className="text-emerald-300 bg-emerald-400/20 p-2 rounded-xl flex-shrink-0">
+                    <div className="text-emerald-300 bg-emerald-500/10 p-2 rounded-xl flex-shrink-0">
                       <DollarSign size={18} />
                     </div>
                   </div>
-                  <p className="text-4xl font-extrabold text-[#8fffd0] tracking-tight tabular-nums mb-2 font-mono">
+                  <p className="text-4xl font-normal text-[#8fffd0] tracking-tight tabular-nums mb-2 font-mono">
                     ${revenueRecovered.toLocaleString()}
                   </p>
-                  <span className="text-xs text-emerald-200/80 font-normal leading-relaxed">
+                  <span className="text-xs text-zinc-400 font-normal leading-relaxed">
                     Conservative 75% capture rate via WhatsApp AI assistant.
                   </span>
                 </div>
 
-                <div className="rounded-2xl bg-[#061a12]/60 border border-emerald-500/20 p-6 flex flex-col justify-between">
+                <div className="rounded-2xl bg-[#061a12]/60 border border-white/[0.06] p-6 flex flex-col justify-between">
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <p className="text-[11px] text-[#b8c9bd] font-bold uppercase tracking-wider font-mono">
+                    <p className="text-xs text-zinc-400 font-mono">
                       Staff Hours Saved
                     </p>
                     <div className="text-zinc-300 bg-white/5 p-2 rounded-xl flex-shrink-0">
                       <Hourglass size={18} />
                     </div>
                   </div>
-                  <p className="text-4xl font-extrabold text-white tracking-tight tabular-nums mb-2 font-mono">
+                  <p className="text-4xl font-normal text-white tracking-tight tabular-nums mb-2 font-mono">
                     {hoursReclaimed} hrs
                   </p>
-                  <span className="text-xs text-[#b8c9bd]/80 font-normal leading-relaxed">
+                  <span className="text-xs text-zinc-400 font-normal leading-relaxed">
                     Saves 1.5 hours of manual reminders &amp; callbacks per lead.
                   </span>
                 </div>
@@ -231,28 +230,28 @@ export function PricingClient() {
               <div
                 className={`glass-panel glass-panel-hover relative p-8 md:p-9 h-full flex flex-col ${
                   plan.popular
-                    ? "border-emerald-400/50 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.2),inset_0_1px_2px_rgba(255,255,255,0.3)] md:scale-[1.03] z-10"
-                    : "border-emerald-500/20"
+                    ? "border-emerald-400/40 shadow-2xl md:scale-[1.02] z-10"
+                    : "border-white/[0.08]"
                 }`}
               >
                 {plan.popular && (
-                  <div className="inline-flex w-fit mb-4 px-3.5 py-1 rounded-full bg-gradient-to-r from-[#bcf8db] to-[#44b87d] text-[#03110c] text-xs font-bold shadow-[0_0_20px_rgba(40,223,160,0.4)]">
+                  <div className="inline-flex w-fit mb-4 px-3 py-1 rounded-full bg-emerald-400 text-[#041f13] text-xs font-medium shadow-sm">
                     Most Popular
                   </div>
                 )}
 
                 <div className="mb-7">
-                  <h3 className="font-editorial text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                  <p className="text-[#b8c9bd] text-xs sm:text-sm font-normal mb-6 min-h-[40px] leading-relaxed">
+                  <h3 className="font-editorial text-2xl font-normal text-white mb-2">{plan.name}</h3>
+                  <p className="text-zinc-400 text-xs sm:text-sm font-normal mb-6 min-h-[40px] leading-relaxed">
                     {plan.desc}
                   </p>
                   <div className="flex items-end gap-1.5 mb-2">
-                    <span className="text-5xl font-extrabold tracking-tight text-white font-mono">
+                    <span className="text-5xl font-light tracking-tight text-white font-mono">
                       {plan.price}
                     </span>
-                    <span className="text-[#b8c9bd] font-normal mb-1">/month</span>
+                    <span className="text-zinc-400 font-normal mb-1">/month</span>
                   </div>
-                  <p className="text-emerald-400 text-[11px] font-bold uppercase tracking-wider font-mono">
+                  <p className="text-emerald-400 text-xs font-mono">
                     Billed monthly • Zero commissions
                   </p>
                 </div>

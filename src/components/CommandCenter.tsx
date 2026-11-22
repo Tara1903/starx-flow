@@ -7,7 +7,7 @@ import {
   Search,
   Command,
   ArrowRight,
-  Sparkles,
+  Bot,
   MessageSquare,
   Calendar,
   Settings,
@@ -143,7 +143,7 @@ export function CommandCenter() {
                   onClick={() => handleAction("/demo")}
                   className="w-full text-left px-3 py-3 mb-2 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-start gap-3 cursor-pointer hover:bg-emerald-500/18 transition-colors"
                 >
-                  <Sparkles className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                  <Bot className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
                     <div className="text-emerald-50 text-sm font-medium">
                       Try Interactive AI Demo

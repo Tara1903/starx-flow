@@ -136,16 +136,16 @@ export function FeaturesClient() {
         {/* Header Section */}
         <div className="text-center max-w-4xl mx-auto mb-20 lg:mb-28">
           <div className="spatial-pill-badge mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             Core Capabilities &amp; Architecture
           </div>
-          <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.08]">
+          <h1 className="font-editorial text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight text-white mb-6 leading-[1.08]">
             Everything you need to <br className="hidden md:block" />
-            <span className="text-gradient-emerald">
+            <span className="text-zinc-100">
               automate &amp; scale operations.
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-[#b8c9bd] max-w-2xl mx-auto font-normal leading-relaxed">
+          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto font-normal leading-relaxed">
             From 24/7 WhatsApp AI intake assistants to real-time calendar synchronization, StarX Flow gives service businesses enterprise-grade infrastructure out of the box.
           </p>
         </div>
@@ -161,13 +161,13 @@ export function FeaturesClient() {
             >
               {/* Copy Side */}
               <div className="w-full lg:w-1/2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/25 text-emerald-300 font-mono text-xs uppercase tracking-wider mb-5">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#051910] border border-white/[0.08] text-emerald-300 font-mono text-xs font-medium mb-5">
                   {feature.badge}
                 </div>
-                <h2 className="font-editorial text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 tracking-tight">
+                <h2 className="font-editorial text-3xl md:text-4xl lg:text-5xl font-normal text-white mb-6 tracking-tight">
                   {feature.title}
                 </h2>
-                <p className="text-lg text-[#b8c9bd] leading-relaxed mb-8 font-normal">
+                <p className="text-lg text-zinc-400 leading-relaxed mb-8 font-normal">
                   {feature.desc}
                 </p>
                 <ul className="space-y-4 text-sm font-medium">
@@ -184,16 +184,16 @@ export function FeaturesClient() {
 
               {/* Interactive Glass Mockup Side */}
               <div className="w-full lg:w-1/2">
-                <div className="glass-panel glass-panel-hover p-6 sm:p-8 rounded-3xl relative overflow-hidden border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.15)]">
+                <div className="glass-panel glass-panel-hover p-6 sm:p-8 rounded-3xl relative overflow-hidden border border-white/[0.08] shadow-2xl">
                   {/* Top Bar */}
-                  <div className="flex items-center justify-between pb-4 mb-6 border-b border-emerald-500/20">
+                  <div className="flex items-center justify-between pb-4 mb-6 border-b border-white/[0.06]">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="font-mono text-xs text-emerald-300 uppercase tracking-wider">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                      <span className="font-mono text-xs text-emerald-300">
                         {feature.snippetTitle}
                       </span>
                     </div>
-                    <span className="font-mono text-[11px] text-[#b8c9bd]">Active • TLS 1.3</span>
+                    <span className="font-mono text-[11px] text-zinc-400">Active • TLS 1.3</span>
                   </div>
 
                   {/* Dynamic Inner Visual Based on Feature */}
@@ -280,16 +280,16 @@ export function FeaturesClient() {
             {subFeatures.map((feature) => (
               <div
                 key={feature.title}
-                className="glass-panel glass-panel-hover p-8 rounded-2xl flex flex-col justify-between group"
+                className="glass-panel glass-panel-hover p-8 rounded-2xl flex flex-col justify-between group border-white/[0.08]"
               >
                 <div>
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center mb-6 group-hover:scale-105 group-hover:border-emerald-400/50 transition-all shadow-[0_0_15px_rgba(40,223,160,0.12)]">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-white/[0.08] flex items-center justify-center mb-6 group-hover:scale-105 transition-all shadow-sm">
                     {feature.icon}
                   </div>
-                  <h3 className="font-editorial text-xl font-bold text-white mb-3 group-hover:text-emerald-300 transition-colors">
+                  <h3 className="font-editorial text-xl font-normal text-white mb-3 group-hover:text-emerald-300 transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-[#b8c9bd] text-sm font-normal leading-relaxed">
+                  <p className="text-zinc-400 text-sm font-normal leading-relaxed">
                     {feature.desc}
                   </p>
                 </div>
@@ -299,11 +299,11 @@ export function FeaturesClient() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="glass-panel max-w-5xl mx-auto rounded-[2.5rem] p-10 sm:p-16 text-center mb-12 border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(40,223,160,0.15)]">
-          <h2 className="font-editorial text-3xl sm:text-5xl font-bold text-white mb-5 tracking-tight leading-tight">
+        <div className="glass-panel max-w-5xl mx-auto rounded-[2.5rem] p-10 sm:p-16 text-center mb-12 border border-white/[0.08] shadow-2xl">
+          <h2 className="font-editorial text-3xl sm:text-5xl font-normal text-white mb-5 tracking-tight leading-tight">
             Put front desk operations on autopilot
           </h2>
-          <p className="text-lg text-[#b8c9bd] mb-9 max-w-2xl mx-auto leading-relaxed font-normal">
+          <p className="text-lg text-zinc-400 mb-9 max-w-2xl mx-auto leading-relaxed font-normal">
             Unlock all the tools you need to capture direct client bookings and accelerate clinic, gym, or salon capacity.
           </p>
           <button
