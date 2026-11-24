@@ -5,6 +5,7 @@ import { UsageService } from '../usage';
 import { IdentityResolver } from '../crm/identityResolver';
 import { ReceptionistJobScheduler } from '../jobs/receptionistJobScheduler';
 import { ToolExecutor } from './tools/toolExecutor';
+import { isValidUuid, newUuid, resolveValidOrganizationId } from '../crm/organizationHelper';
 
 export interface InboundMessageEvent {
   userId: string;
@@ -49,13 +50,15 @@ export class AIOrchestrator {
     aiResponse: AgentExecutionResult;
   }> {
     const { userId, channel, senderPhone, senderEmail, senderName, messageText, roleOverride } = event;
+    const dbOrgId = await resolveValidOrganizationId(userId, event.organizationId || event.metadata?.organizationId);
+    const effectiveOrgId = dbOrgId || event.organizationId || event.metadata?.organizationId || null;
 
     // 1. Cross-Channel Customer Identity Resolution (WS-03)
     let leadId: string | null = null;
     try {
       const resolution = await IdentityResolver.resolveCustomer({
         userId,
-        organizationId: event.metadata?.organizationId,
+        organizationId: effectiveOrgId,
         channel: channel.toLowerCase() as any,
         externalUserId: event.metadata?.senderIdentifier || senderPhone || senderEmail || senderName,
         senderName,
@@ -66,7 +69,7 @@ export class AIOrchestrator {
       leadId = resolution.leadId;
     } catch {
       // Resilient fallback
-      leadId = `lead-${Date.now()}`;
+      leadId = newUuid();
     }
 
     // 2. Locate or create active Conversation thread
@@ -145,40 +148,50 @@ export class AIOrchestrator {
         };
       }
     } else if (!conversationId) {
-      const { data: newConvo } = await supabaseAdmin
-        .from('conversations')
-        .insert({
-          user_id: userId,
-          lead_id: leadId,
-          customer_name: senderName,
-          customer_phone: senderPhone || null,
-          customer_email: senderEmail || null,
-          channel,
-          status: 'active',
-          unread_count: 0,
-          last_message: messageText,
-          last_message_at: new Date().toISOString(),
-        })
-        .select('id')
-        .single();
+      if (isValidUuid(userId)) {
+        const { data: newConvo, error: convoErr } = await supabaseAdmin
+          .from('conversations')
+          .insert({
+            user_id: userId,
+            organization_id: dbOrgId,
+            lead_id: isValidUuid(leadId) ? leadId : null,
+            customer_name: senderName,
+            customer_phone: senderPhone || null,
+            customer_email: senderEmail || null,
+            channel,
+            status: 'active',
+            unread_count: 0,
+            last_message: messageText,
+            last_message_at: new Date().toISOString(),
+          })
+          .select('id')
+          .single();
 
-      if (newConvo) {
-        conversationId = newConvo.id;
+        if (convoErr) {
+          console.warn('[AIOrchestrator] Failed to insert conversation:', convoErr.message);
+        } else if (newConvo) {
+          conversationId = newConvo.id;
+        }
       }
     }
 
     if (!conversationId) {
-      conversationId = event.conversationId || `convo-${Date.now()}`;
+      conversationId = event.conversationId || newUuid();
     }
 
     // 3. Save Inbound Customer Message
-    await supabaseAdmin.from('messages').insert({
-      conversation_id: conversationId,
-      direction: 'inbound',
-      role: 'user',
-      content: messageText,
-      status: 'delivered',
-    });
+    if (isValidUuid(userId) && isValidUuid(conversationId)) {
+      const { error: inboundErr } = await supabaseAdmin.from('messages').insert({
+        conversation_id: conversationId,
+        direction: 'inbound',
+        role: 'user',
+        content: messageText,
+        status: 'delivered',
+      });
+      if (inboundErr) {
+        console.warn('[AIOrchestrator] Failed to insert inbound message:', inboundErr.message);
+      }
+    }
 
     // 4. Fetch recent conversation history for context (EXCLUDE internal staff notes)
     const { data: recentMsgs } = await supabaseAdmin
@@ -211,7 +224,7 @@ export class AIOrchestrator {
     // 6. Execute AI Agent with customer context for authorization
     const aiResult = await AIProvider.executeAgent({
       userId,
-      organizationId: event.metadata?.organizationId,
+      organizationId: effectiveOrgId || undefined,
       conversationId,
       leadId: leadId || undefined,
       role: selectedRole,
@@ -224,13 +237,18 @@ export class AIOrchestrator {
     });
 
     // 7. Save Outbound AI Message
-    await supabaseAdmin.from('messages').insert({
-      conversation_id: conversationId,
-      direction: 'outbound',
-      role: 'ai',
-      content: aiResult.replyText,
-      status: 'sent',
-    });
+    if (isValidUuid(userId) && isValidUuid(conversationId)) {
+      const { error: outboundErr } = await supabaseAdmin.from('messages').insert({
+        conversation_id: conversationId,
+        direction: 'outbound',
+        role: 'ai',
+        content: aiResult.replyText,
+        status: 'sent',
+      });
+      if (outboundErr) {
+        console.warn('[AIOrchestrator] Failed to insert outbound message:', outboundErr.message);
+      }
+    }
 
     // 8. Update Conversation Thread State
     const finalStatus = aiResult.requiresHumanHandoff ? 'needs_attention' : 'active';
@@ -243,17 +261,22 @@ export class AIOrchestrator {
       leadId: leadId || undefined,
     });
 
-    await supabaseAdmin
-      .from('conversations')
-      .update({
-        status: finalStatus,
-        control_mode: controlMode,
-        handoff_reason: aiResult.handoffReason || (aiResult.requiresHumanHandoff ? 'Human intervention required' : null),
-        last_message: aiResult.replyText,
-        last_message_at: new Date().toISOString(),
-        unread_count: aiResult.requiresHumanHandoff ? 1 : 0,
-      })
-      .eq('id', conversationId);
+    if (isValidUuid(userId) && isValidUuid(conversationId)) {
+      const { error: updateErr } = await supabaseAdmin
+        .from('conversations')
+        .update({
+          status: finalStatus,
+          control_mode: controlMode,
+          handoff_reason: aiResult.handoffReason || (aiResult.requiresHumanHandoff ? 'Human intervention required' : null),
+          last_message: aiResult.replyText,
+          last_message_at: new Date().toISOString(),
+          unread_count: aiResult.requiresHumanHandoff ? 1 : 0,
+        })
+        .eq('id', conversationId);
+      if (updateErr) {
+        console.warn('[AIOrchestrator] Failed to update conversation:', updateErr.message);
+      }
+    }
 
     // 8b. Automated Appointment Reminder Scheduling (Requirement 3.H)
     for (const execution of aiResult.toolExecutions || []) {

@@ -6,6 +6,7 @@
 
 import { supabaseAdmin, isSupabaseAdminConfigured } from '../supabaseAdmin';
 import { supabase } from '../supabase';
+import { isValidUuid, resolveValidOrganizationId } from '../crm/organizationHelper';
 
 export interface BusinessServiceItem {
   id?: string;
@@ -86,13 +87,14 @@ export class BusinessProfileService {
     }
 
     // 2. Query PostgreSQL
-    if (isSupabaseAdminConfigured) {
+    if (isSupabaseAdminConfigured && isValidUuid(organizationId)) {
       try {
         const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+        const dbOrgId = (await resolveValidOrganizationId(organizationId, organizationId)) || organizationId;
         const { data, error } = await client
           .from('business_receptionist_profiles')
           .select('*')
-          .eq('organization_id', organizationId)
+          .eq('organization_id', dbOrgId)
           .maybeSingle();
 
         if (!error && data) {
@@ -150,11 +152,12 @@ export class BusinessProfileService {
 
     this.inMemoryProfiles.set(organizationId, updated);
 
-    if (isSupabaseAdminConfigured) {
+    if (isSupabaseAdminConfigured && isValidUuid(organizationId)) {
       try {
         const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+        const dbOrgId = (await resolveValidOrganizationId(organizationId, organizationId)) || organizationId;
         await client.from('business_receptionist_profiles').upsert({
-          organization_id: organizationId,
+          organization_id: dbOrgId,
           business_name: updated.businessName,
           business_type: updated.businessType,
           description: updated.description,
@@ -276,7 +279,7 @@ ${profile.customInstructions ? `CUSTOM RECEPTIONIST INSTRUCTIONS:\n${profile.cus
 
 MANDATORY ACCURACY DIRECTIVES:
 1. NEVER fabricate or guess prices, discounts, opening hours, or booking confirmations that are not explicitly stated above.
-2. If a customer asks for a service or price not in the catalog, politely say: "I do not have a listed price for that service in our current catalog, but I can have a team member follow up with you directly."
+2. If a customer asks for a service or price not in the catalog, politely say: "That service is not listed in our current catalog, but I can have a team member follow up with you directly."
 3. When currently closed, inform the customer of our regular opening hours and offer to take their message or schedule an appointment for when we are open.
 4. If the customer requests human assistance or expresses frustration, trigger human handoff immediately.`;
   }

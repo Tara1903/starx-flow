@@ -25,24 +25,18 @@ export default function WhatsAppStep() {
   const whatsappCreds = whatsappChannel?.credentials || {};
   const currentConnectionType = whatsappCreds.connection_type || 'meta';
 
-  // Initialize Facebook SDK dynamically
+  // Listen for Meta login status checks
   useEffect(() => {
-    if (document.getElementById('facebook-jssdk')) return;
-    
-    // Provide a dummy function if it's not configured yet, so the app doesn't crash
-    (window as any).fbAsyncInit = function() {
-      (window as any).FB.init({
-        appId            : process.env.NEXT_PUBLIC_META_APP_ID || 'dummy_app_id_for_dev',
-        autoLogAppEvents : true,
-        xfbml            : true,
-        version          : 'v18.0'
-      });
+    (window as any).statusChangeCallback = (response: any) => {
+      if (response && response.status === 'connected' && response.authResponse?.accessToken) {
+        processMetaToken(response.authResponse.accessToken);
+      }
     };
 
-    const js = document.createElement('script');
-    js.id = 'facebook-jssdk';
-    js.src = "https://connect.facebook.net/en_US/sdk.js";
-    document.body.appendChild(js);
+    // If FB is already loaded, run checkLoginState immediately
+    if (typeof (window as any).checkLoginState === 'function') {
+      (window as any).checkLoginState();
+    }
   }, []);
 
   // Handle OAuth redirect fallback if SDK was blocked

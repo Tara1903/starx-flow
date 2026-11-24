@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Playfair_Display, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 import '../styles/starx-flow-stage.css';
@@ -98,6 +99,44 @@ export default function RootLayout({
         <ClientShell>{children}</ClientShell>
         <Analytics />
         <SpeedInsights />
+        <Script
+          id="fb-sdk-init"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.fbAsyncInit = function() {
+                FB.init({
+                  appId      : '${process.env.NEXT_PUBLIC_META_APP_ID || '2071113703608319'}',
+                  cookie     : true,
+                  xfbml      : true,
+                  version    : 'v19.0'
+                });
+                FB.AppEvents.logPageView();
+
+                FB.getLoginStatus(function(response) {
+                  if (typeof window.statusChangeCallback === 'function') {
+                    window.statusChangeCallback(response);
+                  }
+                });
+              };
+
+              window.checkLoginState = function() {
+                if (window.FB) {
+                  FB.getLoginStatus(function(response) {
+                    if (typeof window.statusChangeCallback === 'function') {
+                      window.statusChangeCallback(response);
+                    }
+                  });
+                }
+              };
+            `,
+          }}
+        />
+        <Script
+          id="facebook-jssdk"
+          strategy="afterInteractive"
+          src="https://connect.facebook.net/en_US/sdk.js"
+        />
       </body>
     </html>
   );

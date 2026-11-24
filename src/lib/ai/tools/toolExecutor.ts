@@ -20,6 +20,7 @@ import {
 } from './schemas';
 import { IdentityResolver } from '../../crm/identityResolver';
 import { CalendarSyncService } from '../../integrations/calendar/calendarSyncService';
+import { isValidUuid, newUuid, resolveValidOrganizationId } from '../../crm/organizationHelper';
 
 export interface ToolExecutionContext {
   userId: string;
@@ -280,13 +281,14 @@ export class ToolExecutor {
     }
 
     // 2. Create appointment record
-    const aptId = `apt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const aptId = newUuid();
     const confirmationCode = `SF-${Math.floor(100000 + Math.random() * 900000)}`;
+    const dbOrgId = await resolveValidOrganizationId(userId, organizationId);
 
     const newAppointment: Appointment = {
       id: aptId,
       user_id: userId,
-      organization_id: organizationId || userId,
+      organization_id: dbOrgId || organizationId || userId,
       customer_name: customerName,
       customer_phone: customerPhone || null,
       customer_email: customerEmail || null,
@@ -303,17 +305,26 @@ export class ToolExecutor {
 
     this.inMemoryAppointments.set(aptId, newAppointment);
 
-    // Try DB insert
-    try {
-      const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
-      await client.from('appointments').insert(newAppointment);
-    } catch {
-      // In-memory fallback
+    // Try DB insert with valid UUID and valid organization FK
+    if (isValidUuid(userId)) {
+      try {
+        const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+        const { error: aptErr } = await client.from('appointments').insert({
+          ...newAppointment,
+          organization_id: dbOrgId,
+          lead_id: isValidUuid(context.leadId) ? context.leadId : null,
+        });
+        if (aptErr) {
+          console.warn('[ToolExecutor] Appointment DB insert failed:', aptErr.message);
+        }
+      } catch {
+        // In-memory fallback
+      }
     }
 
     // 3. Emit immutable audit log
     await this.recordAuditLog({
-      organization_id: organizationId || userId,
+      organization_id: dbOrgId || organizationId || userId,
       actor_id: agentRole ? `agent:${agentRole}` : 'ai-workforce',
       actor_type: 'ai_agent',
       action: 'ai_tool.book_appointment',
@@ -743,15 +754,11 @@ export class ToolExecutor {
     metadata?: Record<string, any>;
   }): Promise<void> {
     const actorType = log.actor_type || 'ai_agent';
-    // Validate UUID format for actor_id to satisfy PostgreSQL auth.users(id) foreign key constraint
-    const isUuid = Boolean(
-      log.actor_id &&
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(log.actor_id)
-    );
-    const dbActorId = isUuid ? log.actor_id : null;
+    const dbActorId = isValidUuid(log.actor_id) ? log.actor_id : null;
+    const validOrgId = isValidUuid(log.organization_id) ? log.organization_id : null;
 
     const entry = {
-      id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: newUuid(),
       organization_id: log.organization_id,
       actor_id: dbActorId,
       actor_type: actorType,
@@ -760,7 +767,7 @@ export class ToolExecutor {
       target_id: log.target_id,
       changes: {
         ...log.changes,
-        ...(log.actor_id && !isUuid ? { raw_actor_identifier: log.actor_id } : {}),
+        ...(log.actor_id && !dbActorId ? { raw_actor_identifier: log.actor_id } : {}),
       },
       metadata: log.metadata || {},
       created_at: new Date().toISOString(),
@@ -768,11 +775,13 @@ export class ToolExecutor {
 
     this.inMemoryAuditLogs.push(entry);
 
-    try {
-      const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
-      await client.from('audit_logs').insert(entry);
-    } catch {
-      // In-memory fallback
+    if (validOrgId) {
+      try {
+        const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+        await client.from('audit_logs').insert({ ...entry, organization_id: validOrgId });
+      } catch {
+        // In-memory fallback
+      }
     }
   }
 

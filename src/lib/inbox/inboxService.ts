@@ -8,6 +8,7 @@ import { supabaseAdmin } from '../supabaseAdmin';
 import { supabase } from '../supabase';
 import { Conversation, Message, Lead } from '../../types/database';
 import { OutboundDispatcher } from './outboundDispatcher';
+import { isValidUuid, newUuid, resolveValidOrganizationId } from '../crm/organizationHelper';
 
 export interface InboxFilterOptions {
   userId: string;
@@ -120,9 +121,14 @@ export class InboxService {
           leads (*),
           messages (*)
         `, { count: 'exact' })
-        .eq('user_id', userId)
         .order('updated_at', { ascending: false })
         .range(offset, offset + limit - 1);
+
+      if (isValidUuid(organizationId) && organizationId !== userId) {
+        query = query.or(`user_id.eq.${userId},organization_id.eq.${organizationId}`);
+      } else {
+        query = query.eq('user_id', userId);
+      }
 
       if (channel && channel !== 'All') {
         query = query.eq('channel', channel);
@@ -222,10 +228,10 @@ export class InboxService {
    * Internal notes are NEVER dispatched to external channels (WhatsApp, Email, etc.).
    */
   static async postMessage(options: PostMessageOptions): Promise<{ message: Message; isInternal: boolean }> {
-    const { conversationId, userId, role, content, isInternal = false, attachments, agentName } = options;
+    const { conversationId, userId, role, content, isInternal = false, attachments } = options;
     const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
     const timestamp = new Date().toISOString();
-    const msgId = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const msgId = newUuid();
 
     const messageRecord: Message = {
       id: msgId,
@@ -239,8 +245,23 @@ export class InboxService {
       created_at: timestamp,
     };
 
-    // Update in-memory thread
+    // Update in-memory thread, hydrating from DB if running in a fresh serverless worker
     let cached = this.inMemoryConversations.get(conversationId);
+    if (!cached && isValidUuid(conversationId)) {
+      try {
+        const { data: dbConvo } = await client
+          .from('conversations')
+          .select('*')
+          .eq('id', conversationId)
+          .maybeSingle();
+        if (dbConvo) {
+          cached = { ...(dbConvo as any), messages: [] };
+          this.inMemoryConversations.set(conversationId, cached as any);
+        }
+      } catch {
+        // Fallback below
+      }
+    }
     if (!cached) {
       const newConvo: Conversation & { messages: Message[]; priority?: string } = {
         id: conversationId,
@@ -266,42 +287,44 @@ export class InboxService {
     cached.updated_at = timestamp;
 
     try {
-      await client.from('messages').insert({
-        id: msgId,
-        conversation_id: conversationId,
-        direction: messageRecord.direction,
-        role: messageRecord.role,
-        content: messageRecord.content,
-        attachments: messageRecord.attachments,
-        status: messageRecord.status,
-        is_internal: isInternal,
-        created_at: timestamp,
-      });
+      if (isValidUuid(conversationId)) {
+        await client.from('messages').insert({
+          id: msgId,
+          conversation_id: conversationId,
+          direction: messageRecord.direction,
+          role: messageRecord.role,
+          content: messageRecord.content,
+          attachments: messageRecord.attachments,
+          status: messageRecord.status,
+          is_internal: isInternal,
+          created_at: timestamp,
+        });
 
-      // Update conversation last_message if not internal
-      if (!isInternal) {
-        await client
-          .from('conversations')
-          .update({
-            last_message: content,
-            last_message_at: timestamp,
-            updated_at: timestamp,
-          })
-          .eq('id', conversationId);
+        // Update conversation last_message if not internal
+        if (!isInternal) {
+          await client
+            .from('conversations')
+            .update({
+              last_message: content,
+              last_message_at: timestamp,
+              updated_at: timestamp,
+            })
+            .eq('id', conversationId);
+        }
+      }
 
-        // If human staff posted message, dispatch outbound to customer's external channel
-        if (role === 'human') {
-          const recipient = cached.customer_phone || cached.customer_email || cached.metadata?.externalUserId || cached.metadata?.senderIdentifier;
-          if (recipient) {
-            await OutboundDispatcher.dispatch({
-              conversationId,
-              organizationId: options.organizationId || userId,
-              channel: cached.channel as any,
-              recipient,
-              text: content,
-              messageId: msgId,
-            });
-          }
+      // If human staff posted message, dispatch outbound to customer's external channel
+      if (!isInternal && role === 'human') {
+        const recipient = cached.customer_phone || cached.customer_email || cached.metadata?.externalUserId || cached.metadata?.senderIdentifier;
+        if (recipient) {
+          await OutboundDispatcher.dispatch({
+            conversationId,
+            organizationId: options.organizationId || userId,
+            channel: cached.channel as any,
+            recipient,
+            text: content,
+            messageId: msgId,
+          });
         }
       }
     } catch {
@@ -377,22 +400,26 @@ export class InboxService {
     if (assignedTo !== undefined) updates.assigned_to = assignedTo;
     if (priority) updates.metadata = { ...(cached?.metadata || {}), priority };
 
-    try {
-      await client.from('conversations').update(updates).eq('id', conversationId);
+    if (isValidUuid(conversationId)) {
+      try {
+        await client.from('conversations').update(updates).eq('id', conversationId);
 
-      // Audit log the status / assignment change
-      await client.from('audit_logs').insert({
-        organization_id: userId,
-        actor_id: actorId || userId,
-        actor_type: 'user',
-        action: 'conversation.update',
-        target_type: 'conversation',
-        target_id: conversationId,
-        changes: updates,
-        created_at: now,
-      });
-    } catch {
-      // In-memory fallback
+        const validOrgId = await resolveValidOrganizationId(userId, options.organizationId);
+        if (validOrgId) {
+          await client.from('audit_logs').insert({
+            organization_id: validOrgId,
+            actor_id: isValidUuid(actorId || userId) ? (actorId || userId) : null,
+            actor_type: 'user',
+            action: 'conversation.update',
+            target_type: 'conversation',
+            target_id: conversationId,
+            changes: updates,
+            created_at: now,
+          });
+        }
+      } catch {
+        // In-memory fallback
+      }
     }
 
     return true;

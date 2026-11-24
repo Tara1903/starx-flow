@@ -8,6 +8,7 @@ import { parsePhoneNumberFromString, CountryCode } from 'libphonenumber-js';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '../supabaseAdmin';
 import { supabase } from '../supabase';
 import { ChannelIdentity, Lead } from '../../types/database';
+import { isValidUuid, newUuid, resolveValidOrganizationId } from './organizationHelper';
 
 export interface IdentityLookupInput {
   userId: string;
@@ -204,25 +205,28 @@ export class IdentityResolver {
       };
     }
 
-    if (isSupabaseAdminConfigured) {
+    if (isSupabaseAdminConfigured && isValidUuid(userId)) {
       try {
-        // Query database channel_identities strictly filtered by organization_id
-        const { data: dbIdentity } = await client
-          .from('channel_identities')
-          .select('*, leads(*)')
-          .eq('organization_id', tenantId)
-          .eq('channel', channel)
-          .eq('external_user_id', externalUserId)
-          .maybeSingle();
+        const dbOrgId = await resolveValidOrganizationId(userId, organizationId);
+        if (dbOrgId) {
+          // Query database channel_identities strictly filtered by organization_id
+          const { data: dbIdentity } = await client
+            .from('channel_identities')
+            .select('*, leads(*)')
+            .eq('organization_id', dbOrgId)
+            .eq('channel', channel)
+            .eq('external_user_id', externalUserId)
+            .maybeSingle();
 
-        if (dbIdentity && dbIdentity.lead_id) {
-          return {
-            leadId: dbIdentity.lead_id,
-            isNewLead: false,
-            isNewIdentityLinked: false,
-            matchedBy: 'channel_identity',
-            customer: dbIdentity.leads || { id: dbIdentity.lead_id },
-          };
+          if (dbIdentity && dbIdentity.lead_id) {
+            return {
+              leadId: dbIdentity.lead_id,
+              isNewLead: false,
+              isNewIdentityLinked: false,
+              matchedBy: 'channel_identity',
+              customer: dbIdentity.leads || { id: dbIdentity.lead_id },
+            };
+          }
         }
       } catch {
         // Offline fallback
@@ -341,7 +345,7 @@ export class IdentityResolver {
     }
 
     // ── STEP 4: Provision new customer profile safely ────────────────────────
-    const newLeadId = `lead-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const newLeadId = newUuid();
     const newLead: Lead = {
       id: newLeadId,
       user_id: userId,
@@ -362,36 +366,42 @@ export class IdentityResolver {
 
     this.inMemoryLeads.set(newLeadId, newLead);
 
-    try {
-      const { data: createdLead } = await client
-        .from('leads')
-        .insert({
-          id: newLeadId,
-          user_id: userId,
-          organization_id: tenantId,
-          name: newLead.name,
-          phone: newLead.phone,
-          email: newLead.email,
-          status: newLead.status,
-          source: newLead.source,
-          score: newLead.score,
-          tags: newLead.tags,
-          notes: newLead.notes,
-        })
-        .select()
-        .single();
+    let persistedOrgId: string | null = null;
+    if (isSupabaseAdminConfigured && isValidUuid(userId)) {
+      try {
+        persistedOrgId = await resolveValidOrganizationId(userId, organizationId);
+        const { data: createdLead, error: leadErr } = await client
+          .from('leads')
+          .insert({
+            id: newLeadId,
+            user_id: userId,
+            organization_id: persistedOrgId,
+            name: newLead.name,
+            phone: newLead.phone,
+            email: newLead.email,
+            status: newLead.status,
+            source: newLead.source,
+            score: newLead.score,
+            tags: newLead.tags,
+            notes: newLead.notes,
+          })
+          .select()
+          .single();
 
-      if (createdLead) {
-        newLead.id = createdLead.id;
+        if (leadErr) {
+          console.warn('[IdentityResolver] Supabase lead insert failed:', leadErr.message);
+        } else if (createdLead) {
+          newLead.id = createdLead.id;
+        }
+      } catch (err: any) {
+        console.warn('[IdentityResolver] Lead DB exception:', err?.message);
       }
-    } catch {
-      // In-memory fallback
     }
 
     // Link channel identity
     await this.linkChannelIdentity({
       userId,
-      organizationId: tenantId,
+      organizationId: persistedOrgId || organizationId || userId,
       leadId: newLead.id,
       channel,
       externalUserId,
@@ -421,7 +431,7 @@ export class IdentityResolver {
     const { userId, organizationId, leadId, channel, externalUserId, profileData } = params;
     const tenantId = organizationId || userId;
     const idKey = this.buildIdentityKey(tenantId, channel, externalUserId);
-    const recordId = `ident-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const recordId = newUuid();
 
     const record: InMemIdentity = {
       id: recordId,
@@ -436,21 +446,29 @@ export class IdentityResolver {
 
     this.inMemoryIdentities.set(idKey, record);
 
-    try {
-      const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
-      await client.from('channel_identities').upsert(
-        {
-          organization_id: tenantId,
-          lead_id: leadId,
-          channel: channel.toLowerCase(),
-          external_user_id: externalUserId.trim(),
-          profile_data: profileData || {},
-          verified_at: new Date().toISOString(),
-        },
-        { onConflict: 'organization_id,channel,external_user_id' }
-      );
-    } catch {
-      // Preserved in memory
+    if (isSupabaseAdminConfigured && isValidUuid(userId) && isValidUuid(leadId)) {
+      try {
+        const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+        const dbOrgId = await resolveValidOrganizationId(userId, organizationId);
+        if (dbOrgId) {
+          const { error: identErr } = await client.from('channel_identities').upsert(
+            {
+              organization_id: dbOrgId,
+              lead_id: leadId,
+              channel: channel.toLowerCase(),
+              external_user_id: externalUserId.trim(),
+              profile_data: profileData || {},
+              verified_at: new Date().toISOString(),
+            },
+            { onConflict: 'organization_id,channel,external_user_id' }
+          );
+          if (identErr) {
+            console.warn('[IdentityResolver] channel_identities upsert failed:', identErr.message);
+          }
+        }
+      } catch {
+        // Preserved in memory
+      }
     }
   }
 
@@ -471,19 +489,24 @@ export class IdentityResolver {
       }
     }
 
-    try {
-      const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
-      const { data } = await client
-        .from('channel_identities')
-        .select('*')
-        .eq('organization_id', tenantId)
-        .eq('lead_id', leadId);
+    if (isSupabaseAdminConfigured && isValidUuid(userId) && isValidUuid(leadId)) {
+      try {
+        const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+        const dbOrgId = await resolveValidOrganizationId(userId, organizationId);
+        if (dbOrgId) {
+          const { data } = await client
+            .from('channel_identities')
+            .select('*')
+            .eq('organization_id', dbOrgId)
+            .eq('lead_id', leadId);
 
-      if (data && data.length > 0) {
-        return data as InMemIdentity[];
+          if (data && data.length > 0) {
+            return data as InMemIdentity[];
+          }
+        }
+      } catch {
+        // Return in-memory
       }
-    } catch {
-      // Return in-memory
     }
 
     return matches;

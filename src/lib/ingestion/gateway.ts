@@ -18,6 +18,7 @@ import { InstagramAdapter } from './adapters/instagramAdapter';
 import { FacebookMessengerAdapter } from './adapters/facebookMessengerAdapter';
 import { AIOrchestrator } from '../ai/orchestrator';
 import { supabaseAdmin } from '../supabaseAdmin';
+import { isValidUuid, resolveValidOrganizationId } from '../crm/organizationHelper';
 
 export class IngestionGateway {
   private static startTime = Date.now();
@@ -75,7 +76,7 @@ export class IngestionGateway {
       IdempotencyManager.markProcessed(channel, eventId);
 
       // 2. Organization & User Identification
-      const targetUserId = await this.resolveTargetUser(event);
+      const { userId: targetUserId, organizationId: targetOrgId } = await this.resolveTargetContext(event);
       if (!targetUserId) {
         throw new Error(`Unable to resolve organization or user for incoming ${channel} event.`);
       }
@@ -98,6 +99,7 @@ export class IngestionGateway {
 
       const orchestratorResult = await AIOrchestrator.handleInboundMessage({
         userId: targetUserId,
+        organizationId: targetOrgId || event.organizationId,
         channel: orchestratorChannelMap[channel] || 'Web',
         senderName: sender.name,
         senderPhone: sender.phone || undefined,
@@ -105,6 +107,7 @@ export class IngestionGateway {
         messageText: message.text,
         metadata: {
           eventId,
+          organizationId: targetOrgId || event.organizationId,
           attachments: message.attachments,
           rawPayload: message.rawPayload,
           senderIdentifier: sender.identifier,
@@ -122,7 +125,7 @@ export class IngestionGateway {
         status: 'processed',
         eventId,
         channel,
-        organizationId: event.organizationId || null,
+        organizationId: targetOrgId || event.organizationId || null,
         conversationId: orchestratorResult.conversationId,
         leadId: orchestratorResult.leadId,
         replyText: orchestratorResult.aiResponse.replyText,
@@ -149,14 +152,14 @@ export class IngestionGateway {
   }
 
   /**
-   * Resolves target business user or organization ID from event or connected channels.
+   * Resolves target business user and organization ID from event or connected channels.
    */
-  private static async resolveTargetUser(event: CanonicalInboundEvent): Promise<string | null> {
-    if (event.userId) return event.userId;
-    if (event.organizationId) return event.organizationId;
+  private static async resolveTargetContext(
+    event: CanonicalInboundEvent
+  ): Promise<{ userId: string | null; organizationId: string | null }> {
+    let resolvedUserId = event.userId || null;
 
-    // Check connected_channels
-    if (event.channel === 'whatsapp' && event.metadata?.phoneNumberId) {
+    if (!resolvedUserId && event.channel === 'whatsapp' && event.metadata?.phoneNumberId) {
       const { data: channels } = await supabaseAdmin
         .from('connected_channels')
         .select('user_id, credentials')
@@ -166,20 +169,45 @@ export class IngestionGateway {
       if (channels) {
         for (const row of channels) {
           if (row.credentials?.phone_number_id === event.metadata.phoneNumberId) {
-            return row.user_id;
+            resolvedUserId = row.user_id;
+            break;
           }
         }
       }
     }
 
-    // Fallback to first active business profile for test / demo mode
-    const { data: defaultProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .limit(1)
-      .maybeSingle();
+    if (!resolvedUserId && event.organizationId) {
+      if (isValidUuid(event.organizationId)) {
+        const { data: member } = await supabaseAdmin
+          .from('organization_members')
+          .select('user_id')
+          .eq('organization_id', event.organizationId)
+          .limit(1)
+          .maybeSingle();
+        resolvedUserId = member?.user_id || event.organizationId;
+      } else {
+        resolvedUserId = event.organizationId;
+      }
+    }
 
-    return defaultProfile?.id || null;
+    if (!resolvedUserId) {
+      const { data: defaultProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+      resolvedUserId = defaultProfile?.id || null;
+    }
+
+    if (!resolvedUserId) {
+      return { userId: null, organizationId: null };
+    }
+
+    const dbOrgId = await resolveValidOrganizationId(resolvedUserId, event.organizationId);
+    return {
+      userId: resolvedUserId,
+      organizationId: dbOrgId || event.organizationId || null,
+    };
   }
 
   /**

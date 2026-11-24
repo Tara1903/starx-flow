@@ -176,3 +176,27 @@ export const GEMINI_TOOL_DECLARATIONS = [
     },
   },
 ];
+
+function toLowerSchemaTypes(node: any): any {
+  if (Array.isArray(node)) return node.map(toLowerSchemaTypes);
+  if (node && typeof node === 'object') {
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(node)) {
+      out[k] = k === 'type' && typeof v === 'string' ? v.toLowerCase() : toLowerSchemaTypes(v);
+    }
+    return out;
+  }
+  return node;
+}
+
+/**
+ * OpenAI / NVIDIA NIM Function Calling Declarations derived from GEMINI_TOOL_DECLARATIONS
+ */
+export const OPENAI_TOOL_DECLARATIONS = GEMINI_TOOL_DECLARATIONS.map((fn) => ({
+  type: 'function' as const,
+  function: {
+    name: fn.name,
+    description: fn.description,
+    parameters: toLowerSchemaTypes(fn.parameters),
+  },
+}));
