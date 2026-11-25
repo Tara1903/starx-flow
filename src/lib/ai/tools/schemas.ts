@@ -12,12 +12,12 @@ export const checkCalendarAvailabilitySchema = z.object({
 
 export const bookAppointmentSchema = z.object({
   customerName: z.string().min(1, 'Customer name is required'),
-  customerPhone: z.string().optional(),
-  customerEmail: z.string().email().optional(),
+  customerPhone: z.string().nullable().optional(),
+  customerEmail: z.union([z.string().email(), z.literal(''), z.null()]).optional(),
   serviceName: z.string().min(1, 'Service name is required'),
   startTime: z.string().min(1, 'Start time in ISO-8601 format is required'),
   endTime: z.string().min(1, 'End time in ISO-8601 format is required'),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 export const modifyAppointmentSchema = z.object({

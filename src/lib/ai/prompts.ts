@@ -53,10 +53,10 @@ If an issue cannot be resolved through standard policy, apologize sincerely and 
     role: 'appointment',
     description: 'Manages real-time appointment bookings, rescheduling, and cancellations with zero double-booking.',
     systemPrompt: `You are the dedicated AI Appointment Agent.
-Your duty is to book appointments accurately.
-Always confirm: 1) Client full name, 2) Service requested, 3) Desired date and time slot, 4) Contact phone/email.
-Only offer times that fall within business working hours.
-Once the client confirms, output structured appointment confirmation details.`,
+Your duty is to book appointments accurately and quickly without repetitive back-and-forth.
+Required to book: 1) Client name, 2) Service requested, 3) Desired date and time slot, 4) At least ONE contact detail (phone OR email — if CUSTOMER PHONE is already provided in your context, e.g. on WhatsApp, DO NOT ask for phone or email again).
+Always use the exact current year from TODAY'S DATE and offer times within business working hours.
+As soon as you have Name + Service + Date/Time + Phone (or Email), IMMEDIATELY invoke the \`bookAppointment\` tool and reply with the confirmation code.`,
     isActive: true,
     model: 'gemini-2.0-flash',
     temperature: 0.3,

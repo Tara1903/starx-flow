@@ -55,6 +55,9 @@ export class AIOrchestrator {
 
     // 1. Cross-Channel Customer Identity Resolution (WS-03)
     let leadId: string | null = null;
+    let resolvedEmail: string | undefined = senderEmail;
+    let resolvedPhone: string | undefined = senderPhone;
+    let resolvedName: string = senderName;
     try {
       const resolution = await IdentityResolver.resolveCustomer({
         userId,
@@ -67,9 +70,21 @@ export class AIOrchestrator {
         profileData: event.metadata?.rawPayload,
       });
       leadId = resolution.leadId;
+      resolvedEmail = resolvedEmail || resolution.customer?.email || undefined;
+      resolvedPhone = resolvedPhone || resolution.customer?.phone || undefined;
+      resolvedName = resolution.customer?.name || resolvedName;
     } catch {
       // Resilient fallback
       leadId = newUuid();
+    }
+
+    // Extract email address if the customer just shared one in chat
+    const extractedEmailMatch = messageText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    if (extractedEmailMatch && !resolvedEmail) {
+      resolvedEmail = extractedEmailMatch[0].toLowerCase();
+      if (isValidUuid(userId) && isValidUuid(leadId)) {
+        await supabaseAdmin.from('leads').update({ email: resolvedEmail }).eq('id', leadId);
+      }
     }
 
     // 2. Locate or create active Conversation thread
@@ -193,26 +208,52 @@ export class AIOrchestrator {
       }
     }
 
-    // 4. Fetch recent conversation history for context (EXCLUDE internal staff notes)
-    const { data: recentMsgs } = await supabaseAdmin
+    if (extractedEmailMatch && resolvedEmail && isValidUuid(userId) && isValidUuid(conversationId)) {
+      await supabaseAdmin.from('conversations').update({ customer_email: resolvedEmail }).eq('id', conversationId);
+    }
+
+    // 4. Fetch MOST RECENT conversation history for context (EXCLUDE internal staff notes & avoid clipping newest turns)
+    const { data: recentMsgsDesc } = await supabaseAdmin
       .from('messages')
       .select('role, content')
       .eq('conversation_id', conversationId)
       .eq('is_internal', false)
-      .order('created_at', { ascending: true })
-      .limit(8);
+      .order('created_at', { ascending: false })
+      .limit(13);
 
-    const formattedHistory = (recentMsgs || []).map((m: any) => ({
+    const chronological = (recentMsgsDesc || []).slice().reverse();
+    // Avoid duplicating the current customer message if it was just inserted right above
+    if (chronological.length > 0) {
+      const last = chronological[chronological.length - 1];
+      if (last.role === 'user' && last.content === messageText) {
+        chronological.pop();
+      }
+    }
+
+    const formattedHistory = chronological.slice(-12).map((m: any) => ({
       role: m.role as any,
       text: m.content,
     }));
 
-    // 5. Select Agent Role based on keyword analysis or override
+    // 5. Select Agent Role based on keyword analysis, recent booking context, or override
     let selectedRole: AgentRole = roleOverride || 'receptionist';
     const lower = messageText.toLowerCase();
+    const recentAssistantText = chronological
+      .slice(-4)
+      .filter((m: any) => m.role !== 'user')
+      .map((m: any) => String(m.content || '').toLowerCase())
+      .join(' ');
 
     if (!roleOverride) {
-      if (lower.includes('book') || lower.includes('appointment') || lower.includes('schedule') || lower.includes('slot')) {
+      if (
+        lower.includes('book') ||
+        lower.includes('appointment') ||
+        lower.includes('schedule') ||
+        lower.includes('slot') ||
+        recentAssistantText.includes('book') ||
+        recentAssistantText.includes('slot') ||
+        recentAssistantText.includes('appointment')
+      ) {
         selectedRole = 'appointment';
       } else if (lower.includes('buy') || lower.includes('order') || lower.includes('pay') || lower.includes('price')) {
         selectedRole = 'sales';
@@ -230,9 +271,9 @@ export class AIOrchestrator {
       role: selectedRole,
       channel,
       customerMessage: messageText,
-      customerName: senderName,
-      customerPhone: senderPhone,
-      customerEmail: senderEmail,
+      customerName: resolvedName,
+      customerPhone: resolvedPhone,
+      customerEmail: resolvedEmail,
       conversationHistory: formattedHistory,
     });
 
