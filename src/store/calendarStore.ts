@@ -18,6 +18,25 @@ interface CalendarState {
   setSelectedDate: (date: Date) => void;
 }
 
+// Tracks in-flight external sync helper without blocking UI
+async function postExternalCalendarAction(payload: Record<string, any>) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return;
+    await fetch('/api/integrations/calendar', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    console.warn('[CalendarStore] External calendar sync skipped:', err);
+  }
+}
+
 const SAMPLE_APPOINTMENTS: Appointment[] = [];
 
 export const useCalendarStore = create<CalendarState>((set, get) => ({
@@ -133,6 +152,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
       set((state) => ({
         appointments: state.appointments.map((a) => (a.id === fallbackApt.id ? created : a)),
       }));
+      void postExternalCalendarAction({ action: 'sync_appointment', appointment: created });
       return { appointment: created, error: null };
     } catch (err: any) {
       set((state) => ({
@@ -153,6 +173,9 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
       set((state) => ({
         appointments: state.appointments.map((a) => (a.id === id ? { ...a, status } : a)),
       }));
+      if (status === 'cancelled') {
+        void postExternalCalendarAction({ action: 'cancel_appointment', appointmentId: id });
+      }
       return { error: null };
     } catch (err: any) {
       return { error: err.message };
@@ -166,6 +189,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
       set((state) => ({
         appointments: state.appointments.filter((a) => a.id !== id),
       }));
+      void postExternalCalendarAction({ action: 'cancel_appointment', appointmentId: id });
       return { error: null };
     } catch (err: any) {
       return { error: err.message };
