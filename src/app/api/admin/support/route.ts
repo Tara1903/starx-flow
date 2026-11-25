@@ -81,10 +81,10 @@ export async function GET(request: NextRequest) {
       }),
       supabaseAdmin
         .from('execution_logs')
-        .select('id, type, channel, message, created_at')
+        .select('id, type, channel, message, timestamp')
         .in('user_id', userCandidates)
         .in('channel', ['WhatsApp', 'Instagram'])
-        .order('created_at', { ascending: false })
+        .order('timestamp', { ascending: false })
         .limit(25),
       supabaseAdmin
         .from('demo_requests')
@@ -185,7 +185,13 @@ export async function GET(request: NextRequest) {
       profile,
       conversations,
       totalCount: conversations.length,
-      logs: logsRes.data || [],
+      logs: (logsRes.data || []).map((row: Record<string, any>) => ({
+        id: row.id,
+        type: row.type,
+        channel: row.channel,
+        message: row.message,
+        created_at: row.timestamp || row.created_at || new Date().toISOString(),
+      })),
       whatsappLeadsCount: waLeadsRes.count || 0,
     });
   } catch (err: unknown) {

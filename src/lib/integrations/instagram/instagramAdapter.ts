@@ -411,14 +411,20 @@ export class InstagramAdapter {
 
     for (const entry of payload.entry || []) {
       const targetPageId = entry.id;
+      const changesEvents = Array.isArray((entry as { changes?: Array<{ field?: string; value?: any }> }).changes)
+        ? ((entry as { changes?: Array<{ field?: string; value?: any }> }).changes || [])
+            .filter((ch) => ch?.field === 'messages' && ch?.value?.message && ch?.value?.sender?.id)
+            .map((ch) => ch.value)
+        : [];
+      const messagingEvents = [...(entry.messaging || []), ...changesEvents];
 
-      for (const msgEvent of entry.messaging || []) {
-        if (!msgEvent.message || msgEvent.message.is_echo) {
+      for (const msgEvent of messagingEvents) {
+        if (!msgEvent?.message || msgEvent.message.is_echo || (targetPageId && msgEvent.sender?.id === targetPageId)) {
           continue;
         }
 
         const senderIgsid = msgEvent.sender.id;
-        const messageId = msgEvent.message.mid;
+        const messageId = msgEvent.message.mid || `ig-${Date.now()}`;
         const messageText = msgEvent.message.text || '[Instagram Story Mention or Attachment]';
         const candidateAccountIds = Array.from(
           new Set([targetPageId, msgEvent.recipient?.id].filter((v): v is string => Boolean(v && v.trim())))
