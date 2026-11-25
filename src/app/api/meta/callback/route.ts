@@ -7,17 +7,24 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
-  const userId = searchParams.get('state');
+  const rawState = searchParams.get('state') || '';
+
+  const returnPath = rawState.startsWith('admin:')
+    ? '/admin'
+    : rawState.startsWith('setup:')
+      ? '/setup/instagram'
+      : '/dashboard';
+  const userId = rawState.replace(/^(admin|setup):/, '');
 
   const appUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
-  
+
   if (error) {
     console.error('Meta OAuth error:', searchParams.get('error_description'));
-    return NextResponse.redirect(`${appUrl}/dashboard?error=meta_auth_failed`);
+    return NextResponse.redirect(`${appUrl}${returnPath}?error=meta_auth_failed`);
   }
 
-  if (!code || !userId) {
-    return NextResponse.redirect(`${appUrl}/dashboard?error=invalid_request`);
+  if (!code || !userId || userId === '<STATE>') {
+    return NextResponse.redirect(`${appUrl}${returnPath}?error=invalid_request`);
   }
 
   const appId = process.env.META_APP_ID;
@@ -95,6 +102,47 @@ export async function GET(request: Request) {
       }
     }
 
+    // Unified Login SUAT discovery via debug_token granular_scopes when no Page was returned
+    if (!igAccountId) {
+      try {
+        const debugRes = await fetch(
+          `https://graph.facebook.com/v19.0/debug_token?input_token=${encodeURIComponent(accessToken)}&access_token=${encodeURIComponent(`${appId}|${appSecret}`)}`
+        );
+        const debugData = await debugRes.json();
+        const scopes = Array.isArray(debugData?.data?.granular_scopes)
+          ? debugData.data.granular_scopes
+          : [];
+        const igScope = scopes.find(
+          (s: any) =>
+            typeof s?.scope === 'string' &&
+            s.scope.startsWith('instagram_') &&
+            Array.isArray(s.target_ids) &&
+            s.target_ids.length > 0
+        );
+        const candidateId = igScope?.target_ids?.[0];
+        if (candidateId) {
+          igAccountId = String(candidateId);
+          try {
+            const profileRes = await fetch(
+              `https://graph.facebook.com/v19.0/${encodeURIComponent(igAccountId)}?fields=id,username,name,instagram_business_account{id,username}&access_token=${encodeURIComponent(accessToken)}`
+            );
+            const profileJson = await profileRes.json();
+            if (profileJson?.instagram_business_account?.id) {
+              igPageId = igAccountId;
+              igAccountId = String(profileJson.instagram_business_account.id);
+              igUsername = profileJson.instagram_business_account.username || igUsername;
+            } else if (profileJson?.username) {
+              igUsername = String(profileJson.username);
+            }
+          } catch {
+            // Keep candidateId as igAccountId
+          }
+        }
+      } catch (dbgErr) {
+        console.warn('[MetaCallback] Unified debug_token discovery warning:', dbgErr);
+      }
+    }
+
     // 5. Save to database (connected_channels + connected_accounts)
     if (igAccountId) {
       await supabase.from('connected_channels').upsert(
@@ -157,11 +205,11 @@ export async function GET(request: Request) {
       );
     }
 
-    // 6. Redirect back to dashboard integrations
-    return NextResponse.redirect(`${appUrl}/dashboard?connected=meta`);
+    // 6. Redirect back to target console / setup
+    return NextResponse.redirect(`${appUrl}${returnPath}?connected=meta`);
 
   } catch (err: any) {
     console.error('Meta callback error:', err);
-    return NextResponse.redirect(`${appUrl}/dashboard?error=meta_callback_failed`);
+    return NextResponse.redirect(`${appUrl}${returnPath}?error=meta_callback_failed`);
   }
 }

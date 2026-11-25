@@ -350,22 +350,32 @@ export function AdminSupportView({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setShowIgForm(false)}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white/[0.05] hover:bg-white/[0.08] text-zinc-300 cursor-pointer"
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <a
+              href="/api/meta/auth?channel=instagram&returnTo=admin&userId=230a2984-8c0b-489f-abda-b31fbcddf742"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.06] hover:bg-white/[0.1] border border-white/15 text-fuchsia-200 inline-flex items-center gap-1.5"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSavingIg || (!igAccountIdInput.trim() && !igPageIdInput.trim())}
-              className="px-4 py-1.5 rounded-xl text-xs font-bold bg-fuchsia-500 hover:bg-fuchsia-400 text-slate-950 inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              <Link2 size={13} />
-              <span>{isSavingIg ? "Connecting..." : "Save Instagram Connection"}</span>
-            </button>
+              <ExternalLink size={12} />
+              <span>Authorize via Meta Unified Login</span>
+            </a>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowIgForm(false)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white/[0.05] hover:bg-white/[0.08] text-zinc-300 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingIg || (!igAccountIdInput.trim() && !igPageIdInput.trim())}
+                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-fuchsia-500 hover:bg-fuchsia-400 text-slate-950 inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Link2 size={13} />
+                <span>{isSavingIg ? "Connecting..." : "Save Instagram Connection"}</span>
+              </button>
+            </div>
           </div>
         </form>
       )}

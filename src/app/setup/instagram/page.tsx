@@ -134,7 +134,7 @@ export default function InstagramStep() {
     // Prefer server-side Meta OAuth route when NEXT_PUBLIC_META_APP_ID isn't exposed or SDK is blocked
     if (!FB || !clientAppId || clientAppId === 'dummy_app_id_for_dev') {
       if (user?.id) {
-        window.location.href = `/api/meta/auth?userId=${encodeURIComponent(user.id)}`;
+        window.location.href = `/api/meta/auth?channel=instagram&returnTo=setup&userId=${encodeURIComponent(user.id)}`;
         return;
       }
       setLoading(false);
