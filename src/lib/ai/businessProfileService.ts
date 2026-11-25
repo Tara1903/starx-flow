@@ -243,7 +243,15 @@ export class BusinessProfileService {
     const hoursStatus = this.isWithinBusinessHours(profile, now);
 
     const servicesCatalog = profile.services && profile.services.length > 0
-      ? profile.services.map((s) => `  - ${s.name}: €${s.priceEur} (${s.durationMinutes} min)${s.description ? ` — ${s.description}` : ''}`).join('\n')
+      ? profile.services
+          .map((s) => {
+            const item = s as typeof s & { price?: number; currency?: string };
+            const symbol = item.currency === 'USD' ? '$' : '€';
+            const amount = item.price ?? item.priceEur ?? 0;
+            const duration = item.durationMinutes && item.durationMinutes > 0 ? ` (${item.durationMinutes} min)` : '';
+            return `  - ${item.name}: ${symbol}${amount}${duration}${item.description ? ` — ${item.description}` : ''}`;
+          })
+          .join('\n')
       : '  (No public price catalog uploaded. Inform the customer to ask for a custom quote or human callback.)';
 
     const faqsSection = profile.faqs && profile.faqs.length > 0

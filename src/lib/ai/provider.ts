@@ -488,15 +488,22 @@ SAFETY & INTEGRITY RULES:
                (cleanDesc && cleanMsg.includes(cleanDesc));
       });
 
+      const formatRateLine = (s: typeof services[number]) => {
+        const item = s as typeof s & { currency?: string };
+        const symbol = item.currency === 'USD' ? '$' : '€';
+        const amount = item.priceEur ?? item.price ?? 0;
+        const duration = item.durationMinutes && item.durationMinutes > 0 ? ` (${item.durationMinutes} min)` : '';
+        return `• ${item.name}: ${symbol}${amount}${duration}`;
+      };
       if (matched.length > 0) {
-        const lines = matched.map((s) => `• ${s.name}: €${s.priceEur ?? s.price ?? 0} (${s.durationMinutes} min)`).join('\n');
+        const lines = matched.map(formatRateLine).join('\n');
         reply = `Here is our transparent pricing for the requested service:\n${lines}\nWould you like to schedule an appointment?`;
         suggestedAction = { type: 'none' };
       } else if (services.length > 0) {
         // If customer asked generally about prices without specifying an unlisted service
         const isGeneralPriceInquiry = msg.includes('menu') || msg.includes('catalog') || msg.includes('services') || msg.includes('list');
         if (isGeneralPriceInquiry) {
-          const lines = services.map((s) => `• ${s.name}: €${s.priceEur ?? s.price ?? 0} (${s.durationMinutes} min)`).join('\n');
+          const lines = services.map(formatRateLine).join('\n');
           reply = `Here are our verified services and rates:\n${lines}\nPlease let us know which service you are interested in!`;
           suggestedAction = { type: 'none' };
         } else {

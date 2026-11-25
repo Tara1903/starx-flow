@@ -21,6 +21,7 @@ import { GET as knowledgeGET, DELETE as knowledgeDELETE } from '@/app/api/knowle
 import { GET as receptionistGET, PUT as receptionistPUT } from '@/app/api/receptionist/settings/route';
 import { POST as crmMergePOST } from '@/app/api/crm/customers/merge/route';
 import { GET as adminDemoGET } from '@/app/api/admin/demo-requests/route';
+import { GET as adminSupportGET, POST as adminSupportPOST } from '@/app/api/admin/support/route';
 
 let passed = 0;
 let failed = 0;
@@ -110,6 +111,20 @@ async function runTests() {
       new Request('http://localhost/api/admin/demo-requests')
     );
     assert(anonAdminDemo.status === 401, 'GET /api/admin/demo-requests rejects anonymous caller (401)');
+
+    const anonAdminSupportGet = await adminSupportGET(
+      new NextRequest('http://localhost/api/admin/support')
+    );
+    assert(anonAdminSupportGet.status === 401, 'GET /api/admin/support rejects anonymous caller (401)');
+
+    const anonAdminSupportPost = await adminSupportPOST(
+      new NextRequest('http://localhost/api/admin/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reply', conversationId: 'conv-1', content: 'Hi' }),
+      })
+    );
+    assert(anonAdminSupportPost.status === 401, 'POST /api/admin/support rejects anonymous caller (401)');
 
     // 2. Role-based access control: non-admin 'agent' role receives 403 on admin/billing endpoints
     console.log('\n2. Non-Admin (agent role) RBAC Restriction (403)');

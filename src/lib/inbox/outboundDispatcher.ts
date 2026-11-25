@@ -220,19 +220,47 @@ export class OutboundDispatcher {
     if (isSupabaseAdminConfigured) {
       try {
         const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
-        const { data: channelData } = await client
+        const { data: channels } = await client
           .from('connected_channels')
-          .select('credentials')
+          .select('user_id, credentials, last_synced')
           .eq('channel_key', 'WhatsApp')
           .eq('is_connected', true)
-          .maybeSingle();
+          .order('last_synced', { ascending: false })
+          .limit(10);
 
-        if (channelData?.credentials?.phone_number_id && channelData.credentials.access_token) {
-          phoneNumberId = channelData.credentials.phone_number_id;
-          accessToken = channelData.credentials.access_token;
+        if (channels && channels.length > 0) {
+          let matchedChannel = channels.find((c: { user_id?: string }) => c.user_id === organizationId);
+
+          if (!matchedChannel && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(organizationId)) {
+            const { data: members } = await client
+              .from('organization_members')
+              .select('user_id')
+              .eq('organization_id', organizationId);
+            const memberIds = new Set((members || []).map((m: { user_id: string }) => m.user_id));
+            matchedChannel = channels.find((c: { user_id?: string }) => c.user_id && memberIds.has(c.user_id));
+          }
+
+          if (
+            !matchedChannel &&
+            (organizationId === '215ae89e-80bc-40f8-89e4-5dfd1254ddbe' ||
+              organizationId === '230a2984-8c0b-489f-abda-b31fbcddf742')
+          ) {
+            matchedChannel =
+              channels.find(
+                (c: { credentials?: { phone_number_id?: string } }) =>
+                  c.credentials?.phone_number_id === process.env.META_PHONE_NUMBER_ID
+              ) || channels[0];
+          }
+
+          if (matchedChannel?.credentials?.phone_number_id) {
+            phoneNumberId = matchedChannel.credentials.phone_number_id;
+          }
+          if (matchedChannel?.credentials?.access_token) {
+            accessToken = matchedChannel.credentials.access_token;
+          }
         }
       } catch {
-        // Fallback
+        // Fallback to environment credentials
       }
     }
 
@@ -244,23 +272,41 @@ export class OutboundDispatcher {
       };
     }
 
-    const res = await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to: toPhone,
-        type: 'text',
-        text: { body: text },
-      }),
-    });
+    const cleanRecipient = toPhone.replace(/[^\d]/g, '') || toPhone.replace(/^\+/, '');
+    const postToMeta = (tokenToUse: string) =>
+      fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokenToUse}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: cleanRecipient,
+          type: 'text',
+          text: { body: text },
+        }),
+      });
+
+    let res = await postToMeta(accessToken);
 
     if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`WhatsApp Meta Graph API error (${res.status}): ${err}`);
+      let errText = await res.text();
+      const envToken = process.env.META_ACCESS_TOKEN;
+      if (
+        (res.status === 401 || errText.includes('"code":190')) &&
+        envToken &&
+        !envToken.includes('placeholder') &&
+        envToken !== accessToken
+      ) {
+        res = await postToMeta(envToken);
+        if (!res.ok) {
+          errText = await res.text();
+          throw new Error(`WhatsApp Meta Graph API error (${res.status}): ${errText}`);
+        }
+      } else {
+        throw new Error(`WhatsApp Meta Graph API error (${res.status}): ${errText}`);
+      }
     }
 
     const data = await res.json();

@@ -12,6 +12,7 @@ import { AdminLeadsView } from "../../components/admin/AdminLeadsView";
 import { AdminAnalyticsView } from "../../components/admin/AdminAnalyticsView";
 import { AdminPlansView } from "../../components/admin/AdminPlansView";
 import { AdminSettingsView } from "../../components/admin/AdminSettingsView";
+import { AdminSupportView } from "../../components/admin/AdminSupportView";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -20,11 +21,17 @@ export default function AdminPage() {
   const isRealtimeConnected = useAdminStore((s) => s.isRealtimeConnected);
   const clients = useAdminStore((s) => s.clients);
   const demoLeads = useAdminStore((s) => s.demoLeads);
+  const supportData = useAdminStore((s) => s.supportData);
+  const isSupportLoading = useAdminStore((s) => s.isSupportLoading);
+  const supportError = useAdminStore((s) => s.supportError);
   const loginAdmin = useAdminStore((s) => s.loginAdmin);
   const logoutAdmin = useAdminStore((s) => s.logoutAdmin);
   const subscribeToAdminRealtime = useAdminStore((s) => s.subscribeToAdminRealtime);
   const fetchClients = useAdminStore((s) => s.fetchClients);
   const fetchDemoLeads = useAdminStore((s) => s.fetchDemoLeads);
+  const fetchSupportData = useAdminStore((s) => s.fetchSupportData);
+  const sendSupportReply = useAdminStore((s) => s.sendSupportReply);
+  const toggleSupportControl = useAdminStore((s) => s.toggleSupportControl);
   const updateClientStatus = useAdminStore((s) => s.updateClientStatus);
   const updateClientPlan = useAdminStore((s) => s.updateClientPlan);
   const updateDemoLeadStatus = useAdminStore((s) => s.updateDemoLeadStatus);
@@ -55,17 +62,19 @@ export default function AdminPage() {
     if (isAdmin) {
       fetchClients();
       fetchDemoLeads();
+      fetchSupportData();
       const unsubscribe = subscribeToAdminRealtime();
       return () => {
         unsubscribe();
       };
     }
-  }, [isAdmin, fetchClients, fetchDemoLeads, subscribeToAdminRealtime]);
+  }, [isAdmin, fetchClients, fetchDemoLeads, fetchSupportData, subscribeToAdminRealtime]);
 
   const handleRefresh = useCallback(() => {
     fetchClients();
     fetchDemoLeads();
-  }, [fetchClients, fetchDemoLeads]);
+    fetchSupportData();
+  }, [fetchClients, fetchDemoLeads, fetchSupportData]);
 
   const handleLeadStatusChange = async (
     id: string,
@@ -138,6 +147,19 @@ export default function AdminPage() {
           onSearchChange={setGlobalSearch}
           onStatusChange={handleLeadStatusChange}
           onRefresh={handleRefresh}
+        />
+      )}
+
+      {activeSection === "support" && (
+        <AdminSupportView
+          supportData={supportData}
+          isLoading={isSupportLoading}
+          error={supportError}
+          searchQuery={globalSearch}
+          onRefresh={fetchSupportData}
+          onOpenLeads={() => setActiveSection("leads")}
+          onSendReply={sendSupportReply}
+          onToggleControl={toggleSupportControl}
         />
       )}
 

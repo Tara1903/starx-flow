@@ -33,7 +33,83 @@ export interface DemoLead {
   createdAt: string;
 }
 
-export type AdminSection = "overview" | "clients" | "leads" | "analytics" | "plans" | "settings";
+export interface SupportConnectionInfo {
+  isConnected: boolean;
+  displayPhoneNumber: string;
+  phoneNumberId: string;
+  wabaId: string | null;
+  webhookUrl: string;
+  tokenConfigured: boolean;
+  tokenSource: 'connected_channels' | 'environment' | 'none';
+  lastSynced: string | null;
+}
+
+export interface SupportProfileSummary {
+  businessName: string;
+  businessDescription: string;
+  aiRole: string;
+  greetingMessage: string;
+  bookingLink: string;
+  services: Array<{
+    name: string;
+    price: number;
+    currency: 'USD' | 'EUR';
+    durationMinutes: number;
+    description: string;
+  }>;
+  updatedAt: string | null;
+}
+
+export interface SupportMessage {
+  id: string;
+  conversation_id: string;
+  role: 'customer' | 'ai' | 'human';
+  content: string;
+  created_at: string;
+  is_internal?: boolean;
+  agent_name?: string | null;
+}
+
+export interface SupportConversation {
+  id: string;
+  user_id: string;
+  organization_id: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  channel: string;
+  status: string;
+  control_mode: 'ai' | 'human';
+  last_message: string | null;
+  unread_count: number;
+  updated_at: string;
+  messages: SupportMessage[];
+}
+
+export interface SupportExecutionLog {
+  id: string;
+  type: string;
+  channel: string | null;
+  message: string;
+  created_at: string;
+}
+
+export interface SupportData {
+  adminOrgId: string;
+  connection: SupportConnectionInfo;
+  instagram: {
+    isConnected: boolean;
+    accountId: string | null;
+    lastSynced: string | null;
+  };
+  profile: SupportProfileSummary;
+  conversations: SupportConversation[];
+  totalCount: number;
+  logs: SupportExecutionLog[];
+  whatsappLeadsCount: number;
+}
+
+export type AdminSection = "overview" | "clients" | "leads" | "support" | "analytics" | "plans" | "settings";
 
 interface AdminState {
   isAdmin: boolean;
@@ -43,6 +119,9 @@ interface AdminState {
   setActiveSection: (section: AdminSection) => void;
   clients: Client[];
   demoLeads: DemoLead[];
+  supportData: SupportData | null;
+  isSupportLoading: boolean;
+  supportError: string | null;
   isSidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
   loginAdmin: () => Promise<boolean>;
@@ -51,6 +130,16 @@ interface AdminState {
   unsubscribeFromAdminRealtime: () => void;
   fetchClients: () => Promise<void>;
   fetchDemoLeads: () => Promise<void>;
+  fetchSupportData: () => Promise<void>;
+  sendSupportReply: (
+    conversationId: string,
+    content: string,
+    isInternal?: boolean
+  ) => Promise<{ success: boolean; error: string | null }>;
+  toggleSupportControl: (
+    conversationId: string,
+    controlMode: 'ai' | 'human'
+  ) => Promise<{ success: boolean; error: string | null }>;
   updateClientStatus: (id: string, status: string) => Promise<void>;
   updateClientPlan: (id: string, plan: string) => Promise<void>;
   updateDemoLeadStatus: (id: string, status: DemoLead['status'], notes?: string) => Promise<{ success: boolean; error: string | null }>;
@@ -85,6 +174,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   setActiveSection: (section) => set({ activeSection: section }),
   clients: [],
   demoLeads: [],
+  supportData: null,
+  isSupportLoading: false,
+  supportError: null,
   isSidebarCollapsed: false,
   setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
 
@@ -116,13 +208,14 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             get().fetchClients();
           }
         )
-        // 3. Listen for inbound website demo inquiries
+        // 3. Listen for inbound website & WhatsApp demo inquiries
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'demo_requests' },
           (payload) => {
             console.log('⚡ [Admin Realtime] Inbound demo request received:', payload.eventType);
             get().fetchDemoLeads();
+            get().fetchSupportData();
           }
         )
         // 4. Listen for CRM leads
@@ -135,12 +228,27 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             get().fetchClients();
           }
         )
-        // 5. Listen for live message activity
+        // 5. Listen for live message & WhatsApp Support conversation activity
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'messages' },
           () => {
             get().fetchClients();
+            get().fetchSupportData();
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'conversations' },
+          () => {
+            get().fetchSupportData();
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'connected_channels' },
+          () => {
+            get().fetchSupportData();
           }
         )
         .subscribe((status) => {
@@ -182,7 +290,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           const parsed = JSON.parse(stored);
           if (parsed && (parsed.role === 'admin' || parsed.role === 'super_admin' || parsed.email === 'admin@starxflow.com')) {
             set({ isAdmin: true });
-            await Promise.all([get().fetchClients(), get().fetchDemoLeads()]).catch(() => {});
+            await Promise.all([get().fetchClients(), get().fetchDemoLeads(), get().fetchSupportData()]).catch(() => {});
             get().subscribeToAdminRealtime();
             return true;
           }
@@ -215,7 +323,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
       if (profile?.role === 'admin' || profile?.role === 'super_admin') {
         set({ isAdmin: true });
-        await Promise.all([get().fetchClients(), get().fetchDemoLeads()]);
+        await Promise.all([get().fetchClients(), get().fetchDemoLeads(), get().fetchSupportData()]);
         get().subscribeToAdminRealtime();
         return true;
       }
@@ -228,7 +336,14 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   logoutAdmin: () => {
     get().unsubscribeFromAdminRealtime();
-    set({ isAdmin: false, isRealtimeConnected: false, clients: [], demoLeads: [] });
+    set({
+      isAdmin: false,
+      isRealtimeConnected: false,
+      clients: [],
+      demoLeads: [],
+      supportData: null,
+      supportError: null,
+    });
   },
 
   /* ─── CLAIM ADMIN ROLE (one-time setup) ─── */
@@ -472,6 +587,121 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       return { success: true, error: null };
     } catch (err: any) {
       return { success: false, error: err.message || 'Network error updating lead status' };
+    }
+  },
+
+  /* ─── FETCH ADMIN WHATSAPP SUPPORT DATA ─── */
+  fetchSupportData: async () => {
+    if (!isSupabaseConfigured) return;
+
+    if (!get().supportData) {
+      set({ isSupportLoading: true, supportError: null });
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        set({
+          isSupportLoading: false,
+          supportError: 'Sign in with your Supabase administrator account to access live WhatsApp Support.',
+        });
+        return;
+      }
+
+      const res = await fetch('/api/admin/support', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        set({
+          isSupportLoading: false,
+          supportError: json.error || `Support endpoint returned ${res.status}`,
+        });
+        return;
+      }
+
+      set({
+        supportData: json,
+        isSupportLoading: false,
+        supportError: null,
+      });
+    } catch (err: any) {
+      set({
+        isSupportLoading: false,
+        supportError: err.message || 'Failed to load WhatsApp Support telemetry',
+      });
+    }
+  },
+
+  sendSupportReply: async (conversationId: string, content: string, isInternal = false) => {
+    if (!isSupabaseConfigured) return { success: false, error: 'Supabase not configured' };
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const res = await fetch('/api/admin/support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'reply',
+          conversationId,
+          content,
+          isInternal,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, error: json.error || 'Failed to send reply' };
+      }
+
+      await get().fetchSupportData();
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error sending reply' };
+    }
+  },
+
+  toggleSupportControl: async (conversationId: string, controlMode: 'ai' | 'human') => {
+    if (!isSupabaseConfigured) return { success: false, error: 'Supabase not configured' };
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const res = await fetch('/api/admin/support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'toggle_control',
+          conversationId,
+          controlMode,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, error: json.error || 'Failed to toggle control mode' };
+      }
+
+      await get().fetchSupportData();
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error updating control mode' };
     }
   },
 

@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Users,
   Sparkles,
+  MessageSquare,
   BarChart3,
   CreditCard,
   Shield,
@@ -23,7 +24,7 @@ import { useUIStore } from "../../store/uiStore";
 import { cn } from "../../lib/utils";
 import { navPillSpring, sidebarSpring, MOTION_EASE, liquidSpring } from "../../lib/motionVariants";
 
-export type AdminSection = "overview" | "clients" | "leads" | "analytics" | "plans" | "settings";
+export type AdminSection = "overview" | "clients" | "leads" | "support" | "analytics" | "plans" | "settings";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -66,6 +67,7 @@ export function AdminSidebar({
   const prefersReduced = useReducedMotion();
   const isCollapsed = useAdminStore((s) => s.isSidebarCollapsed);
   const setIsCollapsed = useAdminStore((s) => s.setSidebarCollapsed);
+  const supportCount = useAdminStore((s) => s.supportData?.conversations?.length || 0);
   const openCommandCenter = useUIStore((s) => s.openCommandCenter);
 
   // Auto-collapse on medium desktop/tablet screens
@@ -194,6 +196,20 @@ export function AdminSidebar({
             { label: "Pending Reviews", action: () => onSelectSection("leads") },
             { label: "Scheduled Demos", action: () => onSelectSection("leads") },
             { label: "Archived Leads", action: () => onSelectSection("leads") },
+          ],
+        },
+        {
+          id: "support",
+          label: "WhatsApp Support",
+          icon: MessageSquare,
+          badge: supportCount > 0 ? supportCount : undefined,
+          badgeColor: "bg-emerald-500/25 text-emerald-300 border border-emerald-400/40",
+          group: "main",
+          squircleColor: "from-emerald-500/25 to-green-600/15 text-emerald-300 border-emerald-400/35",
+          subItems: [
+            { label: "Live Support Inbox", action: () => onSelectSection("support") },
+            { label: "AI Agent Persona", action: () => onSelectSection("support") },
+            { label: "Meta Cloud Connection", action: () => onSelectSection("support") },
           ],
         },
       ],

@@ -372,6 +372,21 @@ export class AIOrchestrator {
       message: `[Agent: ${selectedRole}] Responded to ${senderName}. Handoff required: ${aiResult.requiresHumanHandoff}`,
     });
 
+    if (
+      channel === 'WhatsApp' &&
+      isValidUuid(userId) &&
+      (effectiveOrgId === '215ae89e-80bc-40f8-89e4-5dfd1254ddbe' ||
+        userId === '230a2984-8c0b-489f-abda-b31fbcddf742')
+    ) {
+      await this.syncAdminDemoLead({
+        phone: resolvedPhone || senderPhone,
+        email: resolvedEmail || senderEmail,
+        name: resolvedName || senderName,
+        messageText,
+        conversationId,
+      });
+    }
+
     await supabaseAdmin.from('usage_records').insert({
       user_id: userId,
       metric_type: 'ai_conversations',
@@ -438,5 +453,90 @@ export class AIOrchestrator {
     }
 
     return { success: false, error: result.error };
+  }
+
+  /**
+   * Mirrors inbound Admin-cell WhatsApp Support inquiries into `demo_requests`
+   * so /admin Demo Inquiries & Realtime notifications stay synchronized.
+   */
+  private static async syncAdminDemoLead(params: {
+    phone?: string;
+    email?: string;
+    name: string;
+    messageText: string;
+    conversationId: string | null;
+  }): Promise<void> {
+    try {
+      const cleanPhone = (params.phone || '').trim();
+      const digits = cleanPhone.replace(/\D/g, '');
+      const cleanName = (params.name || '').trim() || 'WhatsApp Support Inquiry';
+      const cleanEmail = params.email?.trim().toLowerCase();
+      const snippet = (params.messageText || '').trim().slice(0, 300);
+      const noteLine = `[WhatsApp Support] Latest: ${snippet || 'Inbound message'} (Conv: ${params.conversationId || 'pending'})`;
+
+      let existing: {
+        id: string;
+        full_name: string | null;
+        work_email: string | null;
+        primary_need: string | null;
+      } | null = null;
+
+      if (digits.length >= 7) {
+        const { data } = await supabaseAdmin
+          .from('demo_requests')
+          .select('id, full_name, work_email, primary_need')
+          .eq('preferred_contact', 'whatsapp')
+          .ilike('phone', `%${digits.slice(-10)}%`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        existing = data;
+      } else if (cleanPhone) {
+        const { data } = await supabaseAdmin
+          .from('demo_requests')
+          .select('id, full_name, work_email, primary_need')
+          .eq('preferred_contact', 'whatsapp')
+          .eq('phone', cleanPhone)
+          .limit(1)
+          .maybeSingle();
+        existing = data;
+      }
+
+      if (existing?.id) {
+        const updates: Record<string, any> = { notes: noteLine };
+        const isPlaceholderEmail =
+          !existing.work_email ||
+          existing.work_email.endsWith('@whatsapp.starxflow.com') ||
+          existing.work_email.endsWith('@whatsapp.starxflow.local');
+        if (cleanEmail && isPlaceholderEmail) {
+          updates.work_email = cleanEmail;
+        }
+        if (cleanName && cleanName !== 'WhatsApp User' && (!existing.full_name || existing.full_name === 'WhatsApp Support Inquiry')) {
+          updates.full_name = cleanName;
+        }
+        if (snippet && (!existing.primary_need || existing.primary_need === 'WhatsApp Support Inquiry')) {
+          updates.primary_need = snippet;
+        }
+        await supabaseAdmin.from('demo_requests').update(updates).eq('id', existing.id);
+        return;
+      }
+
+      const fallbackEmail = cleanEmail || `${digits || 'visitor'}@whatsapp.starxflow.com`;
+      await supabaseAdmin.from('demo_requests').insert({
+        full_name: cleanName,
+        work_email: fallbackEmail,
+        phone: cleanPhone || null,
+        preferred_contact: 'whatsapp',
+        business_name: 'WhatsApp Inbound Inquiry',
+        business_type: 'WhatsApp Support',
+        business_size: 'Evaluating',
+        primary_need: snippet || 'WhatsApp Support Inquiry',
+        status: 'new',
+        consent_given: true,
+        notes: noteLine,
+      });
+    } catch (err) {
+      console.warn('[AIOrchestrator] Non-fatal demo_requests sync failed:', err);
+    }
   }
 }
