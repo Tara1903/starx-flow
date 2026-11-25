@@ -32,6 +32,7 @@ export default function AdminPage() {
   const fetchSupportData = useAdminStore((s) => s.fetchSupportData);
   const sendSupportReply = useAdminStore((s) => s.sendSupportReply);
   const toggleSupportControl = useAdminStore((s) => s.toggleSupportControl);
+  const connectSupportInstagram = useAdminStore((s) => s.connectSupportInstagram);
   const updateClientStatus = useAdminStore((s) => s.updateClientStatus);
   const updateClientPlan = useAdminStore((s) => s.updateClientPlan);
   const updateDemoLeadStatus = useAdminStore((s) => s.updateDemoLeadStatus);
@@ -160,6 +161,7 @@ export default function AdminPage() {
           onOpenLeads={() => setActiveSection("leads")}
           onSendReply={sendSupportReply}
           onToggleControl={toggleSupportControl}
+          onConnectInstagram={connectSupportInstagram}
         />
       )}
 

@@ -373,15 +373,17 @@ export class AIOrchestrator {
     });
 
     if (
-      channel === 'WhatsApp' &&
+      (channel === 'WhatsApp' || channel === 'Instagram') &&
       isValidUuid(userId) &&
       (effectiveOrgId === '215ae89e-80bc-40f8-89e4-5dfd1254ddbe' ||
         userId === '230a2984-8c0b-489f-abda-b31fbcddf742')
     ) {
       await this.syncAdminDemoLead({
+        channel,
         phone: resolvedPhone || senderPhone,
         email: resolvedEmail || senderEmail,
         name: resolvedName || senderName,
+        externalId: event.metadata?.senderIdentifier,
         messageText,
         conversationId,
       });
@@ -456,23 +458,27 @@ export class AIOrchestrator {
   }
 
   /**
-   * Mirrors inbound Admin-cell WhatsApp Support inquiries into `demo_requests`
+   * Mirrors inbound Admin-cell WhatsApp/Instagram Support inquiries into `demo_requests`
    * so /admin Demo Inquiries & Realtime notifications stay synchronized.
    */
   private static async syncAdminDemoLead(params: {
+    channel: 'WhatsApp' | 'Instagram';
     phone?: string;
     email?: string;
     name: string;
+    externalId?: string;
     messageText: string;
     conversationId: string | null;
   }): Promise<void> {
     try {
       const cleanPhone = (params.phone || '').trim();
       const digits = cleanPhone.replace(/\D/g, '');
-      const cleanName = (params.name || '').trim() || 'WhatsApp Support Inquiry';
+      const cleanName = (params.name || '').trim() || `${params.channel} Support Inquiry`;
       const cleanEmail = params.email?.trim().toLowerCase();
+      const cleanExternalId = (params.externalId || '').trim().replace(/^@/, '');
       const snippet = (params.messageText || '').trim().slice(0, 300);
-      const noteLine = `[WhatsApp Support] Latest: ${snippet || 'Inbound message'} (Conv: ${params.conversationId || 'pending'})`;
+      const isInstagram = params.channel === 'Instagram';
+      const noteLine = `[${params.channel} Support] Latest: ${snippet || 'Inbound message'} (Conv: ${params.conversationId || 'pending'})`;
 
       let existing: {
         id: string;
@@ -481,7 +487,17 @@ export class AIOrchestrator {
         primary_need: string | null;
       } | null = null;
 
-      if (digits.length >= 7) {
+      if (isInstagram && cleanExternalId) {
+        const igPseudoEmail = `${cleanExternalId}@instagram.starxflow.com`;
+        const { data } = await supabaseAdmin
+          .from('demo_requests')
+          .select('id, full_name, work_email, primary_need')
+          .eq('work_email', igPseudoEmail)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        existing = data;
+      } else if (digits.length >= 7) {
         const { data } = await supabaseAdmin
           .from('demo_requests')
           .select('id, full_name, work_email, primary_need')
@@ -507,30 +523,39 @@ export class AIOrchestrator {
         const isPlaceholderEmail =
           !existing.work_email ||
           existing.work_email.endsWith('@whatsapp.starxflow.com') ||
-          existing.work_email.endsWith('@whatsapp.starxflow.local');
+          existing.work_email.endsWith('@whatsapp.starxflow.local') ||
+          existing.work_email.endsWith('@instagram.starxflow.com');
         if (cleanEmail && isPlaceholderEmail) {
           updates.work_email = cleanEmail;
         }
-        if (cleanName && cleanName !== 'WhatsApp User' && (!existing.full_name || existing.full_name === 'WhatsApp Support Inquiry')) {
+        if (
+          cleanName &&
+          cleanName !== 'WhatsApp User' &&
+          (!existing.full_name || existing.full_name.endsWith('Support Inquiry'))
+        ) {
           updates.full_name = cleanName;
         }
-        if (snippet && (!existing.primary_need || existing.primary_need === 'WhatsApp Support Inquiry')) {
+        if (snippet && (!existing.primary_need || existing.primary_need.endsWith('Support Inquiry'))) {
           updates.primary_need = snippet;
         }
         await supabaseAdmin.from('demo_requests').update(updates).eq('id', existing.id);
         return;
       }
 
-      const fallbackEmail = cleanEmail || `${digits || 'visitor'}@whatsapp.starxflow.com`;
+      const fallbackEmail =
+        cleanEmail ||
+        (isInstagram
+          ? `${cleanExternalId || 'visitor'}@instagram.starxflow.com`
+          : `${digits || 'visitor'}@whatsapp.starxflow.com`);
       await supabaseAdmin.from('demo_requests').insert({
         full_name: cleanName,
         work_email: fallbackEmail,
         phone: cleanPhone || null,
-        preferred_contact: 'whatsapp',
-        business_name: 'WhatsApp Inbound Inquiry',
-        business_type: 'WhatsApp Support',
+        preferred_contact: isInstagram ? 'email' : 'whatsapp',
+        business_name: isInstagram ? 'Instagram Inbound Inquiry' : 'WhatsApp Inbound Inquiry',
+        business_type: isInstagram ? 'Instagram DM Support' : 'WhatsApp Support',
         business_size: 'Evaluating',
-        primary_need: snippet || 'WhatsApp Support Inquiry',
+        primary_need: snippet || `${params.channel} Support Inquiry`,
         status: 'new',
         consent_given: true,
         notes: noteLine,

@@ -200,7 +200,7 @@ export function AdminSidebar({
         },
         {
           id: "support",
-          label: "WhatsApp Support",
+          label: "Support Channels",
           icon: MessageSquare,
           badge: supportCount > 0 ? supportCount : undefined,
           badgeColor: "bg-emerald-500/25 text-emerald-300 border border-emerald-400/40",
@@ -208,6 +208,7 @@ export function AdminSidebar({
           squircleColor: "from-emerald-500/25 to-green-600/15 text-emerald-300 border-emerald-400/35",
           subItems: [
             { label: "Live Support Inbox", action: () => onSelectSection("support") },
+            { label: "Instagram DM Bridge", action: () => onSelectSection("support") },
             { label: "AI Agent Persona", action: () => onSelectSection("support") },
             { label: "Meta Cloud Connection", action: () => onSelectSection("support") },
           ],

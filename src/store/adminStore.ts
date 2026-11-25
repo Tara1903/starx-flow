@@ -100,6 +100,10 @@ export interface SupportData {
   instagram: {
     isConnected: boolean;
     accountId: string | null;
+    pageId: string | null;
+    username: string | null;
+    webhookUrl: string;
+    tokenConfigured: boolean;
     lastSynced: string | null;
   };
   profile: SupportProfileSummary;
@@ -140,6 +144,12 @@ interface AdminState {
     conversationId: string,
     controlMode: 'ai' | 'human'
   ) => Promise<{ success: boolean; error: string | null }>;
+  connectSupportInstagram: (params: {
+    igAccountId: string;
+    pageId?: string;
+    username?: string;
+    accessToken?: string;
+  }) => Promise<{ success: boolean; error: string | null }>;
   updateClientStatus: (id: string, status: string) => Promise<void>;
   updateClientPlan: (id: string, plan: string) => Promise<void>;
   updateDemoLeadStatus: (id: string, status: DemoLead['status'], notes?: string) => Promise<{ success: boolean; error: string | null }>;
@@ -702,6 +712,39 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       return { success: true, error: null };
     } catch (err: any) {
       return { success: false, error: err.message || 'Network error updating control mode' };
+    }
+  },
+
+  connectSupportInstagram: async (params) => {
+    if (!isSupabaseConfigured) return { success: false, error: 'Supabase not configured' };
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const res = await fetch('/api/admin/support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          action: 'connect_instagram',
+          ...params,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, error: json.error || 'Failed to save Instagram connection' };
+      }
+
+      await get().fetchSupportData();
+      return { success: true, error: null };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error connecting Instagram' };
     }
   },
 

@@ -62,15 +62,23 @@ export default function InstagramStep() {
   const processMetaToken = async (accessToken: string) => {
     try {
       let realIgAccountId = null;
-      
+      let realPageId = null;
+      let realPageToken = accessToken;
+      let igUsername = null;
+
       try {
-        const fbRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account&access_token=${accessToken}`);
+        const fbRes = await fetch(
+          `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username}&access_token=${encodeURIComponent(accessToken)}`
+        );
         const fbData = await fbRes.json();
-        
+
         if (fbData.data && fbData.data.length > 0) {
           const pageWithIg = fbData.data.find((page: any) => page.instagram_business_account);
           if (pageWithIg) {
             realIgAccountId = pageWithIg.instagram_business_account.id;
+            igUsername = pageWithIg.instagram_business_account.username || null;
+            realPageId = pageWithIg.id || null;
+            realPageToken = pageWithIg.access_token || accessToken;
           }
         }
       } catch (apiErr) {
@@ -87,10 +95,12 @@ export default function InstagramStep() {
           user_id: user.id,
           channel_key: 'Instagram',
           is_connected: true,
-          credentials: { 
-            access_token: accessToken,
+          credentials: {
+            access_token: realPageToken,
             ig_account_id: finalIgAccountId,
-            updated_at: new Date().toISOString() 
+            page_id: realPageId,
+            username: igUsername,
+            updated_at: new Date().toISOString()
           },
           last_synced: new Date().toISOString()
         }, { onConflict: 'user_id, channel_key' });
@@ -117,17 +127,18 @@ export default function InstagramStep() {
     setErrorDetails('');
     setLoading(true);
 
+    const user = useAuthStore.getState().user;
+    const clientAppId = process.env.NEXT_PUBLIC_META_APP_ID;
     const FB = (window as any).FB;
-    
-    // ADBLOCKER FALLBACK: If SDK is blocked, redirect directly to Meta OAuth
-    if (!FB) {
-      const clientId = process.env.NEXT_PUBLIC_META_APP_ID || 'dummy';
-      const redirectUri = window.location.origin + '/setup/instagram';
-      const scopes = 'instagram_basic,instagram_manage_messages,pages_show_list,pages_manage_metadata';
-      
-      const oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${scopes}`;
-      
-      window.location.href = oauthUrl;
+
+    // Prefer server-side Meta OAuth route when NEXT_PUBLIC_META_APP_ID isn't exposed or SDK is blocked
+    if (!FB || !clientAppId || clientAppId === 'dummy_app_id_for_dev') {
+      if (user?.id) {
+        window.location.href = `/api/meta/auth?userId=${encodeURIComponent(user.id)}`;
+        return;
+      }
+      setLoading(false);
+      setErrorDetails('Please sign in first to connect your Instagram account.');
       return;
     }
 

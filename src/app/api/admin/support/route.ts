@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { InboxService } from '@/lib/inbox/inboxService';
 import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
+import { CredentialEncryption } from '@/lib/security/encryption';
 
 const ADMIN_SUPPORT_ORG_ID = '215ae89e-80bc-40f8-89e4-5dfd1254ddbe';
 const ADMIN_SUPPORT_OWNER_ID = '230a2984-8c0b-489f-abda-b31fbcddf742';
@@ -35,12 +36,12 @@ async function authenticateAdmin(request: Request) {
   return { error: null, status: 200 as const, user };
 }
 
-function getWebhookUrl(): string {
+function getBaseAppUrl(): string {
   const configured = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL;
   if (configured && configured.startsWith('http')) {
-    return `${configured.replace(/\/+$/, '')}/api/whatsapp/webhook`;
+    return configured.replace(/\/+$/, '');
   }
-  return 'https://starx-flow.runs-on.dev/api/whatsapp/webhook';
+  return 'https://starx-flow.runs-on.dev';
 }
 
 export async function GET(request: NextRequest) {
@@ -50,9 +51,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
+    const baseUrl = getBaseAppUrl();
     const userCandidates = Array.from(new Set([ADMIN_SUPPORT_OWNER_ID, auth.user.id]));
 
-    const [channelsRes, profileRes, inboxRes, logsRes, waLeadsRes] = await Promise.all([
+    const [channelsRes, igAccRes, profileRes, inboxRes, logsRes, waLeadsRes] = await Promise.all([
       supabaseAdmin
         .from('connected_channels')
         .select('id, user_id, channel_key, is_connected, credentials, last_synced')
@@ -60,36 +62,43 @@ export async function GET(request: NextRequest) {
         .in('channel_key', ['WhatsApp', 'Instagram'])
         .order('last_synced', { ascending: false }),
       supabaseAdmin
+        .from('connected_accounts')
+        .select('account_identifier, account_name, status, metadata, updated_at')
+        .eq('organization_id', ADMIN_SUPPORT_ORG_ID)
+        .eq('provider', 'instagram')
+        .maybeSingle(),
+      supabaseAdmin
         .from('business_receptionist_profiles')
-        .select('organization_id, business_name, business_type, description, location, contact_phone, contact_email, services, faqs, custom_instructions, updated_at')
+        .select(
+          'organization_id, business_name, business_type, description, location, contact_phone, contact_email, services, faqs, custom_instructions, updated_at'
+        )
         .eq('organization_id', ADMIN_SUPPORT_ORG_ID)
         .maybeSingle(),
       InboxService.fetchConversations({
         userId: ADMIN_SUPPORT_OWNER_ID,
         organizationId: ADMIN_SUPPORT_ORG_ID,
-        channel: 'WhatsApp',
-        limit: 50,
+        limit: 60,
       }),
       supabaseAdmin
         .from('execution_logs')
         .select('id, type, channel, message, created_at')
         .in('user_id', userCandidates)
-        .eq('channel', 'WhatsApp')
+        .in('channel', ['WhatsApp', 'Instagram'])
         .order('created_at', { ascending: false })
-        .limit(20),
+        .limit(25),
       supabaseAdmin
         .from('demo_requests')
         .select('id', { count: 'exact', head: true })
-        .eq('preferred_contact', 'whatsapp'),
+        .or('preferred_contact.eq.whatsapp,business_type.eq.Instagram DM Support'),
     ]);
 
     const channels = channelsRes.data || [];
-    const waChannel = channels.find(
-      (c) => c.channel_key === 'WhatsApp' && c.user_id === ADMIN_SUPPORT_OWNER_ID
-    ) || channels.find((c) => c.channel_key === 'WhatsApp');
-    const igChannel = channels.find(
-      (c) => c.channel_key === 'Instagram' && c.user_id === ADMIN_SUPPORT_OWNER_ID
-    ) || channels.find((c) => c.channel_key === 'Instagram');
+    const waChannel =
+      channels.find((c) => c.channel_key === 'WhatsApp' && c.user_id === ADMIN_SUPPORT_OWNER_ID) ||
+      channels.find((c) => c.channel_key === 'WhatsApp');
+    const igChannel =
+      channels.find((c) => c.channel_key === 'Instagram' && c.user_id === ADMIN_SUPPORT_OWNER_ID) ||
+      channels.find((c) => c.channel_key === 'Instagram');
 
     const waCreds = (waChannel?.credentials || {}) as Record<string, any>;
     const envToken = process.env.META_ACCESS_TOKEN;
@@ -101,21 +110,37 @@ export async function GET(request: NextRequest) {
       displayPhoneNumber: String(waCreds.display_phone_number || '+1 555-155-5475'),
       phoneNumberId: String(waCreds.phone_number_id || process.env.META_PHONE_NUMBER_ID || ''),
       wabaId: waCreds.waba_id ? String(waCreds.waba_id) : '1139426225454489',
-      webhookUrl: getWebhookUrl(),
+      webhookUrl: `${baseUrl}/api/whatsapp/webhook`,
       tokenConfigured: hasDbToken || hasEnvToken,
       tokenSource: hasDbToken ? 'connected_channels' : hasEnvToken ? 'environment' : 'none',
       lastSynced: waChannel?.last_synced || null,
     };
 
     const igCreds = (igChannel?.credentials || {}) as Record<string, any>;
+    const igAcc = igAccRes.data;
+    const igAccountId = igCreds.ig_account_id
+      ? String(igCreds.ig_account_id)
+      : (igAcc?.metadata?.igAccountId as string | undefined) || igAcc?.account_identifier || null;
+    const igPageId = igCreds.page_id
+      ? String(igCreds.page_id)
+      : (igAcc?.metadata?.pageId as string | undefined) || null;
+    const igUsername = igCreds.username
+      ? String(igCreds.username)
+      : (igAcc?.metadata?.username as string | undefined) || igAcc?.account_name || null;
+
     const instagram = {
-      isConnected: Boolean(igChannel?.is_connected),
-      accountId: igCreds.ig_account_id ? String(igCreds.ig_account_id) : null,
-      lastSynced: igChannel?.last_synced || null,
+      isConnected: Boolean(igChannel?.is_connected || igAcc?.status === 'connected'),
+      accountId: igAccountId,
+      pageId: igPageId,
+      username: igUsername,
+      webhookUrl: `${baseUrl}/api/integrations/instagram/webhook`,
+      tokenConfigured: Boolean(
+        (igCreds.access_token && !String(igCreds.access_token).includes('placeholder')) || hasEnvToken
+      ),
+      lastSynced: igChannel?.last_synced || igAcc?.updated_at || null,
     };
 
     const rawProfile = profileRes.data;
-
     const services = Array.isArray(rawProfile?.services)
       ? rawProfile.services.map((s: Record<string, any>) => ({
           name: String(s.name || 'Service'),
@@ -131,22 +156,27 @@ export async function GET(request: NextRequest) {
       businessDescription: rawProfile?.description || '',
       aiRole: rawProfile?.business_type || 'AI Receptionist SaaS Platform Support & Onboarding',
       greetingMessage: rawProfile?.custom_instructions || '',
-      bookingLink: rawProfile?.location || 'https://starx-flow.runs-on.dev/setup',
+      bookingLink: rawProfile?.location || `${baseUrl}/setup`,
       services,
       updatedAt: rawProfile?.updated_at || null,
     };
 
-    const conversations = (inboxRes.conversations || []).map((convo: Record<string, any>) => {
-      const msgs = Array.isArray(convo.messages)
-        ? [...convo.messages].sort(
-            (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
-          )
-        : [];
-      return {
-        ...convo,
-        messages: msgs,
-      };
-    });
+    const conversations = (inboxRes.conversations || [])
+      .filter((convo: Record<string, any>) => {
+        const ch = String(convo.channel || '').toLowerCase();
+        return ch === 'whatsapp' || ch === 'instagram';
+      })
+      .map((convo: Record<string, any>) => {
+        const msgs = Array.isArray(convo.messages)
+          ? [...convo.messages].sort(
+              (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+            )
+          : [];
+        return {
+          ...convo,
+          messages: msgs,
+        };
+      });
 
     return NextResponse.json({
       adminOrgId: ADMIN_SUPPORT_ORG_ID,
@@ -154,7 +184,7 @@ export async function GET(request: NextRequest) {
       instagram,
       profile,
       conversations,
-      totalCount: inboxRes.totalCount,
+      totalCount: conversations.length,
       logs: logsRes.data || [],
       whatsappLeadsCount: waLeadsRes.count || 0,
     });
@@ -176,6 +206,86 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { action, conversationId, content, isInternal = false, controlMode, reason } = body || {};
+
+    if (action === 'connect_instagram') {
+      const igAccountId = String(body.igAccountId || '').trim();
+      const pageId = body.pageId ? String(body.pageId).trim() : null;
+      const username = body.username ? String(body.username).trim().replace(/^@/, '') : null;
+      const providedToken = body.accessToken ? String(body.accessToken).trim() : '';
+      const tokenToUse = providedToken || process.env.META_ACCESS_TOKEN || '';
+      const primaryId = igAccountId || pageId || '';
+
+      if (!primaryId) {
+        return NextResponse.json(
+          { error: 'Please provide your Instagram Business Account ID or Facebook Page ID.' },
+          { status: 400 }
+        );
+      }
+
+      if (!tokenToUse || tokenToUse.includes('placeholder')) {
+        return NextResponse.json(
+          { error: 'No valid Instagram/System User access token provided or configured.' },
+          { status: 400 }
+        );
+      }
+
+      const now = new Date().toISOString();
+      const displayName = username ? `@${username}` : `Instagram @${primaryId}`;
+
+      const { error: chErr } = await supabaseAdmin.from('connected_channels').upsert(
+        {
+          user_id: ADMIN_SUPPORT_OWNER_ID,
+          channel_key: 'Instagram',
+          is_connected: true,
+          credentials: {
+            access_token: tokenToUse,
+            ig_account_id: igAccountId || primaryId,
+            page_id: pageId,
+            username,
+            updated_at: now,
+          },
+          last_synced: now,
+        },
+        { onConflict: 'user_id, channel_key' }
+      );
+      if (chErr) throw chErr;
+
+      const encrypted = CredentialEncryption.encrypt({
+        pageAccessToken: tokenToUse,
+        pageId,
+        igAccountId: igAccountId || primaryId,
+      });
+
+      const { error: accErr } = await supabaseAdmin.from('connected_accounts').upsert(
+        {
+          organization_id: ADMIN_SUPPORT_ORG_ID,
+          user_id: ADMIN_SUPPORT_OWNER_ID,
+          provider: 'instagram',
+          status: 'connected',
+          account_identifier: primaryId,
+          account_name: displayName,
+          encrypted_credentials: encrypted,
+          metadata: {
+            pageId,
+            igAccountId: igAccountId || primaryId,
+            username,
+            connectedAt: now,
+          },
+        },
+        { onConflict: 'organization_id,provider' }
+      );
+      if (accErr) throw accErr;
+
+      return NextResponse.json({
+        success: true,
+        instagram: {
+          isConnected: true,
+          accountId: igAccountId || primaryId,
+          pageId,
+          username,
+        },
+      });
+    }
 
     if (!conversationId || typeof conversationId !== 'string') {
       return NextResponse.json({ error: 'Missing required parameter: conversationId' }, { status: 400 });
