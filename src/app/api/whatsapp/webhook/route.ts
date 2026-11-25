@@ -83,26 +83,37 @@ export async function POST(request: Request) {
     if (replyText && phoneNumberId && from) {
       const { data: channelData } = await supabaseAdmin
         .from('connected_channels')
-        .select('credentials')
+        .select('user_id, credentials')
         .eq('channel_key', 'WhatsApp')
         .eq('is_connected', true);
 
-      let targetAccessToken = process.env.META_ACCESS_TOKEN;
+      let matchedChannelToken: string | undefined;
+      let matchedUserId: string | undefined;
       if (channelData) {
         for (const row of channelData) {
-          if (row.credentials?.phone_number_id === phoneNumberId && row.credentials.access_token) {
-            targetAccessToken = row.credentials.access_token;
+          if (row.credentials?.phone_number_id === phoneNumberId) {
+            matchedUserId = row.user_id;
+            if (row.credentials.access_token) {
+              matchedChannelToken = row.credentials.access_token;
+            }
             break;
           }
         }
       }
 
-      if (targetAccessToken) {
+      const candidateTokens = Array.from(
+        new Set([matchedChannelToken, process.env.META_ACCESS_TOKEN].filter((t): t is string => Boolean(t && !t.includes('your_'))))
+      );
+
+      let delivered = false;
+      let lastGraphError: string | null = null;
+
+      for (const token of candidateTokens) {
         try {
-          await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
+          const sendRes = await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${targetAccessToken}`,
+              Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -112,9 +123,33 @@ export async function POST(request: Request) {
               text: { body: replyText },
             }),
           });
-        } catch (sendErr) {
+
+          if (sendRes.ok) {
+            delivered = true;
+            break;
+          }
+
+          const errBody = await sendRes.text().catch(() => '');
+          lastGraphError = `HTTP ${sendRes.status}: ${errBody.slice(0, 300)}`;
+          console.error('[WhatsApp Webhook] Graph API send rejected:', lastGraphError);
+
+          // Only retry with fallback token on auth/session expiry errors (HTTP 401 / OAuth code 190)
+          if (sendRes.status !== 401 && !errBody.includes('"code":190')) {
+            break;
+          }
+        } catch (sendErr: any) {
+          lastGraphError = sendErr?.message || 'Network exception';
           console.error('[WhatsApp Webhook] Graph API send error:', sendErr);
         }
+      }
+
+      if (!delivered && lastGraphError && matchedUserId) {
+        await supabaseAdmin.from('execution_logs').insert({
+          user_id: matchedUserId,
+          type: 'system',
+          channel: 'WhatsApp',
+          message: `[Outbound Delivery Failed] ${lastGraphError}`,
+        });
       }
     }
 
