@@ -7,6 +7,7 @@ import {
   Calendar, Instagram, CheckCircle2, ExternalLink, Layers, Unlink, CreditCard
 } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import { supabase } from "../../lib/supabase";
 import { useAuthStore } from "../../store/authStore";
 import { useBillingStore } from "../../store/billingStore";
 import { useToastStore } from "../../store/toastStore";
@@ -69,17 +70,62 @@ export function SettingsSection() {
     }
   };
 
+  const getAccessHeaders = async (): Promise<Record<string, string>> => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (token) {
+        if (typeof document !== 'undefined') {
+          const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
+          document.cookie = `sb-access-token=${encodeURIComponent(token)}; Path=/; Max-Age=3600; SameSite=Lax${secureFlag}`;
+        }
+        return { Authorization: `Bearer ${token}` };
+      }
+    } catch {
+      // Fall back to existing cookies
+    }
+    return {};
+  };
+
   useEffect(() => {
     fetchSubscription();
     async function loadIntegrations() {
       try {
-        const res = await fetch("/api/integrations/calendar");
+        const headers = await getAccessHeaders();
+        const res = await fetch("/api/integrations/calendar", { headers });
         if (res.ok) {
           const data = await res.json();
           if (data.calendars) setActiveCalendars(data.calendars);
         }
       } catch {
         // Fallback
+      }
+
+      // Check OAuth callback outcome flags
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const connectedProvider = params.get("connected");
+        const oauthErr = params.get("error");
+        if (connectedProvider) {
+          notify(
+            'success',
+            connectedProvider === 'google_calendar'
+              ? 'Google Calendar connected and syncing in real time.'
+              : connectedProvider === 'microsoft_calendar'
+                ? 'Microsoft Outlook Calendar connected and syncing.'
+                : `Connected ${connectedProvider}.`
+          );
+          params.delete("connected");
+          params.set("section", "settings");
+          window.history.replaceState({}, "", `/dashboard?${params.toString()}`);
+        } else if (oauthErr) {
+          notify('error', `Calendar connection error: ${oauthErr}`);
+          params.delete("error");
+          params.set("section", "settings");
+          window.history.replaceState({}, "", `/dashboard?${params.toString()}`);
+        }
+      } catch {
+        // Ignore URL cleanup errors
       }
 
       // Check stored Instagram connection state
@@ -100,7 +146,8 @@ export function SettingsSection() {
   const handleConnectProvider = async (provider: 'google' | 'microsoft') => {
     setLoadingIntegrations(true);
     try {
-      const res = await fetch(`/api/integrations/${provider}/oauth/authorize`);
+      const headers = await getAccessHeaders();
+      const res = await fetch(`/api/integrations/${provider}/oauth/authorize`, { headers });
       if (res.ok) {
         const data = await res.json();
         if (data.authUrl) {
@@ -120,9 +167,10 @@ export function SettingsSection() {
   const handleDisconnectProvider = async (provider: string) => {
     if (!confirm(`Are you sure you want to disconnect ${provider}?`)) return;
     try {
+      const headers = await getAccessHeaders();
       await fetch("/api/integrations/calendar/disconnect", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...headers },
         body: JSON.stringify({ provider }),
       });
       setActiveCalendars((prev) => prev.filter((c) => c.provider !== provider));

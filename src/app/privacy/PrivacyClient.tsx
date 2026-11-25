@@ -60,21 +60,45 @@ export function PrivacyClient() {
             </section>
 
             <section>
-              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">4. WhatsApp &amp; Meta Cloud API Integration</h2>
+              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">4. WhatsApp, Meta &amp; Messaging Integrations</h2>
               <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal">
-                StarX Flow interfaces directly with Meta&apos;s official WhatsApp Business Cloud API. Messages sent by clients to your WhatsApp business number are processed solely to execute automated scheduling, answer merchant FAQs, and confirm appointments. You retain complete ownership of your customer list and conversation records.
+                StarX Flow interfaces directly with Meta&apos;s official WhatsApp Business Cloud API and Instagram Messaging API. Messages sent by clients to your business channels are processed solely to execute automated scheduling, answer merchant FAQs, and confirm appointments. You retain complete ownership of your customer list and conversation records.
               </p>
             </section>
 
             <section>
-              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">5. Programmatic GDPR Rights (Export &amp; Erasure)</h2>
+              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">5. Google Calendar API &amp; Limited Use Disclosure</h2>
+              <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal mb-4">
+                When you choose to connect Google Calendar, StarX Flow requests only the permissions required for scheduling automation (<span className="font-mono text-emerald-300 text-sm">calendar.readonly</span> and <span className="font-mono text-emerald-300 text-sm">calendar.events</span>):
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal mb-4">
+                <li>Reading available calendars and busy time blocks solely to compute conflict-free appointment slots.</li>
+                <li>Creating, updating, and canceling booking events on your selected calendar at a customer&apos;s or merchant&apos;s explicit request.</li>
+                <li>Google OAuth access and refresh tokens are encrypted at rest with AES-256-GCM and can be revoked at any time via Workspace Settings or your Google Account permissions.</li>
+              </ul>
+              <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal">
+                StarX Flow&apos;s use and transfer to any other app of information received from Google APIs will adhere to the{" "}
+                <a
+                  href="https://developers.google.com/terms/api-services-user-data-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-400 underline"
+                >
+                  Google API Services User Data Policy
+                </a>
+                , including the Limited Use requirements. Google Workspace data is never sold, used for advertising, or used to train generalized AI models.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">6. Programmatic GDPR Rights (Export &amp; Erasure)</h2>
               <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal">
                 Under GDPR Articles 17 and 20, merchants and their consumers possess the right to data portability and complete erasure. StarX Flow provides automated API endpoints (/api/gdpr/export and /api/gdpr/delete) allowing instant JSON export and irreversible cascade deletion of all personal data upon request.
               </p>
             </section>
 
             <section>
-              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">6. Contact Security &amp; Privacy Engineering</h2>
+              <h2 className="font-editorial text-2xl md:text-3xl font-bold text-white mb-4">7. Contact Security &amp; Privacy Engineering</h2>
               <p className="text-base md:text-lg text-[#b8c9bd] leading-relaxed font-normal">
                 For questions regarding this Privacy Policy or to submit compliance requests, please email our security officer at{" "}
                 <a href="mailto:privacy@starx-flow.runs-on.dev" className="text-emerald-400 underline font-mono">
