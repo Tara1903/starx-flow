@@ -1,11 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import type { HeroCalendarCell, HeroScheduleAvailability } from "@/lib/scheduling/heroSchedule";
 
 export interface MobileStageProps {
+  nowLabel: string;
+  monthYearLabel: string;
+  canPrevMonth: boolean;
+  canNextMonth: boolean;
+  onChangeMonth: (delta: -1 | 1) => void;
+  calendarCells: HeroCalendarCell[];
+  selectedDateKey: string;
+  onSelectDate: (cell: HeroCalendarCell) => void;
+  heroSchedule: HeroScheduleAvailability;
   selectedSlot: string;
+  selectedFullSlot: string;
   onSelectSlot: (slot: string) => void;
   activeWorkflowTab: string;
   onSelectWorkflowTab: (tab: string) => void;
@@ -127,7 +138,17 @@ const orbitalNodesList = [
 ];
 
 export function StarXFlowMobileStage({
+  nowLabel,
+  monthYearLabel,
+  canPrevMonth,
+  canNextMonth,
+  onChangeMonth,
+  calendarCells,
+  selectedDateKey,
+  onSelectDate,
+  heroSchedule,
   selectedSlot,
+  selectedFullSlot,
   onSelectSlot,
   activeWorkflowTab,
   onSelectWorkflowTab,
@@ -141,7 +162,6 @@ export function StarXFlowMobileStage({
   onOpenCapability,
   onScrollToSection,
 }: MobileStageProps) {
-  const [selectedDay, setSelectedDay] = useState(11);
   const currentTab = workflowTabsData[activeWorkflowTab] || workflowTabsData.whatsapp;
 
   return (
@@ -289,16 +309,16 @@ export function StarXFlowMobileStage({
                 {/* Outgoing Bot Prompt + Slot Pills */}
                 <div className="max-w-[92%] ml-auto rounded-2xl rounded-tr-sm bg-[#092e1e]/95 border border-emerald-400/40 p-2.5 shadow-md">
                   <p className="text-xs text-white font-medium leading-tight mb-2 m-0">
-                    Sure! Here are verified open slots:
+                    {heroSchedule.promptText}
                   </p>
                   <div className="flex flex-col gap-1.5">
-                    {['Tue, 10:00 AM', 'Tue, 2:00 PM', 'Wed, 11:00 AM'].map((slot) => {
-                      const isActive = selectedSlot === slot;
+                    {heroSchedule.slots.map((slot) => {
+                      const isActive = selectedSlot === slot.shortLabel;
                       return (
                         <button
-                          key={slot}
+                          key={slot.id}
                           type="button"
-                          onClick={() => onSelectSlot(slot)}
+                          onClick={() => onSelectSlot(slot.shortLabel)}
                           className={cn(
                             "w-full py-1.5 px-3 rounded-full text-xs font-medium flex items-center justify-between transition-all cursor-pointer",
                             isActive
@@ -308,7 +328,7 @@ export function StarXFlowMobileStage({
                         >
                           <span className="flex items-center gap-1.5">
                             <span className={cn("w-1.5 h-1.5 rounded-full", isActive ? "bg-[#042115]" : "bg-emerald-400")} />
-                            <span>{slot}</span>
+                            <span>{slot.shortLabel}</span>
                           </span>
                           <span className="text-[10px] opacity-80">{isActive ? "Selected ✓" : "Available"}</span>
                         </button>
@@ -340,45 +360,77 @@ export function StarXFlowMobileStage({
                   <span>Customer Card</span>
                 </div>
                 <div className="text-[11px] text-emerald-200 font-medium mt-1 truncate">
-                  • {selectedSlot}
+                  • {selectedFullSlot}
                 </div>
               </div>
             </div>
 
-            {/* 3. Interactive Mini Calendar Preview */}
+            {/* 3. Interactive Live Calendar Preview */}
             <div className="mt-3 rounded-xl p-3 bg-[#04160e]/80 border border-emerald-500/25 text-center">
               <div className="flex items-center justify-between text-xs font-medium text-emerald-200/90 mb-2">
-                <span className="flex items-center gap-1 text-white font-semibold">
-                  <svg className="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
-                  November 2026
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={!canPrevMonth}
+                    onClick={() => onChangeMonth(-1)}
+                    aria-label="Previous month"
+                    className="w-5 h-5 rounded-md bg-white/[0.05] text-emerald-200 disabled:opacity-30 flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    ‹
+                  </button>
+                  <span className="flex items-center gap-1 text-white font-semibold" suppressHydrationWarning>
+                    <svg className="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    {monthYearLabel}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={!canNextMonth}
+                    onClick={() => onChangeMonth(1)}
+                    aria-label="Next month"
+                    className="w-5 h-5 rounded-md bg-white/[0.05] text-emerald-200 disabled:opacity-30 flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    ›
+                  </button>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-300 tabular-nums" suppressHydrationWarning>
+                  {nowLabel}
                 </span>
-                <span className="text-[10px] text-emerald-300">Live Provider Lock</span>
               </div>
 
               <div className="grid grid-cols-7 gap-1 text-[11px]">
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
                   <span key={i} className="text-emerald-400/60 font-semibold text-[10px]">{day}</span>
                 ))}
-                {[8, 9, 10, 11, 12, 13, 14].map((d) => {
-                  const isSel = selectedDay === d;
+                {calendarCells.map((cell) => {
+                  const isSel = selectedDateKey === cell.dateKey;
                   return (
                     <button
-                      key={d}
+                      key={cell.dateKey}
                       type="button"
-                      onClick={() => setSelectedDay(d)}
+                      disabled={cell.isPast}
+                      onClick={() => onSelectDate(cell)}
                       className={cn(
-                        "h-6 rounded-full flex items-center justify-center font-medium transition-all cursor-pointer",
-                        isSel
-                          ? "bg-emerald-400 text-black font-semibold shadow-sm"
-                          : "text-emerald-100/90 hover:bg-emerald-500/20"
+                        "h-6 rounded-full flex items-center justify-center font-medium transition-all tabular-nums relative",
+                        cell.isPast
+                          ? "text-emerald-100/20 cursor-not-allowed"
+                          : isSel
+                            ? "bg-emerald-400 text-black font-semibold shadow-sm cursor-pointer"
+                            : cell.isToday
+                              ? "border border-emerald-400/70 text-emerald-200 hover:bg-emerald-500/20 cursor-pointer"
+                              : cell.isCurrentMonth
+                                ? "text-emerald-100/90 hover:bg-emerald-500/20 cursor-pointer"
+                                : "text-emerald-100/40 hover:bg-emerald-500/15 cursor-pointer"
                       )}
                     >
-                      {d}
+                      {cell.day}
                     </button>
                   );
                 })}
+              </div>
+              <div className="mt-2 text-[10px] text-emerald-300/80 text-left">
+                {heroSchedule.statusNote}
               </div>
             </div>
 
@@ -654,13 +706,13 @@ export function StarXFlowMobileStage({
             <div className="max-w-[90%] ml-auto rounded-2xl rounded-tr-sm bg-[#0a2f1f] border border-emerald-400/40 p-2.5 text-xs text-white">
               <p className="m-0 mb-2 font-medium">{currentTab.botPrompt}</p>
               <div className="flex flex-col gap-1.5">
-                {['Tue, 10:00 AM', 'Tue, 2:00 PM', 'Wed, 11:00 AM'].map((slot) => {
-                  const isAct = selectedSlot === slot;
+                {heroSchedule.slots.map((slot) => {
+                  const isAct = selectedSlot === slot.shortLabel;
                   return (
                     <button
-                      key={slot}
+                      key={slot.id}
                       type="button"
-                      onClick={() => onSelectSlot(slot)}
+                      onClick={() => onSelectSlot(slot.shortLabel)}
                       className={cn(
                         "w-full py-1 px-2.5 rounded-full text-[11px] font-medium flex items-center justify-between cursor-pointer",
                         isAct
@@ -668,7 +720,7 @@ export function StarXFlowMobileStage({
                           : "bg-[#06180f] text-emerald-200 border border-emerald-500/30"
                       )}
                     >
-                      <span>{slot}</span>
+                      <span>{slot.shortLabel}</span>
                       <span>{isAct ? '✓' : 'Book'}</span>
                     </button>
                   );
@@ -681,7 +733,7 @@ export function StarXFlowMobileStage({
           <div className="mt-3 p-2.5 rounded-xl bg-emerald-950/70 border border-emerald-400/40 flex items-center justify-between text-left">
             <div>
               <div className="text-xs font-semibold text-emerald-200">{currentTab.confirmedTitle}</div>
-              <div className="text-[10.5px] text-emerald-300/80">• {selectedSlot} verified</div>
+              <div className="text-[10.5px] text-emerald-300/80">• {selectedFullSlot} verified</div>
             </div>
             <span className="w-5 h-5 rounded-full bg-emerald-400 text-[#042115] font-bold text-xs flex items-center justify-center">✓</span>
           </div>

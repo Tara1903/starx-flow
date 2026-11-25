@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUIStore } from "@/store/uiStore";
@@ -9,24 +9,21 @@ import { StarXCoreCanvas } from "./spatial/StarXCoreCanvas";
 import { useMagneticButton } from "@/lib/motion/MagneticController";
 import { StarXFlowMobileStage } from "./StarXFlowMobileStage";
 import { Footer } from "./Footer";
+import {
+  buildHeroCalendarGrid,
+  formatClock24,
+  formatMonthOnly,
+  formatMonthYear,
+  formatShortWeekdayDate,
+  getAvailableHeroSchedule,
+  parseLocalDateKey,
+  toLocalDateKey,
+  type HeroCalendarCell,
+} from "@/lib/scheduling/heroSchedule";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    STATIC DATA DEFINITIONS FROM STARX FLOW RUNTIME
    ───────────────────────────────────────────────────────────────────────────── */
-
-const calendarDaysLayout = [
-  { label: 'S', isHeader: true },
-  { label: 'M', isHeader: true },
-  { label: 'T', isHeader: true },
-  { label: 'W', isHeader: true },
-  { label: 'T', isHeader: true },
-  { label: 'F', isHeader: true },
-  { day: 3 }, { day: 4 }, { day: 5 }, { day: 6 }, { day: 7 }, { day: 8 },
-  { day: 9 }, { day: 10 }, { day: 11 }, { day: 12 }, { day: 13 }, { day: 14 },
-  { day: 17 }, { day: 18 }, { day: 19 }, { day: 20 }, { day: 22 }, { day: 23 },
-  { day: 24 }, { day: 25 }, { day: 26 }, { day: 27 }, { day: 28 }, { day: 29 },
-  { day: 30 }, { day: 31 }, { day: 1, muted: true }, { day: 2, muted: true }, { day: 3, muted: true }, { day: 4, muted: true }
-];
 
 const workflowTabsData: Record<string, {
   sideTitle: string;
@@ -97,18 +94,50 @@ export function StarXFlowLanding() {
   const { isLoggedIn } = useAuthStore();
   const heroGetStartedRef = useMagneticButton<HTMLButtonElement>({ strength: 0.8 });
 
-  const [selectedSlot, setSelectedSlot] = useState('Tue, 10:00 AM');
+  const [now, setNow] = useState<Date>(() => new Date(2026, 10, 25, 10, 0, 0, 0));
+  const [isClockReady, setIsClockReady] = useState(false);
+  const [viewYear, setViewYear] = useState(2026);
+  const [viewMonth, setViewMonth] = useState(10);
+  const [selectedDateKey, setSelectedDateKey] = useState('2026-11-25');
+  const [selectedSlot, setSelectedSlot] = useState('Wed, 11:00 AM');
   const [activeWorkflowTab, setActiveWorkflowTab] = useState('whatsapp');
   const [activeChallengeIdx, setActiveChallengeIdx] = useState(0);
   const [activeOrbitalIdx, setActiveOrbitalIdx] = useState(0);
 
   const appStateRef = useRef({
-    selectedDate: 11,
-    selectedSlot: 'Tue, 10:00 AM',
+    selectedDateKey: '2026-11-25',
+    selectedSlot: 'Wed, 11:00 AM',
+    selectedFullSlot: 'Nov 25 • Wed, 11:00 AM',
     activeWorkflowTab: 'whatsapp',
     activeOrbitalNode: 0,
     renderMode: 'hybrid'
   });
+
+  const calendarCells = useMemo(
+    () => buildHeroCalendarGrid(viewYear, viewMonth, now),
+    [viewYear, viewMonth, now]
+  );
+
+  const heroSchedule = useMemo(
+    () => getAvailableHeroSchedule(selectedDateKey, now),
+    [selectedDateKey, now]
+  );
+
+  const activeSlotObj = useMemo(
+    () => heroSchedule.slots.find((s) => s.shortLabel === selectedSlot) || heroSchedule.slots[0] || null,
+    [heroSchedule.slots, selectedSlot]
+  );
+
+  const activeSlotLabel = activeSlotObj?.shortLabel || selectedSlot;
+  const activeSlotFullLabel = activeSlotObj?.fullLabel || appStateRef.current.selectedFullSlot;
+  const canPrevMonth = viewYear * 12 + viewMonth > now.getFullYear() * 12 + now.getMonth();
+  const canNextMonth = viewYear * 12 + viewMonth < now.getFullYear() * 12 + now.getMonth() + 6;
+
+  useEffect(() => {
+    appStateRef.current.selectedDateKey = selectedDateKey;
+    appStateRef.current.selectedSlot = activeSlotLabel;
+    appStateRef.current.selectedFullSlot = activeSlotFullLabel;
+  }, [selectedDateKey, activeSlotLabel, activeSlotFullLabel]);
 
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
   const spatialMotionRef = useRef<{
@@ -168,47 +197,68 @@ export function StarXFlowLanding() {
     if (toast) toast.classList.add('hidden');
   }, []);
 
-  const updateSlotLabels = useCallback(() => {
+  const triggerCardConfirmationPulse = useCallback(() => {
     if (typeof document === 'undefined') return;
-    const customerLabel = document.getElementById('customer-card-slot');
-    const confirmedSlot = document.getElementById('action-confirmed-slot');
-    const modalBadge = document.getElementById('modal-slot-summary');
-    const displaySlot = appStateRef.current.selectedSlot;
-
-    if (customerLabel) customerLabel.textContent = displaySlot;
-    if (confirmedSlot) confirmedSlot.textContent = displaySlot;
-    if (modalBadge) modalBadge.textContent = displaySlot;
-
-    ['slot-10am', 'slot-2pm', 'slot-4pm'].forEach((id) => {
-      const btn = document.getElementById(id);
-      if (!btn) return;
-      const slot = id === 'slot-10am' ? 'Tue, 10:00 AM' : (id === 'slot-2pm' ? 'Tue, 2:00 PM' : 'Tue, 4:00 PM');
-      if (slot === displaySlot) {
-        btn.style.background = '#4ade80';
-        btn.style.color = '#03110c';
-        btn.style.borderColor = '#86efac';
-      } else {
-        btn.style.background = 'rgba(6, 78, 59, 0.45)';
-        btn.style.color = '#6ee7a8';
-        btn.style.borderColor = 'rgba(74, 222, 128, 0.35)';
+    ['action-confirmed-card', 'hero-ai-card'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.transform = 'scale(1.03)';
+        setTimeout(() => {
+          el.style.transform = '';
+        }, 220);
       }
     });
   }, []);
 
   const selectTimeSlot = useCallback((slotName: string) => {
+    const matched = heroSchedule.slots.find((s) => s.shortLabel === slotName);
+    const fullLabel = matched?.fullLabel || slotName;
     setSelectedSlot(slotName);
     appStateRef.current.selectedSlot = slotName;
-    updateSlotLabels();
+    appStateRef.current.selectedFullSlot = fullLabel;
+    triggerCardConfirmationPulse();
+    showToast('Appointment slot updated to: ' + fullLabel);
+  }, [heroSchedule.slots, triggerCardConfirmationPulse, showToast]);
 
-    const confirmedCard = document.getElementById('action-confirmed-card');
-    if (confirmedCard) {
-      confirmedCard.style.transform = 'scale(1.04)';
-      setTimeout(() => {
-        confirmedCard.style.transform = '';
-      }, 220);
-    }
-    showToast('Appointment slot updated to: ' + slotName);
-  }, [updateSlotLabels, showToast]);
+  const handleSelectCalendarDate = useCallback(
+    (cell: HeroCalendarCell) => {
+      if (cell.isPast) {
+        showToast('Past dates cannot be booked — select today or a future date.');
+        return;
+      }
+
+      const targetDate = parseLocalDateKey(cell.dateKey);
+      setViewYear(targetDate.getFullYear());
+      setViewMonth(targetDate.getMonth());
+      setSelectedDateKey(cell.dateKey);
+
+      const nextAvail = getAvailableHeroSchedule(cell.dateKey, now);
+      const firstSlot = nextAvail.slots[0];
+      if (firstSlot) {
+        setSelectedSlot(firstSlot.shortLabel);
+        appStateRef.current.selectedSlot = firstSlot.shortLabel;
+        appStateRef.current.selectedFullSlot = firstSlot.fullLabel;
+      }
+      appStateRef.current.selectedDateKey = cell.dateKey;
+      triggerCardConfirmationPulse();
+      showToast(`${formatShortWeekdayDate(targetDate)} • ${nextAvail.statusNote}`);
+    },
+    [now, triggerCardConfirmationPulse, showToast]
+  );
+
+  const handleShiftMonth = useCallback(
+    (delta: -1 | 1) => {
+      const minAbsMonth = now.getFullYear() * 12 + now.getMonth();
+      const maxAbsMonth = minAbsMonth + 6;
+      const targetAbs = viewYear * 12 + viewMonth + delta;
+      if (targetAbs < minAbsMonth || targetAbs > maxAbsMonth) return;
+      const nextYear = Math.floor(targetAbs / 12);
+      const nextMonth = targetAbs % 12;
+      setViewYear(nextYear);
+      setViewMonth(nextMonth);
+    },
+    [now, viewYear, viewMonth]
+  );
 
   const selectWorkflowTab = useCallback((tabKey: string) => {
     setActiveWorkflowTab(tabKey);
@@ -229,7 +279,6 @@ export function StarXFlowLanding() {
     const phoneTitle = document.getElementById('phone-header-title');
     const phoneStatus = document.getElementById('phone-header-status');
     const incomingText = document.getElementById('phone-incoming-msg');
-    const botPrompt = document.getElementById('phone-bot-prompt');
     const confirmedTitle = document.getElementById('phone-confirmed-title');
 
     if (sideTitle) sideTitle.textContent = data.sideTitle;
@@ -237,7 +286,6 @@ export function StarXFlowLanding() {
     if (phoneTitle) phoneTitle.textContent = data.phoneHeader;
     if (phoneStatus) phoneStatus.textContent = data.phoneStatus;
     if (incomingText) incomingText.textContent = data.incomingText;
-    if (botPrompt) botPrompt.textContent = data.botPrompt;
     if (confirmedTitle) confirmedTitle.textContent = data.confirmedTitle;
   }, []);
 
@@ -404,10 +452,9 @@ export function StarXFlowLanding() {
       if (submitBtn) submitBtn.textContent = 'Start 14-Day Free Trial →';
     }
 
-    updateSlotLabels();
     backdrop.classList.remove('hidden');
     backdrop.classList.add('flex');
-  }, [isLoggedIn, router, openLogin, openSignup, updateSlotLabels]);
+  }, [isLoggedIn, router, openLogin, openSignup]);
 
   const closeModal = useCallback(() => {
     if (typeof document === 'undefined') return;
@@ -434,7 +481,7 @@ export function StarXFlowLanding() {
     if (form) form.classList.add('hidden');
     if (successTitle) successTitle.textContent = bizName + ' is Connected!';
     if (successMsg) {
-      successMsg.textContent = 'Confirmation sent to ' + contact + ' for Nov ' + appStateRef.current.selectedDate + ' (' + appStateRef.current.selectedSlot + ').';
+      successMsg.textContent = 'Confirmation sent to ' + contact + ' for ' + appStateRef.current.selectedFullSlot + '.';
     }
     if (successBox) successBox.classList.remove('hidden');
 
@@ -504,67 +551,6 @@ export function StarXFlowLanding() {
       bannerText.textContent = 'Appointment confirmed — Sarah K., Deep Tissue, ' + chosenTime;
     }
     showToast('AI Receptionist confirmed slot: ' + chosenTime + ' with Sarah K.');
-  }, [showToast]);
-
-  const renderHeroCalendar = useCallback(() => {
-    if (typeof document === 'undefined') return;
-    const grid = document.getElementById('hero-calendar-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    calendarDaysLayout.forEach((item) => {
-      if (item.isHeader) {
-        const hd = document.createElement('div');
-        hd.style.fontSize = 'calc(10 * var(--u))';
-        hd.style.color = 'rgba(167, 243, 208, 0.6)';
-        hd.style.fontWeight = '600';
-        hd.textContent = item.label || '';
-        grid.appendChild(hd);
-      } else {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = String(item.day);
-        btn.style.width = 'calc(19 * var(--u))';
-        btn.style.height = 'calc(19 * var(--u))';
-        btn.style.margin = '0 auto';
-        btn.style.borderRadius = '999px';
-        btn.style.fontSize = 'calc(9.5 * var(--u))';
-        btn.style.display = 'flex';
-        btn.style.alignItems = 'center';
-        btn.style.justifyContent = 'center';
-        btn.style.border = 'none';
-        btn.style.cursor = 'pointer';
-        btn.style.transition = 'all 0.15s ease';
-
-        if (item.muted) {
-          btn.style.background = 'transparent';
-          btn.style.color = 'rgba(236, 253, 245, 0.18)';
-        } else if (item.day === appStateRef.current.selectedDate) {
-          btn.style.background = '#4ade80';
-          btn.style.color = '#03110c';
-          btn.style.fontWeight = '700';
-          btn.style.boxShadow = '0 0 calc(9 * var(--u)) rgba(74, 222, 128, 0.8)';
-        } else {
-          btn.style.background = 'transparent';
-          btn.style.color = '#ecfdf5';
-          btn.addEventListener('mouseenter', () => {
-            btn.style.background = 'rgba(74, 222, 128, 0.2)';
-          });
-          btn.addEventListener('mouseleave', () => {
-            if (item.day !== appStateRef.current.selectedDate) {
-              btn.style.background = 'transparent';
-            }
-          });
-        }
-
-        btn.addEventListener('click', () => {
-          appStateRef.current.selectedDate = item.day!;
-          renderHeroCalendar();
-          showToast('Selected date: Nov ' + item.day + ', 2026');
-        });
-
-        grid.appendChild(btn);
-      }
-    });
   }, [showToast]);
 
   const initSpatialMotionEngine = useCallback(() => {
@@ -719,6 +705,33 @@ export function StarXFlowLanding() {
      TOP-LEVEL MOUNT HOOK
      ───────────────────────────────────────────────────────────────────────── */
 
+  // Mount-only live clock & visitor local date initialization
+  useEffect(() => {
+    const syncLiveClock = () => {
+      const liveNow = new Date();
+      const todayKey = toLocalDateKey(liveNow);
+      const initialAvail = getAvailableHeroSchedule(todayKey, liveNow);
+      setNow(liveNow);
+      setIsClockReady(true);
+      setViewYear(liveNow.getFullYear());
+      setViewMonth(liveNow.getMonth());
+      setSelectedDateKey(todayKey);
+      if (initialAvail.slots[0]) {
+        setSelectedSlot(initialAvail.slots[0].shortLabel);
+        appStateRef.current.selectedSlot = initialAvail.slots[0].shortLabel;
+        appStateRef.current.selectedFullSlot = initialAvail.slots[0].fullLabel;
+      }
+      appStateRef.current.selectedDateKey = todayKey;
+    };
+
+    syncLiveClock();
+    const clockInterval = setInterval(() => {
+      setNow(new Date());
+    }, 30000);
+
+    return () => clearInterval(clockInterval);
+  }, []);
+
   useEffect(() => {
     // Expose runtime functions on window for complete parity with starx_flow.html
     if (typeof window !== 'undefined') {
@@ -741,16 +754,10 @@ export function StarXFlowLanding() {
       (window as any).initSpatialMotionEngine = initSpatialMotionEngine;
     }
 
-    // 1. Render Hero Calendar
-    renderHeroCalendar();
-
-    // 2. Initial slot labels
-    updateSlotLabels();
-
-    // 3. Initialize ROI calculator
+    // 1. Initialize ROI calculator
     updateRoiCalculator();
 
-    // 4. Initialize Spatial Motion Engine & Cursor Runtime
+    // 2. Initialize Spatial Motion Engine & Cursor Runtime
     const motionCleanup = initSpatialMotionEngine();
 
     return () => {
@@ -758,8 +765,6 @@ export function StarXFlowLanding() {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
   }, [
-    renderHeroCalendar,
-    updateSlotLabels,
     updateRoiCalculator,
     initSpatialMotionEngine,
     selectTimeSlot,
@@ -969,17 +974,23 @@ export function StarXFlowLanding() {
             className="pos"
             style={{ '--x': 896, '--y': 171, '--w': 289, '--h': 348, pointerEvents: 'auto' } as React.CSSProperties}
           >
-            {/* Small left sidebar icon on tablet */}
+            {/* Small left sidebar icon + live local clock on tablet */}
             <div
               className="pos-auto flex flex-col items-center"
-              style={{ '--x': 10, '--y': 54, gap: 'calc(4 * var(--u))', opacity: 0.82 } as React.CSSProperties}
+              style={{ '--x': 10, '--y': 54, gap: 'calc(4 * var(--u))', opacity: 0.88 } as React.CSSProperties}
             >
               <div style={{ width: 'calc(21 * var(--u))', height: 'calc(21 * var(--u))', borderRadius: 'calc(5 * var(--u))', border: 'calc(1.2 * var(--u)) solid rgba(167, 243, 208, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' } as React.CSSProperties}>
                 <svg style={{ width: 'calc(12 * var(--u))', height: 'calc(12 * var(--u))', color: '#a7f3d0' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
                 </svg>
               </div>
-              <span style={{ fontSize: 'calc(9 * var(--u))', color: 'rgba(190, 230, 210, 0.72)' } as React.CSSProperties}>10:00</span>
+              <span
+                suppressHydrationWarning
+                className="tabular-nums"
+                style={{ fontSize: 'calc(9 * var(--u))', color: 'rgba(190, 230, 210, 0.82)', fontWeight: 500 } as React.CSSProperties}
+              >
+                {formatClock24(now)}
+              </span>
             </div>
 
             {/* Bookings Tablet Header */}
@@ -997,21 +1008,200 @@ export function StarXFlowLanding() {
               </span>
             </div>
 
-            {/* Calendar Month Label */}
+            {/* Interactive Month Switcher Header */}
             <div
-              className="pos-auto"
-              style={{ '--x': 154, '--y': 112, fontSize: 'calc(12.5 * var(--u))', fontWeight: 500, color: 'rgba(195, 232, 212, 0.82)', transform: 'rotate(-2deg)' } as React.CSSProperties}
+              className="pos flex items-center justify-between"
+              style={{ '--x': 112, '--y': 108, '--w': 154, '--h': 20, transform: 'rotate(-1.5deg)' } as React.CSSProperties}
             >
-              November
+              <button
+                type="button"
+                aria-label="Previous month"
+                disabled={!canPrevMonth}
+                onClick={() => handleShiftMonth(-1)}
+                style={{
+                  width: 'calc(18 * var(--u))',
+                  height: 'calc(18 * var(--u))',
+                  borderRadius: '999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: canPrevMonth ? '#a7f3d0' : 'rgba(167, 243, 208, 0.25)',
+                  background: canPrevMonth ? 'rgba(52, 211, 153, 0.14)' : 'transparent',
+                  cursor: canPrevMonth ? 'pointer' : 'not-allowed',
+                  fontSize: 'calc(11 * var(--u))',
+                  lineHeight: 1,
+                } as React.CSSProperties}
+              >
+                ‹
+              </button>
+              <span
+                suppressHydrationWarning
+                style={{ fontSize: 'calc(11.4 * var(--u))', fontWeight: 600, color: 'rgba(220, 252, 231, 0.94)', whiteSpace: 'nowrap' } as React.CSSProperties}
+              >
+                {formatMonthYear(viewYear, viewMonth)}
+              </span>
+              <button
+                type="button"
+                aria-label="Next month"
+                disabled={!canNextMonth}
+                onClick={() => handleShiftMonth(1)}
+                style={{
+                  width: 'calc(18 * var(--u))',
+                  height: 'calc(18 * var(--u))',
+                  borderRadius: '999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: canNextMonth ? '#a7f3d0' : 'rgba(167, 243, 208, 0.25)',
+                  background: canNextMonth ? 'rgba(52, 211, 153, 0.14)' : 'transparent',
+                  cursor: canNextMonth ? 'pointer' : 'not-allowed',
+                  fontSize: 'calc(11 * var(--u))',
+                  lineHeight: 1,
+                } as React.CSSProperties}
+              >
+                ›
+              </button>
             </div>
 
-            {/* Interactive Calendar Grid */}
+            {/* Interactive 7-Column Live Calendar Grid (S M T W T F S) */}
             <div
               id="hero-calendar-grid"
               className="pos"
-              style={{ '--x': 113, '--y': 138, '--w': 154, '--h': 180, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', alignItems: 'center', justifyItems: 'center', fontSize: 'calc(11.6 * var(--u))' } as React.CSSProperties}
+              style={{
+                '--x': 112,
+                '--y': 132,
+                '--w': 154,
+                '--h': 186,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                alignItems: 'center',
+                justifyItems: 'center',
+                fontSize: 'calc(9.5 * var(--u))',
+                rowGap: 'calc(2 * var(--u))',
+              } as React.CSSProperties}
             >
-              {/* Populated dynamically by JS */}
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((dow, i) => (
+                <div
+                  key={`dow-${i}`}
+                  style={{
+                    fontSize: 'calc(8.4 * var(--u))',
+                    fontWeight: 600,
+                    color: i === 0 ? 'rgba(167, 243, 208, 0.45)' : 'rgba(167, 243, 208, 0.72)',
+                    paddingBottom: 'calc(2 * var(--u))',
+                  } as React.CSSProperties}
+                >
+                  {dow}
+                </div>
+              ))}
+              {calendarCells.map((cell) => {
+                const isSelected = cell.dateKey === selectedDateKey;
+                const disabled = cell.isPast;
+                let color = 'rgba(236, 253, 245, 0.92)';
+                let background = 'transparent';
+                let border = 'none';
+                let boxShadow = 'none';
+                let fontWeight: number | string = 500;
+                let opacity = 1;
+
+                if (!cell.isCurrentMonth) {
+                  opacity = cell.isPast ? 0.18 : 0.36;
+                  color = 'rgba(167, 243, 208, 0.65)';
+                } else if (cell.isPast) {
+                  opacity = 0.28;
+                  color = 'rgba(195, 232, 212, 0.55)';
+                } else if (isSelected) {
+                  background = 'radial-gradient(circle at 35% 30%, #6ee7b7 0%, #22c55e 75%, #15803d 100%)';
+                  color = '#032014';
+                  fontWeight = 700;
+                  boxShadow = '0 0 calc(11 * var(--u)) rgba(74, 222, 128, 0.78)';
+                } else if (cell.isToday) {
+                  background = 'rgba(34, 197, 94, 0.18)';
+                  border = 'calc(1.2 * var(--u)) solid rgba(110, 231, 183, 0.9)';
+                  color = '#a7f3d0';
+                  fontWeight = 700;
+                } else if (cell.isClosedDay) {
+                  color = 'rgba(209, 250, 229, 0.48)';
+                }
+
+                return (
+                  <button
+                    key={cell.dateKey}
+                    type="button"
+                    disabled={disabled}
+                    aria-label={`${cell.dateKey}${cell.isToday ? ' (Today)' : ''}${cell.isClosedDay ? ' (Closed Sunday)' : ''}`}
+                    aria-pressed={isSelected}
+                    title={
+                      cell.isPast
+                        ? `${cell.dateKey} (Past date)`
+                        : cell.isClosedDay
+                          ? `${cell.dateKey} (Closed Sunday — click for Monday slots)`
+                          : cell.isToday
+                            ? `Today (${cell.dateKey})`
+                            : `Check slots for ${cell.dateKey}`
+                    }
+                    onClick={() => handleSelectCalendarDate(cell)}
+                    className="tabular-nums transition-transform hover:scale-110"
+                    style={{
+                      width: 'calc(18.5 * var(--u))',
+                      height: 'calc(18.5 * var(--u))',
+                      borderRadius: '999px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 'calc(8.9 * var(--u))',
+                      lineHeight: 1,
+                      cursor: disabled ? 'not-allowed' : 'pointer',
+                      color,
+                      background,
+                      border,
+                      boxShadow,
+                      fontWeight,
+                      opacity,
+                    } as React.CSSProperties}
+                  >
+                    {cell.day}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Subtle footer status / jump to today control */}
+            <div
+              className="pos flex items-center justify-between"
+              style={{ '--x': 112, '--y': 324, '--w': 154, '--h': 18 } as React.CSSProperties}
+            >
+              <span
+                suppressHydrationWarning
+                style={{ fontSize: 'calc(8.2 * var(--u))', color: 'rgba(167, 243, 208, 0.78)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as React.CSSProperties}
+              >
+                {selectedDateKey === toLocalDateKey(now) ? 'Live today' : `Selected: ${formatShortWeekdayDate(parseLocalDateKey(selectedDateKey))}`}
+              </span>
+              {selectedDateKey !== toLocalDateKey(now) && (
+                <button
+                  type="button"
+                  onClick={() => handleSelectCalendarDate({
+                    dateKey: toLocalDateKey(now),
+                    day: now.getDate(),
+                    isCurrentMonth: true,
+                    isPast: false,
+                    isToday: true,
+                    isClosedDay: now.getDay() === 0,
+                  })}
+                  style={{
+                    fontSize: 'calc(8 * var(--u))',
+                    fontWeight: 600,
+                    color: '#6ee7b7',
+                    background: 'rgba(34, 197, 94, 0.16)',
+                    border: 'calc(0.8 * var(--u)) solid rgba(110, 231, 183, 0.45)',
+                    borderRadius: '999px',
+                    padding: 'calc(1.5 * var(--u)) calc(6 * var(--u))',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                  } as React.CSSProperties}
+                >
+                  Today
+                </button>
+              )}
             </div>
           </div>
 
@@ -1044,44 +1234,31 @@ export function StarXFlowLanding() {
             <div
               style={{ marginTop: 'calc(10 * var(--u))', marginLeft: 'calc(36 * var(--u))', width: 'calc(184 * var(--u))', background: 'rgba(10, 36, 26, 0.90)', border: 'calc(1.1 * var(--u)) solid rgba(110, 231, 183, 0.38)', borderRadius: 'calc(14 * var(--u))', padding: 'calc(10 * var(--u)) calc(12 * var(--u))', boxShadow: '0 calc(4 * var(--u)) calc(14 * var(--u)) rgba(0, 0, 0, 0.4)' } as React.CSSProperties}
             >
-              <div style={{ fontSize: 'calc(13.2 * var(--u))', lineHeight: '1.28', fontWeight: 500, color: '#ffffff', marginBottom: 'calc(9 * var(--u))' } as React.CSSProperties}>
-                Sure! Here are the available slots:
+              <div
+                suppressHydrationWarning
+                style={{ fontSize: 'calc(12.2 * var(--u))', lineHeight: '1.28', fontWeight: 500, color: '#ffffff', marginBottom: 'calc(9 * var(--u))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as React.CSSProperties}
+              >
+                {heroSchedule.promptText}
               </div>
 
-              {/* 3 Slot Buttons */}
+              {/* Dynamic Available Slot Buttons */}
               <div className="flex flex-col" style={{ gap: 'calc(6.5 * var(--u))' } as React.CSSProperties}>
-                <button
-                  type="button"
-                  data-slot="Tue, 10:00 AM"
-                  onClick={() => selectTimeSlot('Tue, 10:00 AM')}
-                  className="wa-slot-pill hero-slot-btn active flex items-center rounded-full"
-                  style={{ height: 'calc(27 * var(--u))', padding: '0 calc(11 * var(--u))', fontSize: 'calc(12.2 * var(--u))', fontWeight: 500, gap: 'calc(7 * var(--u))' } as React.CSSProperties}
-                >
-                  <span style={{ width: 'calc(6 * var(--u))', height: 'calc(6 * var(--u))', borderRadius: '999px', background: '#86efac', display: 'inline-block', flexShrink: 0 } as React.CSSProperties}></span>
-                  <span>Tue, 10:00 AM</span>
-                </button>
-
-                <button
-                  type="button"
-                  data-slot="Tue, 2:00 PM"
-                  onClick={() => selectTimeSlot('Tue, 2:00 PM')}
-                  className="wa-slot-pill hero-slot-btn flex items-center rounded-full"
-                  style={{ height: 'calc(27 * var(--u))', padding: '0 calc(11 * var(--u))', fontSize: 'calc(12.2 * var(--u))', fontWeight: 500, gap: 'calc(7 * var(--u))' } as React.CSSProperties}
-                >
-                  <span style={{ width: 'calc(6 * var(--u))', height: 'calc(6 * var(--u))', borderRadius: '999px', background: '#86efac', display: 'inline-block', flexShrink: 0 } as React.CSSProperties}></span>
-                  <span>Tue, 2:00 PM</span>
-                </button>
-
-                <button
-                  type="button"
-                  data-slot="Wed, 11:00 AM"
-                  onClick={() => selectTimeSlot('Wed, 11:00 AM')}
-                  className="wa-slot-pill hero-slot-btn flex items-center rounded-full"
-                  style={{ height: 'calc(27 * var(--u))', padding: '0 calc(11 * var(--u))', fontSize: 'calc(12.2 * var(--u))', fontWeight: 500, gap: 'calc(7 * var(--u))' } as React.CSSProperties}
-                >
-                  <span style={{ width: 'calc(6 * var(--u))', height: 'calc(6 * var(--u))', borderRadius: '999px', background: '#86efac', display: 'inline-block', flexShrink: 0 } as React.CSSProperties}></span>
-                  <span>Wed, 11:00 AM</span>
-                </button>
+                {heroSchedule.slots.map((slot) => {
+                  const isActive = slot.shortLabel === activeSlotLabel;
+                  return (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      data-slot={slot.shortLabel}
+                      onClick={() => selectTimeSlot(slot.shortLabel)}
+                      className={`wa-slot-pill hero-slot-btn ${isActive ? 'active' : ''} flex items-center rounded-full`}
+                      style={{ height: 'calc(27 * var(--u))', padding: '0 calc(11 * var(--u))', fontSize: 'calc(12.2 * var(--u))', fontWeight: 500, gap: 'calc(7 * var(--u))' } as React.CSSProperties}
+                    >
+                      <span style={{ width: 'calc(6 * var(--u))', height: 'calc(6 * var(--u))', borderRadius: '999px', background: '#86efac', display: 'inline-block', flexShrink: 0 } as React.CSSProperties}></span>
+                      <span suppressHydrationWarning className="tabular-nums">{slot.shortLabel}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1111,7 +1288,12 @@ export function StarXFlowLanding() {
               </div>
               <div className="flex items-center" style={{ gap: 'calc(5.5 * var(--u))', marginTop: 'calc(4.5 * var(--u))', opacity: 0.88, whiteSpace: 'nowrap' } as React.CSSProperties}>
                 <span style={{ width: 'calc(9 * var(--u))', height: 'calc(9 * var(--u))', borderRadius: 'calc(2.5 * var(--u))', background: '#4ade80', display: 'inline-block', flexShrink: 0 } as React.CSSProperties}></span>
-                <span style={{ fontSize: 'calc(10.4 * var(--u))', color: '#a7f3d0' } as React.CSSProperties}>Synced to Calendar &amp; CRM</span>
+                <span
+                  suppressHydrationWarning
+                  style={{ fontSize: 'calc(10.2 * var(--u))', color: '#a7f3d0', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' } as React.CSSProperties}
+                >
+                  {isClockReady ? `Synced • ${activeSlotLabel}` : 'Synced to Calendar & CRM'}
+                </span>
               </div>
             </div>
           </div>
@@ -1120,20 +1302,27 @@ export function StarXFlowLanding() {
           <div
             id="hero-customer-card"
             className="pos glass-shell"
-            style={{ '--x': 1163, '--y': 433, '--w': 211, '--h': 145, borderRadius: 'calc(22 * var(--u))', padding: 'calc(22 * var(--u)) calc(18 * var(--u))' } as React.CSSProperties}
+            style={{ '--x': 1163, '--y': 433, '--w': 211, '--h': 145, borderRadius: 'calc(22 * var(--u))', padding: 'calc(22 * var(--u)) calc(16 * var(--u))' } as React.CSSProperties}
           >
-            <div className="flex items-start" style={{ gap: 'calc(11 * var(--u))', marginTop: 'calc(6 * var(--u))' } as React.CSSProperties}>
-              <div style={{ width: 'calc(28 * var(--u))', height: 'calc(28 * var(--u))', borderRadius: '999px', background: 'radial-gradient(circle at 35% 30%, #bbf7d0 0%, #34d399 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#042115', flexShrink: 0, marginTop: 'calc(2 * var(--u))' } as React.CSSProperties}>
-                <svg style={{ width: 'calc(16 * var(--u))', height: 'calc(16 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="currentColor">
+            <div className="flex items-start" style={{ gap: 'calc(9 * var(--u))', marginTop: 'calc(6 * var(--u))' } as React.CSSProperties}>
+              <div style={{ width: 'calc(26 * var(--u))', height: 'calc(26 * var(--u))', borderRadius: '999px', background: 'radial-gradient(circle at 35% 30%, #bbf7d0 0%, #34d399 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#042115', flexShrink: 0, marginTop: 'calc(2 * var(--u))' } as React.CSSProperties}>
+                <svg style={{ width: 'calc(15 * var(--u))', height: 'calc(15 * var(--u))' } as React.CSSProperties} viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
               </div>
-              <div style={{ whiteSpace: 'nowrap' } as React.CSSProperties}>
-                <div style={{ fontSize: 'calc(15.8 * var(--u))', fontWeight: 600, color: '#ffffff', lineHeight: '1.15' } as React.CSSProperties}>Customer</div>
-                <div style={{ fontSize: 'calc(14 * var(--u))', fontWeight: 400, color: 'rgba(226, 248, 236, 0.92)', marginTop: 'calc(5 * var(--u))' } as React.CSSProperties}>New appointment</div>
-                <div className="flex items-center" style={{ gap: 'calc(5 * var(--u))', marginTop: 'calc(5 * var(--u))', fontSize: 'calc(13.5 * var(--u))', color: '#86efac', fontWeight: 500 } as React.CSSProperties}>
-                  <span>•</span>
-                  <span id="hero-customer-slot-label">Tue, 10:00 AM</span>
+              <div style={{ whiteSpace: 'nowrap', minWidth: 0, flex: 1 } as React.CSSProperties}>
+                <div style={{ fontSize: 'calc(15.6 * var(--u))', fontWeight: 600, color: '#ffffff', lineHeight: '1.15' } as React.CSSProperties}>Customer</div>
+                <div style={{ fontSize: 'calc(13.6 * var(--u))', fontWeight: 400, color: 'rgba(226, 248, 236, 0.92)', marginTop: 'calc(5 * var(--u))' } as React.CSSProperties}>New appointment</div>
+                <div className="flex items-center" style={{ gap: 'calc(4 * var(--u))', marginTop: 'calc(5 * var(--u))', fontSize: 'calc(10.4 * var(--u))', color: '#86efac', fontWeight: 500 } as React.CSSProperties}>
+                  <span style={{ flexShrink: 0 }}>•</span>
+                  <span
+                    id="hero-customer-slot-label"
+                    suppressHydrationWarning
+                    className="tabular-nums"
+                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.01em' } as React.CSSProperties}
+                  >
+                    {activeSlotFullLabel}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1543,38 +1732,32 @@ export function StarXFlowLanding() {
             <div
               style={{ marginTop: 'calc(11 * var(--u))', width: 'calc(272 * var(--u))', background: 'rgba(9, 34, 24, 0.84)', border: 'calc(1.2 * var(--u)) solid rgba(110, 231, 183, 0.4)', borderRadius: 'calc(15 * var(--u))', padding: 'calc(10 * var(--u)) calc(14 * var(--u))', boxShadow: '0 0 calc(24 * var(--u)) rgba(52, 211, 153, 0.22)' } as React.CSSProperties}
             >
-              <div id="phone-bot-prompt" style={{ fontSize: 'calc(13.4 * var(--u))', fontWeight: 600, color: '#ffffff', marginBottom: 'calc(9 * var(--u))', whiteSpace: 'nowrap' } as React.CSSProperties}>
-                Sure! Here are the available slots:
+              <div
+                id="phone-bot-prompt"
+                suppressHydrationWarning
+                style={{ fontSize: 'calc(13.2 * var(--u))', fontWeight: 600, color: '#ffffff', marginBottom: 'calc(9 * var(--u))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as React.CSSProperties}
+              >
+                {activeWorkflowTab === 'whatsapp'
+                  ? heroSchedule.promptText
+                  : workflowTabsData[activeWorkflowTab]?.botPrompt || heroSchedule.promptText}
               </div>
 
               <div className="flex flex-col" style={{ gap: 'calc(6.5 * var(--u))' } as React.CSSProperties}>
-                <button
-                  type="button"
-                  data-slot="Tue, 10:00 AM"
-                  onClick={() => selectTimeSlot('Tue, 10:00 AM')}
-                  className="wa-slot-pill phone-slot-btn active flex items-center justify-center rounded-full"
-                  style={{ height: 'calc(28 * var(--u))', fontSize: 'calc(12.8 * var(--u))', fontWeight: 500 } as React.CSSProperties}
-                >
-                  Tue, 10:00 AM
-                </button>
-                <button
-                  type="button"
-                  data-slot="Tue, 2:00 PM"
-                  onClick={() => selectTimeSlot('Tue, 2:00 PM')}
-                  className="wa-slot-pill phone-slot-btn flex items-center justify-center rounded-full"
-                  style={{ height: 'calc(28 * var(--u))', fontSize: 'calc(12.8 * var(--u))', fontWeight: 500 } as React.CSSProperties}
-                >
-                  Tue, 2:00 PM
-                </button>
-                <button
-                  type="button"
-                  data-slot="Wed, 11:00 AM"
-                  onClick={() => selectTimeSlot('Wed, 11:00 AM')}
-                  className="wa-slot-pill phone-slot-btn flex items-center justify-center rounded-full"
-                  style={{ height: 'calc(28 * var(--u))', fontSize: 'calc(12.8 * var(--u))', fontWeight: 500 } as React.CSSProperties}
-                >
-                  Wed, 11:00 AM
-                </button>
+                {heroSchedule.slots.map((slot) => {
+                  const isActive = slot.shortLabel === activeSlotLabel;
+                  return (
+                    <button
+                      key={`phone-${slot.id}`}
+                      type="button"
+                      data-slot={slot.shortLabel}
+                      onClick={() => selectTimeSlot(slot.shortLabel)}
+                      className={`wa-slot-pill phone-slot-btn ${isActive ? 'active' : ''} flex items-center justify-center rounded-full`}
+                      style={{ height: 'calc(28 * var(--u))', fontSize: 'calc(12.8 * var(--u))', fontWeight: 500 } as React.CSSProperties}
+                    >
+                      <span suppressHydrationWarning className="tabular-nums">{slot.shortLabel}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1609,11 +1792,11 @@ export function StarXFlowLanding() {
               Booking Confirmed
             </div>
 
-            <div className="flex items-center justify-center" style={{ marginTop: 'calc(8 * var(--u))', gap: 'calc(7 * var(--u))', fontSize: 'calc(15 * var(--u))', color: 'rgba(205, 238, 220, 0.9)', whiteSpace: 'nowrap' } as React.CSSProperties}>
+            <div className="flex items-center justify-center" style={{ marginTop: 'calc(8 * var(--u))', gap: 'calc(7 * var(--u))', fontSize: 'calc(14.5 * var(--u))', color: 'rgba(205, 238, 220, 0.9)', whiteSpace: 'nowrap' } as React.CSSProperties}>
               <svg style={{ width: 'calc(16 * var(--u))', height: 'calc(16 * var(--u))', color: '#6ee7b7' } as React.CSSProperties} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
-              <span id="confirmed-card-slot">Tue, 10:00 AM</span>
+              <span id="confirmed-card-slot" suppressHydrationWarning className="tabular-nums">{activeSlotFullLabel}</span>
             </div>
           </div>
         </section>
@@ -1875,7 +2058,17 @@ export function StarXFlowLanding() {
   {/* ========================================================================= */}
   <div className="block md:hidden">
     <StarXFlowMobileStage
-      selectedSlot={selectedSlot}
+      nowLabel={formatClock24(now)}
+      monthYearLabel={formatMonthYear(viewYear, viewMonth)}
+      canPrevMonth={canPrevMonth}
+      canNextMonth={canNextMonth}
+      onChangeMonth={handleShiftMonth}
+      calendarCells={calendarCells}
+      selectedDateKey={selectedDateKey}
+      onSelectDate={handleSelectCalendarDate}
+      heroSchedule={heroSchedule}
+      selectedSlot={activeSlotLabel}
+      selectedFullSlot={activeSlotFullLabel}
       onSelectSlot={selectTimeSlot}
       activeWorkflowTab={activeWorkflowTab}
       onSelectWorkflowTab={selectWorkflowTab}
@@ -2770,7 +2963,7 @@ export function StarXFlowLanding() {
 
         <div id="modal-slot-summary" className="rounded-xl p-3 text-xs flex items-center justify-between" style={{ background: 'rgba(16, 62, 43, 0.45)', border: '1px solid rgba(110, 231, 183, 0.25)' } as React.CSSProperties}>
           <span className="text-emerald-200/90">Selected Demo Slot:</span>
-          <span id="modal-selected-slot-badge" className="font-semibold text-emerald-300">Nov 11 • Tue, 10:00 AM</span>
+          <span id="modal-selected-slot-badge" suppressHydrationWarning className="font-semibold text-emerald-300 tabular-nums">{activeSlotFullLabel}</span>
         </div>
 
         <button
