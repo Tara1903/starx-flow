@@ -733,7 +733,7 @@ export function AdminSupportView({
               <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[340px]">
                 {activeConversation.messages && activeConversation.messages.length > 0 ? (
                   activeConversation.messages.map((m) => {
-                    const isCustomer = m.role === "customer";
+                    const isCustomer = m.role === "customer" || m.role === "user";
                     const isInternal = Boolean(m.is_internal);
                     return (
                       <div

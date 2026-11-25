@@ -315,7 +315,25 @@ export class InboxService {
 
       // If human staff posted message, dispatch outbound to customer's external channel
       if (!isInternal && role === 'human') {
-        const recipient = cached.customer_phone || cached.customer_email || cached.metadata?.externalUserId || cached.metadata?.senderIdentifier;
+        let recipient =
+          cached.customer_phone ||
+          cached.customer_email ||
+          (cached as any).metadata?.externalUserId ||
+          (cached as any).metadata?.senderIdentifier;
+
+        if (!recipient && isValidUuid((cached as any).lead_id)) {
+          const { data: ident } = await client
+            .from('channel_identities')
+            .select('external_user_id')
+            .eq('lead_id', (cached as any).lead_id)
+            .eq('channel', String(cached.channel || '').toLowerCase())
+            .limit(1)
+            .maybeSingle();
+          if (ident?.external_user_id) {
+            recipient = ident.external_user_id;
+          }
+        }
+
         if (recipient) {
           await OutboundDispatcher.dispatch({
             conversationId,

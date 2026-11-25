@@ -63,7 +63,7 @@ export interface SupportProfileSummary {
 export interface SupportMessage {
   id: string;
   conversation_id: string;
-  role: 'customer' | 'ai' | 'human';
+  role: 'user' | 'customer' | 'ai' | 'human';
   content: string;
   created_at: string;
   is_internal?: boolean;

@@ -143,6 +143,7 @@ export class AIOrchestrator {
           .update({
             last_message: messageText,
             last_message_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
             unread_count: (activeConvo.unread_count || 0) + 1,
           })
           .eq('id', conversationId);
@@ -176,6 +177,13 @@ export class AIOrchestrator {
             channel,
             status: 'active',
             unread_count: 0,
+            metadata: event.metadata
+              ? {
+                  senderIdentifier: event.metadata.senderIdentifier || senderPhone || senderEmail || null,
+                  externalUserId: event.metadata.senderIdentifier || null,
+                  recipientIgsid: event.metadata.recipientIgsid || null,
+                }
+              : {},
             last_message: messageText,
             last_message_at: new Date().toISOString(),
           })
@@ -311,6 +319,7 @@ export class AIOrchestrator {
           handoff_reason: aiResult.handoffReason || (aiResult.requiresHumanHandoff ? 'Human intervention required' : null),
           last_message: aiResult.replyText,
           last_message_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           unread_count: aiResult.requiresHumanHandoff ? 1 : 0,
         })
         .eq('id', conversationId);
