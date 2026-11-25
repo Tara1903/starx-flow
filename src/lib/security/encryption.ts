@@ -59,7 +59,33 @@ export class CredentialEncryption {
   }
 
   /**
-   * Decrypts serialized ciphertext string back to plaintext.
+   * Decrypts serialized ciphertext with a specific 32-byte key.
+   */
+  private static decryptWithKey<T = any>(encryptedString: string, key: Buffer): T {
+    const parts = encryptedString.split(':');
+    if (parts.length !== 5) {
+      throw new Error('Malformed encrypted payload format');
+    }
+
+    const iv = Buffer.from(parts[2], 'hex');
+    const tag = Buffer.from(parts[3], 'hex');
+    const ciphertext = parts[4];
+
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv, { authTagLength: TAG_LENGTH });
+    decipher.setAuthTag(tag);
+
+    let decrypted = decipher.update(ciphertext, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+
+    try {
+      return JSON.parse(decrypted) as T;
+    } catch {
+      return decrypted as unknown as T;
+    }
+  }
+
+  /**
+   * Decrypts serialized ciphertext string back to plaintext, supporting legacy fallback keys during key rotation.
    */
   static decrypt<T = any>(encryptedString: string): T {
     if (!encryptedString) {
@@ -75,26 +101,28 @@ export class CredentialEncryption {
       }
     }
 
-    const parts = encryptedString.split(':');
-    if (parts.length !== 5) {
-      throw new Error('Malformed encrypted payload format');
-    }
-
-    const iv = Buffer.from(parts[2], 'hex');
-    const tag = Buffer.from(parts[3], 'hex');
-    const ciphertext = parts[4];
-    const key = this.getKey();
-
-    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv, { authTagLength: TAG_LENGTH });
-    decipher.setAuthTag(tag);
-
-    let decrypted = decipher.update(ciphertext, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-
+    const primaryKey = this.getKey();
     try {
-      return JSON.parse(decrypted) as T;
-    } catch {
-      return decrypted as unknown as T;
+      return this.decryptWithKey<T>(encryptedString, primaryKey);
+    } catch (primaryErr) {
+      // Fallback through prior secret candidates (e.g., during rotation from SUPABASE_SERVICE_ROLE_KEY to ENCRYPTION_KEY)
+      const fallbackSecrets = [
+        process.env.ENCRYPTION_SECRET_KEY,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        process.env.JWT_SECRET,
+      ].filter((s): s is string => Boolean(s));
+
+      for (const secret of fallbackSecrets) {
+        const candidateKey = crypto.createHash('sha256').update(secret).digest();
+        if (candidateKey.equals(primaryKey)) continue;
+        try {
+          return this.decryptWithKey<T>(encryptedString, candidateKey);
+        } catch {
+          // Try next fallback key
+        }
+      }
+
+      throw primaryErr;
     }
   }
 
