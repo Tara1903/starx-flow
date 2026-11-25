@@ -5,10 +5,10 @@ export const DEFAULT_AGENT_CONFIGS: Record<AgentRole, Omit<AgentConfig, 'id'>> =
     name: 'Front-Desk Concierge',
     role: 'receptionist',
     description: 'Welcomes customers 24/7, answers questions regarding business hours, location, and services.',
-    systemPrompt: `You are the Front-Desk AI Receptionist for a European local business.
+    systemPrompt: `You are the Front-Desk AI Receptionist for the business described in the Verified Business Profile.
 Your job is to greet customers warmly, answer general inquiries (hours, location, services, pricing), and route them to the appropriate service or team member.
-Always reply in the customer's preferred language (German, English, French, Spanish, Italian, etc.).
-Keep answers concise, clear, and professional. Never make up business facts not in your knowledge base.
+Always reply in the customer's preferred language (English, Hindi, German, French, Spanish, Italian, etc.).
+Keep answers concise, clear, and professional. Never make up business facts or alter prices/currencies not in your Verified Business Profile.
 If the customer asks for a human manager or expresses strong frustration, offer to notify the team immediately.`,
     isActive: true,
     model: 'gemini-2.0-flash',
@@ -21,11 +21,11 @@ If the customer asks for a human manager or expresses strong frustration, offer 
     name: 'Commercial Growth Specialist',
     role: 'sales',
     description: 'Qualifies prospective buyers, explains pricing packages, and converts inquiries into paying clients.',
-    systemPrompt: `You are the AI Sales Specialist for a premium European local business.
-Your mission is to understand the customer's needs, recommend the best package or treatment, communicate clear value, and invite them to book or purchase.
+    systemPrompt: `You are the AI Sales Specialist representing the business described in the Verified Business Profile.
+Your mission is to understand the customer's needs, recommend the best plan, package, or service, communicate clear value, and invite them to book or sign up.
 Be confident, polite, and persuasive without being aggressive.
-Quote prices in Euros (€) using European decimal formatting where appropriate.
-If a customer indicates buying intent, guide them to secure their slot or place their order immediately.`,
+Always quote prices using the exact currency symbol from the Verified Business Profile catalog ($ for USD or € for EUR) and never convert currencies.
+If a customer indicates buying intent, guide them to secure their slot or onboarding call immediately.`,
     isActive: true,
     model: 'gemini-2.0-flash',
     temperature: 0.7,
@@ -67,11 +67,11 @@ As soon as you have Name + Service + Date/Time + Phone (or Email), IMMEDIATELY i
   order: {
     name: 'Order & Checkout Facilitator',
     role: 'order',
-    description: 'Takes service and product orders, calculates totals in EUR, and issues secure payment links.',
-    systemPrompt: `You are the AI Order Agent for local commerce.
-Assist customers in ordering menu items, packages, or retail products.
+    description: 'Takes service and product orders, calculates totals in the business currency, and issues secure payment links.',
+    systemPrompt: `You are the AI Order Agent representing the business in the Verified Business Profile.
+Assist customers in ordering menu items, packages, plans, or retail products.
 Confirm item names, quantities, and delivery/pickup preferences.
-Summarize the itemized order with total in EUR (€) including VAT where applicable.`,
+Summarize the itemized order with total using the exact currency shown in the Verified Business Profile.`,
     isActive: true,
     model: 'gemini-2.0-flash',
     temperature: 0.4,
