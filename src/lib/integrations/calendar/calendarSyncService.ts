@@ -29,6 +29,7 @@ export interface AvailabilityCheckOptions {
 export interface ConnectedCalendarRecord {
   id: string;
   organizationId: string;
+  userId?: string;
   provider: CalendarProvider;
   accountIdentifier: string;
   accountName?: string;
@@ -115,8 +116,11 @@ export class CalendarSyncService {
       }
     }
 
-    // Sandbox fallback
-    if (channelToken.startsWith('secret_gcal_token_') || channelToken.startsWith('whsec_gcal_')) {
+    // Sandbox fallback (strictly disabled in production)
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      (channelToken.startsWith('secret_gcal_token_') || channelToken.startsWith('whsec_gcal_'))
+    ) {
       return { valid: true, organizationId: mem?.organizationId || 'org-test' };
     }
 
@@ -166,8 +170,11 @@ export class CalendarSyncService {
       }
     }
 
-    // Sandbox fallback
-    if (clientState.startsWith('secret_ms_state_') || clientState.startsWith('ms_client_state_')) {
+    // Sandbox fallback (strictly disabled in production)
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      (clientState.startsWith('secret_ms_state_') || clientState.startsWith('ms_client_state_'))
+    ) {
       return { valid: true, organizationId: mem?.organizationId || 'org-test' };
     }
 
@@ -279,12 +286,12 @@ export class CalendarSyncService {
         });
 
         // Upsert connected account
-        const { data: account } = await client
+        const { data: account, error: accErr } = await client
           .from('connected_accounts')
           .upsert(
             {
               organization_id: record.organizationId,
-              user_id: record.organizationId, // Fallback to org
+              user_id: record.userId || record.organizationId,
               provider: record.provider,
               status: 'connected',
               account_identifier: record.accountIdentifier,
@@ -297,9 +304,17 @@ export class CalendarSyncService {
           .select('id')
           .single();
 
+        if (accErr) {
+          console.error('[CalendarSyncService] connected_accounts upsert failed:', accErr);
+          if (process.env.NODE_ENV === 'production') {
+            throw new Error(`Failed to persist connected account: ${accErr.message}`);
+          }
+          return;
+        }
+
         if (account) {
           // Upsert external calendar
-          await client.from('external_calendars').upsert(
+          const { error: calErr } = await client.from('external_calendars').upsert(
             {
               organization_id: record.organizationId,
               connected_account_id: account.id,
@@ -312,8 +327,18 @@ export class CalendarSyncService {
             },
             { onConflict: 'organization_id,provider,external_calendar_id' }
           );
+
+          if (calErr) {
+            console.error('[CalendarSyncService] external_calendars upsert failed:', calErr);
+            if (process.env.NODE_ENV === 'production') {
+              throw new Error(`Failed to persist external calendar: ${calErr.message}`);
+            }
+          }
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (process.env.NODE_ENV === 'production' && err?.message?.startsWith('Failed to persist')) {
+          throw err;
+        }
         console.warn('[CalendarSyncService] Database persist skipped (using in-memory):', err);
       }
     }

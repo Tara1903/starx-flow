@@ -24,6 +24,8 @@ export interface OAuthStateRecord {
   expiresAt: string;
   consumedAt?: string | null;
   sessionBindingHash?: string;
+  persistedInDb?: boolean;
+  metadata?: Record<string, any>;
 }
 
 export interface OAuthStateBindingResult {
@@ -56,8 +58,9 @@ export class OAuthStateManager {
     redirectUri: string;
     sessionBindingSecret?: string;
     ttlMinutes?: number;
+    metadata?: Record<string, any>;
   }): Promise<OAuthStateBindingResult> {
-    const { organizationId, userId, provider, redirectUri, ttlMinutes = 10 } = options;
+    const { organizationId, userId, provider, redirectUri, ttlMinutes = 10, metadata } = options;
 
     if (!organizationId || !userId || !provider) {
       throw new Error('OAuth state generation requires organizationId, userId, and provider');
@@ -80,27 +83,33 @@ export class OAuthStateManager {
       expiresAt,
       consumedAt: null,
       sessionBindingHash,
+      metadata,
     };
 
     // 3. Persist state in PostgreSQL database
+    let persistedInDb = false;
     if (isSupabaseAdminConfigured) {
-      try {
-        const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
-        await client.from('oauth_states').insert({
-          state_token: nonce,
-          organization_id: organizationId,
-          user_id: userId,
-          provider,
-          redirect_uri: redirectUri,
-          expires_at: expiresAt,
-          metadata: {
-            session_binding_hash: sessionBindingHash,
-          },
-        });
-      } catch (err) {
-        console.warn('[OAuthStateManager] Database state insert fallback to memory:', err);
+      const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+      const { error: insertErr } = await client.from('oauth_states').insert({
+        state_token: nonce,
+        organization_id: organizationId,
+        user_id: userId,
+        provider,
+        redirect_uri: redirectUri,
+        expires_at: expiresAt,
+      });
+
+      if (insertErr) {
+        console.error('[OAuthStateManager] Database state insert error:', insertErr.code, insertErr.message);
+        if (process.env.NODE_ENV === 'production') {
+          throw new Error(`SECURITY VIOLATION: Failed to persist OAuth state (${insertErr.code || insertErr.message})`);
+        }
+      } else {
+        persistedInDb = true;
       }
     }
+
+    record.persistedInDb = persistedInDb;
 
     // Keep in offline memory registry
     this.inMemoryStates.set(nonce, record);
@@ -114,6 +123,7 @@ export class OAuthStateManager {
       exp: expiresAt,
       sbh: sessionBindingHash,
       rdr: redirectUri,
+      meta: metadata,
     });
     const encodedPayload = Buffer.from(payloadJson).toString('base64url');
     const hmac = crypto
@@ -216,7 +226,16 @@ export class OAuthStateManager {
     }
 
     // 2. Decode and validate payload content
-    let parsed: { tok: string; org: string; uid: string; prv: string; exp: string; sbh?: string; rdr?: string };
+    let parsed: {
+      tok: string;
+      org: string;
+      uid: string;
+      prv: string;
+      exp: string;
+      sbh?: string;
+      rdr?: string;
+      meta?: Record<string, any>;
+    };
     try {
       parsed = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8'));
     } catch {
@@ -260,7 +279,11 @@ export class OAuthStateManager {
     }
 
     // 7. Database-Backed Atomic One-Time Consumption
-    if (isSupabaseAdminConfigured) {
+    const memFallbackEntry = this.inMemoryStates.get(nonce);
+    const bypassDbForTestFixture =
+      process.env.NODE_ENV !== 'production' && memFallbackEntry && memFallbackEntry.persistedInDb === false;
+
+    if (isSupabaseAdminConfigured && !bypassDbForTestFixture) {
       try {
         const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
         const { data: dbState, error: rpcErr } = await client.rpc('consume_oauth_state', {
@@ -285,9 +308,13 @@ export class OAuthStateManager {
           redirectUri: dbState.redirect_uri,
           expiresAt: dbState.expires_at,
           consumedAt: dbState.consumed_at,
+          metadata: parsed.meta,
         };
       } catch (err: any) {
         if (err.message.includes('SECURITY VIOLATION')) throw err;
+        if (process.env.NODE_ENV === 'production') {
+          throw new Error('SECURITY VIOLATION: OAuth state verification store unavailable.');
+        }
         // Fallback to memory in offline test sandbox
       }
     }

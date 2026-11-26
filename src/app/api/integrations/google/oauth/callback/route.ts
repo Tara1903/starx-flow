@@ -10,9 +10,12 @@ export async function GET(req: NextRequest) {
   const state = url.searchParams.get('state');
   const error = url.searchParams.get('error');
 
+  const configuredAppUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/+$/, '');
   const host = req.headers.get('host') || 'localhost:3000';
-  const protocol = host.includes('localhost') ? 'http' : 'https';
-  const redirectUri = `${protocol}://${host}/api/integrations/google/oauth/callback`;
+  const isLocalHost = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
+  const protocol = isLocalHost ? 'http' : 'https';
+  const baseUrl = configuredAppUrl || `${protocol}://${host}`;
+  const redirectUri = `${baseUrl}/api/integrations/google/oauth/callback`;
 
   if (error || !code) {
     return NextResponse.redirect(new URL('/dashboard/settings?error=google_oauth_denied', req.url));
@@ -73,6 +76,7 @@ export async function GET(req: NextRequest) {
     await CalendarSyncService.registerConnection({
       id: `conn-${Date.now()}`,
       organizationId,
+      userId: user.id,
       provider: 'google_calendar',
       accountIdentifier: tokens.accountIdentifier,
       accountName: tokens.accountName,
