@@ -52,6 +52,8 @@ export function CreateWorkflowWizard({ open, onClose }: CreateWorkflowWizardProp
   const [action, setAction] = useState("");
   const [prompt, setPrompt] = useState("");
   const [tone, setTone] = useState<Workflow["aiTone"]>("Friendly");
+  const saving = React.useRef(false);
+  const [error, setError] = useState("");
   const [deploying, setDeploying] = useState(false);
 
   useEffect(() => {
@@ -77,22 +79,28 @@ export function CreateWorkflowWizard({ open, onClose }: CreateWorkflowWizardProp
   };
 
   const handleDeploy = async () => {
+    if (saving.current || !name.trim() || !trigger || !action) return;
+    saving.current = true;
     setDeploying(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    
-    addWorkflow({
-      name: name || "Untitled Workflow",
-      description: desc || "Custom automated workflow.",
-      trigger: TRIGGER_OPTIONS.find(t => t.value === trigger)?.label || trigger,
-      action: ACTION_OPTIONS.find(a => a.value === action)?.label || action,
-      isActive: true,
-      channel: TRIGGER_TO_CHANNEL[trigger] || "Web",
-      aiTone: tone,
-      customPrompt: prompt || "Reply helpfully and book appointments when possible.",
-    });
-    
-    setDeploying(false);
-    setWizStep(5); // success step
+    setError("");
+    try {
+      await addWorkflow({
+        name: name.trim(),
+        description: desc || "Custom automated workflow.",
+        trigger: TRIGGER_OPTIONS.find(t => t.value === trigger)?.label || trigger,
+        action: ACTION_OPTIONS.find(a => a.value === action)?.label || action,
+        isActive: true,
+        channel: TRIGGER_TO_CHANNEL[trigger] || "Web",
+        aiTone: tone,
+        customPrompt: prompt || "Reply helpfully and book appointments when possible.",
+      });
+      setWizStep(5);
+    } catch {
+      setError("Could not save this workflow. Your choices are here. Please try again.");
+    } finally {
+      saving.current = false;
+      setDeploying(false);
+    }
   };
 
   if (!open) return null;
@@ -102,7 +110,7 @@ export function CreateWorkflowWizard({ open, onClose }: CreateWorkflowWizardProp
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onMouseDown={(e) => { if (e.target === e.currentTarget) { onClose(); reset(); } }}
+      onMouseDown={(e) => { if (!saving.current && e.target === e.currentTarget) { onClose(); reset(); } }}
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm select-none"
     >
       <motion.div
@@ -117,7 +125,7 @@ export function CreateWorkflowWizard({ open, onClose }: CreateWorkflowWizardProp
             <h3 className="text-sm font-bold text-white tracking-tight">{wizStep === 5 ? "Workflow Deployed!" : "Create New Workflow"}</h3>
             {wizStep < 5 && <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider mt-0.5">Step {wizStep} of 4</p>}
           </div>
-          <button onClick={() => { onClose(); reset(); }} className="text-zinc-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/5">
+          <button aria-label="Close workflow wizard" disabled={deploying} onClick={() => { onClose(); reset(); }} className="text-zinc-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/5">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -133,6 +141,7 @@ export function CreateWorkflowWizard({ open, onClose }: CreateWorkflowWizardProp
           </div>
         )}
 
+        {error && <p role="alert" className="px-5 pt-4 text-sm text-red-300">{error}</p>}
         {/* Steps Content */}
         <div className="p-5">
           <AnimatePresence mode="wait">
@@ -254,14 +263,14 @@ export function CreateWorkflowWizard({ open, onClose }: CreateWorkflowWizardProp
         {wizStep < 5 && (
           <div className="flex gap-3 p-5 pt-0 bg-white/[0.005]">
             {wizStep > 1 && (
-              <button onClick={() => setWizStep(wizStep - 1)} className="px-5 py-2.5 rounded-full text-xs font-semibold text-zinc-500 hover:text-white hover:bg-white/5 transition-colors uppercase tracking-wider">
+              <button disabled={deploying} onClick={() => setWizStep(wizStep - 1)} className="px-5 py-2.5 rounded-full text-xs font-semibold text-zinc-500 hover:text-white hover:bg-white/5 transition-colors uppercase tracking-wider">
                 Back
               </button>
             )}
             {wizStep < 4 ? (
               <button
                 onClick={() => setWizStep(wizStep + 1)}
-                disabled={wizStep === 1 && !name}
+                disabled={(wizStep === 1 && !name.trim()) || (wizStep === 2 && !trigger) || (wizStep === 3 && !action)}
                 className="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold text-xs py-2.5 rounded-full transition-colors flex items-center justify-center gap-1 uppercase tracking-wider"
               >
                 <span>Continue</span>

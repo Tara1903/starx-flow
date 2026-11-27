@@ -58,28 +58,43 @@ export async function processPolarWebhook(request: Request): Promise<Response> {
   const eventId = headers['webhook-id'] || event.id || `evt_${Date.now()}`;
   const eventType = event.type;
 
-  // 1. Idempotency Check: prevent duplicate event processing
+  // 1. Atomic Idempotency Claim: eliminate SELECT->INSERT TOCTOU race conditions
+  let claimedAtomically = false;
   try {
-    const { data: existingEvent } = await supabaseAdmin
-      .from('polar_webhook_events')
-      .select('id, status')
-      .eq('event_id', eventId)
-      .maybeSingle();
+    const { data: claimRows, error: claimRpcErr } = await supabaseAdmin.rpc('claim_polar_webhook_event', {
+      p_event_id: eventId,
+      p_event_type: eventType,
+      p_lease_seconds: 300,
+    });
 
-    if (existingEvent && existingEvent.status === 'processed') {
-      return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+    if (!claimRpcErr && Array.isArray(claimRows) && claimRows.length > 0) {
+      claimedAtomically = true;
+      if (!claimRows[0].claimed) {
+        return NextResponse.json(
+          { received: true, duplicate: true, status: claimRows[0].claim_status },
+          { status: 200 }
+        );
+      }
     }
+  } catch (rpcErr: any) {
+    console.warn('[Polar Webhook] claim_polar_webhook_event RPC fallback:', rpcErr?.message);
+  }
 
-    if (!existingEvent) {
-      await supabaseAdmin.from('polar_webhook_events').insert({
-        event_id: eventId,
-        event_type: eventType,
-        status: 'processing',
-        received_at: new Date().toISOString(),
-      });
+  if (!claimedAtomically) {
+    // Fallback atomic insert relying on UNIQUE(event_id)
+    const { error: insertErr } = await supabaseAdmin.from('polar_webhook_events').insert({
+      event_id: eventId,
+      event_type: eventType,
+      status: 'processing',
+      received_at: new Date().toISOString(),
+    });
+
+    if (insertErr) {
+      if (insertErr.code === '23505') {
+        return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+      }
+      console.warn('[Polar Webhook] Idempotency insert warning:', insertErr.message);
     }
-  } catch (err: any) {
-    console.warn('[Polar Webhook] Idempotency record warning:', err.message);
   }
 
   try {
@@ -127,7 +142,7 @@ export async function processPolarWebhook(request: Request): Promise<Response> {
 
           await supabaseAdmin.from('profiles').update({ plan: planId }).eq('id', resolvedUserId);
 
-          await supabaseAdmin.from('invoices').insert({
+          const { error: invErr } = await supabaseAdmin.from('invoices').insert({
             user_id: resolvedUserId,
             billing_provider: 'polar',
             polar_order_id: dataObj.id,
@@ -138,6 +153,9 @@ export async function processPolarWebhook(request: Request): Promise<Response> {
             paid_at: new Date().toISOString(),
             hosted_invoice_url: dataObj.hosted_invoice_url || null,
           });
+          if (invErr && invErr.code !== '23505') {
+            throw invErr;
+          }
         }
         break;
       }

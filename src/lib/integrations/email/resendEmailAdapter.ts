@@ -253,9 +253,9 @@ export class ResendEmailAdapter {
    */
   verifyWebhookSignature(rawBody: string, headers: Headers | Record<string, string>): boolean {
     const secret = this.webhookSecret;
-    if (!secret) {
-      // In development / sandbox without configured secret, pass through
-      return true;
+    if (!secret || secret.trim() === '') {
+      // Fail closed when webhook secret is not configured
+      return false;
     }
 
     const getHeader = (name: string): string | null => {
@@ -299,11 +299,15 @@ export class ResendEmailAdapter {
       .update(signedPayload)
       .digest('base64');
 
+    const expectedBuf = Buffer.from(expectedSignature, 'utf8');
     const signatureParts = svixSignature.split(' ');
     for (const part of signatureParts) {
       const [version, sig] = part.split(',');
-      if (version === 'v1' && sig === expectedSignature) {
-        return true;
+      if (version === 'v1' && sig) {
+        const sigBuf = Buffer.from(sig, 'utf8');
+        if (sigBuf.length === expectedBuf.length && crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+          return true;
+        }
       }
     }
 

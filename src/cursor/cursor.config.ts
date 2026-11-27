@@ -56,7 +56,7 @@ export const MAGNETIC_STRENGTH_PRESETS: Record<
 };
 
 /** Routes excluded from Custom Cursor 2.0 */
-export const CURSOR_EXCLUDED_ROUTE_PREFIXES = [] as const;
+export const CURSOR_EXCLUDED_ROUTE_PREFIXES = ['/collections'] as const;
 
 /**
  * Native selector restore list: ensures OS pointer I-beam, resize handles,

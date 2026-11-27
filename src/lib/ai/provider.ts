@@ -5,10 +5,7 @@ import { GEMINI_TOOL_DECLARATIONS, OPENAI_TOOL_DECLARATIONS, ToolName } from './
 import { ToolExecutor } from './tools/toolExecutor';
 import { BusinessProfileService, BusinessReceptionistProfile } from './businessProfileService';
 
-const GEMINI_API_KEY =
-  process.env.GEMINI_API_KEY ||
-  process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
-  '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
 const DEFAULT_NVIDIA_MODEL = 'nvidia/nemotron-3.5-bolt-e4b';
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY || '';

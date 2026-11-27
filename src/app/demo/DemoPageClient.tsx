@@ -4,28 +4,13 @@ import React, { useState } from "react";
 import { CheckCircle, Loader2, Calendar, ArrowRight, ShieldCheck, Clock, MessageSquare } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { demoRequestSchema, type DemoFormValues } from "@/lib/demoRequest";
 
-const demoSchema = z.object({
-  fullName: z.string().trim().min(2, "Name must be at least 2 characters"),
-  workEmail: z.string().trim().email("Please enter a valid work email"),
-  phone: z.string().trim().optional(),
-  businessName: z.string().trim().min(2, "Business name is required"),
-  businessType: z.string().min(1, "Please select an industry"),
-  businessSize: z.string().min(1, "Please select business size"),
-  primaryNeed: z.string().min(1, "Please select primary automation goal"),
-  preferredContact: z.enum(["email", "whatsapp", "phone"]),
-  website: z.string().trim().optional(),
-  notes: z.string().trim().max(500).optional(),
-  honeypot: z.string().optional(),
-  consent: z.boolean().refine((val) => val === true, {
-    message: "Consent is required to schedule your demonstration",
-  }),
-});
-
-type DemoFormValues = z.infer<typeof demoSchema>;
 
 export function DemoPageClient() {
+  const [ready, setReady] = useState(false);
+  React.useEffect(() => setReady(true), []);
+  const pending = React.useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<{ referenceId: string; message: string } | null>(null);
@@ -33,17 +18,16 @@ export function DemoPageClient() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<DemoFormValues>({
-    resolver: zodResolver(demoSchema),
+    resolver: zodResolver(demoRequestSchema),
     defaultValues: {
       fullName: "",
       workEmail: "",
       phone: "",
       businessName: "",
       businessType: "Beauty & Salons",
-      businessSize: "2–10 staff",
+      businessSize: "2–5 staff",
       primaryNeed: "WhatsApp AI Booking",
       preferredContact: "email",
       website: "",
@@ -54,6 +38,8 @@ export function DemoPageClient() {
   });
 
   const onSubmit = async (data: DemoFormValues) => {
+    if (pending.current) return;
+    pending.current = true;
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -66,17 +52,18 @@ export function DemoPageClient() {
 
       const result = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !result.success || !result.referenceId) {
         throw new Error(result.error || "Failed to submit request.");
       }
 
       setSuccessData({
-        referenceId: result.referenceId || "DEMO-CONFIRMED",
+        referenceId: result.referenceId,
         message: result.message || "Your demonstration request has been received.",
       });
     } catch (err: any) {
       setSubmitError(err.message || "Submission failed. Please try again.");
     } finally {
+      pending.current = false;
       setIsSubmitting(false);
     }
   };
@@ -94,15 +81,14 @@ export function DemoPageClient() {
         <div className="p-4 rounded-xl bg-[#010804] border border-emerald-500/20 text-xs text-[#b8c9bd] mb-8 font-mono">
           Reference Code: <span className="text-emerald-300 font-bold">{successData.referenceId}</span>
         </div>
-        <p className="text-xs text-[#b8c9bd]/70">
-          We will review your business profile and reach out via your preferred channel within 2 business hours.
-        </p>
+
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form method="post" onSubmit={handleSubmit(onSubmit)}>
+      <fieldset disabled={!ready || isSubmitting} className="min-w-0 space-y-6">
       {submitError && (
         <div className="p-4 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs font-mono">
           {submitError}
@@ -115,11 +101,11 @@ export function DemoPageClient() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Full Name */}
         <div>
-          <label className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
+          <label htmlFor="demo-fullName" className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
             Your Full Name <span className="text-emerald-400">*</span>
           </label>
           <input
-            {...register("fullName")}
+            id="demo-fullName" {...register("fullName")}
             placeholder="Dr. Sarah Jenkins"
             className="w-full px-4 py-3 rounded-xl bg-[#010804] border border-emerald-500/25 text-white text-sm outline-none focus:border-emerald-400/60 focus:ring-1 focus:ring-emerald-400/40 transition-colors"
           />
@@ -128,11 +114,11 @@ export function DemoPageClient() {
 
         {/* Work Email */}
         <div>
-          <label className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
+          <label htmlFor="demo-workEmail" className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
             Work Email Address <span className="text-emerald-400">*</span>
           </label>
           <input
-            {...register("workEmail")}
+            id="demo-workEmail" {...register("workEmail")}
             type="email"
             placeholder="sarah@cityclinic.co.uk"
             className="w-full px-4 py-3 rounded-xl bg-[#010804] border border-emerald-500/25 text-white text-sm outline-none focus:border-emerald-400/60 focus:ring-1 focus:ring-emerald-400/40 transition-colors"
@@ -144,11 +130,11 @@ export function DemoPageClient() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Business Name */}
         <div>
-          <label className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
+          <label htmlFor="demo-businessName" className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
             Business Name <span className="text-emerald-400">*</span>
           </label>
           <input
-            {...register("businessName")}
+            id="demo-businessName" {...register("businessName")}
             placeholder="City Aesthetic & Dental"
             className="w-full px-4 py-3 rounded-xl bg-[#010804] border border-emerald-500/25 text-white text-sm outline-none focus:border-emerald-400/60 focus:ring-1 focus:ring-emerald-400/40 transition-colors"
           />
@@ -157,11 +143,11 @@ export function DemoPageClient() {
 
         {/* Business Type / Industry */}
         <div>
-          <label className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
+          <label htmlFor="demo-businessType" className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
             Industry Vertical <span className="text-emerald-400">*</span>
           </label>
           <select
-            {...register("businessType")}
+            id="demo-businessType" {...register("businessType")}
             className="w-full px-4 py-3 rounded-xl bg-[#010804] border border-emerald-500/25 text-white text-sm outline-none focus:border-emerald-400/60 transition-colors"
           >
             <option value="Beauty & Salons">Hair Salons &amp; Beauty Studios</option>
@@ -177,21 +163,22 @@ export function DemoPageClient() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Phone */}
         <div>
-          <label className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
+          <label htmlFor="demo-phone" className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
             Phone / WhatsApp Number
           </label>
           <input
-            {...register("phone")}
+            id="demo-phone" {...register("phone")}
             placeholder="+44 7700 900077"
             className="w-full px-4 py-3 rounded-xl bg-[#010804] border border-emerald-500/25 text-white text-sm outline-none focus:border-emerald-400/60 transition-colors"
           />
+          {errors.phone && <p role="alert" className="text-xs text-red-400">{errors.phone.message}</p>}
         </div>
 
         {/* Business Size */}
         <div>
-          <label className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">Team Size</label>
+          <label htmlFor="demo-businessSize" className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">Team Size</label>
           <select
-            {...register("businessSize")}
+            id="demo-businessSize" {...register("businessSize")}
             className="w-full px-4 py-3 rounded-xl bg-[#010804] border border-emerald-500/25 text-white text-sm outline-none focus:border-emerald-400/60 transition-colors"
           >
             <option value="Solo (1 staff)">Solo Practitioner (1 staff)</option>
@@ -203,9 +190,9 @@ export function DemoPageClient() {
 
         {/* Preferred Channel */}
         <div>
-          <label className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">Preferred Contact</label>
+          <label htmlFor="demo-preferredContact" className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">Preferred Contact</label>
           <select
-            {...register("preferredContact")}
+            id="demo-preferredContact" {...register("preferredContact")}
             className="w-full px-4 py-3 rounded-xl bg-[#010804] border border-emerald-500/25 text-white text-sm outline-none focus:border-emerald-400/60 transition-colors"
           >
             <option value="email">Email</option>
@@ -217,11 +204,11 @@ export function DemoPageClient() {
 
       {/* Primary Automation Goal */}
       <div>
-        <label className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
+        <label htmlFor="demo-primaryNeed" className="block text-xs font-mono text-emerald-200/90 mb-1.5 uppercase tracking-wider">
           Primary Operational Problem to Solve
         </label>
         <select
-          {...register("primaryNeed")}
+          id="demo-primaryNeed" {...register("primaryNeed")}
           className="w-full px-4 py-3 rounded-xl bg-[#010804] border border-emerald-500/25 text-white text-sm outline-none focus:border-emerald-400/60 transition-colors"
         >
           <option value="WhatsApp AI Booking">Automate after-hours bookings on WhatsApp &amp; Instagram</option>
@@ -278,6 +265,7 @@ export function DemoPageClient() {
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> No Credit Card Required
         </span>
       </div>
+      </fieldset>
     </form>
   );
 }

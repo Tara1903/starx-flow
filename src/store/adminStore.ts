@@ -290,27 +290,32 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   /* ─── LOGIN ADMIN (verify current user is admin) ─── */
   loginAdmin: async () => {
-    // Check if test or cached admin session is set in localStorage
-    try {
-      if (typeof window !== 'undefined') {
-        const adminStored = localStorage.getItem('starx_admin_auth_v1');
-        const userStored = localStorage.getItem('starx_auth_user_v1');
-        const stored = adminStored || userStored;
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed && (parsed.role === 'admin' || parsed.role === 'super_admin' || parsed.email === 'admin@starxflow.com')) {
-            set({ isAdmin: true });
-            await Promise.all([get().fetchClients(), get().fetchDemoLeads(), get().fetchSupportData()]).catch(() => {});
-            get().subscribeToAdminRealtime();
-            return true;
+    // Only allow cached localStorage session bypass in non-production test environments
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        if (typeof window !== 'undefined') {
+          const adminStored = localStorage.getItem('starx_admin_auth_v1');
+          const userStored = localStorage.getItem('starx_auth_user_v1');
+          const stored = adminStored || userStored;
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed && (parsed.role === 'admin' || parsed.role === 'super_admin' || parsed.email === 'admin@starxflow.com')) {
+              set({ isAdmin: true });
+              await Promise.all([get().fetchClients(), get().fetchDemoLeads(), get().fetchSupportData()]).catch(() => {});
+              get().subscribeToAdminRealtime();
+              return true;
+            }
           }
         }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
     }
 
     if (!isSupabaseConfigured) {
+      if (process.env.NODE_ENV === 'production') {
+        return false;
+      }
       set({
         isAdmin: true,
         clients: get().clients.length > 0 ? get().clients : DEFAULT_ADMIN_CLIENTS,

@@ -6,6 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -17,26 +26,52 @@ serve(async (req) => {
   // 1. Meta Webhook Verification (GET request)
   if (req.method === 'GET') {
     const mode = url.searchParams.get('hub.mode');
-    const token = url.searchParams.get('hub.verify_token');
+    const token = url.searchParams.get('hub.verify_token') || '';
     const challenge = url.searchParams.get('hub.challenge');
 
     const VERIFY_TOKEN = Deno.env.get('META_VERIFY_TOKEN');
-
-    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-      console.log('WEBHOOK_VERIFIED');
-      return new Response(challenge, { status: 200, headers: corsHeaders });
-    } else {
+    if (!VERIFY_TOKEN || VERIFY_TOKEN.trim() === '') {
       return new Response('Forbidden', { status: 403, headers: corsHeaders });
     }
+
+    if (mode === 'subscribe' && timingSafeEqualStr(token, VERIFY_TOKEN)) {
+      return new Response(challenge || '', { status: 200, headers: corsHeaders });
+    }
+    return new Response('Forbidden', { status: 403, headers: corsHeaders });
   }
 
-  // 2. Handle Incoming Messages (POST request)
+  // 2. Handle Incoming Messages (POST request) — strictly fail-closed HMAC verification
   if (req.method === 'POST') {
     try {
-      const body = await req.json();
-      console.log('Incoming Meta Webhook:', JSON.stringify(body));
+      const rawBody = await req.text();
+      const signature = req.headers.get('x-hub-signature-256');
+      const appSecret = Deno.env.get('WHATSAPP_APP_SECRET') || Deno.env.get('META_APP_SECRET');
 
-      // Extract message details (simplified for WhatsApp Cloud API)
+      if (!appSecret || appSecret.trim() === '' || !signature || !signature.startsWith('sha256=')) {
+        return new Response('Forbidden', { status: 403, headers: corsHeaders });
+      }
+
+      const sigHex = signature.slice(7).trim();
+      if (sigHex.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(sigHex)) {
+        return new Response('Forbidden', { status: 403, headers: corsHeaders });
+      }
+
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(appSecret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['verify']
+      );
+      const sigBytes = new Uint8Array(sigHex.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
+      const isValid = await crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(rawBody));
+      if (!isValid) {
+        return new Response('Forbidden', { status: 403, headers: corsHeaders });
+      }
+
+      const body = JSON.parse(rawBody);
+
       if (body.object === 'whatsapp_business_account') {
         const entry = body.entry?.[0];
         const changes = entry?.changes?.[0];
@@ -45,15 +80,13 @@ serve(async (req) => {
 
         if (message && message.type === 'text') {
           const phoneNumberId = value.metadata.phone_number_id;
-          const from = message.from; // Customer's phone number
-          const text = message.text.body; // The actual message
-          
-          // Connect to Supabase
+          const from = message.from;
+          const text = message.text.body;
+
           const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
           const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
           const supabase = createClient(supabaseUrl, supabaseKey);
 
-          // Find the user who owns this WhatsApp phone_number_id
           const { data: channelData, error: channelError } = await supabase
             .from('connected_channels')
             .select('user_id, credentials')
@@ -61,14 +94,12 @@ serve(async (req) => {
             .is('is_connected', true);
 
           if (channelError || !channelData) {
-            console.error('Error finding connected channel or no active channel found:', channelError);
-            return new Response('ok', { status: 200 }); // Always return 200 to Meta
+            return new Response('ok', { status: 200, headers: corsHeaders });
           }
 
-          // Search for the specific user matching the phone_number_id
           let targetUserId = null;
           let targetCredentials = null;
-          
+
           for (const row of channelData) {
             if (row.credentials && row.credentials.phone_number_id === phoneNumberId) {
               targetUserId = row.user_id;
@@ -78,32 +109,25 @@ serve(async (req) => {
           }
 
           if (!targetUserId) {
-            console.log(`No matching user found for phone_number_id: ${phoneNumberId}`);
-            return new Response('ok', { status: 200 });
+            return new Response('ok', { status: 200, headers: corsHeaders });
           }
 
-          // Log the incoming message in our database
           await supabase.from('execution_logs').insert({
             user_id: targetUserId,
             type: 'trigger',
             channel: 'WhatsApp',
-            message: `Customer (${from}): '${text}'`
+            message: `Customer (${from}): '${text}'`,
           });
 
-          // Forward to our AI Processor Edge Function
-          // Note: In production, you might want to call the AI function directly here 
-          // or push to a queue to prevent timeout since Edge functions have a 2-second limit on free tier occasionally.
-          // For this architecture, we will invoke the other function via Supabase Client.
-          
           supabase.functions.invoke('ai-processor', {
-            body: { 
-              userId: targetUserId, 
-              channel: 'WhatsApp', 
-              messageText: text, 
+            body: {
+              userId: targetUserId,
+              channel: 'WhatsApp',
+              messageText: text,
               customerPhone: from,
-              credentials: targetCredentials
-            }
-          }).catch(err => console.error("Error triggering AI processor:", err));
+              credentials: targetCredentials,
+            },
+          }).catch((err) => console.error('Error triggering AI processor:', err));
         }
       }
 

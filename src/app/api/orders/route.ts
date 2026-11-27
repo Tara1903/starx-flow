@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
           0
         );
 
+      let wasDeduplicated = false;
       const { data: order, error } = await supabaseAdmin
         .from('orders')
         .insert({
@@ -87,18 +88,36 @@ export async function POST(req: NextRequest) {
           currency: 'EUR',
           status: status || 'pending',
           payment_status: paymentStatus || 'unpaid',
+          idempotency_key: rawIdempotencyKey || null,
         })
         .select()
         .single();
+
+      if (error?.code === '23505' && rawIdempotencyKey) {
+        const { data: existingOrder, error: fetchErr } = await supabaseAdmin
+          .from('orders')
+          .select()
+          .eq('user_id', tenantId)
+          .eq('idempotency_key', rawIdempotencyKey)
+          .maybeSingle();
+
+        if (!fetchErr && existingOrder) {
+          wasDeduplicated = true;
+          return { order: existingOrder, dbDeduplicated: wasDeduplicated };
+        }
+      }
 
       if (error || !order) {
         throw new Error(sanitizeClientError(error, 'Database failed to persist order'));
       }
 
-      return order;
+      return { order, dbDeduplicated: wasDeduplicated };
     });
 
-    return NextResponse.json({ order: result, deduplicated });
+    return NextResponse.json({
+      order: result.order,
+      deduplicated: deduplicated || result.dbDeduplicated,
+    });
   } catch (err: unknown) {
     return NextResponse.json(
       { error: sanitizeClientError(err, 'Failed to create order. Please retry.') },

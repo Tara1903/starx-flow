@@ -1,63 +1,113 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
 import { CredentialEncryption } from '@/lib/security/encryption';
 import { isValidUuid, resolveValidOrganizationId } from '@/lib/crm/organizationHelper';
+import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
+import { OAuthStateManager } from '@/lib/security/oauthState';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
   const rawState = searchParams.get('state') || '';
 
-  const returnPath = rawState.startsWith('admin:')
-    ? '/admin'
-    : rawState.startsWith('setup:')
-      ? '/setup/instagram'
-      : '/dashboard';
-  const userId = rawState.replace(/^(admin|setup):/, '');
-
   const appUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
+  const redirectUri = `${appUrl}/api/meta/callback`;
+  const cookieName = rawState ? OAuthStateManager.getCookieName('meta', rawState) : '';
+
+  const clearCookieAndRedirect = (destUrl: string) => {
+    const res = NextResponse.redirect(destUrl);
+    if (cookieName) {
+      res.cookies.delete(cookieName);
+    }
+    return res;
+  };
 
   if (error) {
     console.error('Meta OAuth error:', searchParams.get('error_description'));
-    return NextResponse.redirect(`${appUrl}${returnPath}?error=meta_auth_failed`);
+    return clearCookieAndRedirect(`${appUrl}/dashboard?error=meta_auth_failed`);
   }
 
-  if (!code || !userId || userId === '<STATE>') {
-    return NextResponse.redirect(`${appUrl}${returnPath}?error=invalid_request`);
+  if (!code || !rawState) {
+    return clearCookieAndRedirect(`${appUrl}/dashboard?error=invalid_request`);
   }
 
+  // 1. Authenticate active staff session
+  const auth = await authenticateStaffRequest(request);
+  if (!auth.authenticated) {
+    return clearCookieAndRedirect(`${appUrl}/login?error=oauth_session_required`);
+  }
+
+  // 2. Cryptographically verify HMAC signature, session binding cookie, and single-use DB consumption
+  const sessionBindingSecret = cookieName ? request.cookies.get(cookieName)?.value : undefined;
+  let verifiedState;
+  try {
+    verifiedState = await OAuthStateManager.verifyAndConsumeState({
+      stateParam: rawState,
+      expectedProvider: 'meta',
+      sessionBindingSecret,
+      expectedRedirectUri: redirectUri,
+    });
+  } catch (stateErr: any) {
+    console.error('[Meta OAuth State Violation]:', stateErr?.message);
+    return clearCookieAndRedirect(`${appUrl}/dashboard?error=oauth_security_violation`);
+  }
+
+  const returnTo = verifiedState.metadata?.returnTo;
+  const returnPath =
+    returnTo === 'admin'
+      ? '/admin'
+      : returnTo === 'setup'
+        ? '/setup/instagram'
+        : '/dashboard';
+
+  // 3. Verify authenticated caller owns the state (or is platform admin for admin support flow)
+  const initiatedBy = verifiedState.metadata?.initiatedByUserId || verifiedState.userId;
+  if (returnTo === 'admin') {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', auth.session.user.id)
+      .maybeSingle();
+
+    if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+      return clearCookieAndRedirect(`${appUrl}/dashboard?error=forbidden`);
+    }
+  } else if (initiatedBy !== auth.session.user.id) {
+    return clearCookieAndRedirect(`${appUrl}/dashboard?error=oauth_user_mismatch`);
+  }
+
+  const userId = verifiedState.userId;
   const appId = process.env.META_APP_ID;
   const appSecret = process.env.META_APP_SECRET;
-  const redirectUri = `${appUrl}/api/meta/callback`;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!appId || !appSecret || !supabaseUrl || !supabaseServiceKey) {
-    console.error('Meta App or Supabase credentials not configured.');
-    return NextResponse.redirect(`${appUrl}/dashboard?error=config_missing`);
+  if (!appId || !appSecret) {
+    console.error('Meta App credentials not configured.');
+    return clearCookieAndRedirect(`${appUrl}${returnPath}?error=config_missing`);
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
   try {
-    // 1. Exchange code for short-lived access token
-    const tokenRes = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${appSecret}&code=${code}`);
+    // 4. Exchange code for short-lived access token
+    const tokenRes = await fetch(
+      `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${encodeURIComponent(appSecret)}&code=${encodeURIComponent(code)}`
+    );
     const tokenData = await tokenRes.json();
-    
+
     if (tokenData.error) {
       throw new Error(tokenData.error.message);
     }
-    
+
     const shortLivedToken = tokenData.access_token;
 
-    // 2. Exchange for long-lived access token
-    const longLivedRes = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${shortLivedToken}`);
+    // 5. Exchange for long-lived access token
+    const longLivedRes = await fetch(
+      `https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${encodeURIComponent(appId)}&client_secret=${encodeURIComponent(appSecret)}&fb_exchange_token=${encodeURIComponent(shortLivedToken)}`
+    );
     const longLivedData = await longLivedRes.json();
-    
+
     const accessToken = longLivedData.access_token || shortLivedToken;
 
-    // 3. Fetch user's pages and connected Instagram Business / WhatsApp accounts
+    // 6. Fetch user's pages and connected Instagram Business / WhatsApp accounts
     const pagesRes = await fetch(
       `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username}&access_token=${encodeURIComponent(accessToken)}`
     );
@@ -143,9 +193,9 @@ export async function GET(request: Request) {
       }
     }
 
-    // 5. Save to database (connected_channels + connected_accounts)
+    // 7. Save to database (connected_channels + connected_accounts) using verified tenant identity
     if (igAccountId) {
-      await supabase.from('connected_channels').upsert(
+      await supabaseAdmin.from('connected_channels').upsert(
         {
           user_id: userId,
           channel_key: 'Instagram',
@@ -162,14 +212,17 @@ export async function GET(request: Request) {
         { onConflict: 'user_id, channel_key' }
       );
 
-      const resolvedOrgId = isValidUuid(userId) ? (await resolveValidOrganizationId(userId)) || userId : userId;
+      const resolvedOrgId =
+        verifiedState.organizationId ||
+        (isValidUuid(userId) ? (await resolveValidOrganizationId(userId)) || userId : userId);
+
       try {
         const encrypted = CredentialEncryption.encrypt({
           pageAccessToken: igPageToken,
           pageId: igPageId,
           igAccountId,
         });
-        await supabase.from('connected_accounts').upsert(
+        await supabaseAdmin.from('connected_accounts').upsert(
           {
             organization_id: resolvedOrgId,
             user_id: userId,
@@ -193,7 +246,7 @@ export async function GET(request: Request) {
     }
 
     if (waPhoneNumberId) {
-      await supabase.from('connected_channels').upsert(
+      await supabaseAdmin.from('connected_channels').upsert(
         {
           user_id: userId,
           channel_key: 'WhatsApp',
@@ -205,11 +258,9 @@ export async function GET(request: Request) {
       );
     }
 
-    // 6. Redirect back to target console / setup
-    return NextResponse.redirect(`${appUrl}${returnPath}?connected=meta`);
-
+    return clearCookieAndRedirect(`${appUrl}${returnPath}?connected=meta`);
   } catch (err: any) {
     console.error('Meta callback error:', err);
-    return NextResponse.redirect(`${appUrl}${returnPath}?error=meta_callback_failed`);
+    return clearCookieAndRedirect(`${appUrl}${returnPath}?error=meta_callback_failed`);
   }
 }

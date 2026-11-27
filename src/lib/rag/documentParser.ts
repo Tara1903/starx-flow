@@ -4,6 +4,8 @@
  */
 
 import zlib from 'node:zlib';
+import dns from 'node:dns/promises';
+import net from 'node:net';
 
 export interface ParsedDocument {
   title: string;
@@ -70,19 +72,38 @@ export class DocumentParser {
       return true;
     }
 
-    // IPv6 checks
+    // Handle IPv4-mapped IPv6 addresses (e.g. ::ffff:127.0.0.1 or ::ffff:7f00:1)
+    let normalizedIpv4 = cleanHost;
+    if (cleanHost.startsWith('::ffff:')) {
+      const mapped = cleanHost.slice(7);
+      if (net.isIPv4(mapped)) {
+        normalizedIpv4 = mapped;
+      } else {
+        const hexParts = mapped.split(':');
+        if (hexParts.length === 2) {
+          const hi = parseInt(hexParts[0], 16);
+          const lo = parseInt(hexParts[1], 16);
+          if (!Number.isNaN(hi) && !Number.isNaN(lo)) {
+            normalizedIpv4 = `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
+          }
+        }
+      }
+    }
+
+    // IPv6 checks (loopback, unspecified, link-local fe80::/10, unique-local fc00::/7)
     if (
       cleanHost === '::1' ||
       cleanHost === '::' ||
-      cleanHost.startsWith('fe80:') ||
-      cleanHost.startsWith('fc00:') ||
-      cleanHost.startsWith('fd00:')
+      cleanHost === '0:0:0:0:0:0:0:1' ||
+      cleanHost === '0:0:0:0:0:0:0:0' ||
+      /^fe[89ab][0-9a-f]:/i.test(cleanHost) ||
+      /^f[cd][0-9a-f]{2}:/i.test(cleanHost)
     ) {
       return true;
     }
 
     // IPv4 checks
-    const ipv4Match = cleanHost.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    const ipv4Match = normalizedIpv4.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
     if (ipv4Match) {
       const octet1 = parseInt(ipv4Match[1], 10);
       const octet2 = parseInt(ipv4Match[2], 10);
@@ -107,33 +128,78 @@ export class DocumentParser {
   }
 
   /**
+   * Validates URL protocol, hostname, and DNS resolution against private/reserved IP ranges.
+   */
+  private static async assertSafePublicUrl(targetUrl: string): Promise<URL> {
+    const parsedUrl = new URL(targetUrl);
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      throw new Error('Invalid URL protocol. Only HTTP and HTTPS are supported.');
+    }
+
+    if (this.isPrivateOrReservedHost(parsedUrl.hostname)) {
+      throw new Error('SECURITY VIOLATION: URL points to a restricted internal or private network address (SSRF protection).');
+    }
+
+    const cleanHost = parsedUrl.hostname.replace(/^\[|\]$/g, '');
+    if (net.isIP(cleanHost) === 0) {
+      try {
+        const records = await dns.lookup(cleanHost, { all: true });
+        for (const rec of records) {
+          if (this.isPrivateOrReservedHost(rec.address)) {
+            throw new Error('SECURITY VIOLATION: URL resolves to a restricted internal or private network address (SSRF protection).');
+          }
+        }
+      } catch (dnsErr: any) {
+        if (dnsErr?.message?.includes('SSRF protection')) {
+          throw dnsErr;
+        }
+        // Fail closed if DNS lookup cannot resolve a public host
+        throw new Error('SECURITY VIOLATION: Unable to verify public destination host (SSRF protection).');
+      }
+    }
+
+    return parsedUrl;
+  }
+
+  /**
    * Extracts text from website URL by fetching HTML and stripping non-content tags.
    */
   static async parseUrl(url: string, customTitle?: string): Promise<ParsedDocument> {
     try {
-      const parsedUrl = new URL(url);
-      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-        throw new Error('Invalid URL protocol. Only HTTP and HTTPS are supported.');
-      }
-
-      if (this.isPrivateOrReservedHost(parsedUrl.hostname)) {
-        throw new Error('SECURITY VIOLATION: URL points to a restricted internal or private network address (SSRF protection).');
-      }
+      let currentUrl = url;
+      let parsedUrl = await this.assertSafePublicUrl(currentUrl);
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 8000);
 
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; StarXFlowBot/1.0; +https://starx-flow.runs-on.dev)',
-          Accept: 'text/html,application/xhtml+xml,text/plain',
-        },
-      });
+      let response: Response | null = null;
+      const maxRedirects = 3;
+      for (let hop = 0; hop <= maxRedirects; hop++) {
+        response = await fetch(currentUrl, {
+          signal: controller.signal,
+          redirect: 'manual',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; StarXFlowBot/1.0; +https://starx-flow.runs-on.dev)',
+            Accept: 'text/html,application/xhtml+xml,text/plain',
+          },
+        });
+
+        if (response.status >= 300 && response.status < 400) {
+          const location = response.headers.get('location');
+          if (!location || hop === maxRedirects) {
+            clearTimeout(timeout);
+            throw new Error('Too many or invalid redirects while fetching URL.');
+          }
+          currentUrl = new URL(location, currentUrl).toString();
+          parsedUrl = await this.assertSafePublicUrl(currentUrl);
+          continue;
+        }
+        break;
+      }
       clearTimeout(timeout);
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch URL: HTTP ${response.status} ${response.statusText}`);
+      if (!response || !response.ok) {
+        throw new Error(`Failed to fetch URL: HTTP ${response?.status || 0} ${response?.statusText || ''}`);
       }
 
       const contentType = response.headers.get('content-type') || '';

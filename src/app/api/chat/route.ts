@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { IngestionGateway } from '@/lib/ingestion';
 import { UsageService } from '@/lib/usage/usageService';
+import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,9 +19,14 @@ export async function OPTIONS() {
 // Sliding window in-memory rate limiter for abuse protection (Requirement 3.D)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const MAX_REQUESTS_PER_MINUTE = 30;
+const MAX_RATE_LIMIT_ENTRIES = 5000;
+const MAX_MESSAGE_LENGTH = 4000;
 
 function checkRateLimit(key: string): boolean {
   const now = Date.now();
+  if (rateLimitMap.size > MAX_RATE_LIMIT_ENTRIES) {
+    rateLimitMap.clear();
+  }
   const entry = rateLimitMap.get(key);
 
   if (!entry || entry.resetAt < now) {
@@ -38,7 +44,10 @@ function checkRateLimit(key: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'anonymous';
+    const clientIp =
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-real-ip') ||
+      'anonymous';
     const body = await request.json();
     const { message, sessionId, organizationId, businessId } = body;
     const targetOrg = organizationId || businessId || 'default-org';
@@ -55,6 +64,13 @@ export async function POST(request: Request) {
     if (!message || typeof message !== 'string' || !message.trim()) {
       return NextResponse.json(
         { error: 'Message text is required' },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return NextResponse.json(
+        { error: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters` },
         { status: 400, headers: corsHeaders }
       );
     }
@@ -111,10 +127,10 @@ export async function POST(request: Request) {
         headers: corsHeaders,
       }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[API /api/chat error]:', err);
     return NextResponse.json(
-      { error: err.message || 'Internal server error' },
+      { error: sanitizeClientError(err, 'Internal server error') },
       { status: 500, headers: corsHeaders }
     );
   }

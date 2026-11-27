@@ -40,7 +40,9 @@ export class FacebookMessengerAdapter implements ChannelAdapter {
 
   constructor() {
     this.appSecret = process.env.META_APP_SECRET || '';
-    this.verifyToken = process.env.META_VERIFY_TOKEN || 'starx_meta_verify_token_default';
+    this.verifyToken =
+      process.env.META_VERIFY_TOKEN ||
+      (process.env.NODE_ENV !== 'production' ? 'starx_meta_verify_token_default' : '');
     this.isLiveConfigured = Boolean(this.appSecret && !this.appSecret.includes('placeholder'));
   }
 
@@ -68,32 +70,48 @@ export class FacebookMessengerAdapter implements ChannelAdapter {
     challenge?: string | null;
   }): { isValid: boolean; challenge?: string } {
     const { mode, token, challenge } = params;
-    if (mode === 'subscribe' && token === this.verifyToken && challenge) {
+    if (!this.verifyToken || !token || !challenge || mode !== 'subscribe') {
+      return { isValid: false };
+    }
+    const providedBuf = Buffer.from(token, 'utf8');
+    const expectedBuf = Buffer.from(this.verifyToken, 'utf8');
+    if (providedBuf.length === expectedBuf.length && crypto.timingSafeEqual(providedBuf, expectedBuf)) {
       return { isValid: true, challenge };
     }
     return { isValid: false };
   }
 
   /**
-   * Validates Meta Webhook HMAC-SHA256 signature (x-hub-signature-256)
+   * Validates Meta Webhook HMAC-SHA256 signature (x-hub-signature-256).
+   * Strictly fails closed when appSecret or signature is missing/malformed.
    */
   async authenticate(request: Request, rawBody: string): Promise<{ authorized: boolean; reason?: string }> {
     const signature = request.headers.get('x-hub-signature-256');
-    if (!this.appSecret || !signature) {
-      return { authorized: true };
+    if (!this.appSecret || this.appSecret.trim() === '') {
+      return { authorized: false, reason: 'Webhook verification secret not configured (fail closed)' };
+    }
+
+    if (!signature || !signature.trim().startsWith('sha256=')) {
+      return { authorized: false, reason: 'Missing or malformed x-hub-signature-256 header' };
+    }
+
+    const cleanSignature = signature.trim().slice(7).trim();
+    if (cleanSignature.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(cleanSignature)) {
+      return { authorized: false, reason: 'Malformed signature header: invalid hex digest' };
     }
 
     try {
-      const cleanSignature = signature.replace(/^sha256=/, '');
       const expectedSignature = crypto
         .createHmac('sha256', this.appSecret)
         .update(rawBody, 'utf8')
         .digest('hex');
 
-      const isValid = crypto.timingSafeEqual(
-        Buffer.from(cleanSignature, 'hex'),
-        Buffer.from(expectedSignature, 'hex')
-      );
+      const providedBuffer = Buffer.from(cleanSignature.toLowerCase(), 'hex');
+      const expectedBuffer = Buffer.from(expectedSignature.toLowerCase(), 'hex');
+
+      const isValid =
+        providedBuffer.length === expectedBuffer.length &&
+        crypto.timingSafeEqual(providedBuffer, expectedBuffer);
       return { authorized: isValid, reason: isValid ? undefined : 'Invalid HMAC signature' };
     } catch (err: any) {
       return { authorized: false, reason: err.message };

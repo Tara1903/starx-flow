@@ -88,32 +88,37 @@ async function runMotionTestSuite() {
       const pricingLink = page.locator('a[href="/pricing"]').first();
       assert((await pricingLink.count()) > 0, 'Pricing route link present in top nav');
 
-      // Visit dashboard to verify expanding glass dock
+      // Visit dashboard to verify expanding glass dock (or authenticated redirect guard)
       await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(600);
+      await page.waitForTimeout(800);
 
       const sidebar = page.locator('aside[aria-label="Dashboard sidebar"]');
-      assert((await sidebar.count()) > 0, 'Dashboard sidebar dock renders');
+      if ((await sidebar.count()) > 0) {
+        assert(true, 'Dashboard sidebar dock renders');
 
-      const initialBox = await sidebar.boundingBox();
-      assert(Boolean(initialBox && initialBox.width > 60), `Dashboard sidebar width initialized (${initialBox?.width}px)`);
+        const initialBox = await sidebar.boundingBox();
+        assert(Boolean(initialBox && initialBox.width > 60), `Dashboard sidebar width initialized (${initialBox?.width}px)`);
 
-      // Test collapse / expand toggle
-      const collapseToggle = page.locator('button[aria-label="Collapse sidebar"], button[aria-label="Expand sidebar"]').first();
-      if ((await collapseToggle.count()) > 0) {
-        const expandedInitial = await collapseToggle.getAttribute('aria-expanded');
-        await collapseToggle.click();
-        await page.waitForTimeout(450); // Spring animation duration
+        // Test collapse / expand toggle
+        const collapseToggle = page.locator('button[aria-label="Collapse sidebar"], button[aria-label="Expand sidebar"]').first();
+        if ((await collapseToggle.count()) > 0) {
+          const expandedInitial = await collapseToggle.getAttribute('aria-expanded');
+          await collapseToggle.click();
+          await page.waitForTimeout(450); // Spring animation duration
 
-        const nextBox = await sidebar.boundingBox();
-        const expandedNext = await collapseToggle.getAttribute('aria-expanded');
+          const nextBox = await sidebar.boundingBox();
+          const expandedNext = await collapseToggle.getAttribute('aria-expanded');
 
-        assert(expandedInitial !== expandedNext, 'Sidebar aria-expanded toggles correctly');
-        assert(Boolean(nextBox && initialBox && Math.abs(nextBox.width - initialBox.width) > 50), 'Sidebar spring animates width 72px <-> 260px smoothly');
+          assert(expandedInitial !== expandedNext, 'Sidebar aria-expanded toggles correctly');
+          assert(Boolean(nextBox && initialBox && Math.abs(nextBox.width - initialBox.width) > 50), 'Sidebar spring animates width 72px <-> 260px smoothly');
 
-        // Toggle back
-        await collapseToggle.click();
-        await page.waitForTimeout(400);
+          // Toggle back
+          await collapseToggle.click();
+          await page.waitForTimeout(400);
+        }
+      } else {
+        const redirectedToLogin = page.url().includes('/login') || (await page.locator('input[type="password"]').count()) > 0;
+        assert(redirectedToLogin, 'Unauthenticated /dashboard enforces auth redirect to /login');
       }
 
       await page.screenshot({ path: path.join(REPORT_SCREENSHOT_DIR, '01-dashboard-sidebar.png') });
@@ -131,7 +136,7 @@ async function runMotionTestSuite() {
       await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(400);
 
-      const mobileNav = page.locator('nav[aria-label="Mobile quick navigation"]');
+      const mobileNav = page.locator('nav[aria-label="Mobile ultimate navigation"], nav[data-mobile-nav="bottom"]').first();
       assert((await mobileNav.count()) > 0, `Mobile floating capsule renders at viewport ${w}px`);
 
       const box = await mobileNav.boundingBox();
@@ -141,41 +146,37 @@ async function runMotionTestSuite() {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // SUITE 3: Hero Choreography & Interactive Tab Switcher
+    // SUITE 3: Hero Choreography & Interactive Workflow Tab Switcher
     // ─────────────────────────────────────────────────────────────
-    console.log(`\n--- SUITE 3: Hero Choreography & Preview Mode Switcher ---`);
+    console.log(`\n--- SUITE 3: Hero Choreography & Interactive Workflow Switcher ---`);
     {
       const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
       const page: Page = await context.newPage();
       await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(500);
 
-      // Verify hero badge and headline
+      // Verify hero headline
       const heroHeadline = page.locator('h1').first();
       assert((await heroHeadline.count()) > 0, 'Hero headline rendered');
 
-      // Verify preview mode switcher AnimatedTabs
-      const stageTabs = page.locator('[role="tablist"][aria-label="Hero preview mode"]');
-      assert((await stageTabs.count()) > 0, 'Hero AnimatedTabs preview mode switcher rendered');
+      // Verify workflow pill switcher tabs (#tab-btn-whatsapp / #tab-btn-ai)
+      const whatsappTab = page.locator('#tab-btn-whatsapp');
+      const aiTab = page.locator('#tab-btn-ai');
 
-      const whatsappTab = stageTabs.locator('button', { hasText: 'WhatsApp Thread' });
-      const liveOsTab = stageTabs.locator('button', { hasText: 'Live OS View' });
+      assert((await whatsappTab.count()) > 0 && (await aiTab.count()) > 0, 'Both workflow tabs (WhatsApp Bookings, AI Communication) available');
 
-      assert((await whatsappTab.count()) > 0 && (await liveOsTab.count()) > 0, 'Both preview tabs (Live OS View, WhatsApp Thread) available');
+      // Click AI Communication tab to trigger workflow tab switch
+      await aiTab.click();
+      await page.waitForTimeout(350);
 
-      // Click WhatsApp Thread tab to trigger AnimatePresence crossfade
+      const isAiActive = await aiTab.evaluate((el) => el.classList.contains('active'));
+      assert(isAiActive, 'AI Communication tab selected and highlighted');
+
+      // Click back to WhatsApp Bookings
       await whatsappTab.click();
       await page.waitForTimeout(350);
-
-      // Verify active tab pill moved
-      const isWhatsappSelected = await whatsappTab.getAttribute('aria-selected');
-      assert(isWhatsappSelected === 'true', 'WhatsApp Thread tab selected and highlighted');
-
-      // Click back to Live OS View
-      await liveOsTab.click();
-      await page.waitForTimeout(350);
-      const isOsSelected = await liveOsTab.getAttribute('aria-selected');
-      assert(isOsSelected === 'true', 'Live OS View tab selected and restored');
+      const isWhatsappActive = await whatsappTab.evaluate((el) => el.classList.contains('active'));
+      assert(isWhatsappActive, 'WhatsApp Bookings tab selected and restored');
 
       await page.screenshot({ path: path.join(REPORT_SCREENSHOT_DIR, '02-hero-preview-tabs.png') });
       await context.close();
@@ -235,7 +236,7 @@ async function runMotionTestSuite() {
       }
 
       // Test Competitor comparison page CTA
-      await page.goto(`${BASE_URL}/compare/mindbody`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${BASE_URL}/compare/starx-flow-vs-mindbody`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(400);
 
       const compCta = page.locator('button[data-cursor-spotlight="button"], button:has-text("Start 14-Day Free Trial")').first();
@@ -258,62 +259,73 @@ async function runMotionTestSuite() {
     {
       const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
       const page: Page = await context.newPage();
+      await page.route('**/api/auth/otp/send', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, expiresAt: new Date(Date.now() + 600000).toISOString() }),
+        });
+      });
+      await page.route('**/api/auth/otp/verify', async (route) => {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: false, error: 'QA test boundary' }),
+        });
+      });
       await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(400);
 
-      // Open SignupModal
-      const openSignupBtn = page.locator('button:has-text("Start Free Trial"), button:has-text("Start 14-Day Free Trial")').first();
-      if ((await openSignupBtn.count()) > 0) {
-        await openSignupBtn.click();
-        await page.waitForTimeout(400);
+      // Open SignupModal directly in login mode via visible desktop Navbar "Log in" button
+      const openLoginBtn = page.locator('header button:has-text("Log in")').first();
+      await openLoginBtn.waitFor({ state: 'visible', timeout: 8000 });
+      await openLoginBtn.click();
+      await page.waitForTimeout(400);
 
-        const modal = page.locator('[role="dialog"]');
-        assert((await modal.count()) > 0, 'SignupModal opens with spring backdrop');
+      const modal = page.locator('[role="dialog"][aria-labelledby="auth-modal-title"]');
+      await modal.waitFor({ state: 'visible', timeout: 8000 });
+      assert(await modal.isVisible(), 'SignupModal opens with spring backdrop');
 
-        // Switch to sign in tab
-        const signInToggle = page.locator('button:has-text("Sign In")').first();
-        if ((await signInToggle.count()) > 0) {
-          await signInToggle.click();
-          await page.waitForTimeout(300);
+      const emailCodeTab = modal.locator('button:has-text("Email Code")').first();
+      await emailCodeTab.waitFor({ state: 'visible', timeout: 5000 });
+      await emailCodeTab.click();
+      await page.waitForTimeout(250);
 
-          const emailInput = page.locator('input[type="email"]');
-          await emailInput.fill('qa-motion@starxflow.com');
+      const emailInput = modal.locator('input[placeholder="Email or Username"]').first();
+      await emailInput.fill('qa-motion@starxflow.com');
 
-          const submitBtn = page.locator('button[type="submit"]:has-text("Send 8-Character Code")');
-          if ((await submitBtn.count()) > 0) {
-            await submitBtn.click();
-            await page.waitForSelector('input[aria-label*="Verification code character"]', { timeout: 8000 }).catch(() => null);
+      const submitBtn = modal.locator('[data-testid="login-submit-btn"]');
+      await submitBtn.click();
+      const otpSelector = 'input[aria-label^="Character "][aria-label$=" of 8"]';
+      await page.waitForSelector(otpSelector, { timeout: 8000 }).catch(() => null);
 
-            // Verify 8-slot OTP input rendered
-            const otpInputs = page.locator('input[aria-label*="Verification code character"]');
-            const count = await otpInputs.count();
-            assert(count === 8, `Exactly 8 separate OTP input cells render (found: ${count})`);
+      // Verify 8-slot OTP input rendered
+      const otpInputs = page.locator(otpSelector);
+      const count = await otpInputs.count();
+      assert(count === 8, `Exactly 8 separate OTP input cells render (found: ${count})`);
 
-            // Test typing in first cell moves focus to second cell
-            await otpInputs.first().fill('A');
-            await page.waitForTimeout(100);
+      if (count === 8) {
+        // Test typing in first cell moves focus to second cell
+        await otpInputs.first().fill('A');
+        await page.waitForTimeout(100);
 
-            // Verify paste handling
-            await otpInputs.first().evaluate((el: HTMLInputElement) => {
-              const pasteEvent = new ClipboardEvent('paste', {
-                clipboardData: new DataTransfer(),
-                bubbles: true,
-                cancelable: true,
-              });
-              pasteEvent.clipboardData?.setData('text/plain', '23456789');
-              el.dispatchEvent(pasteEvent);
-            });
-            await page.waitForTimeout(200);
+        // Verify multi-character paste / autofill distribution across slots 1..7
+        await otpInputs.first().fill('2345678');
+        await page.waitForTimeout(150);
 
-            const lastVal = await otpInputs.nth(7).inputValue();
-            assert(lastVal.length > 0, '8-character multi-slot paste auto-populates cells');
-          }
-        }
+        const seventhVal = await otpInputs.nth(6).inputValue();
+        assert(seventhVal === '8', `Multi-slot paste auto-populates OTP cells (slot 7="${seventhVal}")`);
 
-        // Close modal via ESC
-        await page.keyboard.press('Escape');
-        await page.waitForTimeout(300);
+        // Entering 8th character triggers orbital verification animation ("Verifying your code")
+        await otpInputs.nth(7).fill('9');
+        const verifyingHeading = page.locator('h3:has-text("Verifying your code")');
+        await verifyingHeading.waitFor({ state: 'visible', timeout: 3000 });
+        assert(await verifyingHeading.isVisible(), '8th OTP character triggers flagship orbital verification animation');
       }
+
+      // Close modal via ESC
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
 
       await context.close();
     }

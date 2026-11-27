@@ -35,6 +35,8 @@ export function SignupModal({
 }: SignupModalProps) {
   const router = useRouter();
   const prefersReduced = useReducedMotion();
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
 
   // Global UI Store
   const authMode = useUIStore((state) => state.authMode);
@@ -394,7 +396,7 @@ export function SignupModal({
               <button
                 type="button"
                 onClick={dismissGuest}
-                disabled={isSubmitting}
+                disabled={!ready || isSubmitting}
                 aria-label="Close modal"
                 className="w-7 h-7 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
               >
@@ -512,7 +514,7 @@ export function SignupModal({
                     setIsSubmitting(false);
                     if (error) setSubmitError(error);
                   }}
-                  disabled={isSubmitting}
+                  disabled={!ready || isSubmitting}
                   className="w-full py-2 px-3 rounded-2xl text-xs font-medium text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mb-2.5"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
@@ -561,7 +563,7 @@ export function SignupModal({
                   </button>
                 </div>
 
-                <form onSubmit={handleLoginSubmit} className="space-y-3">
+                <form method="post" onSubmit={handleLoginSubmit} className="space-y-3">
                   {/* Glass Box Input 1: Username / Email matching Video */}
                   <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                     <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
@@ -610,7 +612,7 @@ export function SignupModal({
                       transition={{ type: "spring", stiffness: 400, damping: 25 }}
                       type="submit"
                       data-testid="login-submit-btn"
-                      disabled={isSubmitting}
+                      disabled={!ready || isSubmitting}
                       className="w-full py-2.5 px-6 rounded-full text-xs sm:text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/20 hover:border-emerald-400 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.4)] disabled:opacity-50"
                     >
                       <span>{loginMethod === "otp" ? "Send Verification Code" : "Login"}</span>
@@ -688,7 +690,7 @@ export function SignupModal({
                     setIsSubmitting(false);
                     if (error) setSubmitError(error);
                   }}
-                  disabled={isSubmitting}
+                  disabled={!ready || isSubmitting}
                   className="w-full py-2 px-3 rounded-2xl text-xs font-medium text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mb-3"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
@@ -700,7 +702,7 @@ export function SignupModal({
                   <span>Continue with Google</span>
                 </button>
 
-                <form onSubmit={handleSignupSubmit} className="space-y-3">
+                <form method="post" onSubmit={handleSignupSubmit} className="space-y-3">
                   {/* Glass Box Input 1: Full Name matching Video */}
                   <div className="relative flex items-center bg-white/[0.04] border border-white/10 focus-within:border-emerald-400/60 focus-within:bg-white/[0.06] rounded-2xl px-3.5 py-2.5 transition-all duration-300 ease-out group">
                     <User size={16} className="text-zinc-400 group-focus-within:text-emerald-400 transition-colors mr-2.5 shrink-0" />
@@ -778,7 +780,7 @@ export function SignupModal({
                       transition={{ type: "spring", stiffness: 400, damping: 25 }}
                       type="submit"
                       data-testid="signup-submit-btn"
-                      disabled={isSubmitting}
+                      disabled={!ready || isSubmitting}
                       className="w-full py-2.5 px-6 rounded-full text-xs sm:text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/20 hover:border-emerald-400 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.4)] disabled:opacity-50"
                     >
                       <span>{signupMethod === "otp" ? "Send Verification Code" : "Sign Up"}</span>
@@ -965,7 +967,7 @@ export function SignupModal({
                     </p>
                   </div>
 
-                  <form onSubmit={handleSignupSubmit} className="space-y-3">
+                  <form method="post" onSubmit={handleSignupSubmit} className="space-y-3">
                     <div className="sr-only">
                       <button type="button" onClick={() => signInWithGoogle()}>Continue with Google</button>
                     </div>
@@ -1030,7 +1032,7 @@ export function SignupModal({
                         whileHover={{ scale: 1.02, y: -1 }}
                         whileTap={{ scale: 0.98 }}
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={!ready || isSubmitting}
                         className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/20 hover:border-emerald-400 transition-all cursor-pointer shadow-md disabled:opacity-50"
                       >
                         <span>{signupMethod === "otp" ? "Send Verification Code" : "Sign Up"}</span>
@@ -1067,7 +1069,7 @@ export function SignupModal({
                     </p>
                   </div>
 
-                  <form onSubmit={handleLoginSubmit} className="space-y-3">
+                  <form method="post" onSubmit={handleLoginSubmit} className="space-y-3">
                     <div className="sr-only">
                       <button type="button" onClick={() => setLoginMethod("password")}>Password</button>
                       <button type="button" onClick={() => setLoginMethod("otp")}>Verification Code</button>
@@ -1119,7 +1121,7 @@ export function SignupModal({
                         whileHover={{ scale: 1.02, y: -1 }}
                         whileTap={{ scale: 0.98 }}
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={!ready || isSubmitting}
                         className="w-full py-2.5 px-6 rounded-full text-sm font-semibold text-white bg-white/10 hover:bg-emerald-500 hover:text-black border border-white/20 hover:border-emerald-400 transition-all cursor-pointer shadow-md disabled:opacity-50"
                       >
                         <span>{loginMethod === "otp" ? "Send Verification Code" : "Login"}</span>

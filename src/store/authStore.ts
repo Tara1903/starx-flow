@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { syncAccessTokenCookie, clearAccessTokenCookie } from '../lib/auth/clientCookie';
 import { useAgentStore } from './agentStore';
 import { useVoiceStore } from './voiceStore';
 import { useBusinessStore } from './businessStore';
@@ -9,6 +10,7 @@ import { useBusinessStore } from './businessStore';
    ────────────────────────────────────────────── */
 
 export interface Workflow {
+  editVersion?: number;
   id: string;
   name: string;
   description: string;
@@ -156,7 +158,7 @@ interface AuthState {
   toggleWorkflow: (id: string) => Promise<void>;
   updateWorkflowPrompt: (id: string, prompt: string, tone: Workflow['aiTone']) => Promise<void>;
   addWorkflow: (workflow: Omit<Workflow, 'id' | 'executionsCount' | 'successRate' | 'savedHours'>) => Promise<void>;
-  updateWorkflow: (id: string, updates: Partial<Workflow>) => Promise<void>;
+  updateWorkflow: (id: string, updates: Partial<Workflow>, expectedVersion?: number) => Promise<void>;
 
   // Channels
   fetchChannels: () => Promise<void>;
@@ -191,6 +193,7 @@ function dbRowToWorkflow(row: Record<string, unknown>): Workflow {
     successRate: Number(row.success_rate) || 100,
     savedHours: Number(row.saved_hours) || 0,
     config: row.config || {},
+    editVersion: Number(row.edit_version ?? 0),
   };
 }
 
@@ -340,6 +343,39 @@ const DEFAULT_WORKFLOWS: Workflow[] = [
 ];
 
 let isInitSessionRunning = false;
+let sessionGeneration = 0;
+function clearSignedOutSession() {
+  sessionGeneration++;
+  // Clear potentially cached onboarding state to avoid cross-account contamination
+  try {
+    clearAccessTokenCookie();
+    localStorage.removeItem('starx_onboarding_state');
+    localStorage.removeItem('starx_auth_user_v1');
+    localStorage.removeItem('starx_admin_auth_v1');
+  } catch (e) {
+    // ignore
+  }
+  // Clear modular store states
+  useAgentStore.getState().resetAgentStore();
+  useVoiceStore.getState().resetVoiceStore();
+  useBusinessStore.getState().resetBusinessStore();
+  import('./onboardingStore').then(({ useOnboardingStore }) => {
+    useOnboardingStore.getState().reset();
+  }).catch(() => {});
+
+  useAuthStore.setState({
+    isLoading: false,
+    isLoggedIn: false,
+    user: null,
+    workflows: [],
+    connectedChannels: [],
+    logs: [],
+    selectedWorkflowId: null,
+  });
+  import('./adminStore').then(({ useAdminStore }) => useAdminStore.getState().logoutAdmin());
+  import('./dashboardStore').then(({ useDashboardStore }) => useDashboardStore.getState().resetDashboardStore());
+}
+
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   isLoggedIn: false,
@@ -385,6 +421,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     if (isInitSessionRunning) return;
     isInitSessionRunning = true;
+    const generation = sessionGeneration;
 
     try {
       // Add a 15 second timeout to getSession to prevent deadlocks
@@ -395,6 +432,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const session = result?.data?.session;
 
       if (session?.user) {
+        syncAccessTokenCookie().catch(() => {});
         // Fetch profile with a short retry mechanism to handle race condition with DB trigger
         let profile: any = null;
         for (let i = 0; i < 3; i++) {
@@ -412,6 +450,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           await new Promise(resolve => setTimeout(resolve, 500));
         }
 
+        if (generation !== sessionGeneration) return;
         if (profile) {
           const onboardingComplete = !!profile.onboarding_complete;
 
@@ -462,6 +501,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (e) {
       console.error('[StarX Auth] Session init error:', e);
+    } finally {
+      isInitSessionRunning = false;
     }
 
     // Only set logged out if we don't already have a session active
@@ -471,7 +512,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: false });
     }
 
-    isInitSessionRunning = false;
   },
 
   /* ─── 8-CHARACTER OTP AUTHENTICATION ─── */
@@ -511,6 +551,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             token_hash: data.tokenHash,
             type: 'email',
           });
+          await syncAccessTokenCookie();
         } catch (syncErr) {
           console.warn('[StarX Auth] Supabase client session sync notice:', syncErr);
         }
@@ -586,6 +627,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       if (data?.user) {
+        syncAccessTokenCookie().catch(() => {});
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -612,12 +654,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isLoggedIn: true,
             user: {
               id: data.user.id,
-              name: 'Admin',
+              name: 'User',
               email: data.user.email || '',
-              businessName: 'StarX Flow',
-              businessType: 'Agency',
-              role: 'admin',
-              onboardingComplete: true,
+              businessName: 'My Business',
+              businessType: 'Other',
+              role: 'user',
+              onboardingComplete: false,
             },
           });
         }
@@ -694,29 +736,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
-    // Clear potentially cached onboarding state to avoid cross-account contamination
-    try {
-      localStorage.removeItem('starx_onboarding_state');
-      localStorage.removeItem('starx_auth_user_v1');
-    } catch (e) {
-      // ignore
-    }
-    // Clear modular store states
-    useAgentStore.getState().resetAgentStore();
-    useVoiceStore.getState().resetVoiceStore();
-    useBusinessStore.getState().resetBusinessStore();
-    import('./onboardingStore').then(({ useOnboardingStore }) => {
-      useOnboardingStore.setState({ isComplete: false, isFetching: false, currentStep: 'account' });
-    }).catch(() => {});
-
-    set({
-      isLoggedIn: false,
-      user: null,
-      workflows: [],
-      connectedChannels: [],
-      logs: [],
-      selectedWorkflowId: null,
-    });
+    if (get().isLoggedIn || get().user) clearSignedOutSession();
   },
 
   /* ─── FETCH WORKFLOWS ─── */
@@ -738,9 +758,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (data) {
         const workflows = data.map(dbRowToWorkflow);
+        const currentSelectedId = get().selectedWorkflowId;
+        const preservedSelectedId =
+          currentSelectedId && workflows.some((w) => w.id === currentSelectedId)
+            ? currentSelectedId
+            : workflows.length > 0
+              ? workflows[0].id
+              : null;
         set({
           workflows,
-          selectedWorkflowId: workflows.length > 0 ? workflows[0].id : null,
+          selectedWorkflowId: preservedSelectedId,
           logs: [
             {
               id: `log-loaded-${Date.now()}`,
@@ -901,60 +928,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   /* ─── ADD WORKFLOW ─── */
   addWorkflow: async (newWf) => {
     const user = get().user;
-    const tempId = `wf-${Date.now()}`;
-
-    const fresh: Workflow = {
-      ...newWf,
-      id: tempId,
-      executionsCount: 0,
-      successRate: 100,
-      savedHours: 0,
-    };
-
-    // Optimistic add
-    set((state) => ({
-      workflows: [...state.workflows, fresh],
-    }));
-
-    get().addLog('system', fresh.channel,
-      `Deployed new workflow: "${fresh.name}"`
-    );
-
-    // Persist
-    if (isSupabaseConfigured && user) {
-      const { data, error } = await supabase
-        .from('workflows')
-        .insert({
-          user_id: user.id,
-          name: fresh.name,
-          description: fresh.description,
-          trigger: fresh.trigger,
-          action: fresh.action,
-          is_active: fresh.isActive,
-          channel: fresh.channel,
-          ai_tone: fresh.aiTone,
-          custom_prompt: fresh.customPrompt,
-          config: fresh.config || {},
-        })
-        .select()
-        .single();
-
-      if (data) {
-        // Replace temp id with real DB id
-        set((state) => ({
-          workflows: state.workflows.map((w) =>
-            w.id === tempId ? dbRowToWorkflow(data) : w
-          ),
-        }));
-      }
-      if (error) console.error('[StarX] Add workflow error:', error);
-    }
+    if (!user) throw new Error('Sign in to save a workflow.');
+    const { data, error } = await supabase.from('workflows').insert({
+      user_id: user.id,
+      name: newWf.name.trim(),
+      description: newWf.description,
+      trigger: newWf.trigger,
+      action: newWf.action,
+      is_active: newWf.isActive,
+      channel: newWf.channel,
+      ai_tone: newWf.aiTone,
+      custom_prompt: newWf.customPrompt,
+      config: newWf.config || {},
+    }).select().single();
+    if (error || !data) throw new Error('Could not save this workflow. Please try again.');
+    if (get().user?.id !== user.id) return;
+    const saved = dbRowToWorkflow(data);
+    set((state) => ({ workflows: [...state.workflows.filter(w => w.id !== saved.id), saved] }));
+    get().addLog('system', saved.channel, `Deployed new workflow: "${saved.name}"`);
   },
 
   /* ─── UPDATE WORKFLOW ─── */
-  updateWorkflow: async (id, updates) => {
+  updateWorkflow: async (id, updates, expectedVersion) => {
     const workflow = get().workflows.find((w) => w.id === id);
-    if (!workflow) return;
+    const user = get().user;
+    if (!user || !workflow) throw new Error('This workflow is unavailable. Reopen the workflow list.');
 
     // Map TS camelCase properties to DB snake_case columns
     const dbUpdates: Record<string, any> = {};
@@ -968,26 +966,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (updates.customPrompt !== undefined) dbUpdates.custom_prompt = updates.customPrompt;
     if (updates.config !== undefined) dbUpdates.config = updates.config;
 
-    // Optimistic update
-    set((state) => ({
-      workflows: state.workflows.map((w) =>
-        w.id === id ? { ...w, ...updates } : w
-      ),
-    }));
-
-    get().addLog('system', updates.channel || workflow.channel,
-      `Updated workflow configuration: "${updates.name || workflow.name}"`
-    );
-
-    // Persist
-    if (isSupabaseConfigured) {
-      const { error } = await supabase
-        .from('workflows')
-        .update(dbUpdates)
-        .eq('id', id);
-
-      if (error) console.error('[StarX] Update workflow error:', error);
-    }
+    const { data, error } = await supabase.from('workflows')
+      .update(dbUpdates).eq('id', id).eq('user_id', user.id)
+      .eq('edit_version', expectedVersion ?? workflow.editVersion ?? 0).select().maybeSingle();
+    if (!error && !data) throw new Error('This workflow changed in another tab or was removed. Copy your edits, then reload to review the latest version.');
+    if (error || !data) throw new Error('Could not save this workflow. Please try again.');
+    if (get().user?.id !== user.id) return;
+    const saved = dbRowToWorkflow(data);
+    set((state) => ({ workflows: state.workflows.map(w => w.id === id ? saved : w) }));
+    get().addLog('system', saved.channel, `Updated workflow configuration: "${saved.name}"`);
   },
 
   /* ─── FETCH & SUBSCRIBE TO LOGS ─── */
@@ -1133,15 +1120,15 @@ export function setupAuthListener() {
   if (!isSupabaseConfigured) return () => {};
 
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Small delay to let DB trigger finish creating profile
-        await new Promise((r) => setTimeout(r, 500));
-        await useAuthStore.getState().initSession();
+    (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user && useAuthStore.getState().user?.id !== session.user.id) {
+        // Let Supabase release its auth lock before reading the new session.
+        const generation = sessionGeneration;
+        setTimeout(() => {
+          if (generation === sessionGeneration) void useAuthStore.getState().initSession();
+        }, 0);
       } else if (event === 'SIGNED_OUT') {
-        // Ignore automatic SIGNED_OUT events to prevent unexpected session drops.
-        // Explicit logouts are handled by the logout() function clearing the state.
-        console.warn('[StarX Auth] Received SIGNED_OUT event from Supabase. Ignoring to prevent automatic logout.');
+        clearSignedOutSession();
       }
     }
   );

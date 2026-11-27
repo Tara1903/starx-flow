@@ -30,63 +30,74 @@ export async function POST(req: NextRequest) {
 
   const resolvedName = pageName || (username ? `@${String(username).replace(/^@/, '')}` : `Instagram @${primaryAccountId}`);
 
-  // Register in-memory for immediate sandbox & runtime execution
+  // Persist to connected_accounts (AES-256 encrypted) and connected_channels BEFORE activating in-memory
+  if (isSupabaseAdminConfigured) {
+    const encrypted = CredentialEncryption.encrypt({
+      pageAccessToken,
+      pageId: pageId || null,
+      igAccountId: igAccountId || null,
+    });
+    const { error: accountErr } = await supabaseAdmin.from('connected_accounts').upsert(
+      {
+        organization_id: organizationId,
+        user_id: isValidUuid(userId) ? userId : organizationId,
+        provider: 'instagram',
+        status: 'connected',
+        account_identifier: primaryAccountId,
+        account_name: resolvedName,
+        encrypted_credentials: encrypted,
+        metadata: {
+          pageId: pageId || null,
+          igAccountId: igAccountId || primaryAccountId,
+          username: username || null,
+          connectedAt: new Date().toISOString(),
+        },
+      },
+      { onConflict: 'organization_id,provider' }
+    );
+
+    if (accountErr) {
+      if (accountErr.code === '23505') {
+        return NextResponse.json(
+          { error: 'This Instagram account is already connected to another organization' },
+          { status: 409 }
+        );
+      }
+      console.error('[InstagramConnect] connected_accounts persist failed:', accountErr);
+      return NextResponse.json({ error: 'Failed to persist Instagram account connection' }, { status: 500 });
+    }
+
+    if (isValidUuid(userId)) {
+      const { error: channelErr } = await supabaseAdmin.from('connected_channels').upsert(
+        {
+          user_id: userId,
+          channel_key: 'Instagram',
+          is_connected: true,
+          credentials: {
+            access_token: pageAccessToken,
+            ig_account_id: igAccountId || primaryAccountId,
+            page_id: pageId || null,
+            username: username || null,
+            updated_at: new Date().toISOString(),
+          },
+          last_synced: new Date().toISOString(),
+        },
+        { onConflict: 'user_id, channel_key' }
+      );
+      if (channelErr) {
+        console.error('[InstagramConnect] connected_channels persist failed:', channelErr);
+        return NextResponse.json({ error: 'Failed to persist Instagram channel state' }, { status: 500 });
+      }
+    }
+  }
+
+  // Register in-memory for immediate sandbox & runtime execution after DB commit succeeds
   InstagramAdapter.registerConnectedAccount({
     organizationId,
     accountIdentifier: primaryAccountId,
     accountName: resolvedName,
     pageAccessToken,
   });
-
-  // Persist to connected_accounts (AES-256 encrypted) and connected_channels
-  if (isSupabaseAdminConfigured) {
-    try {
-      const encrypted = CredentialEncryption.encrypt({
-        pageAccessToken,
-        pageId: pageId || null,
-        igAccountId: igAccountId || null,
-      });
-      await supabaseAdmin.from('connected_accounts').upsert(
-        {
-          organization_id: organizationId,
-          user_id: isValidUuid(userId) ? userId : organizationId,
-          provider: 'instagram',
-          status: 'connected',
-          account_identifier: primaryAccountId,
-          account_name: resolvedName,
-          encrypted_credentials: encrypted,
-          metadata: {
-            pageId: pageId || null,
-            igAccountId: igAccountId || primaryAccountId,
-            username: username || null,
-            connectedAt: new Date().toISOString(),
-          },
-        },
-        { onConflict: 'organization_id,provider' }
-      );
-
-      if (isValidUuid(userId)) {
-        await supabaseAdmin.from('connected_channels').upsert(
-          {
-            user_id: userId,
-            channel_key: 'Instagram',
-            is_connected: true,
-            credentials: {
-              access_token: pageAccessToken,
-              ig_account_id: igAccountId || primaryAccountId,
-              page_id: pageId || null,
-              username: username || null,
-              updated_at: new Date().toISOString(),
-            },
-            last_synced: new Date().toISOString(),
-          },
-          { onConflict: 'user_id, channel_key' }
-        );
-      }
-    } catch (err: any) {
-      console.warn('[InstagramConnect] DB persist failed:', err);
-    }
-  }
 
   return NextResponse.json({
     success: true,

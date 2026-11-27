@@ -10,6 +10,7 @@
     "lint": "tsc --noEmit && tsx scripts/audit-design-consistency.ts",
     "typecheck": "tsc --noEmit",
     "scan:secrets": "node scripts/scan-secrets.cjs",
+    "test:user-behavior": "node tests/user-behavior/run.mjs",
     "test:seo": "tsx tests/test-seo-governance.ts",
     "audit:design": "tsx scripts/audit-design-consistency.ts",
     "test:security": "tsx tests/test-rbac-and-ui-security.ts",

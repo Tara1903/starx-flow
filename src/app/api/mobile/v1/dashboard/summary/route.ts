@@ -13,30 +13,7 @@ export async function GET(req: NextRequest) {
     const tenantId = auth.session.organizationId || auth.session.user.id;
 
     if (!isSupabaseAdminConfigured) {
-      return NextResponse.json({
-        success: true,
-        summary: {
-          totalRevenue: 2450.0,
-          activeLeadsCount: 18,
-          upcomingBookingsCount: 6,
-          activeAgentsCount: 4,
-          revenueTrend: [
-            { label: 'Mon', value: 320.0 },
-            { label: 'Tue', value: 450.0 },
-            { label: 'Wed', value: 580.0 },
-            { label: 'Thu', value: 310.0 },
-            { label: 'Fri', value: 790.0 }
-          ],
-          leadTrend: [
-            { label: 'Mon', value: 3.0 },
-            { label: 'Tue', value: 5.0 },
-            { label: 'Wed', value: 4.0 },
-            { label: 'Thu', value: 2.0 },
-            { label: 'Fri', value: 4.0 }
-          ],
-          recentConversations: []
-        }
-      });
+      return NextResponse.json({ error: 'Dashboard data is unavailable.' }, { status: 503 });
     }
 
     // Parallel fetch for optimal mobile latency
@@ -65,6 +42,10 @@ export async function GET(req: NextRequest) {
         .order('last_message_at', { ascending: false })
         .limit(20)
     ]);
+
+    if ([ordersRes, leadsRes, apptsRes, agentsRes, convosRes].some(result => result.error)) {
+      return NextResponse.json({ error: 'Could not load dashboard data. Please try again.' }, { status: 503 });
+    }
 
     const paidOrders = (ordersRes.data || []).filter((o: any) => o.payment_status === 'paid');
     const totalRevenue = paidOrders.reduce((acc: number, curr: any) => acc + (Number(curr.total_amount) || 0), 0);

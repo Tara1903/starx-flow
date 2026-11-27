@@ -115,7 +115,6 @@ enum class NavigationTab(val label: String, val icon: ImageVector) {
 fun App() {
     StarXTheme {
         // Resolve Repositories and Services from Koin
-        val apiClient: com.starxflow.shared.data.network.StarXApiClient = koinInject()
         val authRepo: AuthRepository = koinInject()
         val dashboardRepo: DashboardRepository = koinInject()
         val inboxRepo: InboxRepository = koinInject()
@@ -125,7 +124,7 @@ fun App() {
         val workflowRepo: WorkflowRepository = koinInject()
 
         // Remember ViewModels with repository bindings
-        val authViewModel = remember { AuthViewModel(authRepo, apiClient) }
+        val authViewModel = remember { AuthViewModel(authRepo) }
         val dashboardViewModel = remember { DashboardViewModel(dashboardRepo) }
         val inboxViewModel = remember { InboxViewModel(inboxRepo) }
         val crmViewModel = remember { CrmViewModel(crmRepo) }

@@ -117,16 +117,10 @@ export async function authenticateStaffRequest(
     }
 
     // 3. Resolve Organization Membership from Database
-    const { data: memberships, error: memberErr } = await supabaseAdmin
+    const { data: memberships } = await supabaseAdmin
       .from('organization_members')
       .select('organization_id, role')
       .eq('user_id', user.id);
-
-    // Also check if user is direct creator/owner of any organizations
-    const { data: ownedOrgs } = await supabaseAdmin
-      .from('organizations')
-      .select('id')
-      .eq('created_by', user.id);
 
     const validOrgIds = new Set<string>();
     let resolvedRole: 'owner' | 'admin' | 'agent' = 'agent';
@@ -136,13 +130,6 @@ export async function authenticateStaffRequest(
         validOrgIds.add(m.organization_id);
         if (m.role === 'owner') resolvedRole = 'owner';
         else if (m.role === 'admin' && resolvedRole !== 'owner') resolvedRole = 'admin';
-      }
-    }
-
-    if (ownedOrgs && ownedOrgs.length > 0) {
-      for (const o of ownedOrgs) {
-        validOrgIds.add(o.id);
-        resolvedRole = 'owner';
       }
     }
 

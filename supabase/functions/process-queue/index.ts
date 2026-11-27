@@ -6,10 +6,38 @@ const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const ab = enc.encode(a);
+  const bb = enc.encode(b);
+  if (ab.length !== bb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < ab.length; i++) {
+    diff |= ab[i] ^ bb[i];
+  }
+  return diff === 0;
+}
+
 serve(async (req) => {
   // Only process POST requests
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
+  }
+
+  // Verify Bearer secret (fail closed if unconfigured)
+  const expectedSecret = Deno.env.get('CRON_SECRET') || supabaseKey;
+  if (!expectedSecret) {
+    return new Response('Server misconfiguration', { status: 500 });
+  }
+  const authHeader = req.headers.get('authorization') || '';
+  const providedToken = authHeader.replace(/^Bearer\s+/i, '').trim();
+  const isAuthorized = Boolean(
+    providedToken &&
+      ((Deno.env.get('CRON_SECRET') && timingSafeEqualStr(providedToken, Deno.env.get('CRON_SECRET')!)) ||
+        (supabaseKey && timingSafeEqualStr(providedToken, supabaseKey)))
+  );
+  if (!isAuthorized) {
+    return new Response('Unauthorized', { status: 401 });
   }
 
   // Poll for 1 pending job
@@ -27,14 +55,16 @@ serve(async (req) => {
 
   const job = jobs[0];
 
-  // Claim job (Optimistic locking conceptually, or simple state transition)
-  const { error: claimError } = await supabase
+  // Atomic optimistic claim: require returned row to verify 1 row transitioned
+  const { data: claimedJob, error: claimError } = await supabase
     .from('job_queue')
     .update({ status: 'processing', started_at: new Date().toISOString() })
     .eq('id', job.id)
-    .eq('status', 'pending');
+    .eq('status', 'pending')
+    .select('id')
+    .maybeSingle();
 
-  if (claimError) {
+  if (claimError || !claimedJob) {
     // Another worker grabbed it
     return new Response(JSON.stringify({ message: 'Job already claimed' }), { status: 200 });
   }

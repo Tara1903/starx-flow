@@ -227,7 +227,7 @@ async function runDomainBTests() {
   }
 
   // -------------------------------------------------------------
-  // Test 7: Orders Isolation - Cross-tenant patch attempt
+  // Test 7: Orders Isolation - Cross-tenant & invalid-ID patch attempt
   // -------------------------------------------------------------
   {
     setTestStaffSession({
@@ -236,21 +236,46 @@ async function runDomainBTests() {
       role: 'admin',
     });
 
+    // 7a. Synthetic non-UUID ID must fail closed (404/403)
+    const nonUuidReq = new NextRequest('http://localhost:3000/api/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId: 'ord-101',
+        paymentStatus: 'paid',
+      }),
+    });
+    const nonUuidRes = await updateOrder(nonUuidReq);
+    check(
+      'Non-UUID order patch fails closed (404/403)',
+      nonUuidRes.status === 404 || nonUuidRes.status === 403,
+      `Got status ${nonUuidRes.status}`
+    );
+
+    // 7b. Cross-tenant UUID order patch attempt must be rejected (403 if exists in another tenant, 404 if absent)
+    const { supabaseAdmin } = await import('../src/lib/supabaseAdmin');
+    const { data: existingOtherOrder } = await supabaseAdmin
+      .from('orders')
+      .select('id')
+      .neq('user_id', tenantBetaOrg)
+      .limit(1)
+      .maybeSingle();
+
+    const targetOrderId = existingOtherOrder?.id || '00000000-0000-4000-8000-000000000101';
     const req = new NextRequest('http://localhost:3000/api/orders', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        orderId: 'ord-101', // Pre-existing order in memory or DB
+        orderId: targetOrderId,
         paymentStatus: 'paid',
       }),
     });
     const res = await updateOrder(req);
-    // Even if in-memory order exists, tenantBetaOrg !== order's tenant
-    const data = await res.json();
+    const expectedStatus = existingOtherOrder ? 403 : 404;
     check(
       'Cross-tenant order patch rejected or properly scoped',
-      res.status === 403 || (data.order && data.order.user_id === tenantBetaOrg),
-      `Got status ${res.status}`
+      res.status === expectedStatus || res.status === 403,
+      `Expected ${expectedStatus}, got status ${res.status}`
     );
   }
 

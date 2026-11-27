@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyEightCharOtp } from '@/lib/auth/otpService';
+import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,10 +40,10 @@ export async function POST(req: NextRequest) {
       emailOtp: result.emailOtp,
       isNewUser: result.isNewUser,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[StarX API /api/auth/otp/verify error]:', err);
     return NextResponse.json(
-      { success: false, error: err.message || 'An unexpected error occurred.' },
+      { success: false, error: sanitizeClientError(err, 'An unexpected error occurred.') },
       { status: 500 }
     );
   }

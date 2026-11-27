@@ -14,7 +14,7 @@ import { Footer } from './Footer';
 import { AmbientEnvironment } from './AmbientEnvironment';
 import { PageTransition } from './ui/PageTransition';
 import { ToastViewport } from './ui/ToastViewport';
-import { CustomCursor } from './CustomCursor';
+import { CursorProvider } from '../cursor';
 import { OpticalGlassFilter } from './spatial/OpticalGlassFilter';
 
 const CommandCenter = dynamic(
@@ -79,7 +79,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
   return (
     <MotionConfig reducedMotion="user">
       <MotionProvider>
-        <CustomCursor />
+        <CursorProvider>
         <OpticalGlassFilter />
         <a
           href="#main-content"
@@ -116,6 +116,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
             {!isHomePage && <ConsentBanner />}
           </>
         )}
+        </CursorProvider>
       </MotionProvider>
     </MotionConfig>
   );

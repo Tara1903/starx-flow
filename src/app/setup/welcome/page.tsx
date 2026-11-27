@@ -9,6 +9,8 @@ import { Sparkles, MessageSquare, ArrowRight, Bot, Shield, Zap } from 'lucide-re
 
 export default function WelcomeStep() {
   const router = useRouter();
+  const [error, setError] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
   const { skipOnboarding, setCurrentStep } = useOnboardingStore();
 
   const handleStart = async () => {
@@ -19,8 +21,17 @@ export default function WelcomeStep() {
 
   const handleSkip = async () => {
     if (confirm('Are you sure you want to skip the guided setup? You can always complete your connection tasks later from the dashboard.')) {
-      await skipOnboarding();
-      router.push('/dashboard');
+      if (saving) return;
+      setSaving(true);
+      setError("");
+      try {
+        await skipOnboarding();
+        router.replace('/dashboard');
+      } catch {
+        setError('Could not save setup. Please try again.');
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -44,6 +55,7 @@ export default function WelcomeStep() {
 
   return (
     <StepCard>
+      {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
       <div className="flex flex-col items-center text-center max-w-2xl mx-auto py-4 md:py-8">
         
         {/* Glow behind icon */}
@@ -91,7 +103,7 @@ export default function WelcomeStep() {
           </button>
           
           <button
-            onClick={handleSkip}
+            disabled={saving} onClick={handleSkip}
             className="spatial-btn-secondary w-full sm:w-auto cursor-pointer"
           >
             Skip to Dashboard

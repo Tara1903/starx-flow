@@ -18,7 +18,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const { searchParams } = new URL(req.url);
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const parsedLimit = parseInt(searchParams.get('limit') || '50', 10);
+    const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 200) : 50;
 
     const messages = await InboxService.fetchMessages(id, limit, true);
     return NextResponse.json({ messages });

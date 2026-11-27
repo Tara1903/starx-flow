@@ -20,6 +20,7 @@ import {
   Link2,
 } from "lucide-react";
 import type { SupportData, SupportConversation } from "../../store/adminStore";
+import { syncAccessTokenCookie } from "../../lib/auth/clientCookie";
 import { cn } from "../../lib/utils";
 
 interface AdminSupportViewProps {
@@ -352,7 +353,12 @@ export function AdminSupportView({
 
           <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <a
-              href="/api/meta/auth?channel=instagram&returnTo=admin&userId=230a2984-8c0b-489f-abda-b31fbcddf742"
+              href="/api/meta/auth?channel=instagram&returnTo=admin"
+              onClick={async (e) => {
+                e.preventDefault();
+                await syncAccessTokenCookie();
+                window.location.href = "/api/meta/auth?channel=instagram&returnTo=admin";
+              }}
               className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.06] hover:bg-white/[0.1] border border-white/15 text-fuchsia-200 inline-flex items-center gap-1.5"
             >
               <ExternalLink size={12} />

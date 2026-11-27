@@ -15,6 +15,7 @@ export default function SetupLayout({ children }: { children: React.ReactNode })
   const { isLoggedIn, isLoading: authLoading, user } = useAuthStore();
   const { isComplete, isFetching, fetchOnboarding, currentStep, steps } = useOnboardingStore();
 
+  const [loadedUser, setLoadedUser] = React.useState<string | null>(null);
   useEffect(() => {
     // 1. If auth is loading, wait
     if (authLoading) return;
@@ -26,12 +27,21 @@ export default function SetupLayout({ children }: { children: React.ReactNode })
     }
 
     // 3. Sync onboarding progress from DB if logged in
-    fetchOnboarding();
-  }, [isLoggedIn, authLoading, location, router, fetchOnboarding]);
+    let active = true;
+    const id = user?.id;
+    if (id) void fetchOnboarding().then(() => { if (active) setLoadedUser(id); });
+    return () => { active = false; };
+  }, [isLoggedIn, authLoading, user?.id, router, fetchOnboarding, location]);
 
   useEffect(() => {
     // 4. Once onboarding data is loaded
-    if (isFetching || authLoading) return;
+    if (!user || loadedUser !== user.id || isFetching || authLoading) return;
+    const requested = steps.find(step => step.route === location);
+    const missing = requested?.dependencies.find(id => !steps.some(s => s.id === id && (s.state === 'complete' || s.state === 'skipped')));
+    if (!isComplete && !user.onboardingComplete && missing) {
+      router.replace(steps.find(s => s.id === missing)?.route || '/setup/account');
+      return;
+    }
 
     // 5. If onboarding is complete, they shouldn't be here (unless they are reviewing, but let's redirect them to dashboard)
     if (isComplete || (user && user.onboardingComplete)) {
@@ -48,10 +58,10 @@ export default function SetupLayout({ children }: { children: React.ReactNode })
         router.push('/setup/account');
       }
     }
-  }, [isComplete, isFetching, currentStep, location, authLoading, router]);
+  }, [isComplete, isFetching, currentStep, location, authLoading, router, loadedUser, user, steps]);
 
   // Loading state
-  if (authLoading || isFetching) {
+  if (authLoading || isFetching || !user || loadedUser !== user.id || isComplete || user.onboardingComplete) {
     return (
       <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#020a07] text-[#f0f5ef]">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />

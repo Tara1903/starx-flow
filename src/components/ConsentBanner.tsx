@@ -76,10 +76,10 @@ export function ConsentBanner() {
                 <p className="mt-0.5 text-[11px] sm:text-xs text-zinc-400">
                   Optional analytics help improve StarX OS.{" "}
                   <a
-                    href="/cookies"
+                    href="/privacy"
                     className="text-emerald-400 underline underline-offset-2 hover:text-emerald-300 transition-colors"
                   >
-                    Cookie Policy
+                    Privacy Policy
                   </a>
                 </p>
               </div>

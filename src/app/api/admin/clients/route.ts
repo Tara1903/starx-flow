@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
+
+const ALLOWED_PLANS = new Set(['free', 'starter', 'growth', 'pro', 'enterprise']);
+const ALLOWED_STATUSES = new Set(['active', 'trial', 'trialing', 'inactive', 'paused', 'canceled', 'cancelled', 'churned']);
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Helper to authenticate caller and verify 'admin' or 'super_admin' role.
@@ -151,9 +156,9 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json({ clients }, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Admin Clients API] Exception:', err);
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: sanitizeClientError(err, 'Internal server error') }, { status: 500 });
   }
 }
 
@@ -171,24 +176,22 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const { id, plan, status } = body;
 
-    if (!id || typeof id !== 'string') {
-      return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
+    if (!id || typeof id !== 'string' || !UUID_RE.test(id)) {
+      return NextResponse.json({ error: 'Valid client ID is required' }, { status: 400 });
     }
 
     if (plan) {
-      let normalizedPlan = plan.toLowerCase().trim();
+      let normalizedPlan = String(plan).toLowerCase().trim();
       let subStatus = 'active';
       if (normalizedPlan.includes('trial') || normalizedPlan.includes('free')) {
         normalizedPlan = 'free';
         subStatus = 'trial';
-      } else if (normalizedPlan === 'starter') {
-        normalizedPlan = 'starter';
-      } else if (normalizedPlan === 'growth') {
-        normalizedPlan = 'growth';
-      } else if (normalizedPlan === 'pro' || normalizedPlan === 'professional') {
+      } else if (normalizedPlan === 'professional') {
         normalizedPlan = 'pro';
-      } else if (normalizedPlan === 'enterprise') {
-        normalizedPlan = 'enterprise';
+      }
+
+      if (!ALLOWED_PLANS.has(normalizedPlan)) {
+        return NextResponse.json({ error: 'Invalid subscription plan' }, { status: 400 });
       }
 
       await supabaseAdmin
@@ -205,7 +208,10 @@ export async function PATCH(request: Request) {
     }
 
     if (status) {
-      const normalizedStatus = status.toLowerCase();
+      const normalizedStatus = String(status).toLowerCase().trim();
+      if (!ALLOWED_STATUSES.has(normalizedStatus)) {
+        return NextResponse.json({ error: 'Invalid subscription status' }, { status: 400 });
+      }
       await supabaseAdmin
         .from('subscriptions')
         .update({ status: normalizedStatus })
@@ -213,9 +219,9 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Admin Clients API Update Exception]:', err);
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: sanitizeClientError(err, 'Internal server error') }, { status: 500 });
   }
 }
 
@@ -233,8 +239,12 @@ export async function DELETE(request: Request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    if (!id) {
-      return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
+    if (!id || !UUID_RE.test(id)) {
+      return NextResponse.json({ error: 'Valid client ID is required' }, { status: 400 });
+    }
+
+    if (auth.user && id === auth.user.id) {
+      return NextResponse.json({ error: 'Cannot delete currently authenticated admin account' }, { status: 400 });
     }
 
     // Cascade delete profile and subscriptions
@@ -242,8 +252,8 @@ export async function DELETE(request: Request) {
     await supabaseAdmin.from('profiles').delete().eq('id', id);
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Admin Clients API Delete Exception]:', err);
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: sanitizeClientError(err, 'Internal server error') }, { status: 500 });
   }
 }

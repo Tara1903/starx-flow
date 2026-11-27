@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MultiTenantRAG } from '@/lib/rag/multiTenantRAG';
 import { DocumentParser } from '@/lib/rag/documentParser';
 import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
+import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
 
 export async function POST(req: NextRequest) {
   try {
@@ -89,8 +90,11 @@ export async function POST(req: NextRequest) {
       chunkCount,
       message: `Document "${title}" successfully ingested and indexed into ${chunkCount} chunks.`,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[API /api/knowledge/ingest error]:', err);
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: sanitizeClientError(err, 'Failed to ingest knowledge document') },
+      { status: 500 }
+    );
   }
 }

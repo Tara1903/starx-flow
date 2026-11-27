@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
+import { demoRequestSchema } from '@/lib/demoRequest';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 // Sliding-window in-memory rate limiter for lead protection (max 5 submissions per 10 minutes per IP)
@@ -23,23 +23,6 @@ function checkRateLimit(ip: string): boolean {
   entry.count += 1;
   return true;
 }
-
-const demoRequestSchema = z.object({
-  fullName: z.string().trim().min(2, 'Name must be at least 2 characters').max(100),
-  workEmail: z.string().trim().email('Please enter a valid work email').max(120),
-  phone: z.string().trim().max(30).optional().or(z.literal('')),
-  businessName: z.string().trim().min(2, 'Business name must be at least 2 characters').max(100),
-  businessType: z.string().trim().min(2).max(50),
-  businessSize: z.string().trim().min(1).max(50),
-  primaryNeed: z.string().trim().min(2).max(100),
-  preferredContact: z.enum(['email', 'whatsapp', 'phone']).default('email'),
-  website: z.string().trim().max(150).optional().or(z.literal('')),
-  notes: z.string().trim().max(500).optional().or(z.literal('')),
-  honeypot: z.string().max(100).optional().or(z.literal('')),
-  consent: z.boolean().refine((val) => val === true, {
-    message: 'You must agree to be contacted regarding your demo request.',
-  }),
-});
 
 export async function POST(request: Request) {
   try {
@@ -110,7 +93,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Zod Server-side Validation
-    const parsed = demoRequestSchema.safeParse(body);
+    const parsed = demoRequestSchema.safeParse({ ...body, preferredContact: body.preferredContact ?? 'email' });
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message || 'Invalid form data';
       return NextResponse.json({ error: firstError }, { status: 400 });
@@ -139,15 +122,12 @@ export async function POST(request: Request) {
         updated_at: new Date().toISOString(),
       });
 
-      if (dbError) {
-        // Table might not be migrated yet in developer environments — log securely and proceed
-        console.warn(
-          `[StarX Demo Capture] DB notice: ${dbError.message} (Stored as reference ${referenceId})`
-        );
-      }
-    } catch (dbErr: any) {
-      console.warn(
-        `[StarX Demo Capture] DB exception: ${dbErr?.message} (Stored as reference ${referenceId})`
+      if (dbError) throw dbError;
+    } catch (error) {
+      console.error('[StarX Demo Capture] Insert failed', error);
+      return NextResponse.json(
+        { error: 'We could not save your demo request. Please try again.' },
+        { status: 503 }
       );
     }
 

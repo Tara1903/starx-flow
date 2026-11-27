@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { IngestionGateway } from '@/lib/ingestion';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
@@ -20,9 +21,17 @@ export async function GET(request: Request) {
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  const VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || 'starx-secure-webhook-token-2026';
+  const VERIFY_TOKEN = process.env.META_VERIFY_TOKEN;
+  if (!VERIFY_TOKEN || !token) {
+    return new NextResponse('Forbidden', { status: 403 });
+  }
 
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+  const expectedBuf = Buffer.from(VERIFY_TOKEN, 'utf8');
+  const providedBuf = Buffer.from(token, 'utf8');
+  const tokensMatch =
+    expectedBuf.length === providedBuf.length && crypto.timingSafeEqual(expectedBuf, providedBuf);
+
+  if (mode === 'subscribe' && tokensMatch) {
     console.log('[WhatsApp Webhook] Verification successful');
     return new NextResponse(challenge || '', { status: 200 });
   }
@@ -85,19 +94,16 @@ export async function POST(request: Request) {
         .from('connected_channels')
         .select('user_id, credentials')
         .eq('channel_key', 'WhatsApp')
-        .eq('is_connected', true);
+        .eq('is_connected', true)
+        .eq('credentials->>phone_number_id', phoneNumberId)
+        .limit(1);
 
       let matchedChannelToken: string | undefined;
       let matchedUserId: string | undefined;
-      if (channelData) {
-        for (const row of channelData) {
-          if (row.credentials?.phone_number_id === phoneNumberId) {
-            matchedUserId = row.user_id;
-            if (row.credentials.access_token) {
-              matchedChannelToken = row.credentials.access_token;
-            }
-            break;
-          }
+      if (channelData && channelData.length > 0) {
+        matchedUserId = channelData[0].user_id;
+        if (channelData[0].credentials?.access_token) {
+          matchedChannelToken = channelData[0].credentials.access_token;
         }
       }
 

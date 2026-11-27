@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Key, Save, Loader2, CheckCircle2, ShieldCheck, Shield, Copy } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
+import { syncAccessTokenCookie } from '../lib/auth/clientCookie';
 import { cn } from '../lib/utils';
 
 import { Facebook } from 'lucide-react';
@@ -157,7 +158,12 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
             </div>
             
             <a 
-              href={`/api/meta/auth?userId=${user?.id}`}
+              href="/api/meta/auth"
+              onClick={async (e) => {
+                e.preventDefault();
+                await syncAccessTokenCookie();
+                window.location.href = '/api/meta/auth';
+              }}
               className="w-full bg-[#1877F2] hover:bg-[#1864D9] text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
             >
               <Facebook className="w-5 h-5 fill-current" />
@@ -205,7 +211,12 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
             </div>
             
             <a 
-              href={`/api/meta/auth?userId=${user?.id}`}
+              href="/api/meta/auth"
+              onClick={async (e) => {
+                e.preventDefault();
+                await syncAccessTokenCookie();
+                window.location.href = '/api/meta/auth';
+              }}
               className="w-full bg-[#1877F2] hover:bg-[#1864D9] text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
             >
               <Facebook className="w-5 h-5 fill-current" />

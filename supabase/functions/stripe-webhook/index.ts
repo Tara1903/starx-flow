@@ -11,6 +11,19 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 
+/** Constant-time string comparison for HMAC hex digests. */
+function timingSafeEqualHex(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const ab = enc.encode(a.toLowerCase());
+  const bb = enc.encode(b.toLowerCase());
+  if (ab.length !== bb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < ab.length; i++) {
+    diff |= ab[i] ^ bb[i];
+  }
+  return diff === 0;
+}
+
 /** Verify Stripe webhook signature using Web Crypto API (Deno-compatible). */
 async function verifyStripeSignature(
   payload: string,
@@ -32,6 +45,7 @@ async function verifyStripeSignature(
 
   // Check timestamp tolerance
   const ts = parseInt(parts.timestamp, 10);
+  if (!Number.isFinite(ts)) return false;
   const now = Math.floor(Date.now() / 1000);
   if (Math.abs(now - ts) > toleranceSec) return false;
 
@@ -50,7 +64,7 @@ async function verifyStripeSignature(
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  return parts.signatures.some((s) => s === expectedHex);
+  return parts.signatures.some((s) => timingSafeEqualHex(s, expectedHex));
 }
 
 /** Map Stripe subscription status → our DB status. */
@@ -107,7 +121,7 @@ serve(async (req) => {
   }
 
   // Parse the event
-  let event: { type: string; data: { object: Record<string, any> } };
+  let event: { id?: string; type: string; data: { object: Record<string, any> } };
   try {
     event = JSON.parse(rawBody);
   } catch {
@@ -118,6 +132,53 @@ serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // Atomic idempotency claim before applying billing state mutations
+  const eventId = typeof event.id === "string" && event.id.trim() ? event.id.trim() : null;
+  const workerId = `stripe_${crypto.randomUUID()}`;
+  let claimedViaRpc = false;
+
+  if (eventId) {
+    const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(rawBody));
+    const payloadHash = Array.from(new Uint8Array(hashBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const { data: claimRows, error: claimErr } = await supabase.rpc("claim_provider_webhook_event", {
+      p_provider: "stripe",
+      p_event_id: eventId,
+      p_payload_hash: payloadHash,
+      p_org_id: null,
+      p_event_type: event.type,
+      p_lease_seconds: 120,
+      p_worker_id: workerId,
+    });
+
+    if (!claimErr && Array.isArray(claimRows) && claimRows.length > 0) {
+      claimedViaRpc = true;
+      if (!claimRows[0].claimed) {
+        return new Response(JSON.stringify({ received: true, deduplicated: true }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else if (claimErr) {
+      const { error: insertErr } = await supabase.from("provider_webhook_events").insert({
+        provider: "stripe",
+        event_id: eventId,
+        event_type: event.type,
+        payload_hash: payloadHash,
+        status: "processed",
+        raw_payload: event,
+      });
+      if (insertErr?.code === "23505") {
+        return new Response(JSON.stringify({ received: true, deduplicated: true }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+  }
 
   const obj = event.data.object;
 
@@ -289,8 +350,26 @@ serve(async (req) => {
       default:
         console.log(`[stripe-webhook] Unhandled event type: ${event.type}`);
     }
-  } catch (e) {
+
+    if (claimedViaRpc && eventId) {
+      await supabase.rpc("complete_provider_webhook_event", {
+        p_provider: "stripe",
+        p_event_id: eventId,
+        p_worker_id: workerId,
+        p_org_id: null,
+        p_metadata: { eventType: event.type },
+      });
+    }
+  } catch (e: any) {
     console.error(`[stripe-webhook] Error processing ${event.type}:`, e);
+    if (claimedViaRpc && eventId) {
+      await supabase.rpc("fail_provider_webhook_event", {
+        p_provider: "stripe",
+        p_event_id: eventId,
+        p_worker_id: workerId,
+        p_error_message: String(e?.message || "Stripe webhook processing failed").slice(0, 500),
+      });
+    }
     // Still return 200 to prevent Stripe retries on processing errors
   }
 

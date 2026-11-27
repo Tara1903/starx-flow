@@ -22,8 +22,10 @@ interface StoredOtp {
 
 const memoryOtpStore = new Map<string, StoredOtp>();
 
-// Rate limit tracker (max 3 requests per 5 minutes per email)
+// Rate limit trackers (max 3 requests per 5 minutes per email, max 15 per 5 minutes per IP)
 const sendRateLimits = new Map<string, { count: number; resetAt: number }>();
+const ipRateLimits = new Map<string, { count: number; resetAt: number }>();
+const MAX_TRACKED_ENTRIES = 2000;
 
 /**
  * Generates a cryptographically secure 8-digit numeric OTP.
@@ -49,10 +51,28 @@ export function _getMemoryOtpForTesting(email: string): string | undefined {
  * Computes a secure HMAC-SHA256 hash of the normalized 8-character OTP and email.
  */
 function hashOtp(code: string, email: string): string {
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.RESEND_API_KEY || 'starx-otp-salt-key';
+  const secret =
+    process.env.ENCRYPTION_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.RESEND_API_KEY ||
+    (process.env.NODE_ENV !== 'production' ? 'starx-otp-dev-salt-key' : '');
+
+  if (!secret) {
+    throw new Error('CRITICAL SECURITY CONFIGURATION ERROR: OTP HMAC secret is not configured in production.');
+  }
+
   const normalized = code.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
   const normalizedEmail = email.trim().toLowerCase();
   return crypto.createHmac('sha256', secret).update(`${normalized}:${normalizedEmail}`).digest('hex');
+}
+
+function timingSafeHexEqual(a: string, b: string): boolean {
+  if (!a || !b || a.length !== b.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(a, 'hex'), Buffer.from(b, 'hex'));
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -76,8 +96,27 @@ export async function sendEightCharOtp(params: {
     return { success: false, error: 'Please enter a valid email address.' };
   }
 
-  // Rate Limiting: Max 3 OTP requests per 5 minutes per email
+  // Rate Limiting: Max 3 OTP requests per 5 minutes per email, max 15 per 5 minutes per IP
   const now = Date.now();
+  if (sendRateLimits.size > MAX_TRACKED_ENTRIES) sendRateLimits.clear();
+  if (ipRateLimits.size > MAX_TRACKED_ENTRIES) ipRateLimits.clear();
+  if (memoryOtpStore.size > MAX_TRACKED_ENTRIES) memoryOtpStore.clear();
+
+  if (params.ipAddress) {
+    const ipLimit = ipRateLimits.get(params.ipAddress);
+    if (ipLimit && ipLimit.resetAt > now) {
+      if (ipLimit.count >= 15) {
+        return {
+          success: false,
+          error: 'Too many verification requests from this network. Please wait a few minutes.',
+        };
+      }
+      ipLimit.count += 1;
+    } else {
+      ipRateLimits.set(params.ipAddress, { count: 1, resetAt: now + 5 * 60 * 1000 });
+    }
+  }
+
   const rateLimit = sendRateLimits.get(email);
   if (rateLimit && rateLimit.resetAt > now) {
     if (rateLimit.count >= 3) {
@@ -216,6 +255,7 @@ export async function verifyEightCharOtp(params: {
   }
 
   // Check Database first if configured
+  let dbCheckedSuccessfully = false;
   if (isSupabaseAdminConfigured) {
     try {
       const { data: records, error: fetchErr } = await supabaseAdmin
@@ -227,6 +267,10 @@ export async function verifyEightCharOtp(params: {
         .order('created_at', { ascending: false })
         .limit(1);
 
+      if (!fetchErr) {
+        dbCheckedSuccessfully = true;
+      }
+
       if (!fetchErr && records && records.length > 0) {
         const record = records[0];
 
@@ -237,21 +281,38 @@ export async function verifyEightCharOtp(params: {
           };
         }
 
-        if (record.otp_hash === codeHash) {
-          matched = true;
-          storedMetadata = record.metadata || {};
-
-          // Mark as consumed
-          await supabaseAdmin
+        if (timingSafeHexEqual(record.otp_hash, codeHash)) {
+          // Atomic single-use consumption to prevent concurrent replay (TOCTOU)
+          const { data: consumedRow } = await supabaseAdmin
             .from('auth_otps')
             .update({ consumed_at: new Date().toISOString() })
-            .eq('id', record.id);
+            .eq('id', record.id)
+            .is('consumed_at', null)
+            .select('id')
+            .maybeSingle();
+
+          if (!consumedRow) {
+            return {
+              success: false,
+              error: 'This verification code has already been used. Please request a new code.',
+            };
+          }
+
+          matched = true;
+          storedMetadata = record.metadata || {};
+          memoryOtpStore.delete(email);
         } else {
           // Increment attempt count
+          const nextAttempts = record.attempts + 1;
           await supabaseAdmin
             .from('auth_otps')
-            .update({ attempts: record.attempts + 1 })
+            .update({ attempts: nextAttempts })
             .eq('id', record.id);
+
+          return {
+            success: false,
+            error: `Incorrect verification code. ${Math.max(0, record.max_attempts - nextAttempts)} attempt(s) remaining.`,
+          };
         }
       }
     } catch (dbErr: any) {
@@ -259,44 +320,46 @@ export async function verifyEightCharOtp(params: {
     }
   }
 
-  // Check memory store if not matched via DB
-  if (!matched) {
-    const memoryRecord = memoryOtpStore.get(email);
-    if (!memoryRecord || memoryRecord.consumed) {
-      return {
-        success: false,
-        error: 'No active verification code found for this email. Please request a new code.',
-      };
-    }
+  // Check memory store only if DB wasn't authoritative for this check
+  if (!matched && (!dbCheckedSuccessfully || isDevTestValid)) {
+    if (!matched) {
+      const memoryRecord = memoryOtpStore.get(email);
+      if (!memoryRecord || memoryRecord.consumed) {
+        return {
+          success: false,
+          error: 'No active verification code found for this email. Please request a new code.',
+        };
+      }
 
-    if (memoryRecord.expiresAt < now) {
+      if (memoryRecord.expiresAt < now) {
+        memoryOtpStore.delete(email);
+        return {
+          success: false,
+          error: 'This verification code has expired. Please request a new code.',
+        };
+      }
+
+      if (memoryRecord.attempts >= MAX_ATTEMPTS) {
+        memoryOtpStore.delete(email);
+        return {
+          success: false,
+          error: 'Too many incorrect attempts. Please request a new verification code.',
+        };
+      }
+
+      if (!timingSafeHexEqual(memoryRecord.hash, codeHash)) {
+        memoryRecord.attempts += 1;
+        return {
+          success: false,
+          error: `Incorrect verification code. ${MAX_ATTEMPTS - memoryRecord.attempts} attempt(s) remaining.`,
+        };
+      }
+
+      matched = true;
+      memoryRecord.consumed = true;
+      storedMetadata = memoryRecord.metadata || {};
       memoryOtpStore.delete(email);
-      return {
-        success: false,
-        error: 'This verification code has expired. Please request a new code.',
-      };
     }
-
-    if (memoryRecord.attempts >= MAX_ATTEMPTS) {
-      memoryOtpStore.delete(email);
-      return {
-        success: false,
-        error: 'Too many incorrect attempts. Please request a new verification code.',
-      };
-    }
-
-    if (memoryRecord.hash !== codeHash) {
-      memoryRecord.attempts += 1;
-      return {
-        success: false,
-        error: `Incorrect verification code. ${MAX_ATTEMPTS - memoryRecord.attempts} attempt(s) remaining.`,
-      };
-    }
-
-    matched = true;
-    memoryRecord.consumed = true;
-    storedMetadata = memoryRecord.metadata || {};
-    memoryOtpStore.delete(email);
   }
 
   if (!matched) {

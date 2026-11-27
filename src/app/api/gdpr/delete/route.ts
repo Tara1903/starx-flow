@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
 
 /**
  * GDPR Article 17: Right to Erasure (Right to be Forgotten)
@@ -25,28 +26,62 @@ export async function POST(request: Request) {
       );
     }
 
-    // Cascade delete user data across tables
-    await Promise.all([
-      supabaseAdmin.from('leads').delete().eq('user_id', user.id),
-      supabaseAdmin.from('conversations').delete().eq('user_id', user.id),
-      supabaseAdmin.from('appointments').delete().eq('user_id', user.id),
-      supabaseAdmin.from('tasks').delete().eq('user_id', user.id),
-      supabaseAdmin.from('knowledge_documents').delete().eq('user_id', user.id),
-      supabaseAdmin.from('workflows').delete().eq('user_id', user.id),
-      supabaseAdmin.from('execution_logs').delete().eq('user_id', user.id),
-      supabaseAdmin.from('consent_logs').delete().eq('user_id', user.id),
-      supabaseAdmin.from('profiles').delete().eq('id', user.id),
-    ]);
+    // Cascade delete user data across tables and fail fast on any DB error
+    const userOwnedTables = [
+      'calls',
+      'tasks',
+      'appointments',
+      'execution_logs',
+      'consent_logs',
+      'usage_records',
+      'analytics_events',
+      'agent_memories',
+      'business_memories',
+      'business_goals',
+      'campaigns',
+      'knowledge_documents',
+      'workflows',
+      'orders',
+      'invoices',
+      'subscriptions',
+      'connected_channels',
+      'connected_accounts',
+      'mobile_push_devices',
+      'organization_members',
+      'agents',
+      'working_hours',
+      'conversations',
+      'leads',
+    ] as const;
+
+    const deleteResults = await Promise.all(
+      userOwnedTables.map((table) =>
+        supabaseAdmin.from(table).delete().eq('user_id', user.id).then((res) => ({ table, error: res.error }))
+      )
+    );
+
+    const failedDelete = deleteResults.find((r) => r.error);
+    if (failedDelete?.error) {
+      throw new Error(`Failed deleting user data from ${failedDelete.table}: ${failedDelete.error.message}`);
+    }
+
+    const { error: profileDeleteErr } = await supabaseAdmin.from('profiles').delete().eq('id', user.id);
+    if (profileDeleteErr) {
+      throw new Error(`Failed deleting profile: ${profileDeleteErr.message}`);
+    }
 
     // Delete auth user from Supabase Auth
-    await supabaseAdmin.auth.admin.deleteUser(user.id);
+    const { error: authDeleteErr } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+    if (authDeleteErr) {
+      throw new Error(`Failed deleting auth user: ${authDeleteErr.message}`);
+    }
 
     return NextResponse.json({
       success: true,
       message: 'All personal data permanently erased pursuant to GDPR Article 17.',
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[GDPR Delete error]:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: sanitizeClientError(err, 'Account erasure failed') }, { status: 500 });
   }
 }

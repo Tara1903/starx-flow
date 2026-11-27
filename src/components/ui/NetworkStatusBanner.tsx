@@ -28,7 +28,7 @@ export function NetworkStatusBanner({ onReconnectRetry }: NetworkStatusBannerPro
           <div className="flex items-center gap-2.5 min-w-0">
             <WifiOff className="w-4 h-4 text-amber-300 flex-shrink-0" />
             <span className="truncate font-medium">
-              Connection offline — live syncing paused. Pending actions will retry safely once connected.
+              You’re offline. Reconnect before saving changes.
             </span>
           </div>
           {onReconnectRetry && (
@@ -55,7 +55,7 @@ export function NetworkStatusBanner({ onReconnectRetry }: NetworkStatusBannerPro
           className="mx-4 sm:mx-8 mt-3 rounded-2xl bg-emerald-500/14 border border-emerald-400/35 px-4 py-2 flex items-center gap-2 text-xs text-emerald-200 font-medium"
         >
           <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-          <span>Back online — workspace synchronized cleanly.</span>
+          <span>Back online.</span>
         </motion.div>
       )}
     </AnimatePresence>

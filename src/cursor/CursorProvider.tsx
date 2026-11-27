@@ -494,6 +494,26 @@ export function CursorProvider({ children }: CursorProviderProps) {
         applyResolved(resolved);
       }
       syncSpotlightHost(pendingTarget, pendingX, pendingY);
+
+      // Broadcast specular caustics coordinates to hovered liquid glass surfaces
+      const targetEl =
+        pendingTarget instanceof Element
+          ? pendingTarget
+          : pendingTarget instanceof Node
+            ? pendingTarget.parentElement
+            : null;
+      const glassEl = targetEl?.closest<HTMLElement>(
+        '.spatial-glass-card, .glass-navbar-floating, .glass-navbar-scrolled, .glass-card-obsidian, .glass-panel, .glass-dock, .glass-capsule-nav, .mat-primary-glass, .mat-crystal-glass',
+      );
+      if (glassEl) {
+        const rect = glassEl.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          const relX = ((pendingX - rect.left) / rect.width) * 100;
+          const relY = ((pendingY - rect.top) / rect.height) * 100;
+          glassEl.style.setProperty('--glass-light-x', `${relX.toFixed(1)}%`);
+          glassEl.style.setProperty('--glass-light-y', `${relY.toFixed(1)}%`);
+        }
+      }
     };
 
     const onPointerMove = (e: PointerEvent) => {

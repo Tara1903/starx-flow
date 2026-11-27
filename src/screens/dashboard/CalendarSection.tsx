@@ -39,6 +39,15 @@ export function CalendarSection() {
     fetchAppointments();
   }, [fetchAppointments]);
 
+  useEffect(() => {
+    if (!isModalOpen || isSubmitting) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsModalOpen(false);
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [isModalOpen, isSubmitting]);
+
   const filteredAppointments = useMemo(() => {
     return appointments.filter((apt) => {
       if (viewFilter === "all") return true;
@@ -48,6 +57,15 @@ export function CalendarSection() {
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    if (!customerName.trim() || !serviceName.trim()) {
+      setConflictError("Enter a customer name and service.");
+      return;
+    }
+    if (endTimeStr <= startTimeStr) {
+      setConflictError("End time must be after start time.");
+      return;
+    }
     setConflictError("");
     setIsSubmitting(true);
 
@@ -69,8 +87,8 @@ export function CalendarSection() {
 
     setIsSubmitting(false);
 
-    if (result.conflictError) {
-      setConflictError(result.conflictError);
+    if (result.error || result.conflictError) {
+      setConflictError(result.conflictError || "Could not save this appointment. Your details are here. Please try again.");
       return;
     }
 
@@ -242,13 +260,14 @@ export function CalendarSection() {
       {/* New Appointment Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-card-obsidian border border-white/10 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div role="dialog" aria-label="Schedule new appointment" className="glass-card-obsidian border border-white/10 rounded-3xl max-w-md max-h-[90dvh] overflow-y-auto w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <h3 className="text-white font-bold text-base flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5 text-emerald-400" />
                 Schedule New Appointment
               </h3>
               <button
+                disabled={isSubmitting}
                 onClick={() => setIsModalOpen(false)}
                 className="text-zinc-400 hover:text-white"
               >
@@ -257,7 +276,7 @@ export function CalendarSection() {
             </div>
 
             {conflictError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-2.5 text-red-400 text-xs">
+              <div role="alert" className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-2.5 text-red-400 text-xs">
                 <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span>{conflictError}</span>
               </div>
@@ -358,7 +377,8 @@ export function CalendarSection() {
               <div className="pt-2 flex justify-end gap-2.5">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  disabled={isSubmitting}
+                onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 rounded-xl border border-white/10 text-zinc-300 hover:bg-white/5"
                 >
                   Cancel

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
+import { MultiTenantRAG } from '@/lib/rag/multiTenantRAG';
+import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,13 +20,15 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      // In offline mode or schema gap, return empty list
       return NextResponse.json({ documents: [] });
     }
 
     return NextResponse.json({ documents: docs || [] });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json(
+      { error: sanitizeClientError(err, 'Failed to load knowledge documents') },
+      { status: 500 }
+    );
   }
 }
 
@@ -37,26 +41,45 @@ export async function DELETE(req: NextRequest) {
 
     const tenantId = auth.session.organizationId || auth.session.user.id;
     const { searchParams } = new URL(req.url);
-    const documentId = searchParams.get('id');
+    const documentId = searchParams.get('id')?.trim();
 
     if (!documentId) {
       return NextResponse.json({ error: 'Missing id parameter' }, { status: 400 });
     }
 
-    // Cascade delete chunks and master document strictly scoped to caller's tenant
-    await supabaseAdmin.from('knowledge_chunks').delete().eq('document_id', documentId);
-    const { error } = await supabaseAdmin
+    // Verify ownership by deleting the tenant-scoped document row first
+    const { data: deletedDoc, error: docErr } = await supabaseAdmin
       .from('knowledge_documents')
       .delete()
       .eq('id', documentId)
-      .eq('user_id', tenantId);
+      .eq('user_id', tenantId)
+      .select('id')
+      .maybeSingle();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (docErr) {
+      return NextResponse.json(
+        { error: sanitizeClientError(docErr, 'Failed to remove knowledge document') },
+        { status: 500 }
+      );
     }
 
+    if (!deletedDoc) {
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+    }
+
+    await supabaseAdmin
+      .from('knowledge_chunks')
+      .delete()
+      .eq('document_id', documentId)
+      .eq('user_id', tenantId);
+
+    await MultiTenantRAG.deleteDocument(tenantId, documentId);
+
     return NextResponse.json({ success: true, message: 'Document and vectorized chunks removed' });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json(
+      { error: sanitizeClientError(err, 'Failed to delete knowledge document') },
+      { status: 500 }
+    );
   }
 }

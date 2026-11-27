@@ -36,11 +36,23 @@ export function WorkflowEditor() {
   const [aiTone, setAiTone] = useState<Workflow['aiTone']>("Friendly");
   const [customPrompt, setCustomPrompt] = useState("");
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [saveError, setSaveError] = useState("");
+  const saving = React.useRef(false);
+  const mounted = React.useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  const draft = React.useRef<{ id: string; version: number } | null>(null);
 
   // Initialize form
   useEffect(() => {
     if (isEditing && existingWorkflow) {
+      if (draft.current?.id === existingWorkflow.id) return;
+      draft.current = { id: existingWorkflow.id, version: existingWorkflow.editVersion ?? 0 };
       setName(existingWorkflow.name);
       setDescription(existingWorkflow.description);
       setChannel(existingWorkflow.channel);
@@ -51,6 +63,7 @@ export function WorkflowEditor() {
       // Initialize steps from config or upgrade legacy flow
       setSteps(initializeSteps(existingWorkflow));
     } else {
+      draft.current = null;
       // New workflow default state
       setName("");
       setDescription("");
@@ -398,7 +411,7 @@ export function WorkflowEditor() {
 
   // Handle Save
   const handleSave = async () => {
-    if (!name.trim()) return;
+    if (saving.current || !name.trim()) return;
 
     // Create workflow trigger & action string values from first trigger and first action steps
     const triggerStep = steps.find(s => s.type === 'trigger');
@@ -421,24 +434,27 @@ export function WorkflowEditor() {
       config: configPayload
     };
 
-    setIsSaved(true);
-    
-    if (isEditing) {
-      await updateWorkflow(selectedWorkflowId!, payload);
-    } else {
-      await addWorkflow(payload);
+    saving.current = true;
+    setIsSaving(true);
+    setSaveError("");
+    try {
+      if (selectedWorkflowId) await updateWorkflow(selectedWorkflowId, payload, draft.current?.version);
+      else await addWorkflow(payload);
+      if (mounted.current && useDashboardStore.getState().activeSection === "workflow_editor") {
+        useAuthStore.setState({ selectedWorkflowId: null });
+        setActiveSection("workflows");
+      }
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Could not save this workflow. Please try again.");
+    } finally {
+      saving.current = false;
+      setIsSaving(false);
     }
-
-    setTimeout(() => {
-      setIsSaved(false);
-      // Navigate back
-      useAuthStore.setState({ selectedWorkflowId: null });
-      setActiveSection("workflows");
-    }, 800);
   };
 
   return (
     <div className="space-y-6 select-none animate-[fade-in_0.4s_ease-out] pb-24">
+      {saveError && <p role="alert" className="text-sm text-red-300">{saveError}</p>}
       {/* Top action header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 select-none">
         <div className="flex items-center gap-3">
@@ -476,11 +492,11 @@ export function WorkflowEditor() {
 
           <button
             onClick={handleSave}
-            disabled={isSaved || !name.trim()}
+            disabled={isSaving || !name.trim()}
             className="flex items-center gap-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-500/50 text-black py-2.5 px-5 rounded-full transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]"
           >
             <Save className="w-3.5 h-3.5" />
-            <span>{isSaved ? "Saving..." : "Save Workflow"}</span>
+            <span>{isSaving ? "Saving..." : "Save Workflow"}</span>
           </button>
         </div>
       </div>

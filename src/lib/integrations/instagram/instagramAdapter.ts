@@ -40,7 +40,9 @@ export class InstagramAdapter {
 
   constructor() {
     this.appSecret = process.env.META_APP_SECRET || '';
-    this.verifyToken = process.env.META_VERIFY_TOKEN || 'starx_meta_verify_token_default';
+    this.verifyToken =
+      process.env.META_VERIFY_TOKEN ||
+      (process.env.NODE_ENV !== 'production' ? 'starx_meta_verify_token_default' : '');
     this.isLiveConfigured = Boolean(this.appSecret && !this.appSecret.includes('placeholder'));
   }
 
@@ -73,7 +75,13 @@ export class InstagramAdapter {
   }): { isValid: boolean; challenge?: string } {
     const { mode, token, challenge } = params;
 
-    if (mode === 'subscribe' && token === this.verifyToken && challenge) {
+    if (!this.verifyToken || !token || !challenge || mode !== 'subscribe') {
+      return { isValid: false };
+    }
+
+    const providedBuf = Buffer.from(token, 'utf8');
+    const expectedBuf = Buffer.from(this.verifyToken, 'utf8');
+    if (providedBuf.length === expectedBuf.length && crypto.timingSafeEqual(providedBuf, expectedBuf)) {
       return { isValid: true, challenge };
     }
 
@@ -82,25 +90,31 @@ export class InstagramAdapter {
 
   /**
    * Validates Meta Webhook HMAC-SHA256 signature (x-hub-signature-256).
+   * Strictly fails closed when appSecret or signature is missing/malformed.
    */
   verifySignature(rawBody: string, signatureHeader?: string | null): boolean {
-    if (!this.appSecret) {
-      // In development / sandbox without configured secret, allow pass-through
-      return true;
+    if (!this.appSecret || this.appSecret.trim() === '') {
+      return false;
     }
 
-    if (!signatureHeader) {
+    if (!signatureHeader || !signatureHeader.trim().startsWith('sha256=')) {
+      return false;
+    }
+
+    const cleanSignature = signatureHeader.trim().slice(7).trim();
+    if (cleanSignature.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(cleanSignature)) {
       return false;
     }
 
     try {
-      const cleanSignature = signatureHeader.replace(/^sha256=/, '');
       const expectedSignature = crypto
         .createHmac('sha256', this.appSecret)
         .update(rawBody, 'utf8')
         .digest('hex');
 
-      return crypto.timingSafeEqual(Buffer.from(cleanSignature, 'hex'), Buffer.from(expectedSignature, 'hex'));
+      const providedBuf = Buffer.from(cleanSignature.toLowerCase(), 'hex');
+      const expectedBuf = Buffer.from(expectedSignature.toLowerCase(), 'hex');
+      return providedBuf.length === expectedBuf.length && crypto.timingSafeEqual(providedBuf, expectedBuf);
     } catch {
       return false;
     }
@@ -561,75 +575,126 @@ export class InstagramAdapter {
         // 2. Record customer interaction to open 24-hour messaging window (C3)
         await InstagramAdapter.recordCustomerInteraction(orgId, senderIgsid, msgEvent.timestamp || Date.now());
 
-        // 3. Idempotency Check
+        // 3. Atomic Idempotency Claim (eliminates SELECT->INSERT TOCTOU race condition)
+        const payloadHash = crypto.createHash('sha256').update(JSON.stringify(msgEvent)).digest('hex');
+        const workerId = `ig_worker_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        let claimedViaRpc = false;
+
         if (isSupabaseAdminConfigured) {
           try {
             const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
-            const { data: existing } = await client
-              .from('provider_webhook_events')
-              .select('id')
-              .eq('provider', 'meta')
-              .eq('event_id', messageId)
-              .maybeSingle();
-
-            if (existing) {
-              continue; // Skip duplicate
-            }
-
-            await client.from('provider_webhook_events').insert({
-              organization_id: orgId,
-              provider: 'meta',
-              event_id: messageId,
-              event_type: 'instagram_direct_message',
-              payload_hash: crypto.createHash('sha256').update(JSON.stringify(msgEvent)).digest('hex'),
-              status: 'processed',
-              raw_payload: msgEvent,
+            const { data: claimRows, error: claimErr } = await client.rpc('claim_provider_webhook_event', {
+              p_provider: 'meta',
+              p_event_id: messageId,
+              p_payload_hash: payloadHash,
+              p_org_id: orgId,
+              p_event_type: 'instagram_direct_message',
+              p_lease_seconds: 60,
+              p_worker_id: workerId,
             });
+
+            if (!claimErr && Array.isArray(claimRows) && claimRows.length > 0) {
+              claimedViaRpc = true;
+              if (!claimRows[0].claimed) {
+                continue; // Skip duplicate or actively leased event
+              }
+            } else if (claimErr) {
+              // Fallback atomic insert relying on UNIQUE(provider, event_id)
+              const { error: insertErr } = await client.from('provider_webhook_events').insert({
+                organization_id: orgId,
+                provider: 'meta',
+                event_id: messageId,
+                event_type: 'instagram_direct_message',
+                payload_hash: payloadHash,
+                status: 'processed',
+                raw_payload: msgEvent,
+              });
+              if (insertErr?.code === '23505') {
+                continue;
+              }
+            }
           } catch {
             // Handled
           }
         }
 
-        // 4. Resolve Customer Identity via IdentityResolver (Isolated by Org)
-        const identityRes = await IdentityResolver.resolveCustomer({
-          userId: effectiveUserId,
-          organizationId: orgId,
-          channel: 'instagram',
-          externalUserId: senderIgsid,
-          senderName: `Instagram @user_${senderIgsid.slice(-4)}`,
-        });
+        // 4-6. Resolve identity, ingest, reply, and finalize atomic webhook claim
+        try {
+          // 4. Resolve Customer Identity via IdentityResolver (Isolated by Org)
+          const identityRes = await IdentityResolver.resolveCustomer({
+            userId: effectiveUserId,
+            organizationId: orgId,
+            channel: 'instagram',
+            externalUserId: senderIgsid,
+            senderName: `Instagram @user_${senderIgsid.slice(-4)}`,
+          });
 
-        // 5. Ingest into Unified Inbox and AI Orchestrator
-        const aiResult = await AIOrchestrator.handleInboundMessage({
-          userId: effectiveUserId,
-          organizationId: orgId,
-          channel: 'Instagram',
-          senderName: identityRes.customer.name || `Instagram @user_${senderIgsid.slice(-4)}`,
-          messageText,
-          leadId: identityRes.leadId,
-          metadata: {
-            senderIdentifier: senderIgsid,
-            recipientIgsid: targetAccountId,
-            rawPayload: msgEvent,
-          },
-        });
+          // 5. Ingest into Unified Inbox and AI Orchestrator
+          const aiResult = await AIOrchestrator.handleInboundMessage({
+            userId: effectiveUserId,
+            organizationId: orgId,
+            channel: 'Instagram',
+            senderName: identityRes.customer.name || `Instagram @user_${senderIgsid.slice(-4)}`,
+            messageText,
+            leadId: identityRes.leadId,
+            metadata: {
+              senderIdentifier: senderIgsid,
+              recipientIgsid: targetAccountId,
+              rawPayload: msgEvent,
+            },
+          });
 
-        processedCount++;
+          processedCount++;
 
-        // 6. Send AI auto-reply to customer if available
-        if (aiResult.aiResponse?.replyText) {
-          try {
-            await this.sendMessage({
-              organizationId: orgId,
-              recipientIgsid: senderIgsid,
-              text: aiResult.aiResponse.replyText,
-              conversationId: aiResult.conversationId,
-              leadId: identityRes.leadId,
-            });
-            repliesSent++;
-          } catch (replyErr) {
-            console.error('[InstagramAdapter] Failed to send outbound reply:', replyErr);
+          // 6. Send AI auto-reply to customer if available
+          if (aiResult.aiResponse?.replyText) {
+            try {
+              await this.sendMessage({
+                organizationId: orgId,
+                recipientIgsid: senderIgsid,
+                text: aiResult.aiResponse.replyText,
+                conversationId: aiResult.conversationId,
+                leadId: identityRes.leadId,
+              });
+              repliesSent++;
+            } catch (replyErr) {
+              console.error('[InstagramAdapter] Failed to send outbound reply:', replyErr);
+            }
           }
+
+          if (claimedViaRpc && isSupabaseAdminConfigured) {
+            try {
+              const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+              await client.rpc('complete_provider_webhook_event', {
+                p_provider: 'meta',
+                p_event_id: messageId,
+                p_worker_id: workerId,
+                p_org_id: orgId,
+                p_metadata: {
+                  processed: true,
+                  conversationId: aiResult.conversationId || null,
+                  leadId: identityRes.leadId || null,
+                },
+              });
+            } catch {
+              // Best-effort completion transition
+            }
+          }
+        } catch (procErr: any) {
+          if (claimedViaRpc && isSupabaseAdminConfigured) {
+            try {
+              const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+              await client.rpc('fail_provider_webhook_event', {
+                p_provider: 'meta',
+                p_event_id: messageId,
+                p_worker_id: workerId,
+                p_error_message: String(procErr?.message || 'Instagram webhook processing failed').slice(0, 500),
+              });
+            } catch {
+              // Best-effort lease release
+            }
+          }
+          throw procErr;
         }
       }
     }

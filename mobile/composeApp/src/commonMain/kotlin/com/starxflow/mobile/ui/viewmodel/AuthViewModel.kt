@@ -24,8 +24,7 @@ sealed interface AuthUiState {
 }
 
 class AuthViewModel(
-    private val authRepository: AuthRepository,
-    private val apiClient: com.starxflow.shared.data.network.StarXApiClient? = null
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Initial)
@@ -75,9 +74,9 @@ class AuthViewModel(
 
         if (cleanCode.length != 8) {
             if (currentSent != null) {
-                _uiState.value = currentSent.copy(error = "Verification code must be exactly 8 digits.")
+                _uiState.value = currentSent.copy(error = "Verification code must be exactly 8 letters or digits.")
             } else {
-                _uiState.value = AuthUiState.Error("Verification code must be exactly 8 digits.")
+                _uiState.value = AuthUiState.Error("Verification code must be exactly 8 letters or digits.")
             }
             return
         }
@@ -92,12 +91,6 @@ class AuthViewModel(
             when (val result = authRepository.verifyOtp(email, cleanCode)) {
                 is StarXResult.Success -> {
                     _uiState.value = AuthUiState.Authenticated(result.data)
-                    // Register mobile device notification token on login
-                    apiClient?.let { client ->
-                        launch {
-                            client.registerPushToken("device_token_${result.data.id}", "android")
-                        }
-                    }
                 }
                 is StarXResult.Error -> {
                     if (currentSent != null) {

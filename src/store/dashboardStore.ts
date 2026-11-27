@@ -5,24 +5,21 @@ import { useAuthStore } from './authStore';
 // Tracks in-flight message sends to prevent duplicate DB inserts on accidental double-submits/retries
 const inFlightMessageSends = new Set<string>();
 
-export type DashboardSection =
-  | 'overview'
-  | 'conversations'
-  | 'crm'
-  | 'calendar'
-  | 'orders'
-  | 'knowledge'
-  | 'tasks'
-  | 'team'
-  | 'workflows'
-  | 'playground'
-  | 'analytics'
-  | 'channels'
-  | 'settings'
-  | 'workflow_editor'
-  | 'agents'
-  | 'voice'
-  | 'os';
+const dashboardSections = [
+  'overview', 'conversations', 'crm', 'calendar', 'orders', 'knowledge', 'tasks',
+  'team', 'workflows', 'playground', 'analytics', 'channels', 'settings',
+  'workflow_editor', 'agents', 'voice', 'os',
+] as const;
+export type DashboardSection = typeof dashboardSections[number];
+
+export function restoreDashboardSection() {
+  const params = new URLSearchParams(window.location.search);
+  const section = dashboardSections.find(value => value === params.get('section')) || 'overview';
+  if (section === 'workflow_editor') {
+    useAuthStore.setState({ selectedWorkflowId: params.get('workflow') });
+  }
+  useDashboardStore.setState({ activeSection: section });
+}
 
 export interface Message {
   id: string;
@@ -143,7 +140,18 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   isInternalMode: false,
   collisionWarning: null,
 
-  setActiveSection: (section) => set({ activeSection: section }),
+  setActiveSection: (section) => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/dashboard') {
+      const url = new URL(window.location.href);
+      if (section === 'overview') url.searchParams.delete('section');
+      else url.searchParams.set('section', section);
+      const workflow = section === 'workflow_editor' && useAuthStore.getState().selectedWorkflowId;
+      if (workflow) url.searchParams.set('workflow', workflow);
+      else url.searchParams.delete('workflow');
+      if (url.href !== window.location.href) window.history.pushState(null, '', url);
+    }
+    set({ activeSection: section });
+  },
   setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
   setIsInternalMode: (mode) => set({ isInternalMode: mode }),
   toggleInternalMode: () => set((state) => ({ isInternalMode: !state.isInternalMode })),

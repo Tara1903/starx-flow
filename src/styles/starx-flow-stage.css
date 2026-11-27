@@ -9,7 +9,10 @@
 
     /* ========================================================================= */
     /* COMPLETE SELF-CONTAINED RESET & LAYOUT SYSTEM (ZERO CDN DEPENDENCY)       */
+    /* Layered in @layer base so Tailwind v4 @layer utilities always take        */
+    /* precedence on buttons, links, spacing, and hover/focus inversions.        */
     /* ========================================================================= */
+    @layer base {
     button, input, select, textarea {
       font-family: inherit;
       font-size: 100%;
@@ -314,6 +317,7 @@
       font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       overflow-x: hidden;
       min-height: 100vh;
+    }
     }
 
     .font-editorial {

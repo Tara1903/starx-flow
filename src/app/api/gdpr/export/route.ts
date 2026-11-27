@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
 
 /**
  * GDPR Article 20: Right to Data Portability (Export)
@@ -57,8 +58,8 @@ export async function GET(request: Request) {
         'Content-Disposition': `attachment; filename="starx_gdpr_export_${user.id}.json"`,
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[GDPR Export error]:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: sanitizeClientError(err, 'GDPR export failed') }, { status: 500 });
   }
 }

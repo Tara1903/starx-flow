@@ -11,6 +11,8 @@ import { PartyPopper, Check, Sparkles, ArrowRight, ShieldCheck, Flame } from 'lu
 
 export default function LaunchStep() {
   const router = useRouter();
+  const [error, setError] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
   const { user } = useAuthStore();
   const { connectedChannels } = useAuthStore();
   const { completeOnboarding, steps, aiConfig } = useOnboardingStore();
@@ -20,21 +22,17 @@ export default function LaunchStep() {
   const connectedCount = activeChannels.length;
 
   const handleLaunch = async () => {
-    // Update profile complete flag in Supabase & LocalStorage
-    await completeOnboarding();
-    
-    // Explicitly update user state in AuthStore
-    if (user) {
-      useAuthStore.setState({
-        user: {
-          ...user,
-          onboardingComplete: true
-        }
-      });
+    if (saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      await completeOnboarding();
+      router.replace('/dashboard');
+    } catch {
+      setError('Could not save setup. Please try again.');
+    } finally {
+      setSaving(false);
     }
-
-    // Force redirection to redesigned command center dashboard
-    router.push('/dashboard');
   };
 
   return (
@@ -117,8 +115,10 @@ export default function LaunchStep() {
           </div>
         </div>
 
+        {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
         {/* Action Button */}
         <button
+          disabled={saving}
           onClick={handleLaunch}
           className="spatial-btn-primary w-full py-4 text-sm flex items-center justify-center gap-2 group cursor-pointer shadow-[0_0_25px_rgba(40,223,160,0.3)] hover:shadow-[0_0_35px_rgba(40,223,160,0.45)]"
         >

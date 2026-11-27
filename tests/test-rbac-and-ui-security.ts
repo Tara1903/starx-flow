@@ -22,6 +22,14 @@ import { GET as receptionistGET, PUT as receptionistPUT } from '@/app/api/recept
 import { POST as crmMergePOST } from '@/app/api/crm/customers/merge/route';
 import { GET as adminDemoGET } from '@/app/api/admin/demo-requests/route';
 import { GET as adminSupportGET, POST as adminSupportPOST } from '@/app/api/admin/support/route';
+import { GET as metaAuthGET } from '@/app/api/meta/auth/route';
+import { GET as metaCallbackGET } from '@/app/api/meta/callback/route';
+import { POST as aiSandboxPOST } from '@/app/api/ai/sandbox/route';
+import { FacebookMessengerAdapter } from '@/lib/ingestion/adapters/facebookMessengerAdapter';
+import { InstagramAdapter } from '@/lib/integrations/instagram/instagramAdapter';
+import { ResendEmailAdapter } from '@/lib/integrations/email/resendEmailAdapter';
+import { ToolExecutor } from '@/lib/ai/tools/toolExecutor';
+import { DocumentParser } from '@/lib/rag/documentParser';
 
 let passed = 0;
 let failed = 0;
@@ -214,6 +222,70 @@ async function runTests() {
       'Unable to load orders'
     );
     assert(leakedStack === 'Unable to load orders', 'Collapses raw SQL schema errors and stack frames');
+
+    // 5. Meta OAuth CSRF/Auth & AI Sandbox & Fail-Closed Webhooks & SSRF & AI Tool Auth
+    console.log('\n5. Hardening Regression Checks (Meta OAuth, AI Sandbox, Webhooks, SSRF, AI Tools)');
+    setTestStaffSession(null);
+
+    process.env.META_APP_ID = process.env.META_APP_ID || 'test-meta-app-id';
+    const anonMetaAuth = await metaAuthGET(
+      new NextRequest('http://localhost/api/meta/auth?userId=victim-id')
+    );
+    assert(anonMetaAuth.status === 401, 'GET /api/meta/auth rejects anonymous caller (401)');
+
+    const forgedMetaCb = await metaCallbackGET(
+      new NextRequest('http://localhost/api/meta/callback?code=evil&state=admin:victim-id')
+    );
+    assert(
+      forgedMetaCb.status === 307 && forgedMetaCb.headers.get('location')?.includes('error='),
+      'GET /api/meta/callback rejects unauthenticated/forged state'
+    );
+
+    const anonSandbox = await aiSandboxPOST(
+      new NextRequest('http://localhost/api/ai/sandbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Hi' }),
+      })
+    );
+    assert(anonSandbox.status === 401, 'POST /api/ai/sandbox rejects anonymous caller (401)');
+
+    const fbAdapter = new FacebookMessengerAdapter();
+    const fbNoSig = await fbAdapter.authenticate(
+      new Request('http://localhost/api/integrations/facebook/webhook', { method: 'POST', body: '{}' }),
+      '{}'
+    );
+    assert(fbNoSig.authorized === false, 'FacebookMessengerAdapter fails closed when signature is missing');
+
+    const prevMetaSecret = process.env.META_APP_SECRET;
+    delete process.env.META_APP_SECRET;
+    const igNoSecret = new InstagramAdapter().verifySignature('{}', 'sha256=' + '0'.repeat(64));
+    assert(igNoSecret === false, 'InstagramAdapter fails closed when META_APP_SECRET is unconfigured');
+    if (prevMetaSecret) process.env.META_APP_SECRET = prevMetaSecret;
+
+    const prevResendSecret = process.env.RESEND_WEBHOOK_SECRET;
+    delete process.env.RESEND_WEBHOOK_SECRET;
+    const resendNoSecret = new ResendEmailAdapter().verifyWebhookSignature('{}', {});
+    assert(resendNoSecret === false, 'ResendEmailAdapter fails closed when RESEND_WEBHOOK_SECRET is unconfigured');
+    if (prevResendSecret) process.env.RESEND_WEBHOOK_SECRET = prevResendSecret;
+
+    const lookupBlocked = await ToolExecutor.executeTool(
+      'lookupCustomer',
+      { query: '@gmail.com' },
+      { userId: 'tenant-1', organizationId: 'tenant-1', actorType: 'ai_agent' }
+    );
+    assert(
+      !lookupBlocked.success && Boolean(lookupBlocked.error?.includes('restricted to authenticated staff')),
+      'ToolExecutor blocks lookupCustomer from end-customer ai_agent sessions'
+    );
+
+    let ipv6MappedBlocked = false;
+    try {
+      await DocumentParser.parseUrl('http://[::ffff:127.0.0.1]/admin');
+    } catch (err: any) {
+      ipv6MappedBlocked = Boolean(err?.message?.includes('SSRF protection'));
+    }
+    assert(ipv6MappedBlocked, 'DocumentParser blocks IPv4-mapped IPv6 loopback SSRF (::ffff:127.0.0.1)');
   } finally {
     setTestStaffSession(null);
   }

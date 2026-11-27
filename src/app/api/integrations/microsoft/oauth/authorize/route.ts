@@ -12,9 +12,12 @@ export async function GET(req: NextRequest) {
   const { organizationId, user } = auth.session;
   const adapter = new OutlookCalendarAdapter();
 
+  const configuredAppUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/+$/, '');
   const host = req.headers.get('host') || 'localhost:3000';
-  const protocol = host.includes('localhost') ? 'http' : 'https';
-  const redirectUri = `${protocol}://${host}/api/integrations/microsoft/oauth/callback`;
+  const isLocalHost = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
+  const protocol = isLocalHost ? 'http' : 'https';
+  const baseUrl = configuredAppUrl || `${protocol}://${host}`;
+  const redirectUri = `${baseUrl}/api/integrations/microsoft/oauth/callback`;
 
   // Cryptographically signed, session-bound OAuth state (C1 remediation)
   const binding = await OAuthStateManager.generateStateWithBinding({

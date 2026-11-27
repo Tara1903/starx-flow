@@ -398,42 +398,19 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   },
 
   completeOnboarding: async () => {
+    const user = useAuthStore.getState().user;
+    if (!user) throw new Error('Sign in to complete setup.');
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', user.id);
+      if (error) throw new Error('Could not save setup. Please try again.');
+    }
+    if (useAuthStore.getState().user?.id !== user.id) return;
     set({ isComplete: true });
-
-    if (!isSupabaseConfigured) {
-      saveToLocalStorage({ ...get(), isComplete: true } as any);
-      return;
-    }
-    
-    try {
-      const user = useAuthStore.getState().user;
-      if (!user) return;
-      saveToLocalStorage({ ...get(), isComplete: true } as any, user.id);
-
-      await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', user.id);
-    } catch (e) {
-      console.warn('[StarX Onboarding] completeOnboarding DB sync failed:', e);
-    }
+    saveToLocalStorage(get(), user.id);
+    useAuthStore.setState({ user: { ...useAuthStore.getState().user!, onboardingComplete: true } });
   },
 
-  skipOnboarding: async () => {
-    set({ isComplete: true });
-
-    if (!isSupabaseConfigured) {
-      saveToLocalStorage({ ...get(), isComplete: true } as any);
-      return;
-    }
-    
-    try {
-      const user = useAuthStore.getState().user;
-      if (!user) return;
-      saveToLocalStorage({ ...get(), isComplete: true } as any, user.id);
-
-      await supabase.from('profiles').update({ onboarding_complete: true }).eq('id', user.id);
-    } catch (e) {
-      console.warn('[StarX Onboarding] skipOnboarding DB sync failed:', e);
-    }
-  },
+  skipOnboarding: () => get().completeOnboarding(),
 
   reset: () => {
     try {

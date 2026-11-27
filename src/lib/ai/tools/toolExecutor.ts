@@ -384,11 +384,13 @@ export class ToolExecutor {
       };
     }
 
-    // Customer-Level Session Authorization Gate
-    if (actorType !== 'staff' && (customerPhone || customerEmail || leadId)) {
-      const isPhoneMatch = customerPhone && IdentityResolver.isPhoneMatch(apt.customer_phone, customerPhone);
-      const isEmailMatch = customerEmail && apt.customer_email && apt.customer_email.toLowerCase() === customerEmail.toLowerCase();
-      const isLeadMatch = leadId && apt.lead_id && apt.lead_id === leadId;
+    // Customer-Level Session Authorization Gate (fail closed for non-staff callers)
+    if (actorType !== 'staff') {
+      const isPhoneMatch = Boolean(customerPhone && IdentityResolver.isPhoneMatch(apt.customer_phone, customerPhone));
+      const isEmailMatch = Boolean(
+        customerEmail && apt.customer_email && apt.customer_email.toLowerCase() === customerEmail.toLowerCase()
+      );
+      const isLeadMatch = Boolean(leadId && apt.lead_id && apt.lead_id === leadId);
 
       if (!isPhoneMatch && !isEmailMatch && !isLeadMatch) {
         await this.recordAuditLog({
@@ -481,11 +483,13 @@ export class ToolExecutor {
       };
     }
 
-    // Customer-Level Session Authorization Gate
-    if (actorType !== 'staff' && (customerPhone || customerEmail || leadId)) {
-      const isPhoneMatch = customerPhone && IdentityResolver.isPhoneMatch(apt.customer_phone, customerPhone);
-      const isEmailMatch = customerEmail && apt.customer_email && apt.customer_email.toLowerCase() === customerEmail.toLowerCase();
-      const isLeadMatch = leadId && apt.lead_id && apt.lead_id === leadId;
+    // Customer-Level Session Authorization Gate (fail closed for non-staff callers)
+    if (actorType !== 'staff') {
+      const isPhoneMatch = Boolean(customerPhone && IdentityResolver.isPhoneMatch(apt.customer_phone, customerPhone));
+      const isEmailMatch = Boolean(
+        customerEmail && apt.customer_email && apt.customer_email.toLowerCase() === customerEmail.toLowerCase()
+      );
+      const isLeadMatch = Boolean(leadId && apt.lead_id && apt.lead_id === leadId);
 
       if (!isPhoneMatch && !isEmailMatch && !isLeadMatch) {
         await this.recordAuditLog({
@@ -546,9 +550,25 @@ export class ToolExecutor {
     input: LookupCustomerInput,
     context: ToolExecutionContext
   ): Promise<ToolExecutionResponse> {
-    const { userId } = context;
+    const { userId, actorType } = context;
+    if (actorType !== 'staff') {
+      return {
+        success: false,
+        tool: 'lookupCustomer',
+        error: 'Security Notice: Customer directory search is restricted to authenticated staff.',
+      };
+    }
+
     const { query } = input;
-    const cleanQuery = query.toLowerCase().trim();
+    // Strip PostgREST filter syntax metacharacters to prevent .or() injection
+    const cleanQuery = query.toLowerCase().replace(/[,()\\*%]/g, '').trim();
+    if (!cleanQuery) {
+      return {
+        success: true,
+        tool: 'lookupCustomer',
+        data: { query, count: 0, customers: [] },
+      };
+    }
 
     const matches: any[] = [];
 
@@ -601,8 +621,8 @@ export class ToolExecutor {
     const { userId, organizationId, agentRole, leadId, actorType } = context;
     const { customerId, name, phone, email, notes, tags } = input;
 
-    // Customer-level authorization: end customers can only update their own profile
-    if (actorType !== 'staff' && leadId && customerId !== leadId) {
+    // Customer-level authorization: end customers can only update their own verified profile
+    if (actorType !== 'staff' && (!leadId || customerId !== leadId)) {
       return {
         success: false,
         tool: 'updateCustomerProfile',
@@ -694,11 +714,13 @@ export class ToolExecutor {
       };
     }
 
-    // Customer-Level Session Authorization Gate
-    if (actorType !== 'staff' && (customerPhone || customerEmail || leadId)) {
-      const isPhoneMatch = customerPhone && IdentityResolver.isPhoneMatch(order.customer_phone, customerPhone);
-      const isEmailMatch = customerEmail && order.customer_email && order.customer_email.toLowerCase() === customerEmail.toLowerCase();
-      const isLeadMatch = leadId && order.lead_id && order.lead_id === leadId;
+    // Customer-Level Session Authorization Gate (fail closed for non-staff callers)
+    if (actorType !== 'staff') {
+      const isPhoneMatch = Boolean(customerPhone && IdentityResolver.isPhoneMatch(order.customer_phone, customerPhone));
+      const isEmailMatch = Boolean(
+        customerEmail && order.customer_email && order.customer_email.toLowerCase() === customerEmail.toLowerCase()
+      );
+      const isLeadMatch = Boolean(leadId && order.lead_id && order.lead_id === leadId);
 
       if (!isPhoneMatch && !isEmailMatch && !isLeadMatch) {
         await this.recordAuditLog({

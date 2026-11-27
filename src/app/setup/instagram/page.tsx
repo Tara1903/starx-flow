@@ -8,6 +8,7 @@ import { useOnboardingStore } from '../../../store/onboardingStore';
 import { StepCard } from '../../../components/setup/StepCard';
 import { StepHeader } from '../../../components/setup/StepHeader';
 import { supabase, isSupabaseConfigured } from '../../../lib/supabase';
+import { syncAccessTokenCookie } from '../../../lib/auth/clientCookie';
 import { Loader2, ArrowRight, Instagram } from 'lucide-react';
 
 export default function InstagramStep() {
@@ -122,7 +123,7 @@ export default function InstagramStep() {
     }
   };
 
-  const handleFacebookLogin = () => {
+  const handleFacebookLogin = async () => {
     if (!isSupabaseConfigured) return;
     setErrorDetails('');
     setLoading(true);
@@ -134,7 +135,8 @@ export default function InstagramStep() {
     // Prefer server-side Meta OAuth route when NEXT_PUBLIC_META_APP_ID isn't exposed or SDK is blocked
     if (!FB || !clientAppId || clientAppId === 'dummy_app_id_for_dev') {
       if (user?.id) {
-        window.location.href = `/api/meta/auth?channel=instagram&returnTo=setup&userId=${encodeURIComponent(user.id)}`;
+        await syncAccessTokenCookie();
+        window.location.href = '/api/meta/auth?channel=instagram&returnTo=setup';
         return;
       }
       setLoading(false);

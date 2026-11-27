@@ -4,8 +4,7 @@ import { motion } from "motion/react";
 import { Brain, MessageSquare, Send, Sparkles } from "lucide-react";
 import { useAuthStore, type Workflow } from "../../store/authStore";
 import { cn } from "../../lib/utils";
-
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY as string | undefined;
+import { supabase } from "../../lib/supabase";
 
 const FALLBACK_RESPONSES: Record<Workflow["aiTone"], string[]> = {
   Friendly: [
@@ -26,23 +25,27 @@ const FALLBACK_RESPONSES: Record<Workflow["aiTone"], string[]> = {
   ],
 };
 
-async function callGeminiAI(systemPrompt: string, userMessage: string): Promise<string | null> {
-  if (!GEMINI_API_KEY) return null;
+async function callSandboxAI(customPrompt: string, aiTone: string, userMessage: string): Promise<string | null> {
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ parts: [{ text: userMessage }] }],
-        }),
-      }
-    );
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const res = await fetch("/api/ai/sandbox", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        customPrompt,
+        aiTone,
+        message: userMessage,
+      }),
+    });
     if (!res.ok) return null;
-    const data = await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    const payload = await res.json();
+    return payload?.reply || null;
   } catch {
     return null;
   }
@@ -72,10 +75,7 @@ export function AIChatTester() {
     const editPrompt = selected.customPrompt || "You are a helpful assistant.";
     const editTone = selected.aiTone || "Friendly";
 
-    // Build system instructions with tone guidelines
-    const fullPrompt = `${editPrompt}\n\nIMPORTANT: Respond in a ${editTone} tone. Keep replies concise (2-3 sentences max).`;
-
-    const geminiReply = await callGeminiAI(fullPrompt, userMsg);
+    const geminiReply = await callSandboxAI(editPrompt, editTone, userMsg);
 
     if (geminiReply) {
       setChatMessages((prev) => [...prev, { sender: "ai", text: geminiReply }]);

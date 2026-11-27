@@ -113,15 +113,17 @@ export default function RootLayout({
                 });
                 FB.AppEvents.logPageView();
 
-                FB.getLoginStatus(function(response) {
-                  if (typeof window.statusChangeCallback === 'function') {
-                    window.statusChangeCallback(response);
-                  }
-                });
+                if (window.location.protocol === 'https:') {
+                  FB.getLoginStatus(function(response) {
+                    if (typeof window.statusChangeCallback === 'function') {
+                      window.statusChangeCallback(response);
+                    }
+                  });
+                }
               };
 
               window.checkLoginState = function() {
-                if (window.FB) {
+                if (window.FB && window.location.protocol === 'https:') {
                   FB.getLoginStatus(function(response) {
                     if (typeof window.statusChangeCallback === 'function') {
                       window.statusChangeCallback(response);

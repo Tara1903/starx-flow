@@ -11,26 +11,35 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { token, platform } = body;
+    const token = typeof body?.token === 'string' ? body.token.trim() : '';
+    const platform = typeof body?.platform === 'string' ? body.platform.toLowerCase() : '';
 
-    if (!token || typeof token !== 'string') {
+    if (!token || /\s/.test(token) || token.startsWith('device_token_') || Buffer.byteLength(token) > 2048) {
       return NextResponse.json(
-        { error: 'Missing device push token' },
+        { error: 'A valid device push token is required' },
         { status: 400 }
       );
     }
 
-    if (!platform || !['android', 'ios'].includes(platform.toLowerCase())) {
+    if (!platform || !['android', 'ios'].includes(platform)) {
       return NextResponse.json(
         { error: 'Invalid platform parameter (expected "android" or "ios")' },
         { status: 400 }
       );
     }
 
-    const tenantId = auth.session.organizationId || auth.session.user.id;
-
-    // Log registration safely without exposing secrets
-    console.log(`[StarX Mobile Push] Registered device token for tenant ${tenantId} (${platform.toLowerCase()})`);
+    if (!isSupabaseAdminConfigured) {
+      return NextResponse.json({ error: 'Device registration is unavailable.' }, { status: 503 });
+    }
+    const { error } = await supabaseAdmin.from('mobile_push_devices').upsert({
+      platform,
+      token,
+      user_id: auth.session.user.id,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'platform,token' });
+    if (error) {
+      return NextResponse.json({ error: 'Could not save this device. Please try again.' }, { status: 503 });
+    }
 
     return NextResponse.json({
       success: true,

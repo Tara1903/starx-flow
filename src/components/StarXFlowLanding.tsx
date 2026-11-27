@@ -2909,6 +2909,9 @@ export function StarXFlowLanding() {
   {/* =========================================================================== */}
   <div
     id="starx-modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-title"
     className="fixed inset-0 z-50 hidden items-center justify-center p-4"
     style={{ background: 'rgba(2, 10, 7, 0.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' } as React.CSSProperties}
     onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}

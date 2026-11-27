@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
+import { useDashboardStore, restoreDashboardSection } from "../../store/dashboardStore";
 import { DashboardSidebar } from "../../components/dashboard/DashboardSidebar";
 import { DashboardTopBar } from "../../components/dashboard/DashboardTopBar";
 import { GlassSkeleton, NetworkStatusBanner } from "../../components/ui";
@@ -56,18 +56,10 @@ export function DashboardLayout() {
     };
   }, [fetchInboxData, subscribeToInbox, unsubscribeFromInbox]);
 
-  // Mark onboarding complete safely if they somehow reach dashboard without it
   React.useEffect(() => {
-    import("../../store/authStore").then(({ useAuthStore }) => {
-      const auth = useAuthStore.getState();
-      if (auth.user && !auth.user.onboardingComplete) {
-        useAuthStore.setState({ user: { ...auth.user, onboardingComplete: true } });
-        
-        import("../../store/onboardingStore").then(({ useOnboardingStore }) => {
-          useOnboardingStore.getState().completeOnboarding();
-        });
-      }
-    });
+    restoreDashboardSection();
+    window.addEventListener("popstate", restoreDashboardSection);
+    return () => window.removeEventListener("popstate", restoreDashboardSection);
   }, []);
 
   // States for modals managed at layout level
@@ -181,20 +173,17 @@ export function DashboardLayout() {
 
         {/* 4. Section Render Area */}
         <div role="region" aria-label="Dashboard workspace" className="flex-1 px-4 py-5 sm:px-6 lg:px-8 py-6 pb-28 sm:pb-12 max-w-[1680px] w-full mx-auto relative z-10">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={activeSection}
-              initial={false}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0.94, scale: 0.99, y: -4 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="h-full"
-            >
-              <React.Suspense fallback={<GlassSkeleton variant="panel" />}>
-                {renderActiveSection()}
-              </React.Suspense>
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            key={activeSection}
+            initial={prefersReduced ? false : { opacity: 0.94, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: prefersReduced ? 0 : 0.16, ease: [0.16, 1, 0.3, 1] }}
+            className="h-full"
+          >
+            <React.Suspense fallback={<GlassSkeleton variant="panel" />}>
+              {renderActiveSection()}
+            </React.Suspense>
+          </motion.div>
         </div>
       </div>
 

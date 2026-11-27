@@ -5,29 +5,11 @@ import { motion, useReducedMotion } from "motion/react";
 import { X, Sparkles, Calendar, ArrowRight, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { demoRequestSchema, type DemoFormValues } from "@/lib/demoRequest";
 import { GlassButton } from "../ui/GlassButton";
 import { SuccessState } from "../ui/SuccessState";
 import { smoothTransition } from "../../lib/motionVariants";
 
-const demoSchema = z.object({
-  fullName: z.string().trim().min(2, "Name must be at least 2 characters"),
-  workEmail: z.string().trim().email("Please enter a valid work email"),
-  phone: z.string().trim().optional(),
-  businessName: z.string().trim().min(2, "Business name is required"),
-  businessType: z.string().min(1, "Please select an industry"),
-  businessSize: z.string().min(1, "Please select business size"),
-  primaryNeed: z.string().min(1, "Please select primary automation goal"),
-  preferredContact: z.enum(["email", "whatsapp", "phone"]),
-  website: z.string().trim().optional(),
-  notes: z.string().trim().max(500).optional(),
-  honeypot: z.string().optional(),
-  consent: z.boolean().refine((val) => val === true, {
-    message: "Consent is required to schedule your demonstration",
-  }),
-});
-
-type DemoFormValues = z.infer<typeof demoSchema>;
 
 interface DemoModalProps {
   onClose: () => void;
@@ -35,6 +17,7 @@ interface DemoModalProps {
 
 export function DemoModal({ onClose }: DemoModalProps) {
   const prefersReduced = useReducedMotion();
+  const pending = React.useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<{
@@ -48,7 +31,7 @@ export function DemoModal({ onClose }: DemoModalProps) {
     watch,
     formState: { errors },
   } = useForm<DemoFormValues>({
-    resolver: zodResolver(demoSchema),
+    resolver: zodResolver(demoRequestSchema),
     defaultValues: {
       fullName: "",
       workEmail: "",
@@ -76,6 +59,8 @@ export function DemoModal({ onClose }: DemoModalProps) {
   }, [onClose, isSubmitting]);
 
   const onSubmit = async (data: DemoFormValues) => {
+    if (pending.current) return;
+    pending.current = true;
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -88,17 +73,18 @@ export function DemoModal({ onClose }: DemoModalProps) {
 
       const result = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !result.success || !result.referenceId) {
         throw new Error(result.error || "Failed to submit request.");
       }
 
       setSuccessData({
-        referenceId: result.referenceId || "DEMO-CONFIRMED",
+        referenceId: result.referenceId,
         message: result.message || "Your demonstration request has been received.",
       });
     } catch (err: any) {
       setSubmitError(err.message || "Submission failed. Please try again.");
     } finally {
+      pending.current = false;
       setIsSubmitting(false);
     }
   };
@@ -177,7 +163,7 @@ export function DemoModal({ onClose }: DemoModalProps) {
               </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-xs">
+            <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-xs">
               <input
                 type="text"
                 {...register("honeypot")}
@@ -297,6 +283,7 @@ export function DemoModal({ onClose }: DemoModalProps) {
                     placeholder="+44 7911 123456 or +353 87 123 4567"
                     className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs"
                   />
+          {errors.phone && <p role="alert" className="text-xs text-red-400">{errors.phone.message}</p>}
                 </div>
               </div>
 
