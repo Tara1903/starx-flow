@@ -24,6 +24,7 @@ import {
   Cpu,
   Search,
   ArrowRight,
+  type LucideIcon,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import {
@@ -37,20 +38,11 @@ import { navPillSpring, sidebarSpring, liquidSpring, MOTION_EASE } from "../../l
 interface SidebarItem {
   id: DashboardSection;
   label: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
   badge?: number | string;
   group: "core" | "ai" | "ops";
   subItems?: { label: string; dotClass: string; action: () => void }[];
 }
-
-const CATEGORY_TABS = [
-  { id: "all", label: "All" },
-  { id: "core", label: "Core" },
-  { id: "ai", label: "AI" },
-  { id: "ops", label: "Ops" },
-] as const;
-
-type CategoryFilter = (typeof CATEGORY_TABS)[number]["id"];
 
 export function DashboardSidebar() {
   const router = useRouter();
@@ -69,7 +61,6 @@ export function DashboardSidebar() {
 
   const openCommandCenter = useUIStore((s) => s.openCommandCenter);
 
-  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
   const [hoveredItemId, setHoveredItemId] = useState<DashboardSection | null>(null);
   const [flyoutState, setFlyoutState] = useState<{ item: SidebarItem; top: number } | null>(null);
   const [tooltipState, setTooltipState] = useState<{
@@ -170,20 +161,20 @@ export function DashboardSidebar() {
     {
       id: "overview",
       label: "Home",
-      icon: <Home className="w-4 h-4" />,
+      icon: Home,
       group: "core",
     },
     {
       id: "conversations",
       label: "Inbox",
-      icon: <MessageSquare className="w-4 h-4" />,
+      icon: MessageSquare,
       badge: unreadConversationsCount || undefined,
       group: "core",
     },
     {
       id: "calendar",
       label: "Calendar",
-      icon: <CalendarIcon className="w-4 h-4" />,
+      icon: CalendarIcon,
       group: "core",
       subItems: [
         { label: "Discovery Calls", dotClass: "bg-amber-400", action: () => setActiveSection("calendar") },
@@ -194,7 +185,7 @@ export function DashboardSidebar() {
     {
       id: "workflows",
       label: "Workflows",
-      icon: <Layers className="w-4 h-4" />,
+      icon: Layers,
       badge: activeWorkflowsCount || undefined,
       group: "core",
       subItems: [
@@ -206,7 +197,7 @@ export function DashboardSidebar() {
     {
       id: "crm",
       label: "Customers",
-      icon: <Users className="w-4 h-4" />,
+      icon: Users,
       group: "core",
       subItems: [
         { label: "Active Clients", dotClass: "bg-emerald-400", action: () => setActiveSection("crm") },
@@ -217,7 +208,7 @@ export function DashboardSidebar() {
     {
       id: "orders",
       label: "Orders",
-      icon: <ShoppingBag className="w-4 h-4" />,
+      icon: ShoppingBag,
       group: "core",
     },
 
@@ -225,7 +216,7 @@ export function DashboardSidebar() {
     {
       id: "agents",
       label: "AI Receptionist",
-      icon: <Bot className="w-4 h-4" />,
+      icon: Bot,
       badge: "Live",
       group: "ai",
       subItems: [
@@ -237,19 +228,19 @@ export function DashboardSidebar() {
     {
       id: "voice",
       label: "Voice AI",
-      icon: <Phone className="w-4 h-4" />,
+      icon: Phone,
       group: "ai",
     },
     {
       id: "playground",
       label: "AI Playground",
-      icon: <Brain className="w-4 h-4" />,
+      icon: Brain,
       group: "ai",
     },
     {
       id: "os",
       label: "Business OS",
-      icon: <Cpu className="w-4 h-4" />,
+      icon: Cpu,
       group: "ai",
     },
 
@@ -257,47 +248,43 @@ export function DashboardSidebar() {
     {
       id: "knowledge",
       label: "Knowledge",
-      icon: <BookOpen className="w-4 h-4" />,
+      icon: BookOpen,
       group: "ops",
     },
     {
       id: "tasks",
       label: "Tasks",
-      icon: <CheckSquare className="w-4 h-4" />,
+      icon: CheckSquare,
       group: "ops",
     },
     {
       id: "team",
       label: "Team",
-      icon: <Contact className="w-4 h-4" />,
+      icon: Contact,
       group: "ops",
     },
     {
       id: "analytics",
       label: "Analytics",
-      icon: <BarChart3 className="w-4 h-4" />,
+      icon: BarChart3,
       group: "ops",
     },
     {
       id: "channels",
       label: "Channels",
-      icon: <Radio className="w-4 h-4" />,
+      icon: Radio,
       badge: connectedChannelsCount > 0 ? connectedChannelsCount : undefined,
       group: "ops",
     },
     {
       id: "settings",
       label: "Settings",
-      icon: <Settings className="w-4 h-4" />,
+      icon: Settings,
       group: "ops",
     },
   ];
 
-  const displayedItems = isCollapsed
-    ? menuItems
-    : selectedCategory === "all"
-      ? menuItems
-      : menuItems.filter((i) => i.group === selectedCategory);
+  const displayedItems = menuItems;
 
   const initials = user?.name
     ? user.name
@@ -308,7 +295,11 @@ export function DashboardSidebar() {
         .join("") || "SX"
     : "SX";
 
-  const workspaceLabel = user?.businessName || "Command Center";
+  const rawBusinessName = user?.businessName?.trim() || "";
+  const workspaceLabel =
+    !rawBusinessName || rawBusinessName.toLowerCase().startsWith("starx flow")
+      ? "Command Workspace"
+      : rawBusinessName;
   const displayName = user?.name || "Workspace Owner";
   const displayEmail = user?.email || "";
 
@@ -336,7 +327,7 @@ export function DashboardSidebar() {
           {/* Brand Row */}
           <div
             className={cn(
-              "flex items-center h-13 px-3 relative border-b border-white/[0.06] flex-shrink-0",
+              "flex items-center h-14 px-3 relative border-b border-white/[0.05] flex-shrink-0",
               isCollapsed ? "justify-center" : "justify-between px-3.5"
             )}
           >
@@ -363,9 +354,9 @@ export function DashboardSidebar() {
                 onMouseLeave={() => {
                   if (isCollapsed) setTooltipState(null);
                 }}
-                className="w-8 h-8 rounded-xl bg-emerald-500/12 border border-emerald-400/35 flex items-center justify-center flex-shrink-0 shadow-[0_0_16px_rgba(16,185,129,0.16)] cursor-pointer"
+                className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center flex-shrink-0 shadow-[0_0_16px_rgba(16,185,129,0.18)] cursor-pointer"
               >
-                <img src="/logo.svg" alt="StarX Flow" className="w-4.5 h-4.5 object-contain" />
+                <img src="/logo.svg" alt="StarX Flow" className="w-5 h-5 object-contain" />
               </motion.div>
 
               <AnimatePresence initial={false}>
@@ -379,7 +370,7 @@ export function DashboardSidebar() {
                     className="flex flex-col min-w-0"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-semibold text-[#f2fbf6] tracking-tight truncate">
+                      <span className="text-[13.5px] font-semibold text-[#f2fbf6] tracking-tight truncate">
                         StarX Flow
                       </span>
                       <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 leading-none whitespace-nowrap">
@@ -404,7 +395,7 @@ export function DashboardSidebar() {
               transition={liquidSpring}
               className={cn(
                 "w-6 h-6 rounded-full bg-[#0a1712] border border-white/[0.14] flex items-center justify-center text-[#8ca398] hover:text-emerald-300 hover:border-emerald-400/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70",
-                isCollapsed ? "absolute -right-3 top-3.5 z-50 shadow-md" : "relative flex-shrink-0"
+                isCollapsed ? "absolute -right-3 top-4 z-50 shadow-md" : "relative flex-shrink-0"
               )}
             >
               <motion.span
@@ -417,108 +408,55 @@ export function DashboardSidebar() {
             </motion.button>
           </div>
 
-          {/* Quick Jump / Command Center */}
-          <div className="px-3 pt-2.5 pb-1.5 flex-shrink-0">
-            {isCollapsed ? (
-              <div className="flex justify-center">
-                <motion.button
-                  type="button"
-                  whileHover={prefersReduced ? undefined : { scale: 1.08 }}
-                  whileTap={prefersReduced ? undefined : { scale: 0.94 }}
-                  transition={liquidSpring}
-                  onClick={openCommandCenter}
-                  onMouseEnter={(e) => {
-                    if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
-                    setFlyoutState(null);
-                    const asideRect = asideContainerRef.current?.getBoundingClientRect();
-                    const btnRect = e.currentTarget.getBoundingClientRect();
-                    if (asideRect) {
-                      setTooltipState({
-                        label: "Quick jump",
-                        badge: "⌘K",
-                        top: btnRect.top - asideRect.top + btnRect.height / 2,
-                      });
-                    }
-                  }}
-                  onMouseLeave={() => setTooltipState(null)}
-                  aria-label="Search and command center (Press ⌘K)"
-                  className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-emerald-400/40 hover:bg-white/[0.07] flex items-center justify-center text-[#8ca398] hover:text-emerald-300 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70"
-                >
-                  <Search className="w-4 h-4" />
-                </motion.button>
-              </div>
-            ) : (
+          {/* Quick Jump kept exclusively in collapsed dock (expanded header uses TopBar Search ⌘K) */}
+          {isCollapsed && (
+            <div className="px-3 pt-2.5 pb-1 flex-shrink-0 flex justify-center">
               <motion.button
                 type="button"
-                whileTap={prefersReduced ? undefined : { scale: 0.985 }}
+                whileHover={prefersReduced ? undefined : { scale: 1.08 }}
+                whileTap={prefersReduced ? undefined : { scale: 0.94 }}
+                transition={liquidSpring}
                 onClick={openCommandCenter}
-                className="w-full h-8 flex items-center justify-between px-2.5 rounded-xl bg-white/[0.035] border border-white/[0.08] hover:border-emerald-400/35 hover:bg-white/[0.06] text-xs text-[#8ca398] hover:text-[#f2fbf6] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 group"
+                onMouseEnter={(e) => {
+                  if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
+                  setFlyoutState(null);
+                  const asideRect = asideContainerRef.current?.getBoundingClientRect();
+                  const btnRect = e.currentTarget.getBoundingClientRect();
+                  if (asideRect) {
+                    setTooltipState({
+                      label: "Quick jump",
+                      badge: "⌘K",
+                      top: btnRect.top - asideRect.top + btnRect.height / 2,
+                    });
+                  }
+                }}
+                onMouseLeave={() => setTooltipState(null)}
+                aria-label="Search and command center (Press ⌘K)"
+                className="w-10 h-9 rounded-xl bg-white/[0.06] hover:border-emerald-400/35 hover:bg-white/[0.1] border border-transparent flex items-center justify-center text-[#b7cbc0] hover:text-emerald-300 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70"
               >
-                <span className="flex items-center gap-2 min-w-0">
-                  <Search className="w-3.5 h-3.5 text-[#8ca398] group-hover:text-emerald-300 transition-colors flex-shrink-0" />
-                  <span className="truncate">Quick jump...</span>
-                </span>
-                <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-white/[0.06] text-zinc-300 border border-white/[0.1] leading-none flex-shrink-0">
-                  ⌘K
-                </kbd>
+                <Search className="w-[18px] h-[18px]" strokeWidth={2.15} />
               </motion.button>
-            )}
-          </div>
-
-          {/* Segmented Category Filter with Gliding Pill */}
-          {!isCollapsed && (
-            <div className="px-3 pb-2 border-b border-white/[0.06] flex-shrink-0">
-              <div
-                role="tablist"
-                aria-label="Filter navigation sections"
-                className="grid grid-cols-4 gap-1 p-0.5 rounded-xl bg-white/[0.03] border border-white/[0.06]"
-              >
-                {CATEGORY_TABS.map((cat) => {
-                  const isSelected = selectedCategory === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={isSelected}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={cn(
-                        "relative py-1 px-1.5 text-[11px] font-medium rounded-[9px] transition-colors cursor-pointer text-center whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70",
-                        isSelected ? "text-emerald-200" : "text-[#8ca398] hover:text-zinc-200"
-                      )}
-                    >
-                      {isSelected && (
-                        <motion.span
-                          layoutId="sidebarCategoryPill"
-                          transition={prefersReduced ? { duration: 0 } : navPillSpring}
-                          className="absolute inset-0 rounded-[9px] bg-emerald-500/18 border border-emerald-400/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] -z-10"
-                        />
-                      )}
-                      {cat.label}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
           )}
         </div>
 
-        {/* Navigation Rail — V7 staggered dock icons, gliding hover surface & active rail */}
+        {/* Navigation Rail — spacious fuller icons, clean dividers, gliding hover & active rail */}
         <nav
           ref={desktopNavRef}
           onKeyDown={handleDesktopNavKeyDown}
           onMouseLeave={() => setHoveredItemId(null)}
           aria-label="Dashboard sections"
           className={cn(
-            "flex-1 min-h-0 flex flex-col overflow-y-auto console-scroll py-1.5 select-none",
-            isCollapsed ? "px-2 gap-1 items-center" : "px-2.5 gap-0.5"
+            "flex-1 min-h-0 flex flex-col overflow-y-auto console-scroll select-none",
+            isCollapsed
+              ? "px-2 py-1.5 gap-1 [@media(max-height:840px)]:gap-0.5 items-center"
+              : "px-2.5 py-2 [@media(max-height:840px)]:py-1.5 gap-1 [@media(max-height:840px)]:gap-0.5"
           )}
         >
           {displayedItems.map((item, idx) => {
             const prevItem = displayedItems[idx - 1];
             const showGroupHeader =
               !isCollapsed &&
-              selectedCategory === "all" &&
               prevItem &&
               prevItem.group !== item.group;
             const showCollapsedDivider =
@@ -530,11 +468,10 @@ export function DashboardSidebar() {
             return (
               <React.Fragment key={item.id}>
                 {showGroupHeader && (
-                  <div className="pt-2 pb-1 [@media(max-height:840px)]:pt-1 [@media(max-height:840px)]:pb-0.5 px-2.5 flex items-center gap-2 flex-shrink-0">
-                    <span className="text-[10px] font-medium text-[#70877c] tracking-wide whitespace-nowrap">
+                  <div className="pt-2.5 pb-1 [@media(max-height:840px)]:pt-1.5 [@media(max-height:840px)]:pb-0.5 px-2.5 flex items-center flex-shrink-0">
+                    <span className="text-[10.5px] font-medium text-[#70877c] tracking-wide whitespace-nowrap">
                       {groupTitle}
                     </span>
-                    <span className="h-px flex-1 bg-white/[0.06]" />
                   </div>
                 )}
                 {showCollapsedDivider && (
@@ -546,32 +483,15 @@ export function DashboardSidebar() {
           })}
         </nav>
 
-        {/* Footer: Honest Live Status + Account Profile */}
-        <div className="flex flex-col flex-shrink-0 border-t border-white/[0.06] bg-black/20 rounded-b-[inherit]">
-          {!isCollapsed && (
-            <div className="px-3.5 py-2 flex items-center justify-between text-[11px] border-b border-white/[0.05]">
-              <span className="flex items-center gap-2 text-[#a7bfb3] min-w-0 truncate">
-                <span className="relative flex h-2 w-2 flex-shrink-0">
-                  {!prefersReduced && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-50" />
-                  )}
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]" />
-                </span>
-                <span className="truncate">Receptionist active</span>
-              </span>
-              <span className="font-mono text-[10px] text-[#8ca398] tabular-nums flex-shrink-0">
-                {activeWorkflowsCount} {activeWorkflowsCount === 1 ? "flow" : "flows"}
-              </span>
-            </div>
-          )}
-
-          <div className="p-2.5">
+        {/* Unified Clean Footer: Live Status integrated into Profile */}
+        <div className="flex flex-col flex-shrink-0 border-t border-white/[0.05] bg-black/20 rounded-b-[inherit]">
+          <div className={cn(isCollapsed ? "p-2.5" : "px-3 py-2.5")}>
             <div
               className={cn(
                 "flex items-center justify-between rounded-xl transition-colors",
                 isCollapsed
                   ? "justify-center"
-                  : "px-2 py-1.5 bg-white/[0.03] border border-white/[0.06]"
+                  : "px-1.5 py-1 hover:bg-white/[0.03]"
               )}
             >
               <div
@@ -599,15 +519,13 @@ export function DashboardSidebar() {
                 </motion.div>
 
                 {!isCollapsed && (
-                  <div className="flex flex-col min-w-0 max-w-[144px]">
+                  <div className="flex flex-col min-w-0 max-w-[152px]">
                     <span className="text-xs font-semibold text-[#f2fbf6] truncate leading-tight">
                       {displayName}
                     </span>
-                    {displayEmail && (
-                      <span className="text-[11px] text-[#8ca398] truncate leading-tight">
-                        {displayEmail}
-                      </span>
-                    )}
+                    <span className="text-[11px] text-[#8ca398] truncate leading-tight tabular-nums">
+                      Receptionist live · {activeWorkflowsCount} {activeWorkflowsCount === 1 ? "flow" : "flows"}
+                    </span>
                   </div>
                 )}
               </div>
@@ -622,7 +540,7 @@ export function DashboardSidebar() {
                   title="Sign out"
                   aria-label="Sign out"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  <LogOut className="w-4 h-4" />
                 </motion.button>
               )}
             </div>
@@ -639,15 +557,15 @@ export function DashboardSidebar() {
               exit={prefersReduced ? { opacity: 0 } : { opacity: 0, x: -6, scale: 0.94 }}
               transition={prefersReduced ? { duration: 0 } : { type: "spring", stiffness: 460, damping: 28, mass: 0.6 }}
               style={{ top: tooltipState.top }}
-              className="absolute left-full ml-3 -translate-y-1/2 z-50 px-3 py-1.5 rounded-full bg-[#07120d]/95 backdrop-blur-2xl border border-emerald-500/30 text-xs font-medium text-white whitespace-nowrap shadow-[0_12px_32px_rgba(0,0,0,0.72)] flex items-center gap-2 pointer-events-none select-none"
+              className="absolute left-full ml-3 -translate-y-1/2 z-50 px-3 py-1.5 rounded-full bg-[#050e0a]/98 backdrop-blur-xl border border-emerald-400/35 text-xs font-medium text-white whitespace-nowrap shadow-[0_16px_40px_rgba(0,0,0,0.9)] flex items-center gap-2 pointer-events-none select-none"
             >
               <span>{tooltipState.label}</span>
               {tooltipState.badge !== undefined && (
                 <span
                   className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded-full font-semibold leading-none",
+                    "text-[10px] px-1.5 py-0.5 rounded-full font-semibold leading-none tabular-nums",
                     tooltipState.badge === "⌘K"
-                      ? "font-mono bg-white/10 text-zinc-300 border border-white/15"
+                      ? "bg-white/10 text-zinc-200 border border-white/15"
                       : tooltipState.badge === "Live" || tooltipState.badge === "Pro"
                         ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/35"
                         : "bg-red-500 text-white"
@@ -704,13 +622,13 @@ export function DashboardSidebar() {
                       sub.action();
                       setFlyoutState(null);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-full bg-[#07120d]/95 backdrop-blur-2xl border border-emerald-400/25 hover:border-emerald-400/55 shadow-[0_12px_30px_rgba(0,0,0,0.75)] text-xs font-medium text-zinc-200 hover:text-white transition-colors flex items-center justify-between gap-2.5 group/sub cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-full bg-[#050e0a]/98 backdrop-blur-xl border border-emerald-400/35 hover:border-emerald-400/65 shadow-[0_16px_42px_rgba(0,0,0,0.92)] text-xs font-medium text-zinc-100 hover:text-white transition-colors flex items-center justify-between gap-2.5 group/sub cursor-pointer"
                   >
                     <span className="flex items-center gap-2 min-w-0">
                       <span className={cn("w-2 h-2 rounded-full flex-shrink-0", sub.dotClass)} />
                       <span className="truncate">{sub.label}</span>
                     </span>
-                    <ArrowRight className="w-3 h-3 text-zinc-500 group-hover/sub:text-emerald-300 group-hover/sub:translate-x-0.5 transition-all flex-shrink-0" />
+                    <ArrowRight className="w-3 h-3 text-zinc-400 group-hover/sub:text-emerald-300 group-hover/sub:translate-x-0.5 transition-all flex-shrink-0" />
                   </motion.button>
                 );
               })}
@@ -730,7 +648,7 @@ export function DashboardSidebar() {
               onMouseEnter={() => setShowProfileFlyout(true)}
               onMouseLeave={() => setShowProfileFlyout(false)}
             >
-              <div className="p-2.5 rounded-2xl bg-[#07120d]/95 backdrop-blur-2xl border border-emerald-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.8)] min-w-[192px]">
+              <div className="p-2.5 rounded-2xl bg-[#050e0a]/98 backdrop-blur-xl border border-emerald-400/35 shadow-[0_20px_50px_rgba(0,0,0,0.92)] min-w-[192px]">
                 <div className="flex items-center gap-2.5 pb-2 border-b border-white/[0.08]">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center font-semibold text-white text-[11px] flex-shrink-0">
                     {initials}
@@ -761,6 +679,7 @@ export function DashboardSidebar() {
   function renderNavItem(item: SidebarItem, index: number) {
     const isActive = activeSection === item.id;
     const isHovered = hoveredItemId === item.id && !isActive;
+    const IconComp = item.icon;
 
     return (
       <motion.button
@@ -788,7 +707,7 @@ export function DashboardSidebar() {
                 delay: Math.min(index, 15) * (isCollapsed ? 0.022 : 0.012),
               }
         }
-        whileHover={prefersReduced ? undefined : isCollapsed ? { scale: 1.1 } : { x: 2 }}
+        whileHover={prefersReduced ? undefined : isCollapsed ? { scale: 1.08 } : { x: 2 }}
         whileTap={prefersReduced ? undefined : { scale: 0.975 }}
         onClick={() => {
           setActiveSection(item.id);
@@ -799,8 +718,8 @@ export function DashboardSidebar() {
         className={cn(
           "relative flex items-center rounded-xl transition-colors duration-150 group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 select-none flex-shrink-0",
           isCollapsed
-            ? "w-10 h-9 [@media(max-height:840px)]:h-7.5 justify-center mx-auto"
-            : "w-full h-[31px] xl:h-[33px] [@media(max-height:840px)]:h-[26px] gap-2.5 px-2.5",
+            ? "w-10 h-9 [@media(max-height:840px)]:w-9 [@media(max-height:840px)]:h-[30px] justify-center mx-auto bg-white/[0.04] hover:bg-white/[0.09]"
+            : "w-full h-[36px] xl:h-[38px] [@media(max-height:840px)]:h-[32px] gap-3 px-2.5",
           isActive
             ? "text-[#f2fbf6] font-semibold"
             : "text-[#9cb2a7] hover:text-[#f2fbf6]"
@@ -811,7 +730,7 @@ export function DashboardSidebar() {
           <motion.span
             layoutId={isCollapsed ? "hoverDockTile" : "hoverSidebarPill"}
             transition={hoverSpring}
-            className="absolute inset-0 rounded-xl bg-white/[0.055] border border-white/[0.07] -z-20 pointer-events-none"
+            className="absolute inset-0 rounded-xl bg-white/[0.06] border border-white/[0.08] -z-20 pointer-events-none"
           />
         )}
 
@@ -820,7 +739,7 @@ export function DashboardSidebar() {
           <motion.span
             layoutId="activeSidebarPill"
             transition={prefersReduced ? { duration: 0 } : navPillSpring}
-            className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-500/18 via-emerald-500/8 to-transparent border border-emerald-400/32 shadow-[0_4px_16px_rgba(16,185,129,0.12),inset_0_1px_0_rgba(255,255,255,0.12)] -z-10"
+            className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent border border-emerald-400/35 shadow-[0_4px_16px_rgba(16,185,129,0.14),inset_0_1px_0_rgba(255,255,255,0.12)] -z-10"
           />
         )}
         {!isCollapsed && isActive && (
@@ -836,11 +755,11 @@ export function DashboardSidebar() {
           <motion.span
             layoutId="activeDockTile"
             transition={prefersReduced ? { duration: 0 } : navPillSpring}
-            className="absolute inset-0 rounded-xl bg-emerald-500/18 border border-emerald-400/35 shadow-[0_0_14px_rgba(16,185,129,0.22)] -z-10"
+            className="absolute inset-0 rounded-xl bg-emerald-500/22 border border-emerald-400/40 shadow-[0_0_14px_rgba(16,185,129,0.24)] -z-10"
           />
         )}
 
-        {/* Icon Slot (replays staggered V7 dock waterfall cascade when collapsing) */}
+        {/* Icon Slot — larger, fuller, staggered V7 dock waterfall cascade */}
         <motion.span
           key={isCollapsed ? `dock-icon-${item.id}` : `row-icon-${item.id}`}
           initial={
@@ -854,7 +773,7 @@ export function DashboardSidebar() {
             prefersReduced
               ? undefined
               : {
-                  scale: isActive || hoveredItemId === item.id ? 1.1 : 1,
+                  scale: isActive || hoveredItemId === item.id ? 1.08 : 1,
                   y: 0,
                   opacity: 1,
                 }
@@ -873,13 +792,31 @@ export function DashboardSidebar() {
                 : hoverSpring
           }
           className={cn(
-            "relative flex items-center justify-center flex-shrink-0 transition-colors w-5 h-5",
+            "relative flex items-center justify-center flex-shrink-0 transition-colors rounded-lg",
+            isCollapsed
+              ? "w-6 h-6"
+              : "w-7 h-7 [@media(max-height:840px)]:w-6.5 [@media(max-height:840px)]:h-6.5",
             isActive
-              ? "text-emerald-300"
-              : "text-[#8ca398] group-hover:text-emerald-200"
+              ? isCollapsed
+                ? "text-emerald-300"
+                : "bg-emerald-500/22 text-emerald-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
+              : isCollapsed
+                ? item.group === "ai"
+                  ? "text-emerald-300/90 group-hover:text-emerald-200"
+                  : "text-[#b6cbc0] group-hover:text-emerald-200"
+                : item.group === "ai"
+                  ? "bg-emerald-500/12 text-emerald-300 group-hover:bg-emerald-500/20 group-hover:text-emerald-200"
+                  : "bg-white/[0.065] text-[#b6cbc0] group-hover:bg-white/[0.11] group-hover:text-[#f2fbf6]"
           )}
         >
-          {item.icon}
+          <IconComp
+            className={cn(
+              isCollapsed
+                ? "w-[19px] h-[19px] [@media(max-height:840px)]:w-[17px] [@media(max-height:840px)]:h-[17px]"
+                : "w-[18px] h-[18px] [@media(max-height:840px)]:w-[17px] [@media(max-height:840px)]:h-[17px]"
+            )}
+            strokeWidth={2.15}
+          />
 
           {isCollapsed && item.badge !== undefined && (
             typeof item.badge === "number" ? (
