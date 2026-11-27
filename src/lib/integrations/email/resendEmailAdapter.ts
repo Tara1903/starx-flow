@@ -182,7 +182,8 @@ export class ResendEmailAdapter {
     };
     if (html) payload.html = html;
     if (text) payload.text = text;
-    if (replyTo) payload.reply_to = replyTo;
+    const effectiveReplyTo = replyTo || process.env.RESEND_INBOUND_EMAIL || 'starx-flow@aisilalune.resend.app';
+    if (effectiveReplyTo) payload.reply_to = effectiveReplyTo;
 
     const requestHeaders: Record<string, string> = {
       Authorization: `Bearer ${this.apiKey}`,

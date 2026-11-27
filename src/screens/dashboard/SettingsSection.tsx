@@ -555,12 +555,12 @@ export function SettingsSection() {
                       <span className={CONSOLE_BADGE_LIVE}>Active</span>
                     </div>
                     <p className="text-xs text-[#727c75] mt-0.5 truncate">
-                      Inbound routing, In-Reply-To threading, and delivery tracking
+                      Sending: notifications@starx-flow.runs-on.dev • Receiving: starx-flow@aisilalune.resend.app
                     </p>
                   </div>
                 </div>
                 <span className="text-[11px] font-mono text-[#a1aaa4] bg-[#19201d] px-2.5 py-1 rounded-md border border-[#edf0ee]/[0.08] shrink-0">
-                  notifications@starx-flow.com
+                  starx-flow@aisilalune.resend.app
                 </span>
               </div>
 
