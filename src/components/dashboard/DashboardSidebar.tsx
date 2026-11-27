@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import {
   ShoppingBag,
   BookOpen,
@@ -12,8 +11,6 @@ import {
   Radio,
   Settings,
   MessageSquare,
-  LogOut,
-  ChevronLeft,
   Home,
   Users,
   Calendar as CalendarIcon,
@@ -22,31 +19,14 @@ import {
   Bot,
   Phone,
   Cpu,
-  Search,
-  ArrowRight,
-  type LucideIcon,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import {
-  useDashboardStore,
-  type DashboardSection,
-} from "../../store/dashboardStore";
+import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
 import { useUIStore } from "../../store/uiStore";
-import { cn } from "../../lib/utils";
-import { navPillSpring, sidebarSpring, liquidSpring, MOTION_EASE } from "../../lib/motionVariants";
-
-interface SidebarItem {
-  id: DashboardSection;
-  label: string;
-  icon: LucideIcon;
-  badge?: number | string;
-  group: "core" | "ai" | "ops";
-  subItems?: { label: string; dotClass: string; action: () => void }[];
-}
+import { ConsoleSidebar, type ConsoleSidebarGroup } from "../shared/ConsoleSidebar";
 
 export function DashboardSidebar() {
   const router = useRouter();
-  const prefersReduced = useReducedMotion();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const workflows = useAuthStore((s) => s.workflows);
@@ -58,233 +38,108 @@ export function DashboardSidebar() {
 
   const isCollapsed = useDashboardStore((s) => s.isSidebarCollapsed);
   const setIsCollapsed = useDashboardStore((s) => s.setSidebarCollapsed);
-
   const openCommandCenter = useUIStore((s) => s.openCommandCenter);
 
-  const [hoveredItemId, setHoveredItemId] = useState<DashboardSection | null>(null);
-  const [flyoutState, setFlyoutState] = useState<{ item: SidebarItem; top: number } | null>(null);
-  const [tooltipState, setTooltipState] = useState<{
-    label: string;
-    badge?: string | number;
-    groupName?: string;
-    top: number;
-  } | null>(null);
-  const [showProfileFlyout, setShowProfileFlyout] = useState(false);
-
-  const desktopNavRef = useRef<HTMLElement>(null);
-  const asideContainerRef = useRef<HTMLDivElement>(null);
-  const flyoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Auto-collapse on narrow tablet/small-laptop viewports
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth >= 640 && window.innerWidth <= 1024) {
       setIsCollapsed(true);
     }
   }, [setIsCollapsed]);
 
-  useEffect(() => {
-    setHoveredItemId(null);
-    if (!isCollapsed) {
-      setFlyoutState(null);
-      setTooltipState(null);
-      setShowProfileFlyout(false);
-    }
-  }, [isCollapsed]);
-
   const activeWorkflowsCount = workflows.filter((w) => w.isActive).length;
   const connectedChannelsCount = connectedChannels.filter((c) => c.isConnected).length;
   const unreadConversationsCount = conversations.filter((c) => c.unread).length;
 
-  const handleItemMouseEnter = (item: SidebarItem, e: React.MouseEvent<HTMLButtonElement>) => {
-    setHoveredItemId(item.id);
-    if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
-    if (!isCollapsed) return;
-
-    const asideRect = asideContainerRef.current?.getBoundingClientRect();
-    const btnRect = e.currentTarget.getBoundingClientRect();
-    if (!asideRect) return;
-
-    const top = btnRect.top - asideRect.top;
-
-    if (item.subItems && item.subItems.length > 0) {
-      setTooltipState(null);
-      setShowProfileFlyout(false);
-      setFlyoutState({ item, top });
-    } else {
-      setFlyoutState(null);
-      setShowProfileFlyout(false);
-      const groupName =
-        item.group === "core" ? "Core" : item.group === "ai" ? "AI Workforce" : "Operations";
-      setTooltipState({
-        label: item.label,
-        badge: item.badge,
-        groupName,
-        top: top + btnRect.height / 2,
-      });
-    }
-  };
-
-  const handleItemMouseLeave = () => {
-    setTooltipState(null);
-    flyoutTimeoutRef.current = setTimeout(() => {
-      setFlyoutState(null);
-    }, 260);
-  };
-
-  const handleDesktopNavKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
-    const keys = ["ArrowDown", "ArrowUp", "Home", "End"];
-    if (!keys.includes(e.key)) return;
-    const buttons = Array.from(
-      desktopNavRef.current?.querySelectorAll<HTMLButtonElement>("button[data-nav-item='true']") || []
-    );
-    if (buttons.length === 0) return;
-    const idx = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    e.preventDefault();
-    if (e.key === "Home") {
-      buttons[0]?.focus();
-    } else if (e.key === "End") {
-      buttons[buttons.length - 1]?.focus();
-    } else if (e.key === "ArrowDown") {
-      buttons[(idx + 1 + buttons.length) % buttons.length]?.focus();
-    } else if (e.key === "ArrowUp") {
-      buttons[(idx - 1 + buttons.length) % buttons.length]?.focus();
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    router.push("/");
-  };
-
-  const menuItems: SidebarItem[] = [
-    // Core
+  const groups: ConsoleSidebarGroup<DashboardSection>[] = [
     {
-      id: "overview",
-      label: "Home",
-      icon: Home,
-      group: "core",
-    },
-    {
-      id: "conversations",
-      label: "Inbox",
-      icon: MessageSquare,
-      badge: unreadConversationsCount || undefined,
-      group: "core",
-    },
-    {
-      id: "calendar",
-      label: "Calendar",
-      icon: CalendarIcon,
-      group: "core",
-      subItems: [
-        { label: "Discovery Calls", dotClass: "bg-amber-400", action: () => setActiveSection("calendar") },
-        { label: "Book Consultation", dotClass: "bg-emerald-400", action: () => setActiveSection("calendar") },
-        { label: "Calendar Sync", dotClass: "bg-sky-400", action: () => setActiveSection("calendar") },
+      id: "core",
+      title: "Core",
+      items: [
+        { id: "overview", label: "Home", icon: Home, group: "core" },
+        {
+          id: "conversations",
+          label: "Inbox",
+          icon: MessageSquare,
+          badge: unreadConversationsCount || undefined,
+          group: "core",
+        },
+        {
+          id: "calendar",
+          label: "Calendar",
+          icon: CalendarIcon,
+          group: "core",
+          subItems: [
+            { label: "Discovery calls", action: () => setActiveSection("calendar") },
+            { label: "Book consultation", action: () => setActiveSection("calendar") },
+            { label: "Calendar sync", action: () => setActiveSection("calendar") },
+          ],
+        },
+        {
+          id: "workflows",
+          label: "Workflows",
+          icon: Layers,
+          badge: activeWorkflowsCount || undefined,
+          group: "core",
+          subItems: [
+            { label: "Active automations", action: () => setActiveSection("workflows") },
+            { label: "Flow builder", action: () => setActiveSection("workflows") },
+            { label: "Draft templates", action: () => setActiveSection("workflows") },
+          ],
+        },
+        {
+          id: "crm",
+          label: "Customers",
+          icon: Users,
+          group: "core",
+          subItems: [
+            { label: "Active clients", action: () => setActiveSection("crm") },
+            { label: "Qualified leads", action: () => setActiveSection("crm") },
+            { label: "Export contacts", action: () => setActiveSection("crm") },
+          ],
+        },
+        { id: "orders", label: "Orders", icon: ShoppingBag, group: "core" },
       ],
     },
     {
-      id: "workflows",
-      label: "Workflows",
-      icon: Layers,
-      badge: activeWorkflowsCount || undefined,
-      group: "core",
-      subItems: [
-        { label: "Active Automations", dotClass: "bg-emerald-400", action: () => setActiveSection("workflows") },
-        { label: "Flow Builder", dotClass: "bg-purple-400", action: () => setActiveSection("workflows") },
-        { label: "Draft Templates", dotClass: "bg-amber-400", action: () => setActiveSection("workflows") },
+      id: "ai",
+      title: "AI workforce",
+      items: [
+        {
+          id: "agents",
+          label: "AI Receptionist",
+          icon: Bot,
+          badge: "Live",
+          group: "ai",
+          subItems: [
+            { label: "Live routing", action: () => setActiveSection("agents") },
+            { label: "Persona config", action: () => setActiveSection("agents") },
+            { label: "Knowledge grounding", action: () => setActiveSection("agents") },
+          ],
+        },
+        { id: "voice", label: "Voice AI", icon: Phone, group: "ai" },
+        { id: "playground", label: "AI Playground", icon: Brain, group: "ai" },
+        { id: "os", label: "Business OS", icon: Cpu, group: "ai" },
       ],
     },
     {
-      id: "crm",
-      label: "Customers",
-      icon: Users,
-      group: "core",
-      subItems: [
-        { label: "Active Clients", dotClass: "bg-emerald-400", action: () => setActiveSection("crm") },
-        { label: "Qualified Leads", dotClass: "bg-teal-400", action: () => setActiveSection("crm") },
-        { label: "Export Contacts", dotClass: "bg-zinc-400", action: () => setActiveSection("crm") },
+      id: "ops",
+      title: "Operations",
+      items: [
+        { id: "knowledge", label: "Knowledge", icon: BookOpen, group: "ops" },
+        { id: "tasks", label: "Tasks", icon: CheckSquare, group: "ops" },
+        { id: "team", label: "Team", icon: Contact, group: "ops" },
+        { id: "analytics", label: "Analytics", icon: BarChart3, group: "ops" },
+        {
+          id: "channels",
+          label: "Channels",
+          icon: Radio,
+          badge: connectedChannelsCount > 0 ? connectedChannelsCount : undefined,
+          group: "ops",
+        },
+        { id: "settings", label: "Settings", icon: Settings, group: "ops" },
       ],
-    },
-    {
-      id: "orders",
-      label: "Orders",
-      icon: ShoppingBag,
-      group: "core",
-    },
-
-    // AI Workforce
-    {
-      id: "agents",
-      label: "AI Receptionist",
-      icon: Bot,
-      badge: "Live",
-      group: "ai",
-      subItems: [
-        { label: "Live Routing", dotClass: "bg-emerald-400", action: () => setActiveSection("agents") },
-        { label: "Persona Config", dotClass: "bg-cyan-400", action: () => setActiveSection("agents") },
-        { label: "Knowledge Grounding", dotClass: "bg-purple-400", action: () => setActiveSection("agents") },
-      ],
-    },
-    {
-      id: "voice",
-      label: "Voice AI",
-      icon: Phone,
-      group: "ai",
-    },
-    {
-      id: "playground",
-      label: "AI Playground",
-      icon: Brain,
-      group: "ai",
-    },
-    {
-      id: "os",
-      label: "Business OS",
-      icon: Cpu,
-      group: "ai",
-    },
-
-    // Operations
-    {
-      id: "knowledge",
-      label: "Knowledge",
-      icon: BookOpen,
-      group: "ops",
-    },
-    {
-      id: "tasks",
-      label: "Tasks",
-      icon: CheckSquare,
-      group: "ops",
-    },
-    {
-      id: "team",
-      label: "Team",
-      icon: Contact,
-      group: "ops",
-    },
-    {
-      id: "analytics",
-      label: "Analytics",
-      icon: BarChart3,
-      group: "ops",
-    },
-    {
-      id: "channels",
-      label: "Channels",
-      icon: Radio,
-      badge: connectedChannelsCount > 0 ? connectedChannelsCount : undefined,
-      group: "ops",
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: Settings,
-      group: "ops",
     },
   ];
-
-  const displayedItems = menuItems;
 
   const initials = user?.name
     ? user.name
@@ -301,565 +156,38 @@ export function DashboardSidebar() {
       ? "Command Workspace"
       : rawBusinessName;
   const displayName = user?.name || "Workspace Owner";
-  const displayEmail = user?.email || "";
 
-  const hoverSpring = prefersReduced
-    ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 480, damping: 30, mass: 0.55 };
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
+  };
 
   return (
-    <motion.aside
-      aria-label="Dashboard sidebar"
-      initial={false}
-      animate={{ width: isCollapsed ? 72 : 280 }}
-      transition={prefersReduced ? { duration: 0 } : sidebarSpring}
-      className="hidden md:flex flex-col fixed top-3.5 bottom-3.5 left-3.5 z-40 select-none h-[calc(100vh-1.75rem)] h-[calc(100dvh-1.75rem)] pointer-events-auto"
-    >
-      <motion.div
-        ref={asideContainerRef}
-        initial={false}
-        animate={{ borderRadius: isCollapsed ? 28 : 24 }}
-        transition={prefersReduced ? { duration: 0 } : sidebarSpring}
-        className="flex flex-col h-full border border-white/[0.09] bg-[#040b08]/92 backdrop-blur-2xl shadow-[0_24px_60px_rgba(0,0,0,0.68),inset_0_1px_0_rgba(255,255,255,0.06)] relative justify-between"
-      >
-        {/* Top Header, Quick Jump, and Segmented Filter */}
-        <div className="flex flex-col flex-shrink-0">
-          {/* Brand Row */}
-          <div
-            className={cn(
-              "flex items-center h-14 px-3 relative border-b border-white/[0.05] flex-shrink-0",
-              isCollapsed ? "justify-center" : "justify-between px-3.5"
-            )}
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <motion.div
-                whileHover={prefersReduced ? undefined : { scale: 1.07 }}
-                whileTap={prefersReduced ? undefined : { scale: 0.94 }}
-                transition={liquidSpring}
-                onMouseEnter={(e) => {
-                  if (isCollapsed) {
-                    const asideRect = asideContainerRef.current?.getBoundingClientRect();
-                    const btnRect = e.currentTarget.getBoundingClientRect();
-                    if (asideRect) {
-                      setFlyoutState(null);
-                      setTooltipState({
-                        label: "StarX Flow",
-                        badge: "Pro",
-                        groupName: workspaceLabel,
-                        top: btnRect.top - asideRect.top + btnRect.height / 2,
-                      });
-                    }
-                  }
-                }}
-                onMouseLeave={() => {
-                  if (isCollapsed) setTooltipState(null);
-                }}
-                className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center flex-shrink-0 shadow-[0_0_16px_rgba(16,185,129,0.18)] cursor-pointer"
-              >
-                <img src="/logo.svg" alt="StarX Flow" className="w-5 h-5 object-contain" />
-              </motion.div>
-
-              <AnimatePresence initial={false}>
-                {!isCollapsed && (
-                  <motion.div
-                    key="sidebar-brand-copy"
-                    initial={prefersReduced ? false : { opacity: 0.92, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={prefersReduced ? { opacity: 0 } : { opacity: 0, x: -6 }}
-                    transition={{ duration: prefersReduced ? 0 : 0.2, ease: MOTION_EASE.premium }}
-                    className="flex flex-col min-w-0"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[13.5px] font-semibold text-[#f2fbf6] tracking-tight truncate">
-                        StarX Flow
-                      </span>
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 leading-none whitespace-nowrap">
-                        Pro
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-[#8ca398] truncate max-w-[148px] leading-tight">
-                      {workspaceLabel}
-                    </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <motion.button
-              type="button"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              aria-expanded={!isCollapsed}
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              whileHover={prefersReduced ? undefined : { scale: 1.12 }}
-              whileTap={prefersReduced ? undefined : { scale: 0.9 }}
-              transition={liquidSpring}
-              className={cn(
-                "w-6 h-6 rounded-full bg-[#0a1712] border border-white/[0.14] flex items-center justify-center text-[#8ca398] hover:text-emerald-300 hover:border-emerald-400/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70",
-                isCollapsed ? "absolute -right-3 top-4 z-50 shadow-md" : "relative flex-shrink-0"
-              )}
-            >
-              <motion.span
-                animate={{ rotate: isCollapsed ? 180 : 0 }}
-                transition={prefersReduced ? { duration: 0 } : liquidSpring}
-                className="flex items-center justify-center"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </motion.span>
-            </motion.button>
-          </div>
-
-          {/* Quick Jump kept exclusively in collapsed dock (expanded header uses TopBar Search ⌘K) */}
-          {isCollapsed && (
-            <div className="px-3 pt-2.5 pb-1 flex-shrink-0 flex justify-center">
-              <motion.button
-                type="button"
-                whileHover={prefersReduced ? undefined : { scale: 1.08 }}
-                whileTap={prefersReduced ? undefined : { scale: 0.94 }}
-                transition={liquidSpring}
-                onClick={openCommandCenter}
-                onMouseEnter={(e) => {
-                  if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
-                  setFlyoutState(null);
-                  const asideRect = asideContainerRef.current?.getBoundingClientRect();
-                  const btnRect = e.currentTarget.getBoundingClientRect();
-                  if (asideRect) {
-                    setTooltipState({
-                      label: "Quick jump",
-                      badge: "⌘K",
-                      top: btnRect.top - asideRect.top + btnRect.height / 2,
-                    });
-                  }
-                }}
-                onMouseLeave={() => setTooltipState(null)}
-                aria-label="Search and command center (Press ⌘K)"
-                className="w-10 h-9 rounded-xl bg-white/[0.06] hover:border-emerald-400/35 hover:bg-white/[0.1] border border-transparent flex items-center justify-center text-[#b7cbc0] hover:text-emerald-300 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70"
-              >
-                <Search className="w-[18px] h-[18px]" strokeWidth={2.15} />
-              </motion.button>
-            </div>
-          )}
-        </div>
-
-        {/* Navigation Rail — spacious fuller icons, clean dividers, gliding hover & active rail */}
-        <nav
-          ref={desktopNavRef}
-          onKeyDown={handleDesktopNavKeyDown}
-          onMouseLeave={() => setHoveredItemId(null)}
-          aria-label="Dashboard sections"
-          className={cn(
-            "flex-1 min-h-0 flex flex-col overflow-y-auto console-scroll select-none",
-            isCollapsed
-              ? "px-2 py-1.5 gap-1 [@media(max-height:840px)]:gap-0.5 items-center"
-              : "px-2.5 py-2 [@media(max-height:840px)]:py-1.5 gap-1 [@media(max-height:840px)]:gap-0.5"
-          )}
-        >
-          {displayedItems.map((item, idx) => {
-            const prevItem = displayedItems[idx - 1];
-            const showGroupHeader =
-              !isCollapsed &&
-              prevItem &&
-              prevItem.group !== item.group;
-            const showCollapsedDivider =
-              isCollapsed && prevItem && prevItem.group !== item.group;
-
-            const groupTitle =
-              item.group === "ai" ? "AI Workforce" : "Operations";
-
-            return (
-              <React.Fragment key={item.id}>
-                {showGroupHeader && (
-                  <div className="pt-2.5 pb-1 [@media(max-height:840px)]:pt-1.5 [@media(max-height:840px)]:pb-0.5 px-2.5 flex items-center flex-shrink-0">
-                    <span className="text-[10.5px] font-medium text-[#70877c] tracking-wide whitespace-nowrap">
-                      {groupTitle}
-                    </span>
-                  </div>
-                )}
-                {showCollapsedDivider && (
-                  <div className="my-0.5 w-6 border-t border-white/[0.07] flex-shrink-0" />
-                )}
-                {renderNavItem(item, idx)}
-              </React.Fragment>
-            );
-          })}
-        </nav>
-
-        {/* Unified Clean Footer: Live Status integrated into Profile */}
-        <div className="flex flex-col flex-shrink-0 border-t border-white/[0.05] bg-black/20 rounded-b-[inherit]">
-          <div className={cn(isCollapsed ? "p-2.5" : "px-3 py-2.5")}>
-            <div
-              className={cn(
-                "flex items-center justify-between rounded-xl transition-colors",
-                isCollapsed
-                  ? "justify-center"
-                  : "px-1.5 py-1 hover:bg-white/[0.03]"
-              )}
-            >
-              <div
-                onMouseEnter={() => {
-                  if (isCollapsed) {
-                    setShowProfileFlyout(true);
-                    setTooltipState(null);
-                    setFlyoutState(null);
-                  }
-                }}
-                onMouseLeave={() => {
-                  if (isCollapsed) setShowProfileFlyout(false);
-                }}
-                className="flex items-center gap-2.5 min-w-0"
-              >
-                <motion.div
-                  whileHover={prefersReduced ? undefined : { scale: 1.07 }}
-                  transition={liquidSpring}
-                  className="relative flex-shrink-0"
-                >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 border border-white/20 flex items-center justify-center font-semibold text-white text-[11px]">
-                    {initials}
-                  </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#040b08]" />
-                </motion.div>
-
-                {!isCollapsed && (
-                  <div className="flex flex-col min-w-0 max-w-[152px]">
-                    <span className="text-xs font-semibold text-[#f2fbf6] truncate leading-tight">
-                      {displayName}
-                    </span>
-                    <span className="text-[11px] text-[#8ca398] truncate leading-tight tabular-nums">
-                      Receptionist live · {activeWorkflowsCount} {activeWorkflowsCount === 1 ? "flow" : "flows"}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {!isCollapsed && (
-                <motion.button
-                  type="button"
-                  whileHover={prefersReduced ? undefined : { scale: 1.08 }}
-                  whileTap={prefersReduced ? undefined : { scale: 0.92 }}
-                  onClick={handleLogout}
-                  className="flex items-center justify-center text-[#8ca398] hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors border border-transparent hover:border-red-500/25 cursor-pointer flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70"
-                  title="Sign out"
-                  aria-label="Sign out"
-                >
-                  <LogOut className="w-4 h-4" />
-                </motion.button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Floating Tooltip Pill (Collapsed Dock — V7 spring pop-out) */}
-        <AnimatePresence>
-          {isCollapsed && tooltipState && !flyoutState && (
-            <motion.div
-              key={tooltipState.label}
-              initial={prefersReduced ? false : { opacity: 0, x: -8, scale: 0.92 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={prefersReduced ? { opacity: 0 } : { opacity: 0, x: -6, scale: 0.94 }}
-              transition={prefersReduced ? { duration: 0 } : { type: "spring", stiffness: 460, damping: 28, mass: 0.6 }}
-              style={{ top: tooltipState.top }}
-              className="absolute left-full ml-3 -translate-y-1/2 z-50 px-3 py-1.5 rounded-full bg-[#050e0a]/98 backdrop-blur-xl border border-emerald-400/35 text-xs font-medium text-white whitespace-nowrap shadow-[0_16px_40px_rgba(0,0,0,0.9)] flex items-center gap-2 pointer-events-none select-none"
-            >
-              <span>{tooltipState.label}</span>
-              {tooltipState.badge !== undefined && (
-                <span
-                  className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded-full font-semibold leading-none tabular-nums",
-                    tooltipState.badge === "⌘K"
-                      ? "bg-white/10 text-zinc-200 border border-white/15"
-                      : tooltipState.badge === "Live" || tooltipState.badge === "Pro"
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/35"
-                        : "bg-red-500 text-white"
-                  )}
-                >
-                  {tooltipState.badge}
-                </span>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Cascading Staggered Floating Pill Submenu (Collapsed Dock — V7 00:02 replica) */}
-        <AnimatePresence>
-          {isCollapsed && flyoutState && (
-            <motion.div
-              key={flyoutState.item.id}
-              initial={prefersReduced ? false : { opacity: 0.92 }}
-              animate={{ opacity: 1 }}
-              exit={prefersReduced ? { opacity: 0 } : { opacity: 0, x: -6 }}
-              transition={{ duration: prefersReduced ? 0 : 0.14 }}
-              style={{ top: flyoutState.top }}
-              onMouseEnter={() => {
-                if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
-              }}
-              onMouseLeave={() => setFlyoutState(null)}
-              className="absolute left-full pl-3 -translate-y-1/4 z-50 flex flex-col gap-1.5 min-w-[198px] select-none pointer-events-auto"
-            >
-              {flyoutState.item.subItems?.map((sub, sIdx) => {
-                const fanRotate = prefersReduced ? 0 : [-4.2, 1.2, 6.2][sIdx] ?? 0;
-                const fanY = prefersReduced ? 0 : [-2, 0, 3][sIdx] ?? 0;
-                return (
-                  <motion.button
-                    key={`${flyoutState.item.id}-${sub.label}`}
-                    type="button"
-                    style={{ transformOrigin: "left center" }}
-                    initial={prefersReduced ? false : { opacity: 0, x: -16, y: 0, scale: 0.86, rotate: 0 }}
-                    animate={{ opacity: 1, x: 0, y: fanY, scale: 1, rotate: fanRotate }}
-                    exit={prefersReduced ? { opacity: 0 } : { opacity: 0, x: -10, scale: 0.9, rotate: 0 }}
-                    transition={
-                      prefersReduced
-                        ? { duration: 0 }
-                        : {
-                            type: "spring",
-                            stiffness: 420,
-                            damping: 25,
-                            mass: 0.65,
-                            delay: sIdx * 0.05,
-                          }
-                    }
-                    whileHover={prefersReduced ? undefined : { x: 5, scale: 1.03, rotate: 0 }}
-                    whileTap={prefersReduced ? undefined : { scale: 0.97 }}
-                    onClick={() => {
-                      sub.action();
-                      setFlyoutState(null);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-full bg-[#050e0a]/98 backdrop-blur-xl border border-emerald-400/35 hover:border-emerald-400/65 shadow-[0_16px_42px_rgba(0,0,0,0.92)] text-xs font-medium text-zinc-100 hover:text-white transition-colors flex items-center justify-between gap-2.5 group/sub cursor-pointer"
-                  >
-                    <span className="flex items-center gap-2 min-w-0">
-                      <span className={cn("w-2 h-2 rounded-full flex-shrink-0", sub.dotClass)} />
-                      <span className="truncate">{sub.label}</span>
-                    </span>
-                    <ArrowRight className="w-3 h-3 text-zinc-400 group-hover/sub:text-emerald-300 group-hover/sub:translate-x-0.5 transition-all flex-shrink-0" />
-                  </motion.button>
-                );
-              })}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Profile Flyout (Collapsed Dock) */}
-        <AnimatePresence>
-          {isCollapsed && showProfileFlyout && (
-            <motion.div
-              initial={prefersReduced ? false : { opacity: 0, x: -8, scale: 0.92 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={prefersReduced ? { opacity: 0 } : { opacity: 0, x: -6, scale: 0.94 }}
-              transition={prefersReduced ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 28 }}
-              className="absolute left-full pl-3 bottom-2.5 z-50 select-none pointer-events-auto"
-              onMouseEnter={() => setShowProfileFlyout(true)}
-              onMouseLeave={() => setShowProfileFlyout(false)}
-            >
-              <div className="p-2.5 rounded-2xl bg-[#050e0a]/98 backdrop-blur-xl border border-emerald-400/35 shadow-[0_20px_50px_rgba(0,0,0,0.92)] min-w-[192px]">
-                <div className="flex items-center gap-2.5 pb-2 border-b border-white/[0.08]">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center font-semibold text-white text-[11px] flex-shrink-0">
-                    {initials}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-white truncate">{displayName}</p>
-                    {displayEmail && (
-                      <p className="text-[11px] text-[#8ca398] truncate">{displayEmail}</p>
-                    )}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="w-full mt-2 px-2 py-1.5 rounded-lg text-xs font-medium text-red-300 hover:bg-red-500/12 hover:text-red-200 transition-colors flex items-center gap-2 cursor-pointer"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Sign out</span>
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </motion.aside>
+    <ConsoleSidebar<DashboardSection>
+      asideAriaLabel="Dashboard sidebar"
+      navAriaLabel="Dashboard sections"
+      collapseAriaLabel="Collapse sidebar"
+      expandAriaLabel="Expand sidebar"
+      searchAriaLabel="Search and command center (Press ⌘K)"
+      layoutIdPrefix="dashboard-sidebar"
+      brandTitle="StarX Flow"
+      brandSubtitle={workspaceLabel}
+      brandBadge="Pro"
+      groups={groups}
+      activeSection={activeSection}
+      onSelectSection={setActiveSection}
+      isCollapsed={isCollapsed}
+      onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+      onOpenSearch={openCommandCenter}
+      footerInitials={initials}
+      footerTitle={displayName}
+      footerSubtitle={`Receptionist live · ${activeWorkflowsCount} ${activeWorkflowsCount === 1 ? "flow" : "flows"}`}
+      footerLiveBanner={{
+        label: "Workspace live",
+        statusText: `${activeWorkflowsCount} active`,
+        isHealthy: true,
+      }}
+      onLogout={handleLogout}
+    />
   );
-
-  function renderNavItem(item: SidebarItem, index: number) {
-    const isActive = activeSection === item.id;
-    const isHovered = hoveredItemId === item.id && !isActive;
-    const IconComp = item.icon;
-
-    return (
-      <motion.button
-        key={item.id}
-        type="button"
-        data-nav-item="true"
-        aria-label={item.label}
-        aria-current={isActive ? "page" : undefined}
-        initial={
-          prefersReduced
-            ? false
-            : isCollapsed
-              ? { scale: 0.78, y: -6, opacity: 0.92 }
-              : { x: -6, opacity: 0.94 }
-        }
-        animate={{ scale: 1, y: 0, x: 0, opacity: 1 }}
-        transition={
-          prefersReduced
-            ? { duration: 0 }
-            : {
-                type: "spring",
-                stiffness: 420,
-                damping: 28,
-                mass: 0.62,
-                delay: Math.min(index, 15) * (isCollapsed ? 0.022 : 0.012),
-              }
-        }
-        whileHover={prefersReduced ? undefined : isCollapsed ? { scale: 1.08 } : { x: 2 }}
-        whileTap={prefersReduced ? undefined : { scale: 0.975 }}
-        onClick={() => {
-          setActiveSection(item.id);
-          setFlyoutState(null);
-        }}
-        onMouseEnter={(e) => handleItemMouseEnter(item, e)}
-        onMouseLeave={handleItemMouseLeave}
-        className={cn(
-          "relative flex items-center rounded-xl transition-colors duration-150 group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 select-none flex-shrink-0",
-          isCollapsed
-            ? "w-10 h-9 [@media(max-height:840px)]:w-9 [@media(max-height:840px)]:h-[30px] justify-center mx-auto bg-white/[0.04] hover:bg-white/[0.09]"
-            : "w-full h-[36px] xl:h-[38px] [@media(max-height:840px)]:h-[32px] gap-3 px-2.5",
-          isActive
-            ? "text-[#f2fbf6] font-semibold"
-            : "text-[#9cb2a7] hover:text-[#f2fbf6]"
-        )}
-      >
-        {/* V7 Gliding Hover Pill (slides smoothly row-to-row across pointer traversal) */}
-        {isHovered && (
-          <motion.span
-            layoutId={isCollapsed ? "hoverDockTile" : "hoverSidebarPill"}
-            transition={hoverSpring}
-            className="absolute inset-0 rounded-xl bg-white/[0.06] border border-white/[0.08] -z-20 pointer-events-none"
-          />
-        )}
-
-        {/* Active Highlight Surface + Emerald Accent Rail */}
-        {!isCollapsed && isActive && (
-          <motion.span
-            layoutId="activeSidebarPill"
-            transition={prefersReduced ? { duration: 0 } : navPillSpring}
-            className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent border border-emerald-400/35 shadow-[0_4px_16px_rgba(16,185,129,0.14),inset_0_1px_0_rgba(255,255,255,0.12)] -z-10"
-          />
-        )}
-        {!isCollapsed && isActive && (
-          <motion.span
-            layoutId="activeSidebarRail"
-            transition={prefersReduced ? { duration: 0 } : navPillSpring}
-            className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]"
-          />
-        )}
-
-        {/* Collapsed Dock Active Surface */}
-        {isCollapsed && isActive && (
-          <motion.span
-            layoutId="activeDockTile"
-            transition={prefersReduced ? { duration: 0 } : navPillSpring}
-            className="absolute inset-0 rounded-xl bg-emerald-500/22 border border-emerald-400/40 shadow-[0_0_14px_rgba(16,185,129,0.24)] -z-10"
-          />
-        )}
-
-        {/* Icon Slot — larger, fuller, staggered V7 dock waterfall cascade */}
-        <motion.span
-          key={isCollapsed ? `dock-icon-${item.id}` : `row-icon-${item.id}`}
-          initial={
-            prefersReduced
-              ? false
-              : isCollapsed
-                ? { scale: 0.54, y: 8, opacity: 0.92 }
-                : { scale: 0.92 }
-          }
-          animate={
-            prefersReduced
-              ? undefined
-              : {
-                  scale: isActive || hoveredItemId === item.id ? 1.08 : 1,
-                  y: 0,
-                  opacity: 1,
-                }
-          }
-          transition={
-            prefersReduced
-              ? { duration: 0 }
-              : isCollapsed
-                ? {
-                    type: "spring",
-                    stiffness: 440,
-                    damping: 24,
-                    mass: 0.58,
-                    delay: Math.min(index, 14) * 0.025,
-                  }
-                : hoverSpring
-          }
-          className={cn(
-            "relative flex items-center justify-center flex-shrink-0 transition-colors rounded-lg",
-            isCollapsed
-              ? "w-6 h-6"
-              : "w-7 h-7 [@media(max-height:840px)]:w-6.5 [@media(max-height:840px)]:h-6.5",
-            isActive
-              ? isCollapsed
-                ? "text-emerald-300"
-                : "bg-emerald-500/22 text-emerald-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
-              : isCollapsed
-                ? item.group === "ai"
-                  ? "text-emerald-300/90 group-hover:text-emerald-200"
-                  : "text-[#b6cbc0] group-hover:text-emerald-200"
-                : item.group === "ai"
-                  ? "bg-emerald-500/12 text-emerald-300 group-hover:bg-emerald-500/20 group-hover:text-emerald-200"
-                  : "bg-white/[0.065] text-[#b6cbc0] group-hover:bg-white/[0.11] group-hover:text-[#f2fbf6]"
-          )}
-        >
-          <IconComp
-            className={cn(
-              isCollapsed
-                ? "w-[19px] h-[19px] [@media(max-height:840px)]:w-[17px] [@media(max-height:840px)]:h-[17px]"
-                : "w-[18px] h-[18px] [@media(max-height:840px)]:w-[17px] [@media(max-height:840px)]:h-[17px]"
-            )}
-            strokeWidth={2.15}
-          />
-
-          {isCollapsed && item.badge !== undefined && (
-            typeof item.badge === "number" ? (
-              <span className="absolute -top-1.5 -right-2 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white border border-[#040b08] text-[8px] font-bold rounded-full flex items-center justify-center leading-none tabular-nums">
-                {item.badge}
-              </span>
-            ) : (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 border border-[#040b08] shadow-[0_0_6px_rgba(52,211,153,0.9)]" />
-            )
-          )}
-        </motion.span>
-
-        {/* Expanded Label & Trailing Badge (slides in smoothly on dock expand) */}
-        {!isCollapsed && (
-          <motion.span
-            initial={prefersReduced ? false : { opacity: 0.92, x: -6 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{
-              duration: prefersReduced ? 0 : 0.18,
-              delay: prefersReduced ? 0 : Math.min(index, 12) * 0.01,
-              ease: MOTION_EASE.premium,
-            }}
-            className="flex items-center justify-between flex-1 min-w-0 gap-2"
-          >
-            <span className="truncate text-[12.5px] xl:text-[13px] tracking-[-0.01em] leading-none">
-              {item.label}
-            </span>
-
-            {item.badge !== undefined && (
-              <span
-                className={cn(
-                  "px-1.5 py-0.5 text-[10px] font-semibold rounded-md ml-auto tabular-nums leading-none whitespace-nowrap flex-shrink-0",
-                  typeof item.badge === "number"
-                    ? "bg-white/[0.08] text-zinc-200 border border-white/[0.1]"
-                    : "bg-emerald-500/15 text-emerald-300 border border-emerald-400/30"
-                )}
-              >
-                {item.badge}
-              </span>
-            )}
-          </motion.span>
-        )}
-      </motion.button>
-    );
-  }
 }
