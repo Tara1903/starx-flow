@@ -1,18 +1,31 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  User, Building, Mail, ShieldAlert, Check, RefreshCw, 
+import {
+  User, Building, Mail, Check, RefreshCw,
   Key, LogOut, Download, Trash2, ShieldCheck, Globe, AlertTriangle,
   Calendar, Instagram, CheckCircle2, ExternalLink, Layers, Unlink, CreditCard
 } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useAuthStore } from "../../store/authStore";
 import { useBillingStore } from "../../store/billingStore";
 import { useToastStore } from "../../store/toastStore";
 import { PermissionGate, GlassModal, GlassButton } from "../../components/ui";
 import { cn } from "../../lib/utils";
+import {
+  CONSOLE_PANEL,
+  CONSOLE_SUBCARD,
+  CONSOLE_INPUT,
+  CONSOLE_BTN_PRIMARY,
+  CONSOLE_BTN_SECONDARY,
+  CONSOLE_BTN_DANGER,
+  CONSOLE_BADGE_LIVE,
+  CONSOLE_BADGE_MUTED,
+  CONSOLE_HEADING,
+  CONSOLE_SECTION_TITLE,
+  CONSOLE_DIVIDER,
+} from "../../lib/consoleSurface";
 
 export function SettingsSection() {
   const user = useAuthStore((s) => s.user);
@@ -38,26 +51,26 @@ export function SettingsSection() {
   const [igInputPageId, setIgInputPageId] = useState("");
   const [igInputToken, setIgInputToken] = useState("");
   const [igConnecting, setIgConnecting] = useState(false);
-  const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [actionNotice, setActionNotice] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
 
-  const isBillingAdmin = !user?.role || user.role.toLowerCase() !== 'agent';
+  const isBillingAdmin = !user?.role || user.role.toLowerCase() !== "agent";
 
-  const notify = (type: 'success' | 'error' | 'info', message: string) => {
+  const notify = (type: "success" | "error" | "info", message: string) => {
     setActionNotice({ type, message });
     useToastStore.getState().pushToast({
       tone: type,
-      title: type === 'error' ? 'Action failed' : type === 'success' ? 'Saved' : 'Notice',
+      title: type === "error" ? "Action failed" : type === "success" ? "Saved" : "Notice",
       description: message,
     });
     setTimeout(() => setActionNotice(null), 5000);
   };
 
-    const handleOpenPortal = async () => {
+  const handleOpenPortal = async () => {
     setPortalLoading(true);
     const res = await openCustomerPortal();
     setPortalLoading(false);
     if (res.error) {
-      notify('error', res.error);
+      notify("error", res.error);
     }
   };
 
@@ -66,7 +79,7 @@ export function SettingsSection() {
     const res = await createPolarCheckout(planId);
     setCheckoutLoading(null);
     if (res.error) {
-      notify('error', res.error);
+      notify("error", res.error);
     }
   };
 
@@ -75,8 +88,8 @@ export function SettingsSection() {
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
       if (token) {
-        if (typeof document !== 'undefined') {
-          const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
+        if (typeof document !== "undefined") {
+          const secureFlag = window.location.protocol === "https:" ? "; Secure" : "";
           document.cookie = `sb-access-token=${encodeURIComponent(token)}; Path=/; Max-Age=3600; SameSite=Lax${secureFlag}`;
         }
         return { Authorization: `Bearer ${token}` };
@@ -101,25 +114,24 @@ export function SettingsSection() {
         // Fallback
       }
 
-      // Check OAuth callback outcome flags
       try {
         const params = new URLSearchParams(window.location.search);
         const connectedProvider = params.get("connected");
         const oauthErr = params.get("error");
         if (connectedProvider) {
           notify(
-            'success',
-            connectedProvider === 'google_calendar'
-              ? 'Google Calendar connected and syncing in real time.'
-              : connectedProvider === 'microsoft_calendar'
-                ? 'Microsoft Outlook Calendar connected and syncing.'
+            "success",
+            connectedProvider === "google_calendar"
+              ? "Google Calendar connected and syncing in real time."
+              : connectedProvider === "microsoft_calendar"
+                ? "Microsoft Outlook Calendar connected and syncing."
                 : `Connected ${connectedProvider}.`
           );
           params.delete("connected");
           params.set("section", "settings");
           window.history.replaceState({}, "", `/dashboard?${params.toString()}`);
         } else if (oauthErr) {
-          notify('error', `Calendar connection error: ${oauthErr}`);
+          notify("error", `Calendar connection error: ${oauthErr}`);
           params.delete("error");
           params.set("section", "settings");
           window.history.replaceState({}, "", `/dashboard?${params.toString()}`);
@@ -128,7 +140,6 @@ export function SettingsSection() {
         // Ignore URL cleanup errors
       }
 
-      // Check stored Instagram connection state
       try {
         const savedIg = localStorage.getItem("starx_ig_connected");
         if (savedIg) {
@@ -143,7 +154,7 @@ export function SettingsSection() {
     loadIntegrations();
   }, []);
 
-  const handleConnectProvider = async (provider: 'google' | 'microsoft') => {
+  const handleConnectProvider = async (provider: "google" | "microsoft") => {
     setLoadingIntegrations(true);
     try {
       const headers = await getAccessHeaders();
@@ -156,9 +167,9 @@ export function SettingsSection() {
         }
       }
       const errData = await res.json().catch(() => ({}));
-      notify('info', errData.error || `Sign in with your workspace account to authorize ${provider === 'google' ? 'Google' : 'Microsoft'} Calendar.`);
+      notify("info", errData.error || `Sign in with your workspace account to authorize ${provider === "google" ? "Google" : "Microsoft"} Calendar.`);
     } catch (err: any) {
-      notify('error', "Failed to initiate OAuth: " + err.message);
+      notify("error", "Failed to initiate OAuth: " + err.message);
     } finally {
       setLoadingIntegrations(false);
     }
@@ -240,15 +251,15 @@ export function SettingsSection() {
     setSaved(false);
 
     await new Promise((r) => setTimeout(r, 800));
-    
+
     if (user) {
       useAuthStore.setState({
         user: {
           ...user,
           name,
           businessName,
-          businessType
-        }
+          businessType,
+        },
       });
     }
 
@@ -269,15 +280,14 @@ export function SettingsSection() {
           mode: "preview",
           exportedAt: new Date().toISOString(),
           profile: { name: name || "Partner", businessName: businessName || "My Business", businessType },
-          note: "Sign in with your account to export full authenticated organization records."
+          note: "Sign in with your account to export full authenticated organization records.",
         };
       } else {
         const res = await fetch(`/api/gdpr/export?userId=${user.id}`);
         if (!res.ok) throw new Error("Export failed");
         data = await res.json();
       }
-      
-      // Trigger browser file download
+
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -287,9 +297,9 @@ export function SettingsSection() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      notify('success', user ? "GDPR data export downloaded." : "Preview snapshot downloaded.");
+      notify("success", user ? "GDPR data export downloaded." : "Preview snapshot downloaded.");
     } catch (err: any) {
-      notify('error', "Failed to export data: " + err.message);
+      notify("error", "Failed to export data: " + err.message);
     } finally {
       setIsExporting(false);
     }
@@ -298,34 +308,34 @@ export function SettingsSection() {
   const handleDeleteData = async () => {
     if (!user) {
       setDeleteConfirmOpen(false);
-      notify('info', "Preview mode active. Sign in as the organization owner to permanently erase tenant records.");
+      notify("info", "Preview mode active. Sign in as the organization owner to permanently erase tenant records.");
       return;
     }
     setIsDeleting(true);
     try {
       const res = await fetch(`/api/gdpr/delete?userId=${user.id}&confirmation=DELETE_ALL_MY_DATA`, {
-        method: "POST"
+        method: "POST",
       });
       if (!res.ok) throw new Error("Deletion request failed");
-      
-      notify('success', "All tenant data and personal records have been permanently erased under GDPR Article 17.");
+
+      notify("success", "All tenant data and personal records have been permanently erased under GDPR Article 17.");
       logout();
       router.push("/");
     } catch (err: any) {
-      notify('error', "Failed to complete erasure: " + err.message);
+      notify("error", "Failed to complete erasure: " + err.message);
       setIsDeleting(false);
     }
   };
 
+  const hasGoogleCalendar = activeCalendars.some((c) => c.provider === "google_calendar");
+  const hasMicrosoftCalendar = activeCalendars.some((c) => c.provider === "microsoft_calendar");
+
   return (
-    <div className="max-w-4xl space-y-6 select-none animate-[fade-in_0.4s_ease-out]">
-      {/* Header Info */}
+    <div className="max-w-5xl space-y-6 select-none">
       <div>
-        <h2 className="text-base font-bold text-white uppercase tracking-wider">
-          Command Center Settings
-        </h2>
-        <p className="text-xs text-zinc-500 mt-1">
-          Configure business details, administrative profiles, and European privacy parameters.
+        <h2 className={CONSOLE_HEADING}>Workspace settings</h2>
+        <p className="text-xs text-[#727c75] mt-1">
+          Configure business details, connected channels, billing plans, and European privacy controls.
         </p>
       </div>
 
@@ -333,68 +343,67 @@ export function SettingsSection() {
         <div
           role="status"
           className={cn(
-            "rounded-xl px-4 py-3 text-xs font-semibold flex items-center justify-between gap-3 border",
-            actionNotice.type === 'success' && "bg-emerald-500/12 border-emerald-500/35 text-emerald-300",
-            actionNotice.type === 'error' && "bg-red-500/12 border-red-500/35 text-red-300",
-            actionNotice.type === 'info' && "bg-amber-500/12 border-amber-500/35 text-amber-200"
+            "rounded-xl px-4 py-3 text-xs font-medium flex items-center justify-between gap-3 border",
+            actionNotice.type === "success" && "bg-[#4cc38a]/10 border-[#4cc38a]/25 text-[#4cc38a]",
+            actionNotice.type === "error" && "bg-[#e5484d]/10 border-[#e5484d]/25 text-[#f28b8e]",
+            actionNotice.type === "info" && "bg-amber-400/10 border-amber-400/25 text-amber-300"
           )}
         >
           <span>{actionNotice.message}</span>
           <button
             type="button"
             onClick={() => setActionNotice(null)}
-            className="text-current opacity-70 hover:opacity-100 cursor-pointer"
+            className="text-current opacity-75 hover:opacity-100 cursor-pointer"
           >
             Dismiss
           </button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Form Editor */}
-        <div className="md:col-span-2 space-y-4">
-          <form onSubmit={handleSave} className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] p-5 space-y-4">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
-              <User className="w-4 h-4 text-zinc-500" />
-              <span>Business Profile</span>
-            </h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <div className="md:col-span-2 space-y-5">
+          {/* Business Profile */}
+          <form onSubmit={handleSave} className={cn(CONSOLE_PANEL, "space-y-4")}>
+            <div className="flex items-center gap-2 pb-3 border-b border-[#edf0ee]/[0.08]">
+              <User className="w-4 h-4 text-[#a1aaa4]" />
+              <h3 className={CONSOLE_SECTION_TITLE}>Business profile</h3>
+            </div>
 
-            {/* Profile fields */}
             <div className="space-y-4 select-text">
               <div>
-                <label className="block text-[10px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">Account Email</label>
-                <div className="relative flex items-center bg-white/[0.01] border border-white/5 rounded-xl px-3.5 py-3 text-zinc-500 cursor-not-allowed">
+                <label className="block text-xs font-medium text-[#a1aaa4] mb-1.5">Account email</label>
+                <div className="flex items-center rounded-lg bg-[#0d1210] border border-[#edf0ee]/[0.06] px-3.5 py-2.5 text-[#727c75] cursor-not-allowed">
                   <Mail className="w-4 h-4 mr-2.5 flex-shrink-0" />
-                  <span className="text-xs font-semibold">{user?.email}</span>
+                  <span className="text-xs font-mono">{user?.email || "Not signed in"}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">Owner / Contact Name</label>
-                  <div className="relative flex items-center bg-white/[0.01] border border-white/10 rounded-xl px-3.5 focus-within:border-emerald-500/30 transition-colors">
-                    <User className="w-4 h-4 text-zinc-500 mr-2.5 flex-shrink-0" />
+                  <label className="block text-xs font-medium text-[#a1aaa4] mb-1.5">Owner or contact name</label>
+                  <div className={cn(CONSOLE_INPUT, "flex items-center px-3")}>
+                    <User className="w-4 h-4 text-[#727c75] mr-2 flex-shrink-0" />
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="bg-transparent border-none text-xs text-white outline-none py-3.5 w-full font-semibold placeholder-zinc-600"
-                      placeholder="E.g. Sarah Jenkins"
+                      className="bg-transparent border-none text-xs text-[#edf0ee] outline-none py-2.5 w-full placeholder-[#727c75]"
+                      placeholder="e.g. Sarah Jenkins"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">Business Name</label>
-                  <div className="relative flex items-center bg-white/[0.01] border border-white/10 rounded-xl px-3.5 focus-within:border-emerald-500/30 transition-colors">
-                    <Building className="w-4 h-4 text-zinc-500 mr-2.5 flex-shrink-0" />
+                  <label className="block text-xs font-medium text-[#a1aaa4] mb-1.5">Business name</label>
+                  <div className={cn(CONSOLE_INPUT, "flex items-center px-3")}>
+                    <Building className="w-4 h-4 text-[#727c75] mr-2 flex-shrink-0" />
                     <input
                       type="text"
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
-                      className="bg-transparent border-none text-xs text-white outline-none py-3.5 w-full font-semibold placeholder-zinc-600"
-                      placeholder="E.g. Zenith Hair Lounge"
+                      className="bg-transparent border-none text-xs text-[#edf0ee] outline-none py-2.5 w-full placeholder-[#727c75]"
+                      placeholder="e.g. Zenith Hair Lounge"
                       required
                     />
                   </div>
@@ -402,11 +411,11 @@ export function SettingsSection() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">Business Niche / Category</label>
+                <label className="block text-xs font-medium text-[#a1aaa4] mb-1.5">Business category</label>
                 <select
                   value={businessType}
                   onChange={(e) => setBusinessType(e.target.value)}
-                  className="w-full glass-input text-xs font-semibold text-white rounded-xl px-3.5 py-3.5 outline-none focus:border-emerald-500/30 transition-all select-none cursor-pointer"
+                  className={cn(CONSOLE_INPUT, "w-full text-xs px-3 py-2.5 cursor-pointer")}
                 >
                   <option value="Salon">Hair & Beauty Salon</option>
                   <option value="Spa">Wellness Spa & Massage</option>
@@ -417,70 +426,68 @@ export function SettingsSection() {
               </div>
             </div>
 
-            {/* Save Button */}
-            <button
-              type="submit"
-              disabled={saving}
-              className={cn(
-                "w-full font-bold text-xs py-3 rounded-xl transition-all uppercase tracking-wider select-none flex items-center justify-center gap-1.5 border mt-4",
-                saved
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                  : "bg-emerald-500 hover:bg-emerald-400 text-black border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-              )}
-            >
-              {saving ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : saved ? (
-                <Check className="w-3.5 h-3.5" />
-              ) : (
-                <Building className="w-3.5 h-3.5" />
-              )}
-              <span>{saving ? "Updating Profile..." : saved ? "Changes Saved!" : "Save Changes"}</span>
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={saving}
+                className={cn(
+                  saved ? CONSOLE_BTN_SECONDARY : CONSOLE_BTN_PRIMARY,
+                  "w-full py-2.5",
+                  saved && "border-[#4cc38a]/30 text-[#4cc38a]"
+                )}
+              >
+                {saving ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : saved ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : (
+                  <Building className="w-3.5 h-3.5" />
+                )}
+                <span>{saving ? "Updating profile..." : saved ? "Changes saved" : "Save changes"}</span>
+              </button>
+            </div>
           </form>
 
-          {/* External Integrations Management (WS-06, WS-07, WS-08) */}
-          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Layers className="w-4 h-4 text-cyan-400" />
-                <span>External Integrations & Channels</span>
-              </h3>
-              <span className="text-[10px] text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 font-bold">
-                Sprint 3 Active
-              </span>
+          {/* External Integrations */}
+          <div className={cn(CONSOLE_PANEL, "space-y-4")}>
+            <div className="flex items-center justify-between pb-3 border-b border-[#edf0ee]/[0.08]">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#a1aaa4]" />
+                <h3 className={CONSOLE_SECTION_TITLE}>External integrations & channels</h3>
+              </div>
+              <span className={CONSOLE_BADGE_MUTED}>AES-256-GCM</span>
             </div>
 
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Connect your external calendar, verified email domain, and Meta Instagram account. All secrets are encrypted at rest with AES-256-GCM.
+            <p className="text-xs text-[#a1aaa4] leading-relaxed">
+              Connect your external calendars, verified email domain, and Meta Instagram account. All credentials are encrypted at rest.
             </p>
 
-            <div className="space-y-3 pt-1">
+            <div className="space-y-2.5">
               {/* Google Calendar */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+              <div className={cn(CONSOLE_SUBCARD, "flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5")}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center text-[#a1aaa4] shrink-0">
                     <Calendar className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>Google Calendar</span>
-                      {activeCalendars.some((c) => c.provider === "google_calendar") ? (
-                        <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded font-bold">Connected</span>
-                      ) : (
-                        <span className="text-[9px] bg-zinc-800 text-zinc-400 px-1.5 py-0.2 rounded">Ready to Connect</span>
-                      )}
-                    </h4>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">Bi-directional event sync, busy slot reservation & double-booking prevention</p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-xs font-medium text-[#edf0ee]">Google Calendar</h4>
+                      <span className={hasGoogleCalendar ? CONSOLE_BADGE_LIVE : CONSOLE_BADGE_MUTED}>
+                        {hasGoogleCalendar ? "Connected" : "Ready"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#727c75] mt-0.5 truncate">
+                      Two-way event sync and busy slot reservation
+                    </p>
                   </div>
                 </div>
-                {activeCalendars.some((c) => c.provider === "google_calendar") ? (
+                {hasGoogleCalendar ? (
                   <button
                     type="button"
                     onClick={() => handleDisconnectProvider("google_calendar")}
-                    className="px-2.5 py-1.5 rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 text-[10px] font-bold flex items-center gap-1 transition-all"
+                    className={cn(CONSOLE_BTN_DANGER, "shrink-0")}
                   >
-                    <Unlink className="w-3 h-3" />
+                    <Unlink className="w-3.5 h-3.5" />
                     <span>Disconnect</span>
                   </button>
                 ) : (
@@ -488,39 +495,39 @@ export function SettingsSection() {
                     type="button"
                     onClick={() => handleConnectProvider("google")}
                     disabled={loadingIntegrations}
-                    className="px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-[10px] font-bold flex items-center gap-1 transition-all"
+                    className={cn(CONSOLE_BTN_SECONDARY, "shrink-0")}
                   >
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                     <span>Connect Google</span>
                   </button>
                 )}
               </div>
 
               {/* Microsoft Outlook Calendar */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+              <div className={cn(CONSOLE_SUBCARD, "flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5")}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center text-[#a1aaa4] shrink-0">
                     <Calendar className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>Microsoft Outlook Calendar</span>
-                      {activeCalendars.some((c) => c.provider === "microsoft_calendar") ? (
-                        <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded font-bold">Connected</span>
-                      ) : (
-                        <span className="text-[9px] bg-zinc-800 text-zinc-400 px-1.5 py-0.2 rounded">Ready to Connect</span>
-                      )}
-                    </h4>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">Microsoft Graph calendar synchronization & appointment booking</p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-xs font-medium text-[#edf0ee]">Microsoft Outlook Calendar</h4>
+                      <span className={hasMicrosoftCalendar ? CONSOLE_BADGE_LIVE : CONSOLE_BADGE_MUTED}>
+                        {hasMicrosoftCalendar ? "Connected" : "Ready"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#727c75] mt-0.5 truncate">
+                      Microsoft Graph calendar sync and booking lock
+                    </p>
                   </div>
                 </div>
-                {activeCalendars.some((c) => c.provider === "microsoft_calendar") ? (
+                {hasMicrosoftCalendar ? (
                   <button
                     type="button"
                     onClick={() => handleDisconnectProvider("microsoft_calendar")}
-                    className="px-2.5 py-1.5 rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 text-[10px] font-bold flex items-center gap-1 transition-all"
+                    className={cn(CONSOLE_BTN_DANGER, "shrink-0")}
                   >
-                    <Unlink className="w-3 h-3" />
+                    <Unlink className="w-3.5 h-3.5" />
                     <span>Disconnect</span>
                   </button>
                 ) : (
@@ -528,52 +535,52 @@ export function SettingsSection() {
                     type="button"
                     onClick={() => handleConnectProvider("microsoft")}
                     disabled={loadingIntegrations}
-                    className="px-3 py-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 text-[10px] font-bold flex items-center gap-1 transition-all"
+                    className={cn(CONSOLE_BTN_SECONDARY, "shrink-0")}
                   >
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                     <span>Connect Outlook</span>
                   </button>
                 )}
               </div>
 
               {/* Resend Email Channel */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <div className={cn(CONSOLE_SUBCARD, "flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5")}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center text-[#34d399] shrink-0">
                     <Mail className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>Resend Email System</span>
-                      <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded font-bold">Active</span>
-                    </h4>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">Inbound webhook routing, threading (In-Reply-To), bounce & delivery tracking</p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-xs font-medium text-[#edf0ee]">Resend Email System</h4>
+                      <span className={CONSOLE_BADGE_LIVE}>Active</span>
+                    </div>
+                    <p className="text-xs text-[#727c75] mt-0.5 truncate">
+                      Inbound routing, In-Reply-To threading, and delivery tracking
+                    </p>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-zinc-400 bg-white/5 px-2.5 py-1 rounded border border-white/5">
+                <span className="text-[11px] font-mono text-[#a1aaa4] bg-[#19201d] px-2.5 py-1 rounded-md border border-[#edf0ee]/[0.08] shrink-0">
                   notifications@starx-flow.com
                 </span>
               </div>
 
-              {/* Instagram Messaging (WS-08 / M2 Remediation) */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400">
+              {/* Instagram Messaging */}
+              <div className={cn(CONSOLE_SUBCARD, "flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5")}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center text-[#a1aaa4] shrink-0">
                     <Instagram className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>Instagram Direct Messaging</span>
-                      {instagramConnected ? (
-                        <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded font-bold">Connected</span>
-                      ) : (
-                        <span className="text-[9px] bg-zinc-800 text-zinc-400 px-1.5 py-0.2 rounded">Ready to Connect</span>
-                      )}
-                    </h4>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-xs font-medium text-[#edf0ee]">Instagram Direct Messaging</h4>
+                      <span className={instagramConnected ? CONSOLE_BADGE_LIVE : CONSOLE_BADGE_MUTED}>
+                        {instagramConnected ? "Connected" : "Ready"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#727c75] mt-0.5 truncate">
                       {instagramConnected
-                        ? `Meta Page: @${instagramPageId} — 24h messaging window active`
-                        : "Meta Graph API, HMAC signature verification & 24h messaging window monitor"}
+                        ? `Meta Page @${instagramPageId} — 24h messaging window active`
+                        : "Meta Graph API, HMAC signature verification, and 24h window monitor"}
                     </p>
                   </div>
                 </div>
@@ -581,18 +588,18 @@ export function SettingsSection() {
                   <button
                     type="button"
                     onClick={handleDisconnectInstagram}
-                    className="px-2.5 py-1.5 rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 text-[10px] font-bold flex items-center gap-1 transition-all"
+                    className={cn(CONSOLE_BTN_DANGER, "shrink-0")}
                   >
-                    <Unlink className="w-3 h-3" />
+                    <Unlink className="w-3.5 h-3.5" />
                     <span>Disconnect</span>
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setShowIgModal(true)}
-                    className="px-3 py-1.5 rounded-lg border border-pink-500/30 bg-pink-500/10 text-pink-400 hover:bg-pink-500/20 text-[10px] font-bold flex items-center gap-1 transition-all"
+                    className={cn(CONSOLE_BTN_SECONDARY, "shrink-0")}
                   >
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                     <span>Connect Instagram</span>
                   </button>
                 )}
@@ -600,45 +607,52 @@ export function SettingsSection() {
             </div>
           </div>
 
-          {/* Subscription Plan & Commercial Limits (Workstream J) */}
-          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-emerald-400" />
-                <span>Subscription Plan & Resource Limits</span>
-              </h3>
-              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold uppercase">
-                {subscription?.status || "Active 14-Day Trial"}
+          {/* Subscription Plan & Commercial Limits */}
+          <div className={cn(CONSOLE_PANEL, "space-y-4")}>
+            <div className="flex items-center justify-between pb-3 border-b border-[#edf0ee]/[0.08]">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-[#a1aaa4]" />
+                <h3 className={CONSOLE_SECTION_TITLE}>Subscription plan & limits</h3>
+              </div>
+              <span className={CONSOLE_BADGE_LIVE}>
+                {subscription?.status || "Active trial"}
               </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02]">
-                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Current Tier</span>
-                <div className="text-sm font-bold text-white mt-0.5 flex items-center gap-2">
-                  <span>{user?.plan ? (user.plan.charAt(0).toUpperCase() + user.plan.slice(1)) : (subscription?.planId ? (subscription.planId.charAt(0).toUpperCase() + subscription.planId.slice(1)) : "Starter")} Plan</span>
-                  <span className="text-[10px] text-zinc-400 font-normal">
-                    {subscription?.planId === 'pro' ? '($99/mo)' : subscription?.planId === 'growth' ? '($59/mo)' : '($29/mo)'}
+              <div className={cn(CONSOLE_SUBCARD, "p-3.5")}>
+                <span className="text-xs text-[#727c75]">Current tier</span>
+                <div className="text-sm font-semibold text-[#edf0ee] mt-1 flex items-center gap-2 tabular-nums">
+                  <span>
+                    {user?.plan
+                      ? user.plan.charAt(0).toUpperCase() + user.plan.slice(1)
+                      : subscription?.planId
+                        ? subscription.planId.charAt(0).toUpperCase() + subscription.planId.slice(1)
+                        : "Starter"}{" "}
+                    Plan
+                  </span>
+                  <span className="text-xs text-[#a1aaa4] font-normal">
+                    {subscription?.planId === "pro" ? "($99/mo)" : subscription?.planId === "growth" ? "($59/mo)" : "($29/mo)"}
                   </span>
                 </div>
-                <p className="text-[10px] text-zinc-400 mt-1">Zero booking commissions. Flat monthly billing model.</p>
+                <p className="text-xs text-[#727c75] mt-1">Flat monthly billing with zero booking commissions.</p>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02]">
-                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Plan Inclusions</span>
-                <ul className="text-[10px] text-zinc-300 mt-1 space-y-1">
-                  <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+              <div className={cn(CONSOLE_SUBCARD, "p-3.5")}>
+                <span className="text-xs text-[#727c75]">Plan inclusions</span>
+                <ul className="text-xs text-[#a1aaa4] mt-1.5 space-y-1.5">
+                  <li className="flex items-center gap-1.5 tabular-nums">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#34d399] shrink-0" />
                     <span>
-                      {subscription?.planId === 'pro' ? '25,000' : subscription?.planId === 'growth' ? '5,000' : '500'} AI conversations / month
+                      {subscription?.planId === "pro" ? "25,000" : subscription?.planId === "growth" ? "5,000" : "500"} AI conversations / month
                     </span>
                   </li>
                   <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                    <span>Two-Way Google & Outlook Calendar Sync</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#34d399] shrink-0" />
+                    <span>Two-way Google & Outlook calendar sync</span>
                   </li>
                   <li className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#34d399] shrink-0" />
                     <span>PostgreSQL exclusion lock concurrency protection</span>
                   </li>
                 </ul>
@@ -649,13 +663,13 @@ export function SettingsSection() {
               allowed={isBillingAdmin}
               reason="Admin or Owner role required to modify plans or open the billing portal"
             >
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5">
+              <div className={cn("flex flex-wrap items-center justify-between gap-3 pt-3 border-t", CONSOLE_DIVIDER)}>
                 <div className="flex flex-wrap items-center gap-2">
                   <GlassButton
                     variant="primary"
                     size="sm"
-                    onClick={() => handleCheckout('growth')}
-                    isLoading={checkoutLoading === 'growth'}
+                    onClick={() => handleCheckout("growth")}
+                    isLoading={checkoutLoading === "growth"}
                     loadingText="Redirecting..."
                     disabled={!isBillingAdmin || checkoutLoading !== null}
                   >
@@ -664,8 +678,8 @@ export function SettingsSection() {
                   <GlassButton
                     variant="secondary"
                     size="sm"
-                    onClick={() => handleCheckout('pro')}
-                    isLoading={checkoutLoading === 'pro'}
+                    onClick={() => handleCheckout("pro")}
+                    isLoading={checkoutLoading === "pro"}
                     loadingText="Redirecting..."
                     disabled={!isBillingAdmin || checkoutLoading !== null}
                   >
@@ -677,7 +691,7 @@ export function SettingsSection() {
                   size="sm"
                   onClick={handleOpenPortal}
                   isLoading={portalLoading}
-                  loadingText="Opening Portal..."
+                  loadingText="Opening portal..."
                   disabled={!isBillingAdmin || portalLoading}
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -686,31 +700,29 @@ export function SettingsSection() {
               </div>
             </PermissionGate>
 
-            <div className="p-3 rounded-lg bg-zinc-900/60 border border-white/5 text-[11px] text-zinc-400 flex items-center justify-between">
-              <span>Need custom multi-location SLAs or direct invoicing?</span>
+            <div className={cn(CONSOLE_SUBCARD, "p-3 text-xs text-[#a1aaa4] flex flex-wrap items-center justify-between gap-2")}>
+              <span>Need multi-location SLAs or direct invoicing?</span>
               <a
                 href="mailto:support@starx-flow.runs-on.dev?subject=Plan%20Upgrade%20Inquiry"
-                className="text-emerald-400 hover:text-emerald-300 font-semibold text-xs transition-colors"
+                className="text-[#34d399] hover:text-[#4cc38a] font-medium transition-colors"
               >
-                Contact Enterprise Sales →
+                Contact enterprise sales
               </a>
             </div>
           </div>
 
-          {/* GDPR Article 20 & Article 17 Management Card */}
-          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>GDPR & European Privacy Compliance</span>
-              </h3>
-              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">
-                EU Law Ready
-              </span>
+          {/* GDPR Article 20 & Article 17 Compliance */}
+          <div className={cn(CONSOLE_PANEL, "space-y-4")}>
+            <div className="flex items-center justify-between pb-3 border-b border-[#edf0ee]/[0.08]">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#34d399]" />
+                <h3 className={CONSOLE_SECTION_TITLE}>GDPR & privacy compliance</h3>
+              </div>
+              <span className={CONSOLE_BADGE_LIVE}>EU Regulation 2016/679</span>
             </div>
 
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Under Regulation (EU) 2016/679 (GDPR), your organization has full autonomy over personal data processing, portability, and automated erasure.
+            <p className="text-xs text-[#a1aaa4] leading-relaxed">
+              Your organization retains full control over personal data portability and automated erasure.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
@@ -718,77 +730,75 @@ export function SettingsSection() {
                 type="button"
                 onClick={handleExportData}
                 disabled={isExporting}
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-bold text-white transition-all"
+                className={cn(CONSOLE_BTN_SECONDARY, "py-2.5")}
               >
-                {isExporting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 text-emerald-400" />}
-                <span>Export Data (Art. 20)</span>
+                {isExporting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 text-[#34d399]" />}
+                <span>Export data (Art. 20)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setDeleteConfirmOpen(true)}
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-xs font-bold text-red-400 transition-all"
+                className={cn(CONSOLE_BTN_DANGER, "py-2.5")}
               >
-                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                <Trash2 className="w-3.5 h-3.5" />
                 <span>Erase All Data (Art. 17)</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Platform Security Cards */}
+        {/* Right Column: Infrastructure & Session */}
         <div className="space-y-4">
-          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12] space-y-3">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Globe className="w-4 h-4 text-emerald-400" />
-              <span>Data Localization</span>
-            </h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Your tenant database, vector chunks, and telemetry are hosted strictly in the European Union (Frankfurt / Dublin) under ISO 27001 certifications.
+          <div className={cn(CONSOLE_PANEL, "space-y-3")}>
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-[#a1aaa4]" />
+              <h3 className={CONSOLE_SECTION_TITLE}>Data localization</h3>
+            </div>
+            <p className="text-xs text-[#727c75] leading-relaxed">
+              Your database records, vector indexes, and telemetry reside in European Union infrastructure under ISO 27001 controls.
             </p>
-            <div className="space-y-1.5 text-[10px] text-zinc-400 font-mono">
-              <div className="flex items-center justify-between border-b border-white/5 pb-1">
-                <span>Region:</span>
-                <span className="text-white font-bold">eu-central-1 (EU Frankfurt)</span>
+            <div className="space-y-2 text-xs pt-1">
+              <div className="flex items-center justify-between border-b border-[#edf0ee]/[0.06] pb-1.5">
+                <span className="text-[#727c75]">Region</span>
+                <span className="font-mono text-[11px] text-[#edf0ee]">eu-central-1</span>
               </div>
-              <div className="flex items-center justify-between border-b border-white/5 pb-1">
-                <span>Currency:</span>
-                <span className="text-emerald-400 font-bold">Euro (€ EUR)</span>
+              <div className="flex items-center justify-between border-b border-[#edf0ee]/[0.06] pb-1.5">
+                <span className="text-[#727c75]">Currency</span>
+                <span className="font-mono text-[11px] text-[#4cc38a]">EUR (€)</span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Timezone:</span>
-                <span className="text-white font-bold">Europe/Berlin (CET/CEST)</span>
+                <span className="text-[#727c75]">Timezone</span>
+                <span className="font-mono text-[11px] text-[#edf0ee]">Europe/Berlin</span>
               </div>
             </div>
           </div>
 
-          <div className="glass-card-obsidian rounded-2xl p-5 border border-emerald-500/[0.12]">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
-              <Key className="w-4 h-4 text-zinc-500" />
-              <span>Tenant Isolation</span>
-            </h3>
-            <p className="text-xs text-zinc-500 leading-normal mb-3">
-              Multi-tenant architecture enforces PostgreSQL Row-Level Security (RLS) on all 14 database tables.
-            </p>
-            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15 text-[10px] font-bold text-emerald-400 w-fit">
-              <span>RLS Model Enforcement</span>
+          <div className={cn(CONSOLE_PANEL, "space-y-3")}>
+            <div className="flex items-center gap-2">
+              <Key className="w-4 h-4 text-[#a1aaa4]" />
+              <h3 className={CONSOLE_SECTION_TITLE}>Tenant isolation</h3>
             </div>
+            <p className="text-xs text-[#727c75] leading-relaxed">
+              Multi-tenant architecture enforces PostgreSQL Row-Level Security (RLS) across all 14 database tables.
+            </p>
+            <span className={CONSOLE_BADGE_LIVE}>RLS enforced</span>
           </div>
 
-          {/* Logout Card */}
-          <div className="glass-card rounded-xl p-5 border border-zinc-800 bg-black/40">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
-              <LogOut className="w-4 h-4 text-zinc-500" />
-              <span>Session</span>
-            </h3>
-            <p className="text-[11px] text-zinc-500 leading-normal mb-4">
-              Log out of your administrative session securely.
+          <div className={cn(CONSOLE_PANEL, "space-y-3")}>
+            <div className="flex items-center gap-2">
+              <LogOut className="w-4 h-4 text-[#a1aaa4]" />
+              <h3 className={CONSOLE_SECTION_TITLE}>Session</h3>
+            </div>
+            <p className="text-xs text-[#727c75] leading-relaxed">
+              Sign out of your active workspace session on this browser.
             </p>
-            <button 
+            <button
+              type="button"
               onClick={handleLogout}
-              className="w-full bg-zinc-900 hover:bg-zinc-800 text-white border border-white/5 text-[10px] font-bold py-2.5 rounded-lg uppercase tracking-wider transition-colors"
+              className={cn(CONSOLE_BTN_SECONDARY, "w-full py-2.5")}
             >
-              Log Out
+              Log out
             </button>
           </div>
         </div>
@@ -800,19 +810,19 @@ export function SettingsSection() {
         onClose={() => !isDeleting && setDeleteConfirmOpen(false)}
         disableClose={isDeleting}
         maxWidth="md"
-        className="border-red-500/30"
+        className="border-[#e5484d]/30"
         title={
-          <span className="flex items-center gap-2.5 text-red-400 text-sm font-bold uppercase tracking-wider">
-            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-            <span>Permanent Right to Erasure</span>
+          <span className="flex items-center gap-2.5 text-[#f28b8e] text-sm font-semibold">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <span>Permanent right to erasure</span>
           </span>
         }
       >
         <div className="space-y-4">
-          <p className="text-xs text-zinc-300 leading-relaxed">
-            Are you sure you want to permanently delete all leads, conversations, messages, appointments, orders, and knowledge base chunks? This action is irreversible.
+          <p className="text-xs text-[#a1aaa4] leading-relaxed">
+            Are you sure you want to permanently delete all leads, conversations, messages, appointments, orders, and knowledge base chunks? This action cannot be undone.
           </p>
-          <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#edf0ee]/[0.08]">
             <GlassButton
               variant="ghost"
               size="sm"
@@ -830,51 +840,50 @@ export function SettingsSection() {
               isLoading={isDeleting}
               loadingText="Deleting..."
             >
-              Permanently Delete All Data
+              Permanently delete all data
             </GlassButton>
           </div>
         </div>
       </GlassModal>
 
-      {/* Instagram Business Account Onboarding Modal (WS-08 / M2 Remediation) */}
+      {/* Instagram Business Account Onboarding Modal */}
       <GlassModal
         open={showIgModal}
         onClose={() => !igConnecting && setShowIgModal(false)}
         disableClose={igConnecting}
         maxWidth="md"
-        className="border-pink-500/30"
         title={
-          <span className="flex items-center gap-2.5 text-pink-400 text-sm font-bold uppercase tracking-wider">
-            <Instagram className="w-5 h-5 flex-shrink-0" />
-            <span className="text-white">Connect Instagram Business</span>
+          <span className="flex items-center gap-2.5 text-[#edf0ee] text-sm font-semibold">
+            <Instagram className="w-4 h-4 text-[#a1aaa4] flex-shrink-0" />
+            <span>Connect Instagram Business</span>
           </span>
         }
         subtitle="Meta Graph API Messaging Integration"
       >
-        <form onSubmit={handleConnectInstagram} className="space-y-3 pt-1">
+        <form onSubmit={handleConnectInstagram} className="space-y-3.5 pt-1">
           <div>
-            <label className="block text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider">
-              Instagram Page / Account ID
+            <label className="block text-xs font-medium text-[#a1aaa4] mb-1.5">
+              Instagram Page or Account ID
             </label>
             <input
               type="text"
               value={igInputPageId}
               onChange={(e) => setIgInputPageId(e.target.value)}
               placeholder="e.g. 17841400000000001 or zenith_salon"
-              className="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 outline-none focus:border-pink-500/50"
+              className={cn(CONSOLE_INPUT, "w-full px-3.5 py-2.5 text-xs font-mono")}
             />
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-zinc-400 mb-1 uppercase tracking-wider">
-              Page Access Token (AES-256 Encrypted)
+            <label className="block text-xs font-medium text-[#a1aaa4] mb-1.5">
+              Page Access Token (AES-256 encrypted)
             </label>
             <input
               type="password"
               value={igInputToken}
               onChange={(e) => setIgInputToken(e.target.value)}
-              placeholder="EAAG... (Leave empty for test token)"
-              className="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 outline-none focus:border-pink-500/50"
+              placeholder="EAAG... (leave empty for test token)"
+              className={cn(CONSOLE_INPUT, "w-full px-3.5 py-2.5 text-xs font-mono")}
             />
           </div>
 
@@ -885,13 +894,13 @@ export function SettingsSection() {
                 setIgInputPageId("17841400000000001");
                 setIgInputToken("IGAA_simulated_sandbox_token");
               }}
-              className="text-[10px] text-pink-400/80 hover:text-pink-300 underline underline-offset-2 cursor-pointer"
+              className="text-xs text-[#34d399] hover:text-[#4cc38a] underline underline-offset-2 cursor-pointer"
             >
-              Use Sandbox Test Account
+              Use sandbox test account
             </button>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-white/10">
+          <div className="flex justify-end gap-2 pt-4 border-t border-[#edf0ee]/[0.08]">
             <GlassButton
               variant="ghost"
               size="sm"
@@ -902,13 +911,13 @@ export function SettingsSection() {
               Cancel
             </GlassButton>
             <GlassButton
+              variant="primary"
               type="submit"
               size="sm"
               isLoading={igConnecting}
               loadingText="Connecting..."
-              className="bg-pink-600 hover:bg-pink-500 text-white border-pink-400/30"
             >
-              Connect Page
+              Connect page
             </GlassButton>
           </div>
         </form>

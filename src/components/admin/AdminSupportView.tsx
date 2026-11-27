@@ -9,18 +9,31 @@ import {
   Send,
   CheckCircle2,
   AlertCircle,
-  ShieldCheck,
   RefreshCw,
   Copy,
   Check,
   ExternalLink,
   Instagram,
-  Activity,
   Lock,
   Link2,
 } from "lucide-react";
 import type { SupportData, SupportConversation } from "../../store/adminStore";
 import { syncAccessTokenCookie } from "../../lib/auth/clientCookie";
+import {
+  CONSOLE_PANEL,
+  CONSOLE_PANEL_FLUSH,
+  CONSOLE_SUBCARD,
+  CONSOLE_INPUT,
+  CONSOLE_BTN_PRIMARY,
+  CONSOLE_BTN_SECONDARY,
+  CONSOLE_HEADING,
+  CONSOLE_SECTION_TITLE,
+  CONSOLE_BADGE_LIVE,
+  CONSOLE_BADGE_WARN,
+  CONSOLE_BADGE_INFO,
+  CONSOLE_BADGE_MUTED,
+  CONSOLE_BADGE_DANGER,
+} from "../../lib/consoleSurface";
 import { cn } from "../../lib/utils";
 
 interface AdminSupportViewProps {
@@ -126,7 +139,7 @@ export function AdminSupportView({
       setCopiedTarget(target);
       setTimeout(() => setCopiedTarget(null), 1800);
     } catch {
-      // Clipboard blocked in non-HTTPS context
+      // Clipboard unavailable
     }
   };
 
@@ -142,13 +155,13 @@ export function AdminSupportView({
       setFeedback({
         type: "ok",
         text: isInternalNote
-          ? "Internal admin note saved to conversation timeline."
-          : `Reply dispatched live via ${activeConversation.channel || "WhatsApp"} Cloud API.`,
+          ? "Internal admin note saved to timeline."
+          : `Reply dispatched via ${activeConversation.channel || "WhatsApp"}.`,
       });
     } else {
       setFeedback({
         type: "err",
-        text: result.error || "Failed to dispatch support reply.",
+        text: result.error || "Failed to send support reply.",
       });
     }
   };
@@ -165,13 +178,13 @@ export function AdminSupportView({
         type: "ok",
         text:
           nextMode === "human"
-            ? "Manual Admin takeover active — AI auto-reply paused for this thread."
-            : "Conversation released back to StarX Flow Support AI.",
+            ? "Manual takeover active. AI auto-reply paused for this thread."
+            : "Conversation returned to StarX Flow Support AI.",
       });
     } else {
       setFeedback({
         type: "err",
-        text: result.error || "Unable to switch conversation control mode.",
+        text: result.error || "Unable to switch control mode.",
       });
     }
   };
@@ -193,7 +206,7 @@ export function AdminSupportView({
       setIgTokenInput("");
       setFeedback({
         type: "ok",
-        text: "StarX Flow Official Instagram account linked to Admin Cell and webhook router.",
+        text: "Instagram account linked to admin support webhook.",
       });
     } else {
       setFeedback({
@@ -208,33 +221,22 @@ export function AdminSupportView({
   const instagram = supportData?.instagram;
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8 select-none tabular-nums">
       {/* Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 border border-emerald-400/30 text-emerald-300">
-              <span
-                className={cn(
-                  "w-1.5 h-1.5 rounded-full",
-                  conn?.isConnected ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
-                )}
-              />
-              Omnichannel Support Cell
-            </span>
-            <span className="text-[11px] font-mono text-zinc-400 tabular-nums">
-              {conversations.length} Active Thread{conversations.length === 1 ? "" : "s"}
+            <h1 className={CONSOLE_HEADING}>Support desk</h1>
+            <span className={conn?.isConnected ? CONSOLE_BADGE_LIVE : CONSOLE_BADGE_WARN}>
+              {conversations.length} thread{conversations.length === 1 ? "" : "s"}
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1.5">
-            StarX Flow Official Support (WhatsApp &amp; Instagram)
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">
-            Live Meta Cloud API telemetry, StarX Flow Support AI persona, Instagram DM bridge, and human takeover inbox.
+          <p className="text-xs sm:text-sm text-[#727c75] mt-0.5">
+            WhatsApp Cloud API, Instagram DM bridge, and operator takeover inbox
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => {
@@ -243,20 +245,16 @@ export function AdminSupportView({
               setIgUsernameInput(instagram?.username?.replace(/^@/, "") || "");
               setShowIgForm((prev) => !prev);
             }}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-fuchsia-500/15 hover:bg-fuchsia-500/25 border border-fuchsia-400/35 text-fuchsia-200 transition-colors cursor-pointer"
+            className={CONSOLE_BTN_SECONDARY}
           >
-            <Instagram size={14} />
+            <Instagram className="w-3.5 h-3.5 text-[#a1aaa4]" strokeWidth={1.65} />
             <span>{instagram?.isConnected ? "Update Instagram" : "Link Instagram"}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={onOpenLeads}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 text-zinc-200 transition-colors cursor-pointer"
-          >
-            <span>Support Leads</span>
-            <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-mono text-[10px] tabular-nums">
-              {supportData?.whatsappLeadsCount ?? 0}
+          <button type="button" onClick={onOpenLeads} className={CONSOLE_BTN_SECONDARY}>
+            <span>Support leads</span>
+            <span className="font-mono text-[11px] text-[#a1aaa4]">
+              ({supportData?.whatsappLeadsCount ?? 0})
             </span>
           </button>
 
@@ -264,89 +262,76 @@ export function AdminSupportView({
             type="button"
             onClick={onRefresh}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/35 text-emerald-200 transition-colors cursor-pointer disabled:opacity-60"
+            className={CONSOLE_BTN_PRIMARY}
           >
-            <RefreshCw size={14} className={cn(isLoading && "animate-spin")} />
-            <span>Sync Support Cell</span>
+            <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
+            <span>Sync inbox</span>
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="rounded-2xl bg-rose-500/10 border border-rose-500/30 px-4 py-3 text-xs text-rose-200 flex items-center gap-2.5">
-          <AlertCircle size={16} className="shrink-0 text-rose-400" />
+        <div className="rounded-xl bg-[#e5484d]/10 border border-[#e5484d]/25 px-4 py-3 text-xs text-[#f28b8e] flex items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Optional Inline Connect StarX Flow Instagram Drawer */}
+      {/* Connect Instagram Form */}
       {showIgForm && (
-        <form
-          onSubmit={handleConnectInstagramSubmit}
-          className="rounded-2xl bg-[#08150f]/90 backdrop-blur-2xl border border-fuchsia-500/30 p-5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] space-y-4"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <Instagram size={16} className="text-fuchsia-300" />
-                <span>Connect StarX Flow Official Instagram Account</span>
-              </h2>
-              <p className="text-[11px] text-zinc-400 mt-0.5">
-                Once your Instagram Professional account is created and assigned to System User Star in Meta Business Suite, save its IDs here (leave Access Token blank to reuse your Permanent System User Token).
-              </p>
-            </div>
+        <form onSubmit={handleConnectInstagramSubmit} className={cn(CONSOLE_PANEL, "space-y-4")}>
+          <div>
+            <h2 className={cn(CONSOLE_SECTION_TITLE, "flex items-center gap-2")}>
+              <Instagram className="w-4 h-4 text-[#a1aaa4]" strokeWidth={1.65} />
+              Connect Instagram account
+            </h2>
+            <p className="text-xs text-[#727c75] mt-1">
+              Save your Instagram Professional IDs from Meta Business Suite (leave token blank to reuse the system user token).
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
-              <label className="block text-[11px] text-zinc-300 mb-1 font-medium">
-                Instagram Account ID *
-              </label>
+              <label className="block text-xs text-[#a1aaa4] mb-1">Instagram account ID *</label>
               <input
                 type="text"
                 value={igAccountIdInput}
                 onChange={(e) => setIgAccountIdInput(e.target.value)}
-                placeholder="e.g. 17841400000000000"
-                className="w-full h-9 px-3 rounded-xl bg-white/[0.05] border border-white/10 focus:border-fuchsia-400/60 text-xs text-white font-mono outline-none"
+                placeholder="17841400000000000"
+                className={cn(CONSOLE_INPUT, "w-full h-9 px-3 text-xs font-mono")}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] text-zinc-300 mb-1 font-medium">
-                Linked FB Page ID (optional)
-              </label>
+              <label className="block text-xs text-[#a1aaa4] mb-1">FB page ID (optional)</label>
               <input
                 type="text"
                 value={igPageIdInput}
                 onChange={(e) => setIgPageIdInput(e.target.value)}
-                placeholder="e.g. 122098765432100"
-                className="w-full h-9 px-3 rounded-xl bg-white/[0.05] border border-white/10 focus:border-fuchsia-400/60 text-xs text-white font-mono outline-none"
+                placeholder="122098765432100"
+                className={cn(CONSOLE_INPUT, "w-full h-9 px-3 text-xs font-mono")}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] text-zinc-300 mb-1 font-medium">
-                Instagram Handle
-              </label>
+              <label className="block text-xs text-[#a1aaa4] mb-1">Instagram handle</label>
               <input
                 type="text"
                 value={igUsernameInput}
                 onChange={(e) => setIgUsernameInput(e.target.value)}
-                placeholder="e.g. starxflow"
-                className="w-full h-9 px-3 rounded-xl bg-white/[0.05] border border-white/10 focus:border-fuchsia-400/60 text-xs text-white outline-none"
+                placeholder="starxflow"
+                className={cn(CONSOLE_INPUT, "w-full h-9 px-3 text-xs")}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] text-zinc-300 mb-1 font-medium">
-                Access Token (blank = Star SUAT)
-              </label>
+              <label className="block text-xs text-[#a1aaa4] mb-1">Access token (optional)</label>
               <input
                 type="password"
                 value={igTokenInput}
                 onChange={(e) => setIgTokenInput(e.target.value)}
                 placeholder="Optional custom token"
-                className="w-full h-9 px-3 rounded-xl bg-white/[0.05] border border-white/10 focus:border-fuchsia-400/60 text-xs text-white font-mono outline-none"
+                className={cn(CONSOLE_INPUT, "w-full h-9 px-3 text-xs font-mono")}
               />
             </div>
           </div>
@@ -359,206 +344,181 @@ export function AdminSupportView({
                 await syncAccessTokenCookie();
                 window.location.href = "/api/meta/auth?channel=instagram&returnTo=admin";
               }}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.06] hover:bg-white/[0.1] border border-white/15 text-fuchsia-200 inline-flex items-center gap-1.5"
+              className={CONSOLE_BTN_SECONDARY}
             >
-              <ExternalLink size={12} />
-              <span>Authorize via Meta Unified Login</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Authorize via Meta login</span>
             </a>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setShowIgForm(false)}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white/[0.05] hover:bg-white/[0.08] text-zinc-300 cursor-pointer"
+                className={CONSOLE_BTN_SECONDARY}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSavingIg || (!igAccountIdInput.trim() && !igPageIdInput.trim())}
-                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-fuchsia-500 hover:bg-fuchsia-400 text-slate-950 inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className={CONSOLE_BTN_PRIMARY}
               >
-                <Link2 size={13} />
-                <span>{isSavingIg ? "Connecting..." : "Save Instagram Connection"}</span>
+                <Link2 className="w-3.5 h-3.5" />
+                <span>{isSavingIg ? "Saving..." : "Save connection"}</span>
               </button>
             </div>
           </div>
         </form>
       )}
 
-      {/* Telemetry Cards */}
+      {/* 3 Channel Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Card 1: Meta WhatsApp Line */}
-        <div className="rounded-2xl bg-[#08150f]/85 backdrop-blur-2xl border border-emerald-500/20 p-5 shadow-[0_12px_40px_rgba(0,0,0,0.45)] space-y-3">
+        <div className={cn(CONSOLE_PANEL, "space-y-3")}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-300">
-                <Phone size={17} />
+              <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/10 flex items-center justify-center text-[#a1aaa4]">
+                <Phone className="w-4 h-4" strokeWidth={1.65} />
               </div>
               <div>
-                <p className="text-xs font-semibold text-zinc-300">Official WhatsApp Line</p>
-                <p className="text-sm font-bold text-white font-mono">
+                <p className="text-xs text-[#727c75]">WhatsApp line</p>
+                <p className="text-sm font-medium text-[#edf0ee] font-mono">
                   {conn?.displayPhoneNumber || "+1 555-155-5475"}
                 </p>
               </div>
             </div>
-
-            <span
-              className={cn(
-                "px-2.5 py-1 rounded-full text-[11px] font-semibold border",
-                conn?.isConnected
-                  ? "bg-emerald-500/15 border-emerald-400/35 text-emerald-300"
-                  : "bg-amber-500/15 border-amber-400/35 text-amber-300"
-              )}
-            >
+            <span className={conn?.isConnected ? CONSOLE_BADGE_LIVE : CONSOLE_BADGE_WARN}>
               {conn?.isConnected ? "Connected" : "Pending"}
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/[0.06] text-[11px]">
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#edf0ee]/[0.06] text-[11px]">
             <div>
-              <span className="text-zinc-400 block">Phone Number ID</span>
-              <span className="text-zinc-200 font-mono truncate block">
+              <span className="text-[#727c75] block">Phone ID</span>
+              <span className="text-[#a1aaa4] font-mono truncate block">
                 {conn?.phoneNumberId || "1460999263760910"}
               </span>
             </div>
             <div>
-              <span className="text-zinc-400 block">WABA ID</span>
-              <span className="text-zinc-200 font-mono truncate block">
+              <span className="text-[#727c75] block">WABA ID</span>
+              <span className="text-[#a1aaa4] font-mono truncate block">
                 {conn?.wabaId || "1139426225454489"}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 px-2.5 py-1.5">
-            <code className="text-[10px] text-zinc-200 font-mono truncate flex-1">
+          <div className={cn(CONSOLE_SUBCARD, "flex items-center gap-2 px-2.5 py-1.5")}>
+            <code className="text-[11px] text-[#a1aaa4] font-mono truncate flex-1">
               {conn?.webhookUrl || "https://starx-flow.runs-on.dev/api/whatsapp/webhook"}
             </code>
             <button
               type="button"
               onClick={() => handleCopyUrl("wa", conn?.webhookUrl)}
               aria-label="Copy WhatsApp webhook URL"
-              className="p-1 rounded-lg hover:bg-white/10 text-zinc-300 hover:text-emerald-300 transition-colors cursor-pointer"
+              className="p-1 rounded text-[#727c75] hover:text-[#edf0ee] transition-colors cursor-pointer"
             >
-              {copiedTarget === "wa" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+              {copiedTarget === "wa" ? <Check className="w-3.5 h-3.5 text-[#4cc38a]" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>
 
-        {/* Card 2: Active AI Support Persona */}
-        <div className="rounded-2xl bg-[#08150f]/85 backdrop-blur-2xl border border-emerald-500/20 p-5 shadow-[0_12px_40px_rgba(0,0,0,0.45)] space-y-3">
+        <div className={cn(CONSOLE_PANEL, "space-y-3")}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-teal-500/15 border border-teal-400/30 flex items-center justify-center text-teal-300">
-                <Bot size={17} />
+              <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/10 flex items-center justify-center text-[#a1aaa4]">
+                <Bot className="w-4 h-4" strokeWidth={1.65} />
               </div>
-              <div>
-                <p className="text-xs font-semibold text-zinc-300">Configured Support Persona</p>
-                <p className="text-sm font-bold text-white truncate max-w-[210px]">
-                  {profile?.businessName || "StarX Flow Official Support"}
+              <div className="min-w-0">
+                <p className="text-xs text-[#727c75]">Support persona</p>
+                <p className="text-sm font-medium text-[#edf0ee] truncate">
+                  {profile?.businessName || "StarX Flow Support"}
                 </p>
               </div>
             </div>
-
-            <span className="px-2 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-[10px] font-mono text-zinc-300 tabular-nums">
-              {profile?.services?.length ?? 0} Plans/Slots
+            <span className={CONSOLE_BADGE_MUTED}>
+              {profile?.services?.length ?? 0} plans
             </span>
           </div>
 
-          <p className="text-[11px] text-zinc-300 line-clamp-2 leading-relaxed">
-            {profile?.aiRole || "AI Receptionist SaaS Platform Support & Onboarding"}
+          <p className="text-xs text-[#a1aaa4] line-clamp-2 leading-relaxed">
+            {profile?.aiRole || "Platform support and onboarding specialist"}
           </p>
 
-          <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-[11px]">
+          <div className="flex items-center justify-between pt-2 border-t border-[#edf0ee]/[0.06] text-xs">
             <a
               href={profile?.bookingLink || "/setup/instagram"}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200 font-medium"
+              className="inline-flex items-center gap-1 text-[#4cc38a] hover:underline font-medium"
             >
-              <span>Onboarding Portal</span>
-              <ExternalLink size={12} />
+              <span>Onboarding portal</span>
+              <ExternalLink className="w-3 h-3" />
             </a>
-            <span className="flex items-center gap-1 text-emerald-300 text-[10px]">
-              <ShieldCheck size={12} />
-              Permanent Token
-            </span>
+            <span className="text-[#727c75] text-[11px]">System token active</span>
           </div>
         </div>
 
-        {/* Card 3: Instagram Business Connection & Webhook */}
-        <div className="rounded-2xl bg-[#08150f]/85 backdrop-blur-2xl border border-emerald-500/20 p-5 shadow-[0_12px_40px_rgba(0,0,0,0.45)] space-y-3">
+        <div className={cn(CONSOLE_PANEL, "space-y-3")}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-fuchsia-500/15 border border-fuchsia-400/30 flex items-center justify-center text-fuchsia-300">
-                <Instagram size={17} />
+              <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/10 flex items-center justify-center text-[#a1aaa4]">
+                <Instagram className="w-4 h-4" strokeWidth={1.65} />
               </div>
-              <div>
-                <p className="text-xs font-semibold text-zinc-300">Official Instagram DM</p>
-                <p className="text-sm font-bold text-white font-mono truncate max-w-[180px]">
+              <div className="min-w-0">
+                <p className="text-xs text-[#727c75]">Instagram DM</p>
+                <p className="text-sm font-medium text-[#edf0ee] font-mono truncate max-w-[160px]">
                   {instagram?.username
                     ? `@${instagram.username.replace(/^@/, "")}`
-                    : instagram?.accountId || "Not linked yet"}
+                    : instagram?.accountId || "Not linked"}
                 </p>
               </div>
             </div>
-
-            <span
-              className={cn(
-                "px-2.5 py-1 rounded-full text-[11px] font-semibold border",
-                instagram?.isConnected
-                  ? "bg-fuchsia-500/15 border-fuchsia-400/35 text-fuchsia-200"
-                  : "bg-white/[0.05] border-white/10 text-zinc-400"
-              )}
-            >
-              {instagram?.isConnected ? "IG Live" : "Standby"}
+            <span className={instagram?.isConnected ? CONSOLE_BADGE_LIVE : CONSOLE_BADGE_MUTED}>
+              {instagram?.isConnected ? "Connected" : "Standby"}
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/[0.06] text-[11px]">
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#edf0ee]/[0.06] text-[11px]">
             <div>
-              <span className="text-zinc-400 block">IG Account ID</span>
-              <span className="text-zinc-200 font-mono truncate block">
-                {instagram?.accountId || "Pending setup"}
+              <span className="text-[#727c75] block">IG account ID</span>
+              <span className="text-[#a1aaa4] font-mono truncate block">
+                {instagram?.accountId || "Pending"}
               </span>
             </div>
             <div>
-              <span className="text-zinc-400 block">FB Page ID</span>
-              <span className="text-zinc-200 font-mono truncate block">
-                {instagram?.pageId || "Unified / Optional"}
+              <span className="text-[#727c75] block">FB page ID</span>
+              <span className="text-[#a1aaa4] font-mono truncate block">
+                {instagram?.pageId || "Optional"}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 px-2.5 py-1.5">
-            <code className="text-[10px] text-zinc-200 font-mono truncate flex-1">
+          <div className={cn(CONSOLE_SUBCARD, "flex items-center gap-2 px-2.5 py-1.5")}>
+            <code className="text-[11px] text-[#a1aaa4] font-mono truncate flex-1">
               {instagram?.webhookUrl || "https://starx-flow.runs-on.dev/api/integrations/instagram/webhook"}
             </code>
             <button
               type="button"
               onClick={() => handleCopyUrl("ig", instagram?.webhookUrl)}
               aria-label="Copy Instagram webhook URL"
-              className="p-1 rounded-lg hover:bg-white/10 text-zinc-300 hover:text-fuchsia-300 transition-colors cursor-pointer"
+              className="p-1 rounded text-[#727c75] hover:text-[#edf0ee] transition-colors cursor-pointer"
             >
-              {copiedTarget === "ig" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+              {copiedTarget === "ig" ? <Check className="w-3.5 h-3.5 text-[#4cc38a]" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Configured USD Rates & Services Bar */}
+      {/* Quoted Plans Bar */}
       {profile && profile.services.length > 0 && (
-        <div className="rounded-2xl bg-[#08150f]/80 backdrop-blur-2xl border border-emerald-500/15 px-5 py-3.5 flex flex-wrap items-center gap-2.5">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300 mr-1">
-            Live AI Quoted Plans:
-          </span>
+        <div className={cn(CONSOLE_PANEL, "py-3 px-4 flex flex-wrap items-center gap-2")}>
+          <span className="text-xs font-medium text-[#727c75] mr-1">Quoted plans:</span>
           {profile.services.map((svc) => (
             <span
               key={svc.name}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/10 text-xs text-zinc-200 tabular-nums"
+              className={cn(CONSOLE_SUBCARD, "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs")}
             >
-              <span className="font-medium text-white">{svc.name}</span>
-              <span className="text-emerald-300 font-mono font-semibold">
+              <span className="text-[#edf0ee]">{svc.name}</span>
+              <span className="text-[#4cc38a] font-mono">
                 {svc.currency === "USD" ? "$" : "€"}
                 {svc.price}
               </span>
@@ -567,21 +527,13 @@ export function AdminSupportView({
         </div>
       )}
 
-      {/* Main Split Support Inbox */}
+      {/* Split Support Inbox */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[460px]">
-        {/* Left Thread List */}
-        <div className="lg:col-span-4 rounded-2xl bg-[#08150f]/85 backdrop-blur-2xl border border-emerald-500/20 flex flex-col overflow-hidden">
-          <div className="px-4 py-3 border-b border-white/[0.08] space-y-2.5">
+        <div className={cn(CONSOLE_PANEL_FLUSH, "lg:col-span-4 flex flex-col")}>
+          <div className="px-4 py-3 border-b border-[#edf0ee]/[0.08] space-y-2.5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageSquare size={15} className="text-emerald-400" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                  Support Conversations
-                </h2>
-              </div>
-              <span className="text-[11px] font-mono text-zinc-400 tabular-nums">
-                {conversations.length}
-              </span>
+              <h2 className="text-xs font-medium text-[#edf0ee]">Conversations</h2>
+              <span className="text-[11px] font-mono text-[#727c75]">{conversations.length}</span>
             </div>
 
             <div className="flex items-center gap-1.5">
@@ -591,22 +543,22 @@ export function AdminSupportView({
                   type="button"
                   onClick={() => setChannelFilter(tab)}
                   className={cn(
-                    "px-2.5 py-1 rounded-lg text-[10px] font-semibold capitalize transition-colors cursor-pointer border",
+                    "px-2.5 py-1 rounded-md text-xs font-medium capitalize transition-colors cursor-pointer border",
                     channelFilter === tab
-                      ? "bg-emerald-500/20 border-emerald-400/40 text-emerald-200"
-                      : "bg-white/[0.03] border-white/10 text-zinc-400 hover:text-zinc-200"
+                      ? "bg-[#19201d] border-[#34d399]/35 text-[#edf0ee]"
+                      : "bg-[#0d1210] border-[#edf0ee]/[0.06] text-[#727c75] hover:text-[#edf0ee]"
                   )}
                 >
-                  {tab === "all" ? "All Channels" : tab}
+                  {tab === "all" ? "All" : tab}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto divide-y divide-white/[0.06] max-h-[480px]">
+          <div className="flex-1 overflow-y-auto divide-y divide-[#edf0ee]/[0.06] max-h-[480px]">
             {conversations.length === 0 ? (
-              <div className="p-6 text-center text-xs text-zinc-400">
-                No {channelFilter === "all" ? "Support" : channelFilter} threads yet. Inbound WhatsApp (+1 555-155-5475) and Instagram DMs appear here live.
+              <div className="p-6 text-center text-xs text-[#727c75]">
+                No {channelFilter === "all" ? "support" : channelFilter} threads yet
               </div>
             ) : (
               conversations.map((convo) => {
@@ -622,51 +574,33 @@ export function AdminSupportView({
                       setFeedback(null);
                     }}
                     className={cn(
-                      "w-full text-left px-4 py-3.5 transition-colors cursor-pointer",
+                      "w-full text-left px-4 py-3 transition-colors cursor-pointer",
                       isSelected
-                        ? "bg-emerald-500/[0.14] border-l-2 border-l-emerald-400"
-                        : "hover:bg-white/[0.04]"
+                        ? "bg-[#19201d] border-l-2 border-l-[#34d399]"
+                        : "hover:bg-[#19201d]/50"
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-white truncate">
-                        {convo.customer_name || convo.customer_phone || "Support Visitor"}
+                      <span className="text-xs font-medium text-[#edf0ee] truncate">
+                        {convo.customer_name || convo.customer_phone || "Visitor"}
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
-                        <span
-                          className={cn(
-                            "px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase border",
-                            isIg
-                              ? "bg-fuchsia-500/15 text-fuchsia-200 border-fuchsia-400/30"
-                              : "bg-emerald-500/10 text-emerald-300 border-emerald-400/25"
-                          )}
-                        >
-                          {isIg ? "IG" : "WA"}
-                        </span>
-                        <span
-                          className={cn(
-                            "px-1.5 py-0.5 rounded text-[10px] font-semibold",
-                            isHuman
-                              ? "bg-amber-500/20 text-amber-300 border border-amber-400/30"
-                              : "bg-emerald-500/15 text-emerald-300 border border-emerald-400/25"
-                          )}
-                        >
-                          {isHuman ? "Human" : "AI Auto"}
+                        <span className={CONSOLE_BADGE_MUTED}>{isIg ? "IG" : "WA"}</span>
+                        <span className={isHuman ? CONSOLE_BADGE_WARN : CONSOLE_BADGE_LIVE}>
+                          {isHuman ? "Human" : "AI"}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-zinc-400 mt-1">
+                    <div className="flex items-center justify-between text-[11px] text-[#727c75] mt-1">
                       <span className="font-mono truncate">
                         {convo.customer_phone || convo.customer_email || convo.channel}
                       </span>
-                      <span className="text-[10px] shrink-0">
-                        {formatShortTime(convo.updated_at)}
-                      </span>
+                      <span className="shrink-0">{formatShortTime(convo.updated_at)}</span>
                     </div>
 
-                    <p className="text-[11px] text-zinc-300 line-clamp-1 mt-1.5">
-                      {convo.last_message || "Started Support conversation"}
+                    <p className="text-xs text-[#a1aaa4] line-clamp-1 mt-1.5">
+                      {convo.last_message || "Started conversation"}
                     </p>
                   </button>
                 );
@@ -675,36 +609,33 @@ export function AdminSupportView({
           </div>
         </div>
 
-        {/* Right Active Thread */}
-        <div className="lg:col-span-8 rounded-2xl bg-[#08150f]/85 backdrop-blur-2xl border border-emerald-500/20 flex flex-col overflow-hidden">
+        {/* Thread Detail */}
+        <div className={cn(CONSOLE_PANEL_FLUSH, "lg:col-span-8 flex flex-col")}>
           {!activeConversation ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <MessageSquare size={28} className="text-emerald-400/60 mb-2" />
-              <p className="text-sm font-semibold text-zinc-200">Select a Support Thread</p>
-              <p className="text-xs text-zinc-400 mt-1 max-w-sm">
-                Inspect AI replies, take over control manually, or send direct WhatsApp and Instagram DM responses from the Admin Cell.
+              <MessageSquare className="w-7 h-7 text-[#727c75] mb-2" strokeWidth={1.5} />
+              <p className="text-sm font-medium text-[#edf0ee]">Select a thread</p>
+              <p className="text-xs text-[#727c75] mt-1 max-w-sm">
+                Inspect AI replies, switch to human control, or respond directly over WhatsApp or Instagram
               </p>
             </div>
           ) : (
             <>
-              {/* Thread Header */}
-              <div className="px-5 py-3.5 border-b border-white/[0.08] flex flex-wrap items-center justify-between gap-3">
+              <div className="px-5 py-3.5 border-b border-[#edf0ee]/[0.08] flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-white">
-                      {activeConversation.customer_name || "Support Customer"}
+                    <h3 className="text-sm font-medium text-[#edf0ee]">
+                      {activeConversation.customer_name || "Customer"}
                     </h3>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white/[0.06] border border-white/10 text-zinc-300">
-                      {activeConversation.channel}
-                    </span>
+                    <span className={CONSOLE_BADGE_MUTED}>{activeConversation.channel}</span>
                     {activeConversation.customer_phone && (
-                      <span className="text-[11px] font-mono text-zinc-400">
+                      <span className="text-xs font-mono text-[#727c75]">
                         {activeConversation.customer_phone}
                       </span>
                     )}
                   </div>
                   {activeConversation.customer_email && (
-                    <p className="text-[11px] text-emerald-300 font-mono">
+                    <p className="text-xs text-[#a1aaa4] font-mono mt-0.5">
                       {activeConversation.customer_email}
                     </p>
                   )}
@@ -715,27 +646,24 @@ export function AdminSupportView({
                   onClick={handleToggleControl}
                   disabled={isToggling}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer disabled:opacity-60",
-                    activeConversation.control_mode === "human"
-                      ? "bg-emerald-500/15 border-emerald-400/35 text-emerald-200 hover:bg-emerald-500/25"
-                      : "bg-amber-500/15 border-amber-400/35 text-amber-200 hover:bg-amber-500/25"
+                    CONSOLE_BTN_SECONDARY,
+                    activeConversation.control_mode === "human" && "border-[#34d399]/35"
                   )}
                 >
                   {activeConversation.control_mode === "human" ? (
                     <>
-                      <Bot size={14} />
-                      <span>Release to Support AI</span>
+                      <Bot className="w-3.5 h-3.5 text-[#4cc38a]" />
+                      <span>Return to AI</span>
                     </>
                   ) : (
                     <>
-                      <UserCheck size={14} />
-                      <span>Take Over (Human Admin)</span>
+                      <UserCheck className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Take over manually</span>
                     </>
                   )}
                 </button>
               </div>
 
-              {/* Message Feed */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[340px]">
                 {activeConversation.messages && activeConversation.messages.length > 0 ? (
                   activeConversation.messages.map((m) => {
@@ -745,71 +673,71 @@ export function AdminSupportView({
                       <div
                         key={m.id}
                         className={cn(
-                          "flex flex-col max-w-[84%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed",
+                          "flex flex-col max-w-[84%] rounded-xl px-3.5 py-2.5 text-xs leading-relaxed border",
                           isCustomer
-                            ? "self-start mr-auto bg-white/[0.06] border border-white/10 text-zinc-100"
+                            ? "self-start mr-auto bg-[#19201d] border-[#edf0ee]/10 text-[#edf0ee]"
                             : isInternal
-                              ? "self-end ml-auto bg-amber-500/15 border border-amber-400/30 text-amber-100"
+                              ? "self-end ml-auto bg-amber-400/10 border-amber-400/20 text-amber-100"
                               : m.role === "human"
-                                ? "self-end ml-auto bg-cyan-500/15 border border-cyan-400/30 text-cyan-50"
-                                : "self-end ml-auto bg-emerald-500/15 border border-emerald-400/30 text-emerald-50"
+                                ? "self-end ml-auto bg-[#0d1210] border-[#edf0ee]/12 text-[#edf0ee]"
+                                : "self-end ml-auto bg-[#4cc38a]/10 border-[#4cc38a]/25 text-[#edf0ee]"
                         )}
                       >
-                        <div className="flex items-center justify-between gap-3 text-[10px] mb-1 opacity-80">
-                          <span className="font-semibold flex items-center gap-1">
-                            {isInternal && <Lock size={10} />}
+                        <div className="flex items-center justify-between gap-3 text-[11px] mb-1 text-[#a1aaa4]">
+                          <span className="font-medium flex items-center gap-1">
+                            {isInternal && <Lock className="w-3 h-3" />}
                             {isCustomer
                               ? activeConversation.customer_name || "Customer"
                               : isInternal
-                                ? "Internal Admin Note"
+                                ? "Internal note"
                                 : m.role === "human"
-                                  ? m.agent_name || "Admin Agent"
-                                  : "StarX Flow Support AI"}
+                                  ? m.agent_name || "Operator"
+                                  : "Support AI"}
                           </span>
-                          <span className="font-mono">{formatShortTime(m.created_at)}</span>
+                          <span className="font-mono text-[#727c75]">
+                            {formatShortTime(m.created_at)}
+                          </span>
                         </div>
                         <p className="whitespace-pre-wrap break-words">{m.content}</p>
                       </div>
                     );
                   })
                 ) : (
-                  <p className="text-xs text-zinc-400 text-center py-8">
-                    No messages recorded in this thread yet.
+                  <p className="text-xs text-[#727c75] text-center py-8">
+                    No messages in this thread yet
                   </p>
                 )}
               </div>
 
-              {/* Feedback Toast */}
               {feedback && (
                 <div
                   className={cn(
-                    "mx-4 mb-2 px-3 py-2 rounded-xl text-[11px] flex items-center gap-2 border",
-                    feedback.type === "ok"
-                      ? "bg-emerald-500/10 border-emerald-400/30 text-emerald-200"
-                      : "bg-rose-500/10 border-rose-400/30 text-rose-200"
+                    "mx-4 mb-2 px-3 py-2 rounded-lg text-xs flex items-center gap-2 border",
+                    feedback.type === "ok" ? CONSOLE_BADGE_LIVE : CONSOLE_BADGE_DANGER
                   )}
                 >
-                  {feedback.type === "ok" ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+                  {feedback.type === "ok" ? (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5" />
+                  )}
                   <span>{feedback.text}</span>
                 </div>
               )}
 
-              {/* Composer */}
               <form
                 onSubmit={handleSubmitReply}
-                className="p-3.5 border-t border-white/[0.08] bg-white/[0.02] space-y-2"
+                className="p-3.5 border-t border-[#edf0ee]/[0.08] bg-[#0d1210] space-y-2"
               >
-                <div className="flex items-center justify-between">
-                  <label className="inline-flex items-center gap-2 text-[11px] text-zinc-300 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={isInternalNote}
-                      onChange={(e) => setIsInternalNote(e.target.checked)}
-                      className="rounded border-white/20 bg-white/5 text-emerald-400 focus:ring-emerald-400"
-                    />
-                    <span>Save as internal Admin note only (do not send externally)</span>
-                  </label>
-                </div>
+                <label className="inline-flex items-center gap-2 text-xs text-[#a1aaa4] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isInternalNote}
+                    onChange={(e) => setIsInternalNote(e.target.checked)}
+                    className="rounded border-[#edf0ee]/20 bg-[#121715]"
+                  />
+                  <span>Save as internal note only</span>
+                </label>
 
                 <div className="flex items-center gap-2">
                   <input
@@ -818,23 +746,19 @@ export function AdminSupportView({
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder={
                       isInternalNote
-                        ? "Add internal admin note..."
-                        : `Reply directly on ${activeConversation.channel || "WhatsApp"}...`
+                        ? "Add internal note"
+                        : `Reply via ${activeConversation.channel || "WhatsApp"}`
                     }
-                    className="flex-1 h-10 px-3.5 rounded-xl bg-white/[0.05] border border-white/10 focus:border-emerald-400/60 text-xs text-white placeholder-zinc-400 outline-none"
+                    className={cn(CONSOLE_INPUT, "flex-1 h-9 px-3.5 text-xs")}
                   />
                   <button
                     type="submit"
                     disabled={isSending || !replyText.trim()}
-                    className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                    className={cn(CONSOLE_BTN_PRIMARY, "h-9")}
                   >
-                    <Send size={13} />
+                    <Send className="w-3.5 h-3.5" />
                     <span>
-                      {isSending
-                        ? "Sending..."
-                        : isInternalNote
-                          ? "Save Note"
-                          : `Send ${activeConversation.channel || "Reply"}`}
+                      {isSending ? "Sending..." : isInternalNote ? "Save note" : "Send"}
                     </span>
                   </button>
                 </div>
@@ -846,33 +770,26 @@ export function AdminSupportView({
 
       {/* Telemetry Logs */}
       {supportData && supportData.logs.length > 0 && (
-        <div className="rounded-2xl bg-[#08150f]/85 backdrop-blur-2xl border border-emerald-500/20 p-4 space-y-2.5">
-          <div className="flex items-center gap-2">
-            <Activity size={14} className="text-emerald-400" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
-              Recent WhatsApp &amp; Instagram Cloud API Telemetry
-            </h3>
-          </div>
-          <div className="divide-y divide-white/[0.05] max-h-48 overflow-y-auto">
+        <div className={cn(CONSOLE_PANEL, "space-y-3")}>
+          <h2 className="text-xs font-medium text-[#a1aaa4]">Recent channel webhook logs</h2>
+          <div className="divide-y divide-[#edf0ee]/[0.06] max-h-48 overflow-y-auto">
             {supportData.logs.map((log) => (
               <div
                 key={log.id}
-                className="py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[11px]"
+                className="py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span
                     className={cn(
-                      "px-1.5 py-0.5 rounded font-mono text-[10px] uppercase shrink-0",
-                      log.type === "error"
-                        ? "bg-rose-500/20 text-rose-300"
-                        : "bg-emerald-500/15 text-emerald-300"
+                      "px-1.5 py-0.5 rounded font-mono text-[11px] shrink-0",
+                      log.type === "error" ? CONSOLE_BADGE_DANGER : CONSOLE_BADGE_MUTED
                     )}
                   >
                     {log.channel || log.type}
                   </span>
-                  <span className="text-zinc-200 truncate">{log.message}</span>
+                  <span className="text-[#edf0ee] truncate">{log.message}</span>
                 </div>
-                <span className="text-zinc-400 font-mono text-[10px] shrink-0">
+                <span className="text-[#727c75] font-mono text-[11px] shrink-0">
                   {formatShortTime(log.created_at)}
                 </span>
               </div>

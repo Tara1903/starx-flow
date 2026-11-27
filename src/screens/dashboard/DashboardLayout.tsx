@@ -134,19 +134,8 @@ export function DashboardLayout() {
   };
 
   return (
-    <div className="h-screen h-[100dvh] overflow-hidden bg-[#020a07] text-[#f0f5ef] font-sans flex relative selection:bg-emerald-500/30 selection:text-emerald-200">
-      {/* Background Emerald Ambient Depth */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div
-          className="absolute -top-40 -left-40 w-[600px] h-[600px] pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(40, 223, 160, 0.08) 0%, transparent 70%)" }}
-        />
-        <div
-          className="absolute top-1/3 -right-40 w-[500px] h-[500px] pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)" }}
-        />
-      </div>
-      {/* Dynamic desktop clearance style for fixed floating dock */}
+    <div className="h-screen h-[100dvh] overflow-hidden bg-[#080a09] text-[#edf0ee] font-sans flex relative selection:bg-[#34d399]/25 selection:text-[#edf0ee]">
+      {/* Dynamic desktop clearance style for fixed dock */}
       <style>{`
         @media (min-width: 768px) {
           .dashboard-viewport-clearance {
@@ -155,29 +144,29 @@ export function DashboardLayout() {
         }
       `}</style>
 
-      {/* 1. Sidebar component (Floating fixed dock on desktop, bottom navigation on mobile) */}
+      {/* 1. Sidebar component (Floating dock on desktop, bottom navigation on mobile) */}
       <DashboardSidebar />
 
-      {/* 2. Main Content Scrollable Viewport (Scrolls smoothly while sidebar stays fixed) */}
+      {/* 2. Main Content Scrollable Viewport */}
       <div 
         className={cn(
-          "flex-1 h-screen h-[100dvh] overflow-y-auto console-scroll flex flex-col min-w-0 transition-all duration-300 relative z-10 pb-20 md:pb-0 dashboard-viewport-clearance",
+          "flex-1 h-screen h-[100dvh] overflow-y-auto console-scroll flex flex-col min-w-0 transition-[padding] duration-300 relative z-10 pb-20 md:pb-0 dashboard-viewport-clearance",
           isSidebarCollapsed ? "dashboard-content-collapsed md:pl-24" : "dashboard-content-expanded md:pl-[304px]"
         )}
       >
-        {/* 3. TopBar Component (Sticky at top of scrollable area) */}
-        <div className="sticky top-0 z-30 bg-[#020a07]/85 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        {/* 3. TopBar Component */}
+        <div className="sticky top-0 z-30 bg-[#080a09]/92 backdrop-blur-md border-b border-[#edf0ee]/[0.08]">
           <DashboardTopBar onNewWorkflowClick={handleOpenWorkflowWizard} />
         </div>
         <NetworkStatusBanner onReconnectRetry={fetchInboxData} />
 
         {/* 4. Section Render Area */}
-        <div role="region" aria-label="Dashboard workspace" className="flex-1 px-4 py-5 sm:px-6 lg:px-8 py-6 pb-28 sm:pb-12 max-w-[1680px] w-full mx-auto relative z-10">
+        <div role="region" aria-label="Dashboard workspace" className="flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-32 sm:pb-32 max-w-[1520px] w-full mx-auto relative z-10">
           <motion.div
             key={activeSection}
             initial={prefersReduced ? false : { opacity: 0.94, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: prefersReduced ? 0 : 0.16, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: prefersReduced ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
             className="h-full"
           >
             <React.Suspense fallback={<GlassSkeleton variant="panel" />}>

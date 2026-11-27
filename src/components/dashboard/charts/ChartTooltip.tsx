@@ -28,23 +28,20 @@ export function ChartTooltip({
       {visible && (
         <motion.div
           role="status"
-          initial={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 4, scale: 0.96 }}
+          initial={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 4, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 2, scale: 0.96 }}
+          exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 2, scale: 0.98 }}
           transition={{ duration: 0.14 }}
           className={cn(
-            "pointer-events-none z-30 min-w-[120px] rounded-xl bg-[#07120e]/95 backdrop-blur-xl border border-emerald-400/30 px-3 py-2 shadow-[0_14px_34px_rgba(0,0,0,0.75)] tabular-nums",
+            "pointer-events-none z-30 min-w-[120px] rounded-lg bg-[#0c100e] border border-[#edf0ee]/12 px-3 py-2 shadow-[0_12px_28px_rgba(0,0,0,0.65)] tabular-nums",
             className
           )}
-          style={{ WebkitBackdropFilter: "blur(16px)" }}
         >
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-            {label}
-          </p>
-          <p className="text-xs font-bold text-white mt-0.5">{value}</p>
-          {sublabel && <p className="text-[10px] text-emerald-300 mt-0.5">{sublabel}</p>}
+          <p className="text-[11px] font-medium text-[#727c75]">{label}</p>
+          <p className="text-xs font-semibold text-[#edf0ee] mt-0.5">{value}</p>
+          {sublabel && <p className="text-[11px] text-[#4cc38a] mt-0.5">{sublabel}</p>}
           {comparison && (
-            <p className="text-[10px] text-zinc-400 mt-0.5 border-t border-white/[0.08] pt-1">
+            <p className="text-[11px] text-[#a1aaa4] mt-1 border-t border-[#edf0ee]/[0.08] pt-1">
               {comparison}
             </p>
           )}

@@ -24,9 +24,9 @@ export default function Dashboard() {
 
   if (isLoading || !isLoggedIn || onboardingComplete === false) {
     return (
-      <div className="min-h-screen bg-[#020a07] text-[#f0f5ef] flex flex-col items-center justify-center font-sans">
-        <div className="w-12 h-12 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin mb-4" />
-        <p className="text-xs font-mono tracking-widest uppercase text-emerald-400">Loading StarX Flow Dashboard...</p>
+      <div className="min-h-screen bg-[#080a09] text-[#edf0ee] flex flex-col items-center justify-center font-sans">
+        <div className="w-8 h-8 rounded-full border-2 border-[#edf0ee]/20 border-t-[#34d399] animate-spin mb-3" />
+        <p className="text-xs font-medium text-[#a1aaa4]">Loading StarX Flow workspace</p>
       </div>
     );
   }

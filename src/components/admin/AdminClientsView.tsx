@@ -15,73 +15,37 @@ import {
   Clock,
   Shield,
   X,
-  UserCheck,
-  BarChart3,
-  Sparkles,
   Download,
-  Plus,
 } from "lucide-react";
+import {
+  CONSOLE_PANEL,
+  CONSOLE_PANEL_FLUSH,
+  CONSOLE_SUBCARD,
+  CONSOLE_INPUT,
+  CONSOLE_BTN_SECONDARY,
+  CONSOLE_BTN_DANGER,
+  CONSOLE_HEADING,
+  CONSOLE_SECTION_TITLE,
+  CONSOLE_BADGE_LIVE,
+  CONSOLE_BADGE_INFO,
+  CONSOLE_BADGE_MUTED,
+  CONSOLE_BADGE_DANGER,
+} from "../../lib/consoleSurface";
 import { cn } from "../../lib/utils";
 import type { Client } from "../../store/adminStore";
 
-const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string; border: string }> = {
-  Active: {
-    bg: "bg-emerald-500/10",
-    text: "text-emerald-400",
-    dot: "bg-emerald-500",
-    border: "border-emerald-500/25",
-  },
-  Trial: {
-    bg: "bg-cyan-500/10",
-    text: "text-cyan-400",
-    dot: "bg-cyan-500",
-    border: "border-cyan-500/25",
-  },
-  Inactive: {
-    bg: "bg-zinc-500/10",
-    text: "text-zinc-400",
-    dot: "bg-zinc-500",
-    border: "border-zinc-500/25",
-  },
-  Churned: {
-    bg: "bg-rose-500/10",
-    text: "text-rose-400",
-    dot: "bg-rose-500",
-    border: "border-rose-500/25",
-  },
+const STATUS_BADGE: Record<string, string> = {
+  Active: CONSOLE_BADGE_LIVE,
+  Trial: CONSOLE_BADGE_INFO,
+  Inactive: CONSOLE_BADGE_MUTED,
+  Churned: CONSOLE_BADGE_DANGER,
 };
 
-const PLAN_STYLES: Record<string, { text: string; bg: string; border: string }> = {
-  "Free Trial": {
-    text: "text-zinc-400",
-    bg: "bg-zinc-500/10",
-    border: "border-zinc-500/20",
-  },
-  Starter: {
-    text: "text-blue-300",
-    bg: "bg-blue-500/10",
-    border: "border-blue-500/20",
-  },
-  Growth: {
-    text: "text-teal-300",
-    bg: "bg-teal-500/10",
-    border: "border-teal-500/25",
-  },
-  Pro: {
-    text: "text-emerald-300",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/25",
-  },
-  Professional: {
-    text: "text-emerald-300",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/25",
-  },
-  Enterprise: {
-    text: "text-amber-300",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/25",
-  },
+const STATUS_DOT: Record<string, string> = {
+  Active: "bg-[#4cc38a]",
+  Trial: "bg-sky-400",
+  Inactive: "bg-[#727c75]",
+  Churned: "bg-[#e5484d]",
 };
 
 type SortKey = "businessName" | "signupDate" | "totalExecutions" | "totalWorkflows" | "status";
@@ -103,7 +67,6 @@ export function AdminClientsView({
   onStatusChange,
   onPlanChange,
   onDeleteClient,
-  onRefresh,
 }: AdminClientsViewProps) {
   const prefersReduced = useReducedMotion();
   const [filterStatus, setFilterStatus] = useState<string>("All");
@@ -113,7 +76,6 @@ export function AdminClientsView({
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Filter & Sort
   const filteredClients = useMemo(() => {
     let result = [...clients];
 
@@ -175,11 +137,11 @@ export function AdminClientsView({
   };
 
   const SortIndicator = ({ col }: { col: SortKey }) => {
-    if (sortKey !== col) return <ChevronDown className="w-3 h-3 opacity-25" />;
+    if (sortKey !== col) return <ChevronDown className="w-3 h-3 opacity-35" />;
     return sortAsc ? (
-      <ChevronUp className="w-3 h-3 text-emerald-400" />
+      <ChevronUp className="w-3 h-3 text-[#34d399]" />
     ) : (
-      <ChevronDown className="w-3 h-3 text-emerald-400" />
+      <ChevronDown className="w-3 h-3 text-[#34d399]" />
     );
   };
 
@@ -199,60 +161,56 @@ export function AdminClientsView({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Title & Actions Bar */}
+    <div className="space-y-6 select-none">
+      {/* Header Row */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-            Client Directory
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-              {clients.length} Total
-            </span>
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">
-            Manage authenticated enterprise accounts, subscription tiers, and automation capacity.
+          <div className="flex items-center gap-2.5">
+            <h1 className={CONSOLE_HEADING}>Client directory</h1>
+            <span className={CONSOLE_BADGE_MUTED}>{clients.length} total</span>
+          </div>
+          <p className="text-xs sm:text-sm text-[#727c75] mt-0.5">
+            Manage authenticated accounts, plan tiers, and workspace execution counts
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={exportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-white bg-[#08150f]/80 hover:bg-emerald-950/40 border border-emerald-500/20 hover:border-emerald-500/40 transition-all duration-200"
-          >
-            <Download className="w-3.5 h-3.5 text-emerald-400" />
-            Export CSV
-          </button>
-        </div>
+        <button type="button" onClick={exportCSV} className={CONSOLE_BTN_SECONDARY}>
+          <Download className="w-3.5 h-3.5 text-[#a1aaa4]" strokeWidth={1.65} />
+          <span>Export CSV</span>
+        </button>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="p-4 rounded-2xl bg-[#08150f]/80 backdrop-blur-2xl border border-emerald-500/20 shadow-[0_10px_30px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)] space-y-3">
+      <div className={cn(CONSOLE_PANEL, "p-4 space-y-3")}>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400/60" />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#727c75]"
+              strokeWidth={1.65}
+            />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search clients by company, owner, email, or category..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-black/40 border border-emerald-500/15 focus:border-emerald-500/50 text-sm text-white placeholder-zinc-500 outline-none transition-all duration-200"
+              placeholder="Search by business, owner, or email"
+              className={cn(CONSOLE_INPUT, "w-full pl-9 pr-4 py-2 text-sm")}
             />
           </div>
 
           <button
+            type="button"
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              "flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium border transition-all duration-200",
-              showFilters
-                ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                : "bg-black/30 border-emerald-500/15 text-zinc-400 hover:text-white hover:border-emerald-500/30"
+              CONSOLE_BTN_SECONDARY,
+              "px-4",
+              showFilters && "border-[#34d399]/35 text-[#edf0ee]"
             )}
           >
-            <Filter className="w-3.5 h-3.5 text-emerald-400" />
-            Filter View
+            <Filter className="w-3.5 h-3.5 text-[#a1aaa4]" strokeWidth={1.65} />
+            <span>Filters</span>
             <ChevronDown
               className={cn(
-                "w-3 h-3 text-zinc-400 transition-transform duration-200",
+                "w-3.5 h-3.5 text-[#727c75] transition-transform duration-150",
                 showFilters && "rotate-180"
               )}
             />
@@ -265,25 +223,23 @@ export function AdminClientsView({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: prefersReduced ? 0 : 0.2 }}
+              transition={{ duration: prefersReduced ? 0 : 0.18 }}
               className="overflow-hidden"
             >
-              <div className="pt-3 border-t border-emerald-500/15 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Status Filter */}
+              <div className="pt-3 border-t border-[#edf0ee]/[0.08] grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
-                    Account Status
-                  </p>
+                  <p className="text-xs font-medium text-[#a1aaa4] mb-2">Account status</p>
                   <div className="flex flex-wrap gap-1.5">
                     {["All", "Active", "Trial", "Inactive", "Churned"].map((st) => (
                       <button
+                        type="button"
                         key={st}
                         onClick={() => setFilterStatus(st)}
                         className={cn(
-                          "px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 border",
+                          "px-2.5 py-1 rounded-md text-xs font-medium transition-colors border cursor-pointer",
                           filterStatus === st
-                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
-                            : "bg-black/30 text-zinc-400 border-white/5 hover:text-white hover:border-emerald-500/20"
+                            ? "bg-[#19201d] text-[#edf0ee] border-[#34d399]/35"
+                            : "bg-[#0d1210] text-[#727c75] border-[#edf0ee]/[0.06] hover:text-[#edf0ee]"
                         )}
                       >
                         {st}
@@ -292,21 +248,19 @@ export function AdminClientsView({
                   </div>
                 </div>
 
-                {/* Plan Filter */}
                 <div>
-                  <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
-                    Subscription Tier
-                  </p>
+                  <p className="text-xs font-medium text-[#a1aaa4] mb-2">Subscription tier</p>
                   <div className="flex flex-wrap gap-1.5">
                     {["All", "Free Trial", "Starter", "Growth", "Pro", "Enterprise"].map((pl) => (
                       <button
+                        type="button"
                         key={pl}
                         onClick={() => setFilterPlan(pl)}
                         className={cn(
-                          "px-3 py-1 rounded-lg text-xs font-medium transition-all duration-150 border",
+                          "px-2.5 py-1 rounded-md text-xs font-medium transition-colors border cursor-pointer",
                           filterPlan === pl
-                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
-                            : "bg-black/30 text-zinc-400 border-white/5 hover:text-white hover:border-emerald-500/20"
+                            ? "bg-[#19201d] text-[#edf0ee] border-[#34d399]/35"
+                            : "bg-[#0d1210] text-[#727c75] border-[#edf0ee]/[0.06] hover:text-[#edf0ee]"
                         )}
                       >
                         {pl}
@@ -320,171 +274,144 @@ export function AdminClientsView({
         </AnimatePresence>
       </div>
 
-      {/* Clients Glass Table */}
-      <div className="rounded-2xl bg-[#08150f]/85 backdrop-blur-2xl border border-emerald-500/20 shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.1)] overflow-hidden">
-        {/* Table Header */}
-        <div className="hidden lg:grid grid-cols-12 gap-4 px-6 py-3.5 border-b border-emerald-500/15 bg-black/40 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+      {/* Clients Table */}
+      <div className={cn(CONSOLE_PANEL_FLUSH, "tabular-nums")}>
+        <div className="hidden lg:grid grid-cols-12 gap-4 px-5 py-3 border-b border-[#edf0ee]/[0.08] bg-[#0d1210] text-xs font-medium text-[#727c75]">
           <button
+            type="button"
             onClick={() => handleSort("businessName")}
-            className="col-span-4 flex items-center gap-1.5 hover:text-emerald-300 transition-colors text-left"
+            className="col-span-4 flex items-center gap-1.5 hover:text-[#edf0ee] transition-colors text-left cursor-pointer"
           >
-            Business & Owner
+            Business & owner
             <SortIndicator col="businessName" />
           </button>
-          <div className="col-span-2">Contact Info</div>
+          <div className="col-span-2">Contact</div>
           <button
+            type="button"
             onClick={() => handleSort("status")}
-            className="col-span-2 flex items-center gap-1.5 hover:text-emerald-300 transition-colors text-left"
+            className="col-span-2 flex items-center gap-1.5 hover:text-[#edf0ee] transition-colors text-left cursor-pointer"
           >
-            Status & Tier
+            Status & tier
             <SortIndicator col="status" />
           </button>
           <button
+            type="button"
             onClick={() => handleSort("totalWorkflows")}
-            className="col-span-1 flex items-center gap-1.5 hover:text-emerald-300 transition-colors text-left"
+            className="col-span-1 flex items-center gap-1.5 hover:text-[#edf0ee] transition-colors text-left cursor-pointer"
           >
             Flows
             <SortIndicator col="totalWorkflows" />
           </button>
           <button
+            type="button"
             onClick={() => handleSort("totalExecutions")}
-            className="col-span-1 flex items-center gap-1.5 hover:text-emerald-300 transition-colors text-left"
+            className="col-span-1 flex items-center gap-1.5 hover:text-[#edf0ee] transition-colors text-left cursor-pointer"
           >
-            Execs
+            Runs
             <SortIndicator col="totalExecutions" />
           </button>
           <button
+            type="button"
             onClick={() => handleSort("signupDate")}
-            className="col-span-1 flex items-center gap-1.5 hover:text-emerald-300 transition-colors text-left"
+            className="col-span-1 flex items-center gap-1.5 hover:text-[#edf0ee] transition-colors text-left cursor-pointer"
           >
             Joined
             <SortIndicator col="signupDate" />
           </button>
-          <div className="col-span-1 text-right">Action</div>
+          <div className="col-span-1 text-right">Details</div>
         </div>
 
-        {/* Rows */}
-        <div className="divide-y divide-emerald-500/10">
+        <div className="divide-y divide-[#edf0ee]/[0.06]">
           {filteredClients.length === 0 ? (
-            <div className="py-16 text-center">
-              <Users className="w-10 h-10 text-emerald-500/30 mx-auto mb-3" />
-              <p className="text-sm font-medium text-white">No clients found</p>
-              <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
-                No registered accounts match your active filters or search criteria.
+            <div className="py-14 text-center">
+              <Users className="w-8 h-8 text-[#727c75] mx-auto mb-2.5" strokeWidth={1.5} />
+              <p className="text-sm font-medium text-[#edf0ee]">No clients found</p>
+              <p className="text-xs text-[#727c75] mt-1 max-w-sm mx-auto">
+                No registered accounts match your active filters or search term
               </p>
             </div>
           ) : (
-            filteredClients.map((client, index) => {
-              const status = STATUS_STYLES[client.status] || STATUS_STYLES.Trial;
-              const plan = PLAN_STYLES[client.plan] || PLAN_STYLES["Free Trial"];
+            filteredClients.map((client) => {
+              const badgeCls = STATUS_BADGE[client.status] || CONSOLE_BADGE_INFO;
+              const dotCls = STATUS_DOT[client.status] || "bg-[#727c75]";
 
               return (
-                <motion.div
+                <div
                   key={client.id}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: prefersReduced ? 0 : index * 0.02 }}
                   onClick={() => setSelectedClient(client)}
-                  className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 px-6 py-4 hover:bg-emerald-500/[0.04] cursor-pointer transition-colors duration-150 group items-center"
+                  className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 px-5 py-3.5 hover:bg-[#19201d]/60 cursor-pointer transition-colors duration-150 items-center"
                 >
-                  {/* Business & Owner */}
-                  <div className="lg:col-span-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-900/30 border border-emerald-500/30 flex items-center justify-center text-emerald-300 font-bold text-sm shadow-[0_0_12px_rgba(16,185,129,0.15)] flex-shrink-0">
+                  <div className="lg:col-span-4 flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-[#19201d] border border-[#edf0ee]/10 flex items-center justify-center text-[#edf0ee] font-medium text-sm flex-shrink-0">
                       {client.businessName ? client.businessName.charAt(0).toUpperCase() : "C"}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white group-hover:text-emerald-300 transition-colors truncate">
+                      <p className="text-sm font-medium text-[#edf0ee] truncate">
                         {client.businessName}
                       </p>
-                      <p className="text-xs text-zinc-400 truncate">
-                        {client.ownerName} · <span className="text-zinc-500">{client.businessType}</span>
+                      <p className="text-xs text-[#727c75] truncate">
+                        {client.ownerName} · {client.businessType}
                       </p>
                     </div>
                   </div>
 
-                  {/* Contact Info */}
                   <div className="lg:col-span-2 min-w-0">
-                    <p className="text-xs text-zinc-300 truncate">{client.email || "—"}</p>
-                    <p className="text-[11px] text-zinc-500 truncate">ID: {client.id.slice(0, 8)}...</p>
+                    <p className="text-xs text-[#a1aaa4] truncate">{client.email || "—"}</p>
+                    <p className="text-[11px] font-mono text-[#727c75] truncate">
+                      {client.id.slice(0, 8)}
+                    </p>
                   </div>
 
-                  {/* Status & Tier */}
                   <div className="lg:col-span-2 flex flex-wrap items-center gap-1.5">
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border",
-                        status.bg,
-                        status.text,
-                        status.border
-                      )}
-                    >
-                      <span className={cn("w-1.5 h-1.5 rounded-full", status.dot)} />
+                    <span className={badgeCls}>
+                      <span className={cn("w-1.5 h-1.5 rounded-full", dotCls)} />
                       {client.status}
                     </span>
-                    <span
-                      className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border",
-                        plan.bg,
-                        plan.text,
-                        plan.border
-                      )}
-                    >
-                      {client.plan}
-                    </span>
+                    <span className={CONSOLE_BADGE_MUTED}>{client.plan}</span>
                   </div>
 
-                  {/* Flows */}
-                  <div className="lg:col-span-1">
-                    <span className="text-xs font-semibold text-white">
-                      {client.totalWorkflows || 0}
-                    </span>
-                    <span className="text-[10px] text-zinc-500 lg:hidden ml-1">flows</span>
+                  <div className="lg:col-span-1 text-xs font-medium text-[#edf0ee]">
+                    {client.totalWorkflows || 0}
+                    <span className="text-[#727c75] lg:hidden ml-1 font-normal">flows</span>
                   </div>
 
-                  {/* Execs */}
-                  <div className="lg:col-span-1">
-                    <span className="text-xs font-semibold text-emerald-400">
-                      {(client.totalExecutions || 0).toLocaleString()}
-                    </span>
+                  <div className="lg:col-span-1 text-xs font-medium text-[#4cc38a]">
+                    {(client.totalExecutions || 0).toLocaleString()}
                   </div>
 
-                  {/* Joined Date */}
-                  <div className="lg:col-span-1">
-                    <span className="text-xs text-zinc-400">{client.signupDate || "—"}</span>
+                  <div className="lg:col-span-1 text-xs text-[#727c75]">
+                    {client.signupDate || "—"}
                   </div>
 
-                  {/* Actions */}
                   <div className="lg:col-span-1 flex items-center justify-end">
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedClient(client);
                       }}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/15 border border-transparent hover:border-emerald-500/30 transition-all duration-150"
+                      aria-label={`Inspect ${client.businessName}`}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-[#727c75] hover:text-[#edf0ee] hover:bg-[#19201d] transition-colors cursor-pointer"
                     >
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-4 h-4" strokeWidth={1.65} />
                     </button>
                   </div>
-                </motion.div>
+                </div>
               );
             })
           )}
         </div>
       </div>
 
-      {/* Distribution Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tier Distribution */}
-        <div className="p-6 rounded-2xl bg-[#08150f]/80 backdrop-blur-2xl border border-emerald-500/20 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-emerald-400" />
-              Plan Tier Distribution
-            </h3>
-            <span className="text-xs text-zinc-400">Live Breakdown</span>
+      {/* Breakdown Split */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className={cn(CONSOLE_PANEL, "space-y-4")}>
+          <div className="flex items-center justify-between">
+            <h2 className={CONSOLE_SECTION_TITLE}>Plan tier breakdown</h2>
+            <span className="text-xs text-[#727c75]">Active share</span>
           </div>
 
-          <div className="space-y-3.5">
+          <div className="space-y-3">
             {["Enterprise", "Pro", "Growth", "Starter", "Free Trial"].map((tier) => {
               const count = clients.filter((c) => {
                 if (tier === "Pro") return c.plan === "Pro" || c.plan === "Professional";
@@ -492,31 +419,19 @@ export function AdminClientsView({
                 return c.plan === tier;
               }).length;
               const pct = clients.length > 0 ? Math.round((count / clients.length) * 100) : 0;
-              const plan = PLAN_STYLES[tier] || PLAN_STYLES["Free Trial"];
 
               return (
-                <div key={tier} className="space-y-1.5">
+                <div key={tier} className="space-y-1.5 tabular-nums">
                   <div className="flex items-center justify-between text-xs">
-                    <span
-                      className={cn(
-                        "px-2 py-0.5 rounded font-medium text-[11px] border",
-                        plan.bg,
-                        plan.text,
-                        plan.border
-                      )}
-                    >
-                      {tier}
-                    </span>
-                    <span className="text-zinc-300 font-semibold">
-                      {count} <span className="text-zinc-500 font-normal">({pct}%)</span>
+                    <span className="text-[#a1aaa4] font-medium">{tier}</span>
+                    <span className="text-[#edf0ee] font-medium">
+                      {count} <span className="text-[#727c75] font-normal">({pct}%)</span>
                     </span>
                   </div>
-                  <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: prefersReduced ? 0 : 0.8, ease: "easeOut" }}
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
+                  <div className="h-1.5 bg-[#0d1210] rounded-full overflow-hidden border border-[#edf0ee]/[0.06]">
+                    <div
+                      style={{ width: `${pct}%` }}
+                      className="h-full rounded-full bg-[#34d399]"
                     />
                   </div>
                 </div>
@@ -525,37 +440,25 @@ export function AdminClientsView({
           </div>
         </div>
 
-        {/* Status Distribution */}
-        <div className="p-6 rounded-2xl bg-[#08150f]/80 backdrop-blur-2xl border border-emerald-500/20 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <UserCheck className="w-4 h-4 text-emerald-400" />
-              Account Status Summary
-            </h3>
-            <span className="text-xs text-zinc-400">Health Overview</span>
+        <div className={cn(CONSOLE_PANEL, "space-y-4")}>
+          <div className="flex items-center justify-between">
+            <h2 className={CONSOLE_SECTION_TITLE}>Account status summary</h2>
+            <span className="text-xs text-[#727c75]">Current roster</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 tabular-nums">
             {["Active", "Trial", "Inactive", "Churned"].map((st) => {
               const count = clients.filter((c) => c.status === st).length;
               const pct = clients.length > 0 ? Math.round((count / clients.length) * 100) : 0;
-              const s = STATUS_STYLES[st] || STATUS_STYLES.Trial;
 
               return (
-                <div
-                  key={st}
-                  className={cn(
-                    "p-3.5 rounded-xl border transition-all duration-200",
-                    s.bg,
-                    s.border
-                  )}
-                >
+                <div key={st} className={cn(CONSOLE_SUBCARD, "p-3.5")}>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <span className={cn("w-2 h-2 rounded-full", s.dot)} />
-                    <span className={cn("text-xs font-semibold", s.text)}>{st}</span>
+                    <span className={cn("w-1.5 h-1.5 rounded-full", STATUS_DOT[st] || "bg-[#727c75]")} />
+                    <span className="text-xs font-medium text-[#a1aaa4]">{st}</span>
                   </div>
-                  <p className="text-xl font-bold text-white tracking-tight">{count}</p>
-                  <p className="text-[10px] text-zinc-400 mt-0.5">{pct}% of user base</p>
+                  <p className="text-xl font-semibold text-[#edf0ee]">{count}</p>
+                  <p className="text-[11px] text-[#727c75] mt-0.5">{pct}% of user base</p>
                 </div>
               );
             })}
@@ -573,95 +476,95 @@ export function AdminClientsView({
             onClick={(e) => {
               if (e.target === e.currentTarget) setSelectedClient(null);
             }}
-            className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ scale: 0.94, y: 14, opacity: 0 }}
+              initial={prefersReduced ? { opacity: 1 } : { scale: 0.97, y: 8, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.94, y: 14, opacity: 0 }}
-              transition={{ duration: prefersReduced ? 0 : 0.2 }}
-              className="w-full max-w-lg rounded-2xl bg-[#08150f] border border-emerald-500/30 shadow-[0_30px_70px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.12)] overflow-hidden"
+              exit={prefersReduced ? { opacity: 0 } : { scale: 0.97, y: 8, opacity: 0 }}
+              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full max-w-lg rounded-2xl bg-[#0c100e] border border-[#edf0ee]/12 shadow-[0_24px_64px_rgba(0,0,0,0.75)] overflow-hidden"
             >
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 to-transparent">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-900/40 border border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-lg shadow-[0_0_16px_rgba(16,185,129,0.2)]">
+              <div className="flex items-center justify-between p-5 border-b border-[#edf0ee]/[0.08]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#19201d] border border-[#edf0ee]/10 flex items-center justify-center text-[#edf0ee] font-semibold text-base">
                     {selectedClient.businessName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-white">{selectedClient.businessName}</h3>
-                    <p className="text-xs text-zinc-400">
+                    <h3 className="text-base font-semibold text-[#edf0ee]">
+                      {selectedClient.businessName}
+                    </h3>
+                    <p className="text-xs text-[#727c75]">
                       {selectedClient.ownerName} · {selectedClient.businessType}
                     </p>
                   </div>
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => setSelectedClient(null)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                  aria-label="Close modal"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#727c75] hover:text-[#edf0ee] hover:bg-[#19201d] transition-colors cursor-pointer"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Body */}
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-xs">
-                      <Mail className="w-4 h-4 text-emerald-400/70" />
-                      <span className="text-zinc-300 truncate">{selectedClient.email || "—"}</span>
+              <div className="p-5 space-y-5 tabular-nums">
+                <div className="grid grid-cols-2 gap-4 text-xs text-[#a1aaa4]">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-[#727c75]" />
+                      <span className="truncate">{selectedClient.email || "—"}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <Calendar className="w-4 h-4 text-emerald-400/70" />
-                      <span className="text-zinc-300">Joined {selectedClient.signupDate}</span>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-[#727c75]" />
+                      <span>Joined {selectedClient.signupDate}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <Clock className="w-4 h-4 text-emerald-400/70" />
-                      <span className="text-zinc-300">Last active: {selectedClient.lastActive}</span>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-[#727c75]" />
+                      <span>Last active {selectedClient.lastActive}</span>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-xs">
-                      <Shield className="w-4 h-4 text-emerald-400/70" />
-                      <span className="text-zinc-300">Role: {selectedClient.role}</span>
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-3.5 h-3.5 text-[#727c75]" />
+                      <span>Role: {selectedClient.role}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-2">
                       <span
                         className={cn(
-                          "w-2 h-2 rounded-full",
-                          STATUS_STYLES[selectedClient.status]?.dot || "bg-zinc-500"
+                          "w-1.5 h-1.5 rounded-full",
+                          STATUS_DOT[selectedClient.status] || "bg-[#727c75]"
                         )}
                       />
-                      <span className="text-zinc-300">Status: {selectedClient.status}</span>
+                      <span>Status: {selectedClient.status}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Utilization Counters */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-xl bg-black/40 border border-emerald-500/15 text-center">
-                    <p className="text-2xl font-bold text-white">{selectedClient.totalWorkflows}</p>
-                    <p className="text-xs text-zinc-400 mt-0.5">Active Workflows</p>
+                  <div className={cn(CONSOLE_SUBCARD, "p-3.5 text-center")}>
+                    <p className="text-xl font-semibold text-[#edf0ee]">
+                      {selectedClient.totalWorkflows}
+                    </p>
+                    <p className="text-xs text-[#727c75] mt-0.5">Active workflows</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-black/40 border border-emerald-500/15 text-center">
-                    <p className="text-2xl font-bold text-emerald-400">
+                  <div className={cn(CONSOLE_SUBCARD, "p-3.5 text-center")}>
+                    <p className="text-xl font-semibold text-[#4cc38a]">
                       {selectedClient.totalExecutions.toLocaleString()}
                     </p>
-                    <p className="text-xs text-zinc-400 mt-0.5">Total Executions</p>
+                    <p className="text-xs text-[#727c75] mt-0.5">Total executions</p>
                   </div>
                 </div>
 
-                {/* Controls */}
-                <div className="pt-2 border-t border-emerald-500/15 space-y-4">
-                  <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-                    Administrative Controls
-                  </h4>
+                <div className="pt-4 border-t border-[#edf0ee]/[0.08] space-y-4">
+                  <p className="text-xs font-medium text-[#a1aaa4]">Account controls</p>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Status</label>
+                      <label className="block text-xs text-[#727c75] mb-1.5">Status</label>
                       <select
                         value={selectedClient.status}
                         onChange={(e) => {
@@ -669,7 +572,7 @@ export function AdminClientsView({
                           onStatusChange(selectedClient.id, val);
                           setSelectedClient({ ...selectedClient, status: val });
                         }}
-                        className="w-full bg-black/60 border border-emerald-500/25 text-sm text-white rounded-xl px-3 py-2 outline-none focus:border-emerald-500/60 cursor-pointer"
+                        className={cn(CONSOLE_INPUT, "w-full px-3 py-2 text-xs cursor-pointer")}
                       >
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
@@ -679,7 +582,7 @@ export function AdminClientsView({
                     </div>
 
                     <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Plan Tier</label>
+                      <label className="block text-xs text-[#727c75] mb-1.5">Plan tier</label>
                       <select
                         value={selectedClient.plan}
                         onChange={(e) => {
@@ -687,7 +590,7 @@ export function AdminClientsView({
                           onPlanChange(selectedClient.id, val);
                           setSelectedClient({ ...selectedClient, plan: val });
                         }}
-                        className="w-full bg-black/60 border border-emerald-500/25 text-sm text-white rounded-xl px-3 py-2 outline-none focus:border-emerald-500/60 cursor-pointer"
+                        className={cn(CONSOLE_INPUT, "w-full px-3 py-2 text-xs cursor-pointer")}
                       >
                         <option value="Free Trial">Free Trial ($0/mo)</option>
                         <option value="Starter">Starter ($29/mo)</option>
@@ -700,19 +603,21 @@ export function AdminClientsView({
 
                   <div className="pt-2 flex justify-between items-center">
                     <button
+                      type="button"
                       onClick={() => {
                         onDeleteClient(selectedClient.id);
                         setSelectedClient(null);
                       }}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors"
+                      className={CONSOLE_BTN_DANGER}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      Remove Client Account
+                      <span>Remove account</span>
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => setSelectedClient(null)}
-                      className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+                      className={CONSOLE_BTN_SECONDARY}
                     >
                       Close
                     </button>

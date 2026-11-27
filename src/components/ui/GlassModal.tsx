@@ -80,25 +80,22 @@ export function GlassModal({
             animate="visible"
             exit="exit"
             className={cn(
-              "relative w-full rounded-t-3xl sm:rounded-3xl glass-focal border border-emerald-500/25 shadow-[0_24px_80px_rgba(0,0,0,0.85),0_0_50px_rgba(16,185,129,0.18)] overflow-y-auto max-h-[90vh] max-h-[90dvh] pb-[env(safe-area-inset-bottom)] sm:my-auto",
+              "relative w-full rounded-t-2xl sm:rounded-2xl bg-[#121715] backdrop-blur-xl border border-[#edf0ee]/[0.12] shadow-[0_24px_80px_rgba(0,0,0,0.65)] overflow-y-auto max-h-[90vh] max-h-[90dvh] pb-[env(safe-area-inset-bottom)] sm:my-auto",
               maxWidths[maxWidth],
               className
             )}
             style={{ WebkitBackdropFilter: "blur(24px)" }}
           >
-            {/* Top specular emerald line */}
-            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
-
             {(title || !disableClose) && (
-              <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-white/[0.06]">
+              <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-[#edf0ee]/[0.08]">
                 <div className="min-w-0 pr-4">
                   {title && (
-                    <h2 className="text-lg font-bold text-white tracking-tight leading-snug">
+                    <h2 className="text-base font-semibold text-[#edf0ee] leading-snug">
                       {title}
                     </h2>
                   )}
                   {subtitle && (
-                    <p className="text-xs text-zinc-400 mt-1">{subtitle}</p>
+                    <p className="text-xs text-[#727c75] mt-1">{subtitle}</p>
                   )}
                 </div>
                 {!disableClose && (
@@ -106,7 +103,7 @@ export function GlassModal({
                     type="button"
                     onClick={onClose}
                     aria-label="Close modal"
-                    className="w-8 h-8 flex items-center justify-center rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-400 hover:text-white transition-colors flex-shrink-0"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#19201d] hover:bg-[#222b27] border border-[#edf0ee]/[0.08] text-[#a1aaa4] hover:text-[#edf0ee] transition-colors flex-shrink-0 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>

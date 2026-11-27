@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { Layers, Plus, Search } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useAuthStore } from "../../store/authStore";
@@ -7,6 +7,14 @@ import { useDashboardStore } from "../../store/dashboardStore";
 import { WorkflowCard } from "../../components/dashboard/WorkflowCard";
 import { ExecutionConsole } from "../../components/dashboard/ExecutionConsole";
 import { CreateWorkflowWizard } from "../../components/dashboard/CreateWorkflowWizard";
+import {
+  CONSOLE_PANEL,
+  CONSOLE_INPUT,
+  CONSOLE_BTN_PRIMARY,
+  CONSOLE_BADGE_LIVE,
+  CONSOLE_SECTION_TITLE,
+} from "../../lib/consoleSurface";
+import { cn } from "../../lib/utils";
 
 export function WorkflowsSection() {
   const workflows = useAuthStore((s) => s.workflows) || [];
@@ -18,62 +26,60 @@ export function WorkflowsSection() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredWorkflows = workflows.filter((w) =>
-    w.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    w.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    w.channel.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredWorkflows = workflows.filter(
+    (w) =>
+      w.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      w.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      w.channel.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const liveCount = workflows.filter((w) => w.isActive).length;
+
   return (
-    <div className="space-y-6 animate-[fade-in_0.4s_ease-out]">
-      {/* Header Actions Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 select-none">
-        <div className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-zinc-400" />
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-            Active Workflow Automation
-          </h2>
-          <span className="text-[10px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">
-            {workflows.filter((w) => w.isActive).length} Live
-          </span>
+    <div className="space-y-6 select-none tabular-nums">
+      {/* Header Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <h2 className={CONSOLE_SECTION_TITLE}>Active workflows</h2>
+          <span className={CONSOLE_BADGE_LIVE}>{liveCount} live</span>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Search bar */}
-          <div className="relative flex items-center bg-white/5 border border-white/5 rounded-full px-3.5 py-1.5 w-44 sm:w-56 text-xs">
-            <Search className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex items-center w-48 sm:w-56">
+            <Search
+              className="w-3.5 h-3.5 text-[#727c75] absolute left-3 pointer-events-none"
+              strokeWidth={1.65}
+            />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search workflows..."
-              className="bg-transparent border-none text-zinc-300 outline-none w-full placeholder-zinc-600 ml-1.5"
+              placeholder="Search workflows"
+              className={cn(CONSOLE_INPUT, "w-full h-9 pl-9 pr-3 text-xs")}
             />
           </div>
 
           <button
+            type="button"
             onClick={() => {
               useAuthStore.setState({ selectedWorkflowId: null });
               setActiveSection("workflow_editor");
             }}
-            data-cursor-spotlight="button"
-            className="btn-emerald-glow flex items-center gap-1.5 text-xs font-bold py-2.5 px-4 rounded-full flex-shrink-0"
+            className={cn(CONSOLE_BTN_PRIMARY, "h-9")}
           >
-            <Plus className="w-4 h-4" />
-            <span>Create Flow</span>
+            <Plus className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <span>Create flow</span>
           </button>
         </div>
       </div>
 
-      {/* Grid containing workflows */}
+      {/* Workflows Grid */}
       {filteredWorkflows.length === 0 ? (
-        <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] p-8 text-center select-none py-12">
-          <div className="w-12 h-12 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center mx-auto mb-4">
-            <Layers className="w-5 h-5 text-zinc-600" />
-          </div>
-          <h3 className="text-sm font-bold text-white">No workflows matching search</h3>
-          <p className="text-xs text-zinc-500 mt-1 max-w-xs mx-auto">
-            Try revising your search term or create a new automated flow to start triaging.
+        <div className={cn(CONSOLE_PANEL, "p-10 text-center")}>
+          <Layers className="w-6 h-6 text-[#727c75] mx-auto mb-3" strokeWidth={1.5} />
+          <h3 className="text-sm font-medium text-[#edf0ee]">No matching workflows</h3>
+          <p className="text-xs text-[#727c75] mt-1 max-w-xs mx-auto">
+            Adjust your search filter or create a workflow to start automating responses
           </p>
         </div>
       ) : (
@@ -92,10 +98,9 @@ export function WorkflowsSection() {
         </div>
       )}
 
-      {/* Developer simulation console log */}
+      {/* Execution Console */}
       <ExecutionConsole logs={logs} onClear={clearLogs} />
 
-      {/* Workflow Wizard Overlay Modal */}
       <AnimatePresence>
         {wizardOpen && (
           <CreateWorkflowWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />

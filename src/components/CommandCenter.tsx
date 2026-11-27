@@ -13,7 +13,6 @@ import {
   Settings,
   ShieldCheck,
   Wifi,
-  LayoutGrid,
   DollarSign,
 } from "lucide-react";
 import { smoothTransition } from "../lib/motionVariants";
@@ -65,7 +64,7 @@ export function CommandCenter() {
     { id: "inbox", icon: MessageSquare, label: "View Inbox", path: "/dashboard?section=conversations" },
     { id: "calendar", icon: Calendar, label: "View Calendar", path: "/dashboard?section=calendar" },
     { id: "pricing", icon: DollarSign, label: "View Pricing Plans", path: "/pricing" },
-    { id: "settings", icon: Settings, label: "OS Settings", path: "/dashboard?section=settings" },
+    { id: "settings", icon: Settings, label: "Workspace Settings", path: "/dashboard?section=settings" },
   ];
 
   const filteredActions = actions.filter((a) =>
@@ -100,20 +99,20 @@ export function CommandCenter() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="absolute inset-0 bg-black/75 backdrop-blur-md"
-            style={{ WebkitBackdropFilter: "blur(12px)" }}
+            transition={{ duration: 0.16 }}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            style={{ WebkitBackdropFilter: "blur(8px)" }}
             onClick={closeCommandCenter}
           />
           <motion.div
-            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.96, y: -14 }}
+            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.98, y: -8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: -10 }}
+            exit={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: -6 }}
             transition={smoothTransition}
-            className="relative w-full max-w-2xl glass-card-obsidian rounded-2xl overflow-hidden border border-emerald-500/25 shadow-[0_24px_80px_rgba(0,0,0,0.85),0_0_40px_rgba(16,185,129,0.12)]"
+            className="relative w-full max-w-xl rounded-2xl bg-[#0c100e] overflow-hidden border border-[#edf0ee]/12 shadow-[0_24px_64px_rgba(0,0,0,0.75)]"
           >
-            <div className="flex items-center px-4 border-b border-white/10 focus-within:border-emerald-400/50 transition-colors">
-              <Search className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+            <div className="flex items-center px-4 border-b border-[#edf0ee]/[0.08]">
+              <Search className="w-4 h-4 text-[#727c75] flex-shrink-0" strokeWidth={1.65} />
               <input
                 ref={inputRef}
                 type="text"
@@ -124,15 +123,15 @@ export function CommandCenter() {
                 }}
                 onKeyDown={handleInputKeyDown}
                 aria-label="Search commands or routes"
-                placeholder="Type a command or search routes..."
-                className="w-full bg-transparent text-white px-3.5 py-4 outline-none focus-visible:outline-none text-sm sm:text-base placeholder:text-zinc-500"
+                placeholder="Search commands or routes"
+                className="w-full bg-transparent text-[#edf0ee] px-3 py-3.5 outline-none text-sm placeholder:text-[#727c75]"
               />
               <button
                 type="button"
                 onClick={closeCommandCenter}
-                className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white bg-white/[0.06] border border-white/10 px-2.5 py-1 rounded-md cursor-pointer"
+                className="text-[11px] font-mono text-[#a1aaa4] hover:text-[#edf0ee] bg-[#19201d] border border-[#edf0ee]/10 px-2 py-0.5 rounded cursor-pointer"
               >
-                <span>esc</span>
+                esc
               </button>
             </div>
 
@@ -141,23 +140,23 @@ export function CommandCenter() {
                 <button
                   type="button"
                   onClick={() => handleAction("/demo")}
-                  className="w-full text-left px-3 py-3 mb-2 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-start gap-3 cursor-pointer hover:bg-emerald-500/18 transition-colors"
+                  className="w-full text-left px-3 py-2.5 mb-1.5 bg-[#121715] border border-[#34d399]/25 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-[#19201d] transition-colors"
                 >
-                  <Bot className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                  <Bot className="w-4 h-4 text-[#34d399] shrink-0" strokeWidth={1.65} />
                   <div>
-                    <div className="text-emerald-50 text-sm font-medium">
-                      Try Interactive AI Demo
+                    <div className="text-[#edf0ee] text-sm font-medium">
+                      Try interactive AI demo
                     </div>
-                    <div className="text-emerald-400/75 text-xs">
-                      Test &ldquo;{query}&rdquo; in live demo sandbox
+                    <div className="text-[#a1aaa4] text-xs">
+                      Test &ldquo;{query}&rdquo; in the demo sandbox
                     </div>
                   </div>
                 </button>
               )}
 
-              <div className="px-3 py-2 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
-                <span>Quick Navigation</span>
-                <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline">↑↓ to navigate · ↵ to open</span>
+              <div className="px-3 py-2 text-xs font-medium text-[#727c75] flex items-center justify-between">
+                <span>Quick navigation</span>
+                <span className="text-[11px] font-mono text-[#727c75] hidden sm:inline">↑↓ navigate · ↵ open</span>
               </div>
 
               {filteredActions.map((action, idx) => {
@@ -169,27 +168,25 @@ export function CommandCenter() {
                     onMouseEnter={() => setSelectedIndex(idx)}
                     onClick={() => handleAction(action.path)}
                     className={cn(
-                      "w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all group text-left cursor-pointer",
+                      "w-full flex items-center justify-between px-3 py-2 rounded-lg border transition-colors text-left cursor-pointer",
                       isSelected
-                        ? "bg-emerald-500/12 border-emerald-500/30"
-                        : "border-transparent hover:bg-emerald-500/10 hover:border-emerald-500/20"
+                        ? "bg-[#19201d] border-[#edf0ee]/12"
+                        : "border-transparent hover:bg-[#19201d]/60"
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className={cn(
-                          "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-                          isSelected
-                            ? "bg-emerald-500/20 text-emerald-300"
-                            : "bg-white/[0.05] text-zinc-400 group-hover:text-emerald-400 group-hover:bg-emerald-500/15"
+                          "w-7 h-7 rounded-md flex items-center justify-center transition-colors",
+                          isSelected ? "text-[#34d399]" : "text-[#727c75]"
                         )}
                       >
-                        <action.icon className="w-4 h-4" />
+                        <action.icon className="w-4 h-4" strokeWidth={1.65} />
                       </div>
                       <span
                         className={cn(
                           "text-sm font-medium transition-colors",
-                          isSelected ? "text-white" : "text-zinc-200 group-hover:text-white"
+                          isSelected ? "text-[#edf0ee]" : "text-[#a1aaa4]"
                         )}
                       >
                         {action.label}
@@ -197,10 +194,8 @@ export function CommandCenter() {
                     </div>
                     <ArrowRight
                       className={cn(
-                        "w-4 h-4 transition-all",
-                        isSelected
-                          ? "text-emerald-400 translate-x-0.5"
-                          : "text-zinc-600 group-hover:text-emerald-400 group-hover:translate-x-0.5"
+                        "w-3.5 h-3.5 transition-opacity",
+                        isSelected ? "text-[#34d399] opacity-100" : "text-[#727c75] opacity-40"
                       )}
                     />
                   </button>
@@ -208,7 +203,7 @@ export function CommandCenter() {
               })}
 
               {filteredActions.length === 0 && (
-                <div className="px-3 py-8 text-center text-zinc-400 text-sm">
+                <div className="px-3 py-8 text-center text-[#727c75] text-sm">
                   No commands found for &ldquo;{query}&rdquo;
                 </div>
               )}

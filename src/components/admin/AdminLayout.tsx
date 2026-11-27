@@ -40,35 +40,8 @@ export function AdminLayout({
   const isSidebarCollapsed = useAdminStore((s) => s.isSidebarCollapsed);
 
   return (
-    <div className="h-screen h-[100dvh] overflow-hidden bg-[#040806] text-zinc-100 flex relative selection:bg-emerald-500/30 selection:text-emerald-200">
-      {/* Background Ambient Glows */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Top-left subtle emerald glow */}
-        <div
-          className="absolute -top-40 -left-40 w-96 h-96 rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(5, 150, 105, 0.12) 0%, transparent 70%)" }}
-        />
-        {/* Top-right teal ambient glow */}
-        <div
-          className="absolute top-1/4 -right-40 w-96 h-96 rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(13, 148, 136, 0.10) 0%, transparent 70%)" }}
-        />
-        {/* Bottom center deep glow */}
-        <div
-          className="absolute -bottom-40 left-1/3 w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(6, 78, 59, 0.22) 0%, transparent 70%)" }}
-        />
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `radial-gradient(rgba(16, 185, 129, 0.4) 1px, transparent 1px)`,
-            backgroundSize: "28px 28px",
-          }}
-        />
-      </div>
-
-      {/* Sidebar (Floating Fixed Aside on Desktop & Mobile Slide-Over Drawer) */}
+    <div className="h-screen h-[100dvh] overflow-hidden bg-[#080a09] text-[#edf0ee] font-sans flex relative selection:bg-[#34d399]/25 selection:text-[#edf0ee]">
+      {/* Sidebar (Fixed Dock on Desktop & Mobile Slide-Over Drawer) */}
       <AdminSidebar
         activeSection={activeSection}
         onSelectSection={(sec) => {
@@ -81,9 +54,10 @@ export function AdminLayout({
         onCloseMobile={() => setIsMobileMenuOpen(false)}
         onLogout={onLogout}
         adminEmail={adminEmail}
+        isRealtimeConnected={isRealtimeConnected}
       />
 
-      {/* Dynamic desktop clearance style for fixed floating dock */}
+      {/* Dynamic desktop clearance style for fixed dock */}
       <style>{`
         @media (min-width: 768px) {
           .admin-viewport-clearance {
@@ -92,15 +66,15 @@ export function AdminLayout({
         }
       `}</style>
 
-      {/* Main Content Scrollable Viewport (Scrolls smoothly while sidebar stays fixed) */}
-      <div 
+      {/* Main Content Scrollable Viewport */}
+      <div
         className={cn(
-          "flex-1 h-screen h-[100dvh] overflow-y-auto console-scroll flex flex-col min-w-0 transition-all duration-300 relative z-10 pb-20 md:pb-0 admin-viewport-clearance",
+          "flex-1 h-screen h-[100dvh] overflow-y-auto console-scroll flex flex-col min-w-0 transition-[padding] duration-300 relative z-10 pb-20 md:pb-0 admin-viewport-clearance",
           isSidebarCollapsed ? "dashboard-content-collapsed md:pl-24" : "dashboard-content-expanded md:pl-[304px]"
         )}
       >
-        {/* Top Floating Glass Toolbar (Sticky at top of scrollable area) */}
-        <header className="sticky top-0 z-20 px-4 sm:px-6 lg:px-8 pt-4 pb-2 bg-[#040806]/85 backdrop-blur-xl border-b border-white/[0.05]">
+        {/* Top Header Bar */}
+        <header className="sticky top-0 z-20 px-4 sm:px-6 lg:px-8 bg-[#080a09]/92 backdrop-blur-md border-b border-[#edf0ee]/[0.08]">
           <AdminToolbar
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
@@ -114,14 +88,14 @@ export function AdminLayout({
         </header>
 
         {/* Page Content View */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl w-full mx-auto">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-[1440px] w-full mx-auto">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={activeSection}
               initial={false}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0.94, y: prefersReduced ? 0 : -6 }}
-              transition={{ duration: prefersReduced ? 0 : 0.2, ease: "easeOut" }}
+              exit={{ opacity: 0.94, y: prefersReduced ? 0 : -4 }}
+              transition={{ duration: prefersReduced ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
             >
               {children}
             </motion.div>

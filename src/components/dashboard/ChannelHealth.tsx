@@ -1,10 +1,23 @@
 "use client";
 
 import React from "react";
-import { motion } from "motion/react";
-import { MessageCircle, Phone, Star, Instagram, Globe, Settings, Shield, AlertCircle } from "lucide-react";
+import {
+  MessageCircle,
+  Phone,
+  Star,
+  Instagram,
+  Globe,
+  Settings,
+  AlertCircle,
+} from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import { liquidSpring } from "../../lib/motionVariants";
+import {
+  CONSOLE_PANEL,
+  CONSOLE_SUBCARD,
+  CONSOLE_BTN_SECONDARY,
+  CONSOLE_BTN_PRIMARY,
+  CONSOLE_SECTION_TITLE,
+} from "../../lib/consoleSurface";
 import { cn } from "../../lib/utils";
 
 interface ChannelHealthProps {
@@ -12,89 +25,116 @@ interface ChannelHealthProps {
 }
 
 const HEALTH_CHANNELS = [
-  { key: "WhatsApp", name: "WhatsApp Business API", icon: <MessageCircle className="w-5 h-5" />, color: "text-green-300 border-green-400/30 bg-green-500/14", desc: "Customer auto-bookings" },
-  { key: "Reviews", name: "GBP Reviews", icon: <Star className="w-5 h-5" />, color: "text-amber-300 border-amber-400/30 bg-amber-500/14", desc: "Google review responder" },
-  { key: "SMS", name: "Twilio SMS Gateway", icon: <Phone className="w-5 h-5" />, color: "text-blue-300 border-blue-400/30 bg-blue-500/14", desc: "Missed call recoveries" },
-  { key: "Instagram", name: "Instagram Direct", icon: <Instagram className="w-5 h-5" />, color: "text-pink-300 border-pink-400/30 bg-pink-500/14", desc: "Lead generation & DMs" },
-  { key: "Web", name: "Live Website Widget", icon: <Globe className="w-5 h-5" />, color: "text-cyan-300 border-cyan-400/30 bg-cyan-500/14", desc: "Interactive customer chat" }
+  {
+    key: "WhatsApp",
+    name: "WhatsApp Business",
+    icon: MessageCircle,
+    desc: "Customer bookings and replies",
+  },
+  {
+    key: "Reviews",
+    name: "Google Business Profile",
+    icon: Star,
+    desc: "Automated review responses",
+  },
+  {
+    key: "SMS",
+    name: "Twilio SMS",
+    icon: Phone,
+    desc: "Missed call follow-ups",
+  },
+  {
+    key: "Instagram",
+    name: "Instagram Direct",
+    icon: Instagram,
+    desc: "Lead capture and direct replies",
+  },
+  {
+    key: "Web",
+    name: "Website Chat Widget",
+    icon: Globe,
+    desc: "Embedded visitor chat",
+  },
 ];
 
 export function ChannelHealth({ onOpenIntegration }: ChannelHealthProps) {
   const connectedChannels = useAuthStore((s) => s.connectedChannels);
+  const connectedCount = HEALTH_CHANNELS.filter((ch) =>
+    connectedChannels.some((c) => c.channelKey === ch.key && c.isConnected)
+  ).length;
 
   return (
-    <div
-      className="liquid-glass glass-card-obsidian rounded-2xl p-5 select-none border border-white/[0.14]"
-    >
-      <div className="flex items-center justify-between mb-4 relative z-10">
+    <div className={cn(CONSOLE_PANEL, "select-none h-full flex flex-col justify-between")}>
+      <div className="flex items-center justify-between pb-3.5 mb-3 border-b border-[#edf0ee]/[0.08]">
         <div>
-          <h3 className="text-sm font-bold text-white tracking-tight">Channel Health &amp; Integrations</h3>
-          <p className="text-[11px] text-zinc-300/75 mt-0.5">Live status and API connection health check</p>
-        </div>
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/18 border border-emerald-400/35 text-[10px] font-bold text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,0.16)]">
-          <Shield className="w-3 h-3" />
-          <span>RLS Secure</span>
+          <h2 className={CONSOLE_SECTION_TITLE}>Channel connections</h2>
+          <p className="text-xs text-[#727c75] mt-0.5">
+            {connectedCount} of {HEALTH_CHANNELS.length} connected
+          </p>
         </div>
       </div>
 
-      <div className="space-y-2.5 relative z-10">
-        {HEALTH_CHANNELS.map((ch, idx) => {
+      <div className="space-y-2 flex-1">
+        {HEALTH_CHANNELS.map((ch) => {
           const dbChannel = connectedChannels.find((c) => c.channelKey === ch.key);
           const isConnected = dbChannel?.isConnected || false;
+          const Icon = ch.icon;
 
           return (
-            <motion.div
+            <div
               key={ch.key}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.34, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ x: 3 }}
               className={cn(
-                "flex items-center justify-between p-3 rounded-xl border transition-colors",
-                isConnected
-                  ? "bg-white/[0.05] border-white/[0.12] hover:border-emerald-400/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
-                  : "bg-white/[0.025] border-white/[0.06] hover:border-white/[0.15] opacity-80 hover:opacity-100"
+                CONSOLE_SUBCARD,
+                "flex items-center justify-between p-3 gap-3 hover:bg-[#19201d] transition-colors"
               )}
             >
               <div className="flex items-center gap-3 min-w-0">
-                {/* Custom channel colored icon box */}
-                <div className={cn("w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]", ch.color)}>
-                  {ch.icon}
+                <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center text-[#a1aaa4] flex-shrink-0">
+                  <Icon className="w-4 h-4" strokeWidth={1.65} />
                 </div>
-                
+
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-white leading-tight">{ch.name}</p>
-                  <p className="text-[10px] text-zinc-400 mt-0.5 truncate">{ch.desc}</p>
+                  <p className="text-xs font-medium text-[#edf0ee] truncate">{ch.name}</p>
+                  <p className="text-[11px] text-[#727c75] mt-0.5 truncate">{ch.desc}</p>
                 </div>
               </div>
 
-              {/* Status and Action button */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5 flex-shrink-0">
                 <div className="flex items-center gap-1.5">
-                  <span className={cn("w-1.5 h-1.5 rounded-full", isConnected ? "bg-emerald-400 status-live" : "bg-zinc-500")} />
-                  <span className={cn("text-[10px] font-bold uppercase tracking-wider", isConnected ? "text-emerald-300" : "text-zinc-400")}>
+                  <span
+                    className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      isConnected ? "bg-[#4cc38a]" : "bg-[#727c75]"
+                    )}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className={cn(
+                      "text-xs",
+                      isConnected ? "text-[#4cc38a]" : "text-[#727c75]"
+                    )}
+                  >
                     {isConnected ? "Live" : "Offline"}
                   </span>
                 </div>
 
-                <motion.button
+                <button
                   type="button"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={liquidSpring}
                   onClick={() => onOpenIntegration(ch.key)}
                   className={cn(
-                    "flex items-center gap-1 text-[10px] font-bold py-1.5 px-3 rounded-full border transition-all cursor-pointer",
-                    isConnected
-                      ? "bg-white/[0.08] border-white/15 text-zinc-200 hover:text-white hover:bg-white/14"
-                      : "bg-emerald-500/16 border-emerald-400/35 text-emerald-300 hover:bg-emerald-500/25 shadow-[0_0_14px_rgba(16,185,129,0.16)]"
+                    isConnected ? CONSOLE_BTN_SECONDARY : CONSOLE_BTN_PRIMARY,
+                    "py-1 px-2.5 text-[11px]"
                   )}
                 >
-                  {isConnected ? <Settings className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                  {isConnected ? (
+                    <Settings className="w-3 h-3" strokeWidth={1.65} />
+                  ) : (
+                    <AlertCircle className="w-3 h-3" strokeWidth={1.65} />
+                  )}
                   <span>{isConnected ? "Manage" : "Setup"}</span>
-                </motion.button>
+                </button>
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>

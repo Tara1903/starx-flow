@@ -1,24 +1,16 @@
 "use client";
 
 import React from "react";
-import { motion } from "motion/react";
 import { Plus, Brain, MessageSquare, Radio, ArrowRight } from "lucide-react";
 import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
-import {
-  liquidStaggerGrid,
-  liquidCardEntrance,
-  liquidHoverLift,
-  liquidTapPress,
-} from "../../lib/motionVariants";
+import { CONSOLE_PANEL } from "../../lib/consoleSurface";
+import { cn } from "../../lib/utils";
 
 interface ActionItem {
   title: string;
   desc: string;
-  icon: React.ReactNode;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   section: DashboardSection;
-  ctaText: string;
-  colorClass: string;
-  hoverColorClass: string;
 }
 
 interface QuickActionsProps {
@@ -30,41 +22,29 @@ export function QuickActions({ onNewWorkflowClick }: QuickActionsProps) {
 
   const actions: ActionItem[] = [
     {
-      title: "Build Flow Node",
-      desc: "Deploy customized trigger & action rules",
-      icon: <Plus className="w-5 h-5" />,
+      title: "Create automation",
+      desc: "Add trigger and AI action rules",
+      icon: Plus,
       section: "workflows",
-      ctaText: "Add Workflow",
-      colorClass: "text-emerald-300 bg-emerald-500/18 border-emerald-400/30 shadow-[0_0_20px_rgba(16,185,129,0.22),inset_0_1px_0_rgba(255,255,255,0.25)]",
-      hoverColorClass: "group-hover:border-emerald-300/60 group-hover:bg-emerald-500/28 group-hover:scale-105"
     },
     {
-      title: "Test AI Sandbox",
-      desc: "Simulate and tune custom prompt replies",
-      icon: <Brain className="w-5 h-5" />,
+      title: "Test in AI sandbox",
+      desc: "Simulate and tune receptionist replies",
+      icon: Brain,
       section: "playground",
-      ctaText: "AI Lab",
-      colorClass: "text-purple-300 bg-purple-500/18 border-purple-400/30 shadow-[0_0_20px_rgba(168,85,247,0.22),inset_0_1px_0_rgba(255,255,255,0.25)]",
-      hoverColorClass: "group-hover:border-purple-300/60 group-hover:bg-purple-500/28 group-hover:scale-105"
     },
     {
-      title: "Triage Live Inbox",
-      desc: "Respond directly to incoming customer chats",
-      icon: <MessageSquare className="w-5 h-5" />,
+      title: "Open unified inbox",
+      desc: "Inspect customer threads across channels",
+      icon: MessageSquare,
       section: "conversations",
-      ctaText: "View Chats",
-      colorClass: "text-pink-300 bg-pink-500/18 border-pink-400/30 shadow-[0_0_20px_rgba(236,72,153,0.22),inset_0_1px_0_rgba(255,255,255,0.25)]",
-      hoverColorClass: "group-hover:border-pink-300/60 group-hover:bg-pink-500/28 group-hover:scale-105"
     },
     {
-      title: "Setup Integrations",
-      desc: "Configure WhatsApp, SMS, or Google GBP",
-      icon: <Radio className="w-5 h-5" />,
+      title: "Manage integrations",
+      desc: "Connect WhatsApp, SMS, reviews, or Instagram",
+      icon: Radio,
       section: "channels",
-      ctaText: "Connections",
-      colorClass: "text-cyan-300 bg-cyan-500/18 border-cyan-400/30 shadow-[0_0_20px_rgba(34,211,238,0.22),inset_0_1px_0_rgba(255,255,255,0.25)]",
-      hoverColorClass: "group-hover:border-cyan-300/60 group-hover:bg-cyan-500/28 group-hover:scale-105"
-    }
+    },
   ];
 
   const handleAction = (item: ActionItem) => {
@@ -78,53 +58,39 @@ export function QuickActions({ onNewWorkflowClick }: QuickActionsProps) {
   return (
     <div className="space-y-3 select-none">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-          Quick Actions
-        </h3>
-        <span className="text-[10px] font-mono text-zinc-500">
-          4 Fast Shortcuts
-        </span>
+        <h2 className="text-xs font-medium text-[#727c75]">Quick shortcuts</h2>
       </div>
-      <motion.div
-        variants={liquidStaggerGrid}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-      >
-        {actions.map((item, i) => (
-          <motion.button
-            type="button"
-            key={i}
-            data-cursor-spotlight="true"
-            data-cursor-hover="true"
-            variants={liquidCardEntrance}
-            whileHover={liquidHoverLift}
-            whileTap={liquidTapPress}
-            onClick={() => handleAction(item)}
-            className="text-left group cursor-pointer glass-card-obsidian rounded-2xl p-5 flex flex-col justify-between min-h-[148px] border border-white/[0.12] hover:border-emerald-400/40 relative overflow-hidden transition-all duration-200 shadow-[0_8px_24px_rgba(0,0,0,0.32)]"
-          >
-            {/* Header Icon & Navigation Cue */}
-            <div className="flex items-center justify-between w-full relative z-10">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-300 ${item.colorClass} ${item.hoverColorClass}`}>
-                {item.icon}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {actions.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              type="button"
+              key={item.title}
+              onClick={() => handleAction(item)}
+              className={cn(
+                CONSOLE_PANEL,
+                "text-left group cursor-pointer p-4 flex items-center justify-between gap-3 hover:bg-[#19201d] hover:border-[#edf0ee]/14 transition-colors duration-150"
+              )}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center text-[#a1aaa4] group-hover:text-[#edf0ee] flex-shrink-0 transition-colors">
+                  <Icon className="w-4 h-4" strokeWidth={1.65} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-[#edf0ee] truncate">
+                    {item.title}
+                  </p>
+                  <p className="text-[11px] text-[#727c75] mt-0.5 truncate">
+                    {item.desc}
+                  </p>
+                </div>
               </div>
-              <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center group-hover:border-emerald-400/35 group-hover:bg-emerald-500/10 transition-colors">
-                <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-300 group-hover:translate-x-0.5 transition-all duration-300" />
-              </div>
-            </div>
-
-            {/* Description with balanced bottom clearance */}
-            <div className="mt-4 pt-1 pb-1 relative z-10">
-              <h4 className="text-[13px] font-bold text-white leading-snug group-hover:text-emerald-200 transition-colors">
-                {item.title}
-              </h4>
-              <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed line-clamp-2">
-                {item.desc}
-              </p>
-            </div>
-          </motion.button>
-        ))}
-      </motion.div>
+              <ArrowRight className="w-3.5 h-3.5 text-[#727c75] group-hover:text-[#34d399] flex-shrink-0 transition-colors" />
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

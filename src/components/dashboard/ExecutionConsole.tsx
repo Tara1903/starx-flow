@@ -1,22 +1,23 @@
 import React, { useEffect, useRef } from "react";
 import { Terminal, Trash2 } from "lucide-react";
 import { type SimulationLog } from "../../store/authStore";
+import { CONSOLE_PANEL_FLUSH } from "../../lib/consoleSurface";
 import { cn } from "../../lib/utils";
 
 const LOG_COLORS: Record<SimulationLog["type"], string> = {
-  trigger:    "text-amber-400",
-  ai_process: "text-blue-400",
-  ai_reply:   "text-emerald-400",
-  success:    "text-green-300",
-  system:     "text-zinc-500",
+  trigger: "text-amber-300",
+  ai_process: "text-sky-300",
+  ai_reply: "text-[#4cc38a]",
+  success: "text-[#34d399]",
+  system: "text-[#727c75]",
 };
 
-const LOG_PREFIX: Record<SimulationLog["type"], string> = {
-  trigger:    "▶ TRIGGER",
-  ai_process: "⟳ PROCESS",
-  ai_reply:   "◈ AI-OUT ",
-  success:    "✓ SUCCESS",
-  system:     "⚙ SYSTEM ",
+const LOG_LABEL: Record<SimulationLog["type"], string> = {
+  trigger: "Trigger",
+  ai_process: "Process",
+  ai_reply: "Reply",
+  success: "Success",
+  system: "System",
 };
 
 interface ExecutionConsoleProps {
@@ -34,50 +35,40 @@ export function ExecutionConsole({ logs, onClear }: ExecutionConsoleProps) {
   }, [logs.length]);
 
   return (
-    <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] overflow-hidden select-none">
-      {/* Console Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/[0.01]">
+    <div className={cn(CONSOLE_PANEL_FLUSH, "select-none")}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#edf0ee]/[0.08]">
         <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-emerald-400" />
-          <span className="text-[10px] font-bold text-zinc-300 tracking-wider uppercase">Live Execution Console</span>
-          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full status-live" />
+          <Terminal className="w-4 h-4 text-[#727c75]" strokeWidth={1.65} />
+          <span className="text-xs font-medium text-[#edf0ee]">Execution log</span>
         </div>
         <button
+          type="button"
           onClick={onClear}
-          className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 rounded hover:bg-white/5"
-          title="Clear console logs"
+          className="text-[#727c75] hover:text-[#f28b8e] transition-colors p-1 rounded hover:bg-[#19201d] cursor-pointer"
+          title="Clear logs"
+          aria-label="Clear console logs"
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <Trash2 className="w-3.5 h-3.5" strokeWidth={1.65} />
         </button>
       </div>
 
-      {/* Console Body */}
       <div
         ref={scrollRef}
-        className="h-56 overflow-y-auto console-scroll bg-[#060606] p-4 font-mono text-xs space-y-2 select-text"
+        className="h-52 overflow-y-auto console-scroll bg-[#0c100e] p-4 font-mono text-xs space-y-2 select-text tabular-nums"
       >
         {logs.length === 0 ? (
-          <div className="flex items-center gap-2 text-zinc-700">
-            <span className="cursor-blink select-none">▌</span>
-            <span className="select-none">Awaiting workflow triggers...</span>
-          </div>
+          <p className="text-[#727c75] select-none">Awaiting workflow runs...</p>
         ) : (
           logs.map((log) => (
-            <div key={log.id} className="log-entry flex gap-2 leading-relaxed align-top">
-              <span className="text-zinc-600 flex-shrink-0 select-none font-mono">{log.timestamp}</span>
-              <span className={cn("flex-shrink-0 font-bold select-none font-mono", LOG_COLORS[log.type])}>
-                {LOG_PREFIX[log.type]}
+            <div key={log.id} className="flex gap-2.5 leading-relaxed items-baseline">
+              <span className="text-[#727c75] flex-shrink-0 select-none">{log.timestamp}</span>
+              <span className={cn("flex-shrink-0 font-medium select-none w-16", LOG_COLORS[log.type])}>
+                {LOG_LABEL[log.type]}
               </span>
-              <span className="text-zinc-500 flex-shrink-0 select-none font-mono">[{log.channel}]</span>
-              <span className="text-zinc-300 font-mono break-all">{log.message}</span>
+              <span className="text-[#a1aaa4] flex-shrink-0 select-none">[{log.channel}]</span>
+              <span className="text-[#edf0ee] break-all">{log.message}</span>
             </div>
           ))
-        )}
-        {/* Cursor */}
-        {logs.length > 0 && (
-          <div className="flex items-center gap-2 text-zinc-700 pt-1 select-none">
-            <span className="cursor-blink">▌</span>
-          </div>
         )}
       </div>
     </div>

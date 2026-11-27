@@ -3,16 +3,16 @@ import { ConversationList } from "../../components/dashboard/ConversationList";
 import { ConversationThread } from "../../components/dashboard/ConversationThread";
 import { ConversationEmpty } from "../../components/dashboard/ConversationEmpty";
 import { useDashboardStore } from "../../store/dashboardStore";
+import { CONSOLE_PANEL_FLUSH } from "../../lib/consoleSurface";
+import { cn } from "../../lib/utils";
 
 export function ConversationsSection() {
   const selectedConversationId = useDashboardStore((s) => s.selectedConversationId);
 
   return (
-    <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] overflow-hidden flex h-[600px] animate-[fade-in_0.4s_ease-out]">
-      {/* Search and List */}
+    <div className={cn(CONSOLE_PANEL_FLUSH, "flex h-[620px]")}>
       <ConversationList />
 
-      {/* Message Thread view or Empty placeholder */}
       {selectedConversationId ? (
         <ConversationThread />
       ) : (

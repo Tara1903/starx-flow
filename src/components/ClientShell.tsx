@@ -35,7 +35,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
   const isAppRoute =
     pathname?.startsWith('/setup') ||
     pathname?.startsWith('/dashboard') ||
-    (pathname?.startsWith('/admin') && pathname !== '/admin/login');
+    pathname?.startsWith('/admin');
   const isAuthRoute =
     pathname === '/login' ||
     pathname === '/signup' ||

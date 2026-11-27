@@ -1,23 +1,26 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  ShoppingBag,
-  Search,
-  Plus,
-  Clock,
-  RefreshCw,
-  Euro,
-  X,
-} from "lucide-react";
+import { ShoppingBag, Search, Plus, Clock, RefreshCw, Euro, X } from "lucide-react";
 import { useOrderStore } from "../../store/orderStore";
 import { useToastStore } from "../../store/toastStore";
 import { formatEuro, formatEuropeanDate } from "../../lib/locale";
+import {
+  CONSOLE_PANEL,
+  CONSOLE_INPUT,
+  CONSOLE_BTN_PRIMARY,
+  CONSOLE_BTN_SECONDARY,
+  CONSOLE_HEADING,
+  CONSOLE_BADGE_LIVE,
+  CONSOLE_BADGE_WARN,
+  CONSOLE_BADGE_INFO,
+  CONSOLE_BADGE_MUTED,
+  CONSOLE_BADGE_DANGER,
+} from "../../lib/consoleSurface";
 import { cn } from "../../lib/utils";
 import { Order } from "../../types/database";
 import { createIdempotencyKey } from "../../lib/idempotency";
 import {
-  GlassPanel,
   GlassButton,
   GlassModal,
   GlassSkeleton,
@@ -151,7 +154,7 @@ export function OrdersSection() {
       header: "Order #",
       render: (o) => (
         <div className="flex items-center gap-2">
-          <span className="font-mono font-bold text-white">{o.order_number}</span>
+          <span className="font-mono font-medium text-[#edf0ee]">{o.order_number}</span>
           <CopyButton
             value={o.order_number}
             label=""
@@ -167,8 +170,8 @@ export function OrdersSection() {
       header: "Customer",
       render: (o) => (
         <div>
-          <div className="font-semibold text-white">{o.customer_name}</div>
-          <div className="text-[10px] text-zinc-400">
+          <div className="font-medium text-[#edf0ee]">{o.customer_name}</div>
+          <div className="text-[11px] text-[#727c75]">
             {o.customer_phone || o.customer_email || "No contact"}
           </div>
         </div>
@@ -178,23 +181,23 @@ export function OrdersSection() {
       key: "items",
       header: "Items",
       render: (o) => (
-        <div className="max-w-xs truncate text-zinc-300">
+        <div className="max-w-xs truncate text-[#a1aaa4]">
           {o.items?.map((it) => `${it.quantity}x ${it.name}`).join(", ") || "—"}
         </div>
       ),
     },
     {
       key: "total",
-      header: "Total (€)",
+      header: "Total",
       render: (o) => (
-        <span className="font-bold text-emerald-400 tabular-nums">
+        <span className="font-medium text-[#4cc38a] tabular-nums">
           {formatEuro(o.total_amount)}
         </span>
       ),
     },
     {
       key: "status",
-      header: "Order Status",
+      header: "Order status",
       render: (o) => (
         <select
           aria-label={`Order status for ${o.order_number}`}
@@ -204,17 +207,18 @@ export function OrdersSection() {
             if (!ok) pushToast({ title: "Status update failed", tone: "error" });
           }}
           className={cn(
-            "text-[11px] font-bold px-2.5 py-1 rounded-full border outline-none cursor-pointer bg-[#07120e]",
-            o.status === "completed" && "text-emerald-300 border-emerald-500/35 bg-emerald-500/12",
-            o.status === "processing" && "text-sky-300 border-sky-500/35 bg-sky-500/12",
-            o.status === "pending" && "text-amber-300 border-amber-500/35 bg-amber-500/12",
-            o.status === "cancelled" && "text-red-300 border-red-500/35 bg-red-500/12"
+            CONSOLE_INPUT,
+            "px-2.5 py-1 text-xs cursor-pointer",
+            o.status === "completed" && CONSOLE_BADGE_LIVE,
+            o.status === "processing" && CONSOLE_BADGE_INFO,
+            o.status === "pending" && CONSOLE_BADGE_WARN,
+            o.status === "cancelled" && CONSOLE_BADGE_DANGER
           )}
         >
-          <option value="pending">Pending</option>
-          <option value="processing">Processing</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="pending" className="bg-[#0c100e]">Pending</option>
+          <option value="processing" className="bg-[#0c100e]">Processing</option>
+          <option value="completed" className="bg-[#0c100e]">Completed</option>
+          <option value="cancelled" className="bg-[#0c100e]">Cancelled</option>
         </select>
       ),
     },
@@ -230,15 +234,16 @@ export function OrdersSection() {
             if (!ok) pushToast({ title: "Payment update failed", tone: "error" });
           }}
           className={cn(
-            "text-[11px] font-bold px-2.5 py-1 rounded border outline-none cursor-pointer bg-[#07120e]",
-            o.payment_status === "paid" && "text-emerald-300 border-emerald-500/35 bg-emerald-500/12",
-            o.payment_status === "unpaid" && "text-amber-300 border-amber-500/35 bg-amber-500/12",
-            o.payment_status === "refunded" && "text-zinc-300 border-zinc-500/35 bg-zinc-500/12"
+            CONSOLE_INPUT,
+            "px-2.5 py-1 text-xs cursor-pointer",
+            o.payment_status === "paid" && CONSOLE_BADGE_LIVE,
+            o.payment_status === "unpaid" && CONSOLE_BADGE_WARN,
+            o.payment_status === "refunded" && CONSOLE_BADGE_MUTED
           )}
         >
-          <option value="paid">Paid</option>
-          <option value="unpaid">Unpaid</option>
-          <option value="refunded">Refunded</option>
+          <option value="paid" className="bg-[#0c100e]">Paid</option>
+          <option value="unpaid" className="bg-[#0c100e]">Unpaid</option>
+          <option value="refunded" className="bg-[#0c100e]">Refunded</option>
         </select>
       ),
     },
@@ -247,7 +252,7 @@ export function OrdersSection() {
       header: "Date",
       align: "right",
       render: (o) => (
-        <span className="text-zinc-400 text-[11px] tabular-nums">
+        <span className="text-[#727c75] text-xs tabular-nums">
           {formatEuropeanDate(o.created_at)}
         </span>
       ),
@@ -255,71 +260,68 @@ export function OrdersSection() {
   ];
 
   return (
-    <div className="space-y-6 select-none">
-      {/* Header */}
+    <div className="space-y-6 select-none tabular-nums">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-base font-bold text-white uppercase tracking-wider">
-              Orders & Operations
-            </h2>
-            <span className="text-[10px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">
-              AI Order Agent Active
-            </span>
-          </div>
-          <p className="text-xs text-zinc-400 mt-1">
-            Real-time tracking of customer purchases, bookings, invoices, and fulfillment.
+          <h1 className={CONSOLE_HEADING}>Orders & payments</h1>
+          <p className="text-xs sm:text-sm text-[#727c75] mt-0.5">
+            Track customer purchases, invoices, and fulfillment
           </p>
         </div>
 
-        <GlassButton variant="primary" size="sm" onClick={handleOpenNewModal}>
-          <Plus className="w-4 h-4" />
+        <button type="button" onClick={handleOpenNewModal} className={CONSOLE_BTN_PRIMARY}>
+          <Plus className="w-3.5 h-3.5" />
           <span>Create Order</span>
-        </GlassButton>
+        </button>
       </div>
 
-      {/* KPI Stats Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 tabular-nums">
-        <GlassPanel tier="panel" className="p-4 rounded-xl border border-white/10">
+      {/* KPI Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className={CONSOLE_PANEL}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Settled Revenue</span>
-            <Euro className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs font-medium text-[#a1aaa4]">Settled revenue</span>
+            <Euro className="w-4 h-4 text-[#727c75]" strokeWidth={1.65} />
           </div>
-          <div className="text-2xl font-bold text-white mt-2">{formatEuro(totalRevenue)}</div>
-          <p className="text-[11px] text-zinc-400 mt-1">Calculated from paid workspace orders</p>
-        </GlassPanel>
+          <div className="text-[28px] font-semibold text-[#edf0ee] tracking-[-0.02em] mt-2 leading-none">
+            {formatEuro(totalRevenue)}
+          </div>
+          <p className="text-xs text-[#727c75] mt-2">From paid workspace orders</p>
+        </div>
 
-        <GlassPanel tier="panel" className="p-4 rounded-xl border border-white/10">
+        <div className={CONSOLE_PANEL}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Active Orders</span>
-            <Clock className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-medium text-[#a1aaa4]">Pending fulfillment</span>
+            <Clock className="w-4 h-4 text-[#727c75]" strokeWidth={1.65} />
           </div>
-          <div className="text-2xl font-bold text-white mt-2">{pendingOrders}</div>
-          <p className="text-[11px] text-zinc-400 mt-1">Orders pending fulfillment or confirmation</p>
-        </GlassPanel>
+          <div className="text-[28px] font-semibold text-[#edf0ee] tracking-[-0.02em] mt-2 leading-none">
+            {pendingOrders}
+          </div>
+          <p className="text-xs text-[#727c75] mt-2">Pending or processing</p>
+        </div>
 
-        <GlassPanel tier="panel" className="p-4 rounded-xl border border-white/10">
+        <div className={CONSOLE_PANEL}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Total Volume</span>
-            <ShoppingBag className="w-4 h-4 text-sky-400" />
+            <span className="text-xs font-medium text-[#a1aaa4]">Total orders</span>
+            <ShoppingBag className="w-4 h-4 text-[#727c75]" strokeWidth={1.65} />
           </div>
-          <div className="text-2xl font-bold text-white mt-2">{orders.length}</div>
-          <p className="text-[11px] text-zinc-400 mt-1">Processed via AI Agents and staff checkout</p>
-        </GlassPanel>
+          <div className="text-[28px] font-semibold text-[#edf0ee] tracking-[-0.02em] mt-2 leading-none">
+            {orders.length}
+          </div>
+          <p className="text-xs text-[#727c75] mt-2">AI agent and manual checkout</p>
+        </div>
       </div>
 
-      {/* Controls & Search */}
+      {/* Controls */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#727c75]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             aria-label="Search orders"
-            placeholder="Search order #, customer, or phone..."
-            className="glass-input w-full rounded-full pl-9 pr-4 py-2 text-sm sm:text-xs text-zinc-100"
+            placeholder="Search order #, customer, or phone"
+            className={cn(CONSOLE_INPUT, "w-full pl-9 pr-4 py-2 text-xs sm:text-sm")}
           />
         </div>
 
@@ -328,28 +330,26 @@ export function OrdersSection() {
             aria-label="Filter order statuses"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="glass-input bg-[#07120e] text-xs text-zinc-200 rounded-xl px-3 py-2 outline-none"
+            className={cn(CONSOLE_INPUT, "text-xs px-3 py-2 cursor-pointer")}
           >
-            <option value="all">All Statuses</option>
+            <option value="all">All statuses</option>
             <option value="pending">Pending</option>
             <option value="processing">Processing</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
 
-          <GlassButton
-            variant="secondary"
-            size="sm"
+          <button
+            type="button"
             onClick={() => fetchOrders()}
             aria-label="Refresh orders"
-            className="px-3"
+            className={CONSOLE_BTN_SECONDARY}
           >
-            <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
-          </GlassButton>
+            <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
+          </button>
         </div>
       </div>
 
-      {/* Error -> Loading -> Adaptive Table / Empty */}
       {error ? (
         <ErrorState
           title="Unable to load workspace orders"
@@ -366,14 +366,14 @@ export function OrdersSection() {
           tableLabel="Workspace orders"
           emptyState={
             <EmptyState
-              icon={<ShoppingBag className="w-6 h-6 text-emerald-400" />}
-              title={search || statusFilter !== "all" ? "No matching orders" : "No orders recorded yet"}
+              icon={<ShoppingBag className="w-5 h-5 text-[#727c75]" />}
+              title={search || statusFilter !== "all" ? "No matching orders" : "No orders recorded"}
               description={
                 search || statusFilter !== "all"
-                  ? "Adjust your search or status filter to view matching orders."
-                  : "Create your first order manually or connect an AI channel to capture customer bookings."
+                  ? "Adjust your search or status filter"
+                  : "Create an order manually or accept bookings via connected channels"
               }
-              actionLabel={search || statusFilter !== "all" ? "Clear Filters" : "Create Order"}
+              actionLabel={search || statusFilter !== "all" ? "Clear filters" : "Create Order"}
               onAction={() => {
                 if (search || statusFilter !== "all") {
                   setSearch("");
@@ -388,97 +388,94 @@ export function OrdersSection() {
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <span className="font-mono font-bold text-white text-sm">{o.order_number}</span>
-                  <div className="font-semibold text-zinc-200 text-xs mt-0.5">{o.customer_name}</div>
+                  <span className="font-mono font-medium text-[#edf0ee] text-sm">
+                    {o.order_number}
+                  </span>
+                  <div className="text-[#a1aaa4] text-xs mt-0.5">{o.customer_name}</div>
                 </div>
-                <span className="font-bold text-emerald-400 text-sm">{formatEuro(o.total_amount)}</span>
+                <span className="font-medium text-[#4cc38a] text-sm">
+                  {formatEuro(o.total_amount)}
+                </span>
               </div>
-              <p className="text-xs text-zinc-400 line-clamp-2">
+              <p className="text-xs text-[#727c75] line-clamp-2">
                 {o.items?.map((it) => `${it.quantity}x ${it.name}`).join(", ") || "—"}
               </p>
-              <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/[0.06]">
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#edf0ee]/[0.06]">
                 <select
                   aria-label={`Order status for ${o.order_number}`}
                   value={o.status}
                   onChange={(e) => updateOrderStatus(o.id, e.target.value as Order["status"])}
-                  className="glass-input bg-[#07120e] rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-white"
+                  className={cn(CONSOLE_INPUT, "px-2.5 py-1.5 text-xs")}
                 >
                   <option value="pending">Pending</option>
                   <option value="processing">Processing</option>
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
-                <span className="text-[11px] text-zinc-400">{formatEuropeanDate(o.created_at)}</span>
+                <span className="text-xs text-[#727c75]">{formatEuropeanDate(o.created_at)}</span>
               </div>
             </div>
           )}
         />
       )}
 
-      {/* New Order Modal */}
       <GlassModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         maxWidth="lg"
         title={
-          <span className="flex items-center gap-2 text-base">
-            <ShoppingBag className="w-4 h-4 text-emerald-400" />
-            <span>Create New Customer Order</span>
+          <span className="flex items-center gap-2 text-sm font-semibold">
+            <ShoppingBag className="w-4 h-4 text-[#a1aaa4]" />
+            <span>Create customer order</span>
           </span>
         }
-        subtitle="Protected by idempotency keys — safe against accidental retries."
+        subtitle="Idempotency protected against accidental duplicate submissions"
       >
-        <form onSubmit={handleSubmitOrder} className="p-6 space-y-4 text-xs">
+        <form onSubmit={handleSubmitOrder} className="p-5 space-y-4 text-xs">
           <div>
-            <label className="block text-[11px] font-bold text-zinc-300 uppercase mb-1.5">
-              Customer Full Name *
-            </label>
+            <label className="block text-[#a1aaa4] font-medium mb-1.5">Customer name *</label>
             <input
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               placeholder="E.g. Charlotte Müller"
               required
-              className="glass-input w-full rounded-xl px-3.5 py-2.5 text-sm sm:text-xs text-white"
+              className={cn(CONSOLE_INPUT, "w-full px-3.5 py-2 text-xs sm:text-sm")}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-zinc-300 uppercase mb-1.5">
-                Phone Number
-              </label>
+              <label className="block text-[#a1aaa4] font-medium mb-1.5">Phone</label>
               <input
                 type="text"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="+49 152 0000000"
-                className="glass-input w-full rounded-xl px-3.5 py-2.5 text-sm sm:text-xs text-white"
+                className={cn(CONSOLE_INPUT, "w-full px-3.5 py-2 text-xs sm:text-sm")}
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-zinc-300 uppercase mb-1.5">
-                Email
-              </label>
+              <label className="block text-[#a1aaa4] font-medium mb-1.5">Email</label>
               <input
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
                 placeholder="customer@domain.de"
-                className="glass-input w-full rounded-xl px-3.5 py-2.5 text-sm sm:text-xs text-white"
+                className={cn(CONSOLE_INPUT, "w-full px-3.5 py-2 text-xs sm:text-sm")}
               />
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[11px] font-bold text-zinc-300 uppercase">Items / Services</label>
+              <label className="text-[#a1aaa4] font-medium">Items</label>
               <button
                 type="button"
                 onClick={handleAddItemRow}
-                className="text-xs text-emerald-400 font-bold hover:underline cursor-pointer"
+                className="text-xs text-[#4cc38a] font-medium hover:underline cursor-pointer"
               >
-                + Add Item
+                + Add item
               </button>
             </div>
             <div className="space-y-2 max-h-40 overflow-y-auto console-scroll pr-1">
@@ -488,16 +485,16 @@ export function OrdersSection() {
                     type="text"
                     value={item.name}
                     onChange={(e) => handleItemChange(idx, "name", e.target.value)}
-                    placeholder="Service or product"
+                    placeholder="Service or item"
                     required
-                    className="glass-input flex-1 rounded-lg px-2.5 py-2 text-white text-xs min-w-0"
+                    className={cn(CONSOLE_INPUT, "flex-1 px-2.5 py-2 text-xs min-w-0")}
                   />
                   <input
                     type="number"
                     min="1"
                     value={item.quantity}
                     onChange={(e) => handleItemChange(idx, "quantity", Number(e.target.value))}
-                    className="glass-input w-14 rounded-lg px-2 py-2 text-white text-xs text-center tabular-nums"
+                    className={cn(CONSOLE_INPUT, "w-14 px-2 py-2 text-xs text-center tabular-nums")}
                   />
                   <input
                     type="number"
@@ -506,14 +503,14 @@ export function OrdersSection() {
                     value={item.price}
                     onChange={(e) => handleItemChange(idx, "price", Number(e.target.value))}
                     placeholder="€"
-                    className="glass-input w-20 rounded-lg px-2 py-2 text-white text-xs text-right tabular-nums"
+                    className={cn(CONSOLE_INPUT, "w-20 px-2 py-2 text-xs text-right tabular-nums")}
                   />
                   {items.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveItemRow(idx)}
                       aria-label="Remove item row"
-                      className="text-zinc-400 hover:text-red-400 p-1.5 cursor-pointer"
+                      className="text-[#727c75] hover:text-[#f28b8e] p-1.5 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -523,10 +520,12 @@ export function OrdersSection() {
             </div>
           </div>
 
-          <div className="border-t border-white/10 pt-4 flex items-center justify-between gap-3">
+          <div className="border-t border-[#edf0ee]/[0.08] pt-4 flex items-center justify-between gap-3">
             <div className="tabular-nums">
-              <span className="text-[11px] text-zinc-400 uppercase font-bold">Total:</span>{" "}
-              <span className="text-base font-bold text-emerald-400">{formatEuro(calculatedTotal)}</span>
+              <span className="text-xs text-[#727c75]">Total:</span>{" "}
+              <span className="text-base font-semibold text-[#4cc38a]">
+                {formatEuro(calculatedTotal)}
+              </span>
             </div>
             <div className="flex gap-2">
               <GlassButton type="button" variant="secondary" size="sm" onClick={() => setIsModalOpen(false)}>
@@ -539,7 +538,7 @@ export function OrdersSection() {
                 isLoading={isSubmitting}
                 loadingText="Creating..."
               >
-                Confirm Order
+                Confirm order
               </GlassButton>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { CONSOLE_PANEL_LG } from "../../../lib/consoleSurface";
 import { cn } from "../../../lib/utils";
 import { EmptyState } from "../../ui/EmptyState";
 
@@ -34,18 +35,19 @@ export function ChartShell({
   return (
     <div
       className={cn(
-        "glass-card-obsidian rounded-2xl p-5 select-none h-full border border-emerald-500/[0.14] flex flex-col justify-between tabular-nums",
+        CONSOLE_PANEL_LG,
+        "select-none h-full flex flex-col justify-between tabular-nums",
         className
       )}
     >
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+      <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-[#edf0ee]/[0.08] mb-5">
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <h2 className="text-sm font-medium text-[#edf0ee] flex items-center gap-2">
             {icon}
             <span>{title}</span>
-          </h3>
+          </h2>
           {subtitle && (
-            <p className="text-[11px] text-zinc-400 mt-0.5">{subtitle}</p>
+            <p className="text-xs text-[#727c75] mt-0.5">{subtitle}</p>
           )}
         </div>
         {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}

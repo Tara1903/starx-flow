@@ -25,16 +25,16 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "glass-card-obsidian rounded-2xl p-8 sm:p-10 text-center flex flex-col items-center justify-center",
+        "rounded-2xl bg-[#121715] border border-[#edf0ee]/[0.08] p-8 sm:p-10 text-center flex flex-col items-center justify-center",
         className
       )}
     >
-      <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-zinc-400 mb-4">
-        {icon || <Inbox className="w-6 h-6" />}
+      <div className="w-12 h-12 rounded-xl bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center text-[#a1aaa4] mb-4">
+        {icon || <Inbox className="w-5 h-5" strokeWidth={1.65} />}
       </div>
-      <h3 className="text-base font-semibold text-white">{title}</h3>
+      <h3 className="text-sm font-medium text-[#edf0ee]">{title}</h3>
       {description && (
-        <p className="text-sm text-zinc-400 max-w-sm mt-1.5 leading-relaxed">
+        <p className="text-xs text-[#727c75] max-w-sm mt-1.5 leading-relaxed">
           {description}
         </p>
       )}

@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Settings, PenTool, Check, Brain, ChevronDown } from "lucide-react";
+import { Settings, PenTool, Check, Brain } from "lucide-react";
 import { useAuthStore, type Workflow } from "../../store/authStore";
+import {
+  CONSOLE_PANEL,
+  CONSOLE_SUBCARD,
+  CONSOLE_INPUT,
+  CONSOLE_BTN_PRIMARY,
+  CONSOLE_SECTION_TITLE,
+} from "../../lib/consoleSurface";
 import { cn } from "../../lib/utils";
-
-const CHANNEL_ICON: Record<string, React.ReactNode> = {
-  WhatsApp:  <span className="text-green-400">MessageCircle</span>,
-  SMS:       <span className="text-blue-400">Phone</span>,
-  Reviews:   <span className="text-amber-400">Star</span>,
-  Instagram: <span className="text-pink-400">Instagram</span>,
-  Web:       <span className="text-cyan-400">Globe</span>,
-};
 
 export function AIConfigPanel() {
   const workflows = useAuthStore((s) => s.workflows);
@@ -20,6 +19,7 @@ export function AIConfigPanel() {
 
   const [editPrompt, setEditPrompt] = useState(selected?.customPrompt || "");
   const [editTone, setEditTone] = useState<Workflow["aiTone"]>(selected?.aiTone || "Friendly");
+  const [savedFlag, setSavedFlag] = useState(false);
 
   useEffect(() => {
     if (selected) {
@@ -31,12 +31,14 @@ export function AIConfigPanel() {
   const handleSave = () => {
     if (selected) {
       updatePrompt(selected.id, editPrompt, editTone);
+      setSavedFlag(true);
+      setTimeout(() => setSavedFlag(false), 1800);
     }
   };
 
   if (!selected) {
     return (
-      <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] p-5 text-center text-xs text-zinc-400 select-none">
+      <div className={cn(CONSOLE_PANEL, "p-8 text-center text-xs text-[#727c75] select-none")}>
         No active workflows found to tune. Create a workflow first.
       </div>
     );
@@ -44,39 +46,43 @@ export function AIConfigPanel() {
 
   return (
     <div className="space-y-4 select-none">
-      {/* Active Node Selection */}
-      <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] p-5">
-        <h3 className="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-          <Settings className="w-4 h-4 text-zinc-500" />
-          <span>Active Agent Config</span>
-        </h3>
-        
+      <div className={CONSOLE_PANEL}>
+        <h2 className={cn(CONSOLE_SECTION_TITLE, "mb-4 flex items-center gap-2")}>
+          <Settings className="w-4 h-4 text-[#727c75]" strokeWidth={1.65} />
+          <span>Agent configuration</span>
+        </h2>
+
         <div className="space-y-4">
           <div>
-            <label className="block text-[10px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">Target Automation Node</label>
-            <div className="flex items-center gap-3 bg-white/[0.01] rounded-lg p-3 border border-white/5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                <Brain className="w-4 h-4 text-emerald-400" />
+            <label className="block text-xs text-[#727c75] mb-1.5">Target automation</label>
+            <div className={cn(CONSOLE_SUBCARD, "flex items-center gap-3 p-3")}>
+              <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center flex-shrink-0 text-[#a1aaa4]">
+                <Brain className="w-4 h-4" strokeWidth={1.65} />
               </div>
               <div className="min-w-0">
-                <span className="text-xs font-bold text-white block truncate">{selected.name}</span>
-                <span className="text-[10px] text-zinc-500 block truncate mt-0.5">{selected.channel} Channel</span>
+                <span className="text-xs font-medium text-[#edf0ee] block truncate">
+                  {selected.name}
+                </span>
+                <span className="text-[11px] text-[#727c75] block truncate mt-0.5">
+                  {selected.channel} channel
+                </span>
               </div>
             </div>
           </div>
-          
+
           <div>
-            <label className="block text-[10px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">AI Conversational Tone</label>
-            <div className="grid grid-cols-4 gap-1.5">
+            <label className="block text-xs text-[#727c75] mb-1.5">Response tone</label>
+            <div className="grid grid-cols-4 gap-2">
               {(["Friendly", "Professional", "Casual", "Urgent"] as const).map((t) => (
                 <button
+                  type="button"
                   key={t}
                   onClick={() => setEditTone(t)}
                   className={cn(
-                    "text-[10px] font-bold py-2 rounded-lg border transition-all uppercase tracking-wider",
+                    "text-xs font-medium py-2 rounded-lg border transition-colors cursor-pointer",
                     editTone === t
-                      ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.03)]"
-                      : "bg-white/[0.01] border-white/5 text-zinc-500 hover:text-zinc-300"
+                      ? "bg-[#19201d] border-[#34d399]/35 text-[#edf0ee]"
+                      : "bg-[#0d1210] border-[#edf0ee]/[0.06] text-[#727c75] hover:text-[#edf0ee]"
                   )}
                 >
                   {t}
@@ -87,27 +93,27 @@ export function AIConfigPanel() {
         </div>
       </div>
 
-      {/* Prompts Instructions */}
-      <div className="glass-card-obsidian rounded-2xl border border-emerald-500/[0.12] p-5">
-        <h3 className="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-          <PenTool className="w-4 h-4 text-zinc-500" />
-          <span>System Instructions</span>
-        </h3>
-        
+      <div className={CONSOLE_PANEL}>
+        <h2 className={cn(CONSOLE_SECTION_TITLE, "mb-3 flex items-center gap-2")}>
+          <PenTool className="w-4 h-4 text-[#727c75]" strokeWidth={1.65} />
+          <span>System instructions</span>
+        </h2>
+
         <textarea
           value={editPrompt}
           onChange={(e) => setEditPrompt(e.target.value)}
           rows={6}
-          className="glass-input w-full rounded-xl px-4 py-3 text-xs text-zinc-200 outline-none resize-none font-mono leading-relaxed select-text"
-          placeholder="E.g. You are a warm receptionist... Answer customer booking questions..."
+          className={cn(CONSOLE_INPUT, "w-full p-3.5 text-xs font-mono leading-relaxed resize-none select-text")}
+          placeholder="Describe how your receptionist should greet customers, answer questions, and schedule bookings"
         />
-        
+
         <button
+          type="button"
           onClick={handleSave}
-          className="mt-3 w-full bg-emerald-500 hover:bg-emerald-400 text-black border border-emerald-500/20 text-xs font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-1.5 uppercase tracking-wider shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+          className={cn(CONSOLE_BTN_PRIMARY, "mt-3 w-full py-2.5")}
         >
           <Check className="w-3.5 h-3.5" />
-          <span>Save Changes</span>
+          <span>{savedFlag ? "Saved" : "Save changes"}</span>
         </button>
       </div>
     </div>

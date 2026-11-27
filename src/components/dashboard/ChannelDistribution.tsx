@@ -8,35 +8,11 @@ import { cn } from "../../lib/utils";
 import { ChartShell } from "./charts/ChartShell";
 
 const CHANNEL_ICON: Record<string, React.ReactNode> = {
-  WhatsApp: <MessageCircle className="w-4 h-4" />,
-  SMS: <Phone className="w-4 h-4" />,
-  Reviews: <Star className="w-4 h-4" />,
-  Instagram: <Instagram className="w-4 h-4" />,
-  Web: <Globe className="w-4 h-4" />,
-};
-
-const CHANNEL_COLOR: Record<string, string> = {
-  WhatsApp: "text-green-400 border-green-500/25 bg-green-500/10",
-  SMS: "text-blue-400 border-blue-500/25 bg-blue-500/10",
-  Reviews: "text-amber-400 border-amber-500/25 bg-amber-500/10",
-  Instagram: "text-pink-400 border-pink-500/25 bg-pink-500/10",
-  Web: "text-cyan-400 border-cyan-500/25 bg-cyan-500/10",
-};
-
-const CHANNEL_TEXT_COLOR: Record<string, string> = {
-  WhatsApp: "text-green-300",
-  SMS: "text-blue-300",
-  Reviews: "text-amber-300",
-  Instagram: "text-pink-300",
-  Web: "text-cyan-300",
-};
-
-const CHANNEL_BAR_COLOR: Record<string, string> = {
-  WhatsApp: "from-green-500 to-emerald-400",
-  SMS: "from-blue-500 to-indigo-400",
-  Reviews: "from-amber-500 to-yellow-400",
-  Instagram: "from-pink-500 to-rose-400",
-  Web: "from-cyan-500 to-blue-400",
+  WhatsApp: <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.65} />,
+  SMS: <Phone className="w-3.5 h-3.5" strokeWidth={1.65} />,
+  Reviews: <Star className="w-3.5 h-3.5" strokeWidth={1.65} />,
+  Instagram: <Instagram className="w-3.5 h-3.5" strokeWidth={1.65} />,
+  Web: <Globe className="w-3.5 h-3.5" strokeWidth={1.65} />,
 };
 
 export function ChannelDistribution() {
@@ -51,7 +27,9 @@ export function ChannelDistribution() {
       const prev = map.get(wf.channel) || 0;
       map.set(wf.channel, prev + (wf.executionsCount || 0));
     }
-    return Array.from(map.entries()).map(([channel, count]) => ({ channel, count }));
+    return Array.from(map.entries())
+      .map(([channel, count]) => ({ channel, count }))
+      .sort((a, b) => b.count - a.count);
   }, [workflows]);
 
   const visibleTotal = useMemo(
@@ -68,19 +46,19 @@ export function ChannelDistribution() {
 
   return (
     <ChartShell
-      title="Channel Distribution"
+      title="Channel mix"
       subtitle={
         visibleTotal > 0
-          ? `${visibleTotal.toLocaleString()} active channel runs`
-          : "Click legends to inspect channel mix"
+          ? `${visibleTotal.toLocaleString()} runs across active channels`
+          : "Filter channels below to inspect traffic share"
       }
-      icon={<Hash className="w-4 h-4 text-emerald-400" />}
+      icon={<Hash className="w-4 h-4 text-[#727c75]" strokeWidth={1.65} />}
       isEmpty={groupedChannels.length === 0}
-      emptyTitle="No connected channels active"
-      emptyDescription="Connect WhatsApp, SMS, Instagram, or Web Chat to compare traffic share."
+      emptyTitle="No connected channels yet"
+      emptyDescription="Connect WhatsApp, SMS, Instagram, or Web Chat to compare traffic share"
       actions={
         groupedChannels.length > 0 ? (
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1 flex-wrap">
             {groupedChannels.map(({ channel }) => {
               const isHidden = Boolean(hiddenChannels[channel]);
               return (
@@ -90,10 +68,10 @@ export function ChannelDistribution() {
                   onClick={() => toggleChannel(channel)}
                   aria-pressed={!isHidden}
                   className={cn(
-                    "px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-all cursor-pointer",
+                    "px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors cursor-pointer",
                     isHidden
-                      ? "opacity-45 border-white/10 bg-white/[0.02] text-zinc-400"
-                      : "border-emerald-400/30 bg-emerald-500/10 text-zinc-200 hover:text-white"
+                      ? "opacity-45 border-[#edf0ee]/[0.06] bg-[#0d1210] text-[#727c75]"
+                      : "border-[#edf0ee]/12 bg-[#19201d] text-[#a1aaa4] hover:text-[#edf0ee]"
                   )}
                 >
                   {channel}
@@ -109,6 +87,7 @@ export function ChannelDistribution() {
           const isHidden = Boolean(hiddenChannels[channel]);
           const pct =
             !isHidden && visibleTotal > 0 ? Math.round((count / visibleTotal) * 100) : 0;
+          const isLead = idx === 0 && !isHidden;
           const isHighlighted = focusedChannel === channel;
 
           return (
@@ -126,42 +105,39 @@ export function ChannelDistribution() {
             >
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0",
-                      CHANNEL_COLOR[channel] || "text-emerald-300 border-white/10 bg-white/5"
-                    )}
-                  >
-                    {CHANNEL_ICON[channel] || <Globe className="w-4 h-4" />}
+                  <span className="text-[#727c75] flex-shrink-0">
+                    {CHANNEL_ICON[channel] || <Globe className="w-3.5 h-3.5" />}
                   </span>
-                  <span className="text-xs font-semibold text-zinc-200 group-hover:text-white transition-colors">
-                    {channel}
-                  </span>
+                  <span className="text-xs font-medium text-[#edf0ee]">{channel}</span>
                 </div>
                 <div className="flex items-center gap-2 tabular-nums">
-                  <span className="text-[11px] text-zinc-400">
+                  <span className="text-xs text-[#727c75]">
                     {count.toLocaleString()} runs
                   </span>
-                  <span className={cn("text-xs font-bold", CHANNEL_TEXT_COLOR[channel] || "text-emerald-300")}>
+                  <span
+                    className={cn(
+                      "text-xs font-medium",
+                      isLead ? "text-[#4cc38a]" : "text-[#a1aaa4]"
+                    )}
+                  >
                     {pct}%
                   </span>
                 </div>
               </div>
 
-              <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[#0d1210] border border-[#edf0ee]/[0.06] rounded-full overflow-hidden">
                 <motion.div
                   initial={prefersReduced ? false : { scaleX: 0 }}
                   animate={{ scaleX: pct / 100 }}
                   transition={
                     prefersReduced
                       ? { duration: 0.01 }
-                      : { duration: 0.65, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }
+                      : { duration: 0.5, delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }
                   }
                   style={{ originX: 0 }}
                   className={cn(
-                    "h-full w-full rounded-full bg-gradient-to-r transition-all",
-                    CHANNEL_BAR_COLOR[channel] || "from-emerald-500 to-teal-400",
-                    isHighlighted && "brightness-115"
+                    "h-full w-full rounded-full transition-colors",
+                    isLead || isHighlighted ? "bg-[#34d399]" : "bg-[#727c75]/55"
                   )}
                 />
               </div>

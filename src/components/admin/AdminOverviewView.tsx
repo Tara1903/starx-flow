@@ -1,22 +1,27 @@
 "use client";
 
 import React from "react";
-import { motion, useReducedMotion } from "motion/react";
 import {
-  Sparkles,
   Download,
   RefreshCw,
-  Users,
   CheckCircle2,
-  Clock,
   ArrowRight,
-  TrendingUp,
-  Activity,
-  Calendar,
 } from "lucide-react";
 import { AdminKPIsRow } from "./AdminKPIs";
 import { RevenueVelocityChart, MonthlyGoalGauge } from "./AdminCharts";
 import { type Client, type DemoLead } from "../../store/adminStore";
+import {
+  CONSOLE_PANEL_LG,
+  CONSOLE_SUBCARD,
+  CONSOLE_BTN_PRIMARY,
+  CONSOLE_BTN_SECONDARY,
+  CONSOLE_BTN_GHOST,
+  CONSOLE_BADGE_LIVE,
+  CONSOLE_BADGE_INFO,
+  CONSOLE_BADGE_MUTED,
+  CONSOLE_HEADING,
+  CONSOLE_SECTION_TITLE,
+} from "../../lib/consoleSurface";
 import { cn } from "../../lib/utils";
 import { CANONICAL_PLANS, normalizePlanId } from "@/lib/plans";
 
@@ -35,16 +40,12 @@ export function AdminOverviewView({
   onRefresh,
   onExportCsv,
 }: AdminOverviewViewProps) {
-  const prefersReduced = useReducedMotion();
-
-  // Compute live metrics from Customer Centre data
   const totalClients = clients.length;
   const activeClients = clients.filter((c) => c.status === "Active").length;
   const totalLeads = demoLeads.length;
   const totalExecutions = clients.reduce((acc, c) => acc + (c.totalExecutions || 0), 0);
   const totalWorkflows = clients.reduce((acc, c) => acc + (c.totalWorkflows || 0), 0);
 
-  // Compute live MRR directly from active customer subscriptions
   const realMRR = clients.reduce((acc, c) => {
     if (c.status?.toLowerCase() === "churned" || c.status?.toLowerCase() === "inactive") return acc;
     const norm = normalizePlanId(c.plan);
@@ -58,60 +59,44 @@ export function AdminOverviewView({
   const targetMonthlyGoal = 5000;
   const goalProgress = Math.min(100, Math.round((realMRR / targetMonthlyGoal) * 100));
 
-  // Dynamic time greeting
-  const hour = new Date().getHours();
-  const timeGreeting =
-    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-
-  // Recent 4 clients and recent 3 leads
   const recentClients = clients.slice(0, 4);
-  const pendingLeads = demoLeads.filter((l) => l.status === "new").slice(0, 3);
+  const pendingLeads = demoLeads.filter((l) => l.status === "new").slice(0, 4);
 
   return (
-    <div className="space-y-6 sm:space-y-8 select-none">
-      {/* ── 1. WELCOME GREETING & CONTEXTUAL HEADER (Frame 003) ── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-[#08150f]/80 backdrop-blur-2xl border border-emerald-500/20 shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
-        <div className="space-y-2">
-          {/* Live Platform Pill */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-300">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>● Live Platform &bull; All AI Workers Operational</span>
-          </div>
-
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            {timeGreeting}, <span className="text-emerald-400">Administrator</span>
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-300 max-w-xl">
-            Here is your real-time platform telemetry, enterprise automation throughput, and active client roster.
+    <div className="space-y-6 select-none">
+      {/* Header Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className={CONSOLE_HEADING}>Platform overview</h1>
+          <p className="text-xs sm:text-sm text-[#727c75] mt-0.5">
+            Multi-tenant automation throughput, recurring revenue, and active client accounts
           </p>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2.5 self-start md:self-auto">
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           {onExportCsv && (
-            <button
-              type="button"
-              onClick={onExportCsv}
-              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Download size={13} />
+            <button type="button" onClick={onExportCsv} className={CONSOLE_BTN_SECONDARY}>
+              <Download className="w-3.5 h-3.5 text-[#a1aaa4]" strokeWidth={1.65} />
               <span>Export CSV</span>
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={onRefresh}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-emerald-400 hover:bg-emerald-300 transition-colors flex items-center gap-1.5 shadow-[0_0_20px_rgba(52,211,153,0.35)] cursor-pointer"
-          >
-            <RefreshCw size={13} />
-            <span>Sync Data</span>
+          <button type="button" onClick={onRefresh} className={CONSOLE_BTN_PRIMARY}>
+            <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <span>Sync data</span>
           </button>
         </div>
       </div>
 
-      {/* ── 2. TOP VISUALIZATION ROW: REVENUE VELOCITY CHART & GOAL GAUGE (Frame 003) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+      {/* Compact KPI Row */}
+      <AdminKPIsRow
+        totalClients={totalClients}
+        activeClients={activeClients}
+        totalLeads={totalLeads}
+        totalExecutions={totalExecutions}
+      />
+
+      {/* Primary Chart (8 cols) + Monthly Target Ring (4 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         <div className="lg:col-span-8 flex">
           <RevenueVelocityChart
             totalRevenue={realMRR}
@@ -129,76 +114,63 @@ export function AdminOverviewView({
         </div>
       </div>
 
-      {/* ── 3. FOUR HOVER-LIFT KPI CARDS (Exact Video JSX `whileHover={{ y: -5 }}`) ── */}
-      <AdminKPIsRow
-        totalClients={totalClients}
-        activeClients={activeClients}
-        totalLeads={totalLeads}
-        totalExecutions={totalExecutions}
-      />
-
-      {/* ── 4. DUAL ACTIVITY COLUMNS: RECENT CLIENTS & HIGH-PRIORITY INQUIRIES ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
-        {/* Left Column: Recent Client Activity (7 cols) */}
-        <div className="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-[#08150f]/85 backdrop-blur-2xl border border-emerald-500/20 shadow-[0_16px_40px_rgba(0,0,0,0.6)] space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+      {/* Bottom 7:5 Split: Active Client Roster & Inbound Demo Leads */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className={cn(CONSOLE_PANEL_LG, "lg:col-span-7 space-y-4")}>
+          <div className="flex items-center justify-between pb-3 border-b border-[#edf0ee]/[0.08]">
             <div>
-              <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                <Users size={16} className="text-emerald-400" />
-                Active Client Roster
-              </h3>
-              <p className="text-xs text-zinc-300">
-                Latest enterprise businesses deployed on StarX Flow
+              <h2 className={CONSOLE_SECTION_TITLE}>Recent clients</h2>
+              <p className="text-xs text-[#727c75] mt-0.5">
+                Active workspaces provisioned on StarX Flow
               </p>
             </div>
             <button
               type="button"
               onClick={() => onSelectSection("clients")}
-              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1 cursor-pointer"
+              className={CONSOLE_BTN_GHOST}
             >
-              <span>View All ({totalClients})</span>
-              <ArrowRight size={13} />
+              <span className="tabular-nums">View all ({totalClients})</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {recentClients.length > 0 ? (
               recentClients.map((client) => (
                 <div
                   key={client.id}
-                  className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-emerald-500/30 transition-all group"
+                  onClick={() => onSelectSection("clients")}
+                  className={cn(
+                    CONSOLE_SUBCARD,
+                    "flex items-center justify-between p-3.5 hover:bg-[#19201d] cursor-pointer transition-colors"
+                  )}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/12 border border-emerald-400/30 flex items-center justify-center font-bold font-mono text-emerald-300 text-sm">
-                      {client.businessName.charAt(0)}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-[#19201d] border border-[#edf0ee]/10 flex items-center justify-center font-medium text-[#edf0ee] text-sm flex-shrink-0">
+                      {client.businessName.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[#edf0ee] truncate">
                         {client.businessName}
                       </p>
-                      <p className="text-[11px] text-zinc-300">
-                        {client.ownerName} &bull; {client.businessType}
+                      <p className="text-xs text-[#727c75] truncate">
+                        {client.ownerName} · {client.businessType}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="hidden sm:block text-right">
-                      <span className="inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-zinc-300">
-                        {client.plan}
-                      </span>
-                      <p className="text-[10px] text-zinc-300 mt-0.5">
-                        {client.totalWorkflows} flows &bull; {client.totalExecutions.toLocaleString()} execs
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="hidden sm:block text-right tabular-nums">
+                      <span className={CONSOLE_BADGE_MUTED}>{client.plan}</span>
+                      <p className="text-[11px] text-[#727c75] mt-1">
+                        {client.totalWorkflows} flows · {client.totalExecutions.toLocaleString()} runs
                       </p>
                     </div>
 
                     <span
-                      className={cn(
-                        "text-[10px] font-mono font-bold px-2 py-0.5 rounded-full",
-                        client.status === "Active"
-                          ? "bg-emerald-500/15 border border-emerald-500/35 text-emerald-300"
-                          : "bg-blue-500/15 border border-blue-500/35 text-blue-300"
-                      )}
+                      className={
+                        client.status === "Active" ? CONSOLE_BADGE_LIVE : CONSOLE_BADGE_INFO
+                      }
                     >
                       {client.status}
                     </span>
@@ -206,63 +178,61 @@ export function AdminOverviewView({
                 </div>
               ))
             ) : (
-              <p className="text-xs text-zinc-400 py-6 text-center">
-                No client records retrieved yet.
+              <p className="text-xs text-[#727c75] py-8 text-center">
+                No client records retrieved yet
               </p>
             )}
           </div>
         </div>
 
-        {/* Right Column: High-Priority Demo Inquiries (5 cols) */}
-        <div className="lg:col-span-5 p-5 sm:p-6 rounded-3xl bg-[#08150f]/85 backdrop-blur-2xl border border-emerald-500/20 shadow-[0_16px_40px_rgba(0,0,0,0.6)] space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+        <div className={cn(CONSOLE_PANEL_LG, "lg:col-span-5 space-y-4")}>
+          <div className="flex items-center justify-between pb-3 border-b border-[#edf0ee]/[0.08]">
             <div>
-              <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                <Sparkles size={16} className="text-emerald-400" />
-                Inbound Demo Leads
-              </h3>
-              <p className="text-xs text-zinc-300">
-                New enterprise requests awaiting action
+              <h2 className={CONSOLE_SECTION_TITLE}>Inbound demo inquiries</h2>
+              <p className="text-xs text-[#727c75] mt-0.5">
+                New requests awaiting follow-up
               </p>
             </div>
             <button
               type="button"
               onClick={() => onSelectSection("leads")}
-              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1 cursor-pointer"
+              className={CONSOLE_BTN_GHOST}
             >
-              <span>Pipeline ({totalLeads})</span>
-              <ArrowRight size={13} />
+              <span className="tabular-nums">Pipeline ({totalLeads})</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {pendingLeads.length > 0 ? (
               pendingLeads.map((lead) => (
                 <div
                   key={lead.id}
-                  className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1.5 hover:border-emerald-500/30 transition-all"
+                  onClick={() => onSelectSection("leads")}
+                  className={cn(
+                    CONSOLE_SUBCARD,
+                    "p-3.5 space-y-1 hover:bg-[#19201d] cursor-pointer transition-colors"
+                  )}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-white">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-[#edf0ee] truncate">
                       {lead.businessName}
                     </span>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300">
-                      NEW
-                    </span>
+                    <span className={CONSOLE_BADGE_LIVE}>New</span>
                   </div>
-                  <p className="text-[11px] text-zinc-300">
-                    Contact: <span className="text-zinc-200 font-medium">{lead.fullName}</span> &bull; {lead.workEmail}
+                  <p className="text-xs text-[#a1aaa4] truncate">
+                    {lead.fullName} · {lead.workEmail}
                   </p>
-                  <p className="text-xs text-emerald-300 font-medium line-clamp-1">
-                    Primary Need: {lead.primaryNeed}
+                  <p className="text-xs text-[#727c75] line-clamp-1">
+                    {lead.primaryNeed}
                   </p>
                 </div>
               ))
             ) : (
-              <div className="py-8 text-center space-y-2">
-                <CheckCircle2 size={24} className="text-emerald-400 mx-auto opacity-70" />
-                <p className="text-xs text-zinc-400">
-                  All demo requests are processed and scheduled!
+              <div className="py-10 text-center space-y-2">
+                <CheckCircle2 className="w-6 h-6 text-[#4cc38a] mx-auto" strokeWidth={1.65} />
+                <p className="text-xs text-[#727c75]">
+                  All demo requests have been processed
                 </p>
               </div>
             )}

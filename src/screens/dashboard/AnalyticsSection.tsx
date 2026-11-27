@@ -5,16 +5,14 @@ import { ChannelDistribution } from "../../components/dashboard/ChannelDistribut
 
 export function AnalyticsSection() {
   return (
-    <div className="space-y-6 animate-[fade-in_0.4s_ease-out]">
-      {/* Real-time KPI Metric displays */}
+    <div className="space-y-6">
       <KPIGrid />
 
-      {/* Analytics Visualization Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        <div className="lg:col-span-8">
           <ExecutionChart />
         </div>
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-4">
           <ChannelDistribution />
         </div>
       </div>

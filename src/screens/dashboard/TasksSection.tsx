@@ -1,22 +1,41 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  CheckSquare, Plus, Trash2, ArrowRight, ArrowLeft, 
-  Clock, AlertCircle, X, Loader2, MoreHorizontal 
+import {
+  CheckSquare,
+  Plus,
+  Trash2,
+  ArrowRight,
+  ArrowLeft,
+  X,
+  Loader2,
 } from "lucide-react";
 import { useTaskStore } from "../../store/taskStore";
 import { Task } from "../../types/database";
+import {
+  CONSOLE_PANEL,
+  CONSOLE_SUBCARD,
+  CONSOLE_INPUT,
+  CONSOLE_BTN_PRIMARY,
+  CONSOLE_BTN_SECONDARY,
+  CONSOLE_HEADING,
+  CONSOLE_SECTION_TITLE,
+  CONSOLE_BADGE_MUTED,
+  CONSOLE_BADGE_INFO,
+  CONSOLE_BADGE_WARN,
+  CONSOLE_BADGE_DANGER,
+} from "../../lib/consoleSurface";
+import { cn } from "../../lib/utils";
 
-const PRIORITY_BADGES: Record<Task["priority"], { bg: string; text: string }> = {
-  low: { bg: "bg-zinc-500/10 border-zinc-500/20", text: "text-zinc-400" },
-  medium: { bg: "bg-blue-500/10 border-blue-500/20", text: "text-blue-400" },
-  high: { bg: "bg-amber-500/10 border-amber-500/20", text: "text-amber-400" },
-  urgent: { bg: "bg-red-500/10 border-red-500/20", text: "text-red-400" },
+const PRIORITY_BADGES: Record<Task["priority"], string> = {
+  low: CONSOLE_BADGE_MUTED,
+  medium: CONSOLE_BADGE_INFO,
+  high: CONSOLE_BADGE_WARN,
+  urgent: CONSOLE_BADGE_DANGER,
 };
 
 export function TasksSection() {
-  const { tasks, isLoading, fetchTasks, createTask, updateTaskStatus, deleteTask } = useTaskStore();
+  const { tasks, fetchTasks, createTask, updateTaskStatus, deleteTask } = useTaskStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -52,58 +71,55 @@ export function TasksSection() {
   const completedTasks = tasks.filter((t) => t.status === "completed");
 
   const renderColumn = (
-    title: string,
+    colTitle: string,
     columnTasks: Task[],
     status: Task["status"],
     indicatorColor: string
   ) => (
-    <div className="glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl p-4 flex flex-col h-full shadow-lg">
-      <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5">
-        <h3 className="font-bold text-white flex items-center gap-2 text-sm">
-          <span className={`w-2.5 h-2.5 rounded-full ${indicatorColor}`}></span>
-          {title}
-        </h3>
-        <span className="text-xs font-bold text-zinc-400 bg-white/5 px-2 py-0.5 rounded-md">
-          {columnTasks.length}
-        </span>
+    <div className={cn(CONSOLE_PANEL, "p-4 flex flex-col h-full")}>
+      <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-[#edf0ee]/[0.08]">
+        <h2 className={cn(CONSOLE_SECTION_TITLE, "flex items-center gap-2")}>
+          <span className={cn("w-2 h-2 rounded-full", indicatorColor)} />
+          {colTitle}
+        </h2>
+        <span className={CONSOLE_BADGE_MUTED}>{columnTasks.length}</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-2.5 pr-0.5">
         {columnTasks.map((task) => {
           const pBadge = PRIORITY_BADGES[task.priority] || PRIORITY_BADGES.medium;
           return (
-            <div
-              key={task.id}
-              className="p-3.5 bg-white/[0.03] hover:bg-white/[0.05] border border-white/10 rounded-xl space-y-2.5 transition-all text-xs"
-            >
+            <div key={task.id} className={cn(CONSOLE_SUBCARD, "p-3.5 space-y-2.5 text-xs")}>
               <div className="flex items-start justify-between gap-2">
-                <h4 className="font-semibold text-white leading-snug">{task.title}</h4>
+                <h3 className="font-medium text-[#edf0ee] leading-snug">{task.title}</h3>
                 <button
+                  type="button"
                   onClick={() => deleteTask(task.id)}
-                  className="text-zinc-500 hover:text-red-400 p-0.5 rounded"
+                  className="text-[#727c75] hover:text-[#f28b8e] p-0.5 rounded transition-colors cursor-pointer"
                   title="Delete task"
+                  aria-label="Delete task"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               {task.description && (
-                <p className="text-zinc-400 text-[11px] leading-relaxed line-clamp-2">
+                <p className="text-[#a1aaa4] text-xs leading-relaxed line-clamp-2">
                   {task.description}
                 </p>
               )}
 
               <div className="flex items-center justify-between pt-1">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize ${pBadge.bg} ${pBadge.text}`}>
-                  {task.priority}
-                </span>
+                <span className={cn(pBadge, "capitalize")}>{task.priority}</span>
 
-                {/* Status Transitions */}
                 <div className="flex items-center gap-1">
                   {status !== "todo" && (
                     <button
-                      onClick={() => updateTaskStatus(task.id, status === "completed" ? "in_progress" : "todo")}
-                      className="p-1 rounded bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white"
+                      type="button"
+                      onClick={() =>
+                        updateTaskStatus(task.id, status === "completed" ? "in_progress" : "todo")
+                      }
+                      className="p-1.5 rounded-md bg-[#19201d] border border-[#edf0ee]/[0.08] text-[#a1aaa4] hover:text-[#edf0ee] cursor-pointer"
                       title="Move backward"
                     >
                       <ArrowLeft className="w-3 h-3" />
@@ -111,8 +127,11 @@ export function TasksSection() {
                   )}
                   {status !== "completed" && (
                     <button
-                      onClick={() => updateTaskStatus(task.id, status === "todo" ? "in_progress" : "completed")}
-                      className="p-1 rounded bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white"
+                      type="button"
+                      onClick={() =>
+                        updateTaskStatus(task.id, status === "todo" ? "in_progress" : "completed")
+                      }
+                      className="p-1.5 rounded-md bg-[#19201d] border border-[#edf0ee]/[0.08] text-[#a1aaa4] hover:text-[#edf0ee] cursor-pointer"
                       title="Move forward"
                     >
                       <ArrowRight className="w-3 h-3" />
@@ -125,8 +144,8 @@ export function TasksSection() {
         })}
 
         {columnTasks.length === 0 && (
-          <div className="h-32 flex items-center justify-center border-2 border-dashed border-white/5 rounded-xl text-zinc-600 text-xs">
-            No tasks in {title.toLowerCase()}
+          <div className="h-32 flex items-center justify-center border border-dashed border-[#edf0ee]/[0.08] rounded-xl text-[#727c75] text-xs">
+            No tasks in {colTitle.toLowerCase()}
           </div>
         )}
       </div>
@@ -134,82 +153,79 @@ export function TasksSection() {
   );
 
   return (
-    <div className="h-full flex flex-col max-w-7xl mx-auto space-y-6">
-      {/* Header */}
+    <div className="h-full flex flex-col max-w-7xl mx-auto space-y-6 select-none tabular-nums">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-            <CheckSquare className="w-6 h-6 text-emerald-400" />
-            Task Management & Operations
-          </h2>
-          <p className="text-zinc-400 text-sm mt-1">
-            Track business to-dos, AI escalations, and staff operational action items.
+          <h1 className={CONSOLE_HEADING}>Tasks</h1>
+          <p className="text-xs sm:text-sm text-[#727c75] mt-0.5">
+            Track team action items and AI escalations
           </p>
         </div>
         <button
+          type="button"
           onClick={() => setIsModalOpen(true)}
-          className="bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+          className={CONSOLE_BTN_PRIMARY}
         >
-          <Plus className="w-4 h-4" />
-          New Task
+          <Plus className="w-3.5 h-3.5" />
+          <span>New Task</span>
         </button>
       </div>
 
-      {/* Kanban Board Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-[500px]">
-        {renderColumn("To Do", todoTasks, "todo", "bg-zinc-500")}
-        {renderColumn("In Progress", inProgressTasks, "in_progress", "bg-blue-500")}
-        {renderColumn("Completed", completedTasks, "completed", "bg-emerald-500")}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 flex-1 min-h-[480px]">
+        {renderColumn("To do", todoTasks, "todo", "bg-[#727c75]")}
+        {renderColumn("In progress", inProgressTasks, "in_progress", "bg-sky-400")}
+        {renderColumn("Completed", completedTasks, "completed", "bg-[#4cc38a]")}
       </div>
 
-      {/* New Task Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-card-obsidian border border-white/10 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <h3 className="text-white font-bold text-base flex items-center gap-2">
-                <CheckSquare className="w-5 h-5 text-emerald-400" />
-                Create New Task
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="rounded-2xl bg-[#0c100e] border border-[#edf0ee]/12 max-w-md w-full p-6 shadow-[0_24px_64px_rgba(0,0,0,0.75)] space-y-4 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-[#edf0ee]/[0.08]">
+              <h3 className="text-[#edf0ee] font-semibold text-sm flex items-center gap-2">
+                <CheckSquare className="w-4 h-4 text-[#a1aaa4]" strokeWidth={1.65} />
+                Create task
               </h3>
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-zinc-400 hover:text-white"
+                aria-label="Close modal"
+                className="text-[#727c75] hover:text-[#edf0ee] cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleCreateSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-zinc-400 mb-1">Task Title *</label>
+                <label className="block text-[#a1aaa4] mb-1">Task title *</label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Follow up with VIP lead regarding contract"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-white outline-none focus:border-emerald-500/50"
+                  className={cn(CONSOLE_INPUT, "w-full px-3.5 py-2 text-xs")}
                 />
               </div>
 
               <div>
-                <label className="block text-zinc-400 mb-1">Description</label>
+                <label className="block text-[#a1aaa4] mb-1">Description</label>
                 <textarea
                   rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add specific instructions or notes..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-white outline-none focus:border-emerald-500/50"
+                  placeholder="Add notes or instructions"
+                  className={cn(CONSOLE_INPUT, "w-full px-3.5 py-2 text-xs")}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-zinc-400 mb-1">Priority</label>
+                  <label className="block text-[#a1aaa4] mb-1">Priority</label>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value as any)}
-                    className="w-full bg-[#181a1d] border border-white/10 rounded-xl px-3.5 py-2 text-white outline-none"
+                    className={cn(CONSOLE_INPUT, "w-full px-3 py-2 text-xs cursor-pointer")}
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -218,30 +234,26 @@ export function TasksSection() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-zinc-400 mb-1">Due Date</label>
+                  <label className="block text-[#a1aaa4] mb-1">Due date</label>
                   <input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-white outline-none"
+                    className={cn(CONSOLE_INPUT, "w-full px-3 py-2 text-xs")}
                   />
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-end gap-2.5">
+              <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-white/10 text-zinc-300 hover:bg-white/5"
+                  className={CONSOLE_BTN_SECONDARY}
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold flex items-center gap-2"
-                >
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Task"}
+                <button type="submit" disabled={isSubmitting} className={CONSOLE_BTN_PRIMARY}>
+                  {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save task"}
                 </button>
               </div>
             </form>

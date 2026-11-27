@@ -90,13 +90,11 @@ export default function AdminPage() {
   // Loading spinner
   if (isChecking || (isLoading && clients.length === 0 && demoLeads.length === 0)) {
     return (
-      <div className="min-h-screen bg-[#040806] flex items-center justify-center">
+      <div className="min-h-screen bg-[#080a09] text-[#edf0ee] flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-            <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
-          </div>
-          <p className="text-xs font-semibold text-emerald-400/80 tracking-wider uppercase">
-            Loading StarX Admin Panel...
+          <div className="w-8 h-8 rounded-full border-2 border-[#edf0ee]/20 border-t-[#34d399] animate-spin" />
+          <p className="text-xs font-medium text-[#a1aaa4]">
+            Loading StarX Admin
           </p>
         </div>
       </div>

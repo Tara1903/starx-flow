@@ -1,15 +1,14 @@
 "use client";
 
 import React from "react";
-import { motion } from "motion/react";
 import { WelcomeHeader } from "../../components/dashboard/WelcomeHeader";
 import { DashboardNotifications } from "../../components/dashboard/DashboardNotifications";
 import { QuickActions } from "../../components/dashboard/QuickActions";
 import { KPIGrid } from "../../components/dashboard/KPIGrid";
-import { GlassyDashboardV30Showcase } from "../../components/dashboard/GlassyDashboardV30Showcase";
+import { ExecutionChart } from "../../components/dashboard/ExecutionChart";
+import { ChannelDistribution } from "../../components/dashboard/ChannelDistribution";
 import { ActivityFeed } from "../../components/dashboard/ActivityFeed";
 import { ChannelHealth } from "../../components/dashboard/ChannelHealth";
-import { liquidStaggerGrid, liquidCardEntrance } from "../../lib/motionVariants";
 
 interface OverviewSectionProps {
   onOpenIntegration: (key: string) => void;
@@ -21,49 +20,38 @@ export function OverviewSection({
   onNewWorkflowClick,
 }: OverviewSectionProps) {
   return (
-    <motion.div
-      variants={liquidStaggerGrid}
-      initial="hidden"
-      animate="visible"
-      className="space-y-6"
-    >
-      {/* Greeting and custom clock greeting */}
-      <motion.div variants={liquidCardEntrance}>
-        <WelcomeHeader />
-      </motion.div>
+    <div className="space-y-6">
+      {/* Workspace context header & quick shortcuts */}
+      <WelcomeHeader />
 
-      {/* 4 Compact Dashboard Notifications in a Single Horizontal Line */}
-      <motion.div variants={liquidCardEntrance}>
-        <DashboardNotifications />
-      </motion.div>
+      {/* Actionable workspace setup & status strip */}
+      <DashboardNotifications />
 
-      {/* Shortcut Action Cards */}
-      <motion.div variants={liquidCardEntrance}>
-        <QuickActions onNewWorkflowClick={onNewWorkflowClick} />
-      </motion.div>
+      {/* 4 Compact Stat Cards (Real metrics only) */}
+      <KPIGrid />
 
-      {/* KPI Performance Gauges */}
-      <motion.div variants={liquidCardEntrance}>
-        <KPIGrid />
-      </motion.div>
+      {/* Focal 8:4 Telemetry Row: Weekly Executions + Channel Share */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        <div className="lg:col-span-8">
+          <ExecutionChart />
+        </div>
+        <div className="lg:col-span-4">
+          <ChannelDistribution />
+        </div>
+      </div>
 
-      {/* Glassy Dashboard V30 Telemetry & Interaction Showcase */}
-      <motion.div variants={liquidCardEntrance}>
-        <GlassyDashboardV30Showcase />
-      </motion.div>
+      {/* Compact Quick Action Strip */}
+      <QuickActions onNewWorkflowClick={onNewWorkflowClick} />
 
-      {/* Two-Column Activity & Health Grid */}
-      <motion.div
-        variants={liquidCardEntrance}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-      >
-        <div className="lg:col-span-2">
+      {/* Two-Column Activity Ledger & Channel Connections */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="lg:col-span-8">
           <ActivityFeed />
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-4">
           <ChannelHealth onOpenIntegration={onOpenIntegration} />
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

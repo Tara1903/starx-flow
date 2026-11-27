@@ -1,14 +1,26 @@
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Play, Pause, 
-  Search, SlidersHorizontal, ArrowLeft, Brain, Calendar, Info, 
-  CheckCircle, Clock, Volume2, Plus, Sparkles, User, Database, AlertCircle, X
+import {
+  Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Play, Pause,
+  Search, Brain, Info, CheckCircle, Clock, Volume2, Plus, Database, AlertCircle, X
 } from "lucide-react";
-import { type Call } from "../../store/authStore";
 import { useVoiceStore } from "../../store/voiceStore";
 import { useAgentStore } from "../../store/agentStore";
 import { cn } from "../../lib/utils";
 import { useIsDocumentVisible } from "../../hooks/useMotionVisibility";
+import {
+  CONSOLE_PANEL,
+  CONSOLE_SUBCARD,
+  CONSOLE_INPUT,
+  CONSOLE_BTN_PRIMARY,
+  CONSOLE_BTN_SECONDARY,
+  CONSOLE_BTN_DANGER,
+  CONSOLE_BADGE_LIVE,
+  CONSOLE_BADGE_WARN,
+  CONSOLE_BADGE_DANGER,
+  CONSOLE_BADGE_MUTED,
+  CONSOLE_HEADING,
+  CONSOLE_SECTION_TITLE,
+} from "../../lib/consoleSurface";
 
 export function VoiceSection() {
   const { calls, addCall, fetchCalls } = useVoiceStore();
@@ -18,14 +30,12 @@ export function VoiceSection() {
   const [directionFilter, setDirectionFilter] = useState<"all" | "inbound" | "outbound">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "completed" | "missed">("all");
   const [sentimentFilter, setSentimentFilter] = useState<"all" | "positive" | "neutral" | "negative">("all");
-  
-  // Audio Playback state
+
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackProgress, setPlaybackProgress] = useState(0); // 0 to 100
+  const [playbackProgress, setPlaybackProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState("0:00");
   const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Simulator Modal State
   const [isSimulating, setIsSimulating] = useState(false);
   const [simStep, setSimStep] = useState<"ringing" | "active" | "wrapup" | "ended">("ringing");
   const [simTranscript, setSimTranscript] = useState<{ role: "agent" | "customer"; text: string; timestamp: string }[]>([]);
@@ -35,26 +45,23 @@ export function VoiceSection() {
 
   const isVisible = useIsDocumentVisible();
 
-  // Fetch calls on load
   useEffect(() => {
     fetchCalls();
   }, [fetchCalls]);
 
-  const selectedCall = calls.find(c => c.id === selectedCallId) || calls[0];
+  const selectedCall = calls.find((c) => c.id === selectedCallId) || calls[0];
 
-  // Set default selected call if list loads
   useEffect(() => {
     if (calls.length > 0 && !selectedCallId) {
       setSelectedCallId(calls[0].id);
     }
   }, [calls, selectedCallId]);
 
-  // Audio Playback Simulation Logic - paused when tab is hidden
   useEffect(() => {
     if (isPlaying && selectedCall && isVisible) {
       const duration = selectedCall.durationSeconds || 60;
-      const step = 100 / duration; // % progress per second
-      
+      const step = 100 / duration;
+
       playbackTimerRef.current = setInterval(() => {
         setPlaybackProgress((prev) => {
           const next = prev + step;
@@ -63,13 +70,12 @@ export function VoiceSection() {
             if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
             return 100;
           }
-          
-          // Format current timestamp
+
           const totalSecs = Math.round((next / 100) * duration);
           const mins = Math.floor(totalSecs / 60);
           const secs = totalSecs % 60;
-          setCurrentTime(`${mins}:${secs < 10 ? '0' : ''}${secs}`);
-          
+          setCurrentTime(`${mins}:${secs < 10 ? "0" : ""}${secs}`);
+
           return next;
         });
       }, 1000);
@@ -78,13 +84,12 @@ export function VoiceSection() {
         clearInterval(playbackTimerRef.current);
       }
     }
-    
+
     return () => {
       if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
     };
   }, [isPlaying, selectedCall, isVisible]);
 
-  // Reset progress when changing selected call
   useEffect(() => {
     setIsPlaying(false);
     setPlaybackProgress(0);
@@ -98,19 +103,18 @@ export function VoiceSection() {
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
     setPlaybackProgress(value);
-    
+
     if (selectedCall) {
       const duration = selectedCall.durationSeconds || 60;
       const totalSecs = Math.round((value / 100) * duration);
       const mins = Math.floor(totalSecs / 60);
       const secs = totalSecs % 60;
-      setCurrentTime(`${mins}:${secs < 10 ? '0' : ''}${secs}`);
+      setCurrentTime(`${mins}:${secs < 10 ? "0" : ""}${secs}`);
     }
   };
 
-  // Convert mm:ss text to seconds for scrubbing
   const parseTimestampToSeconds = (timestamp: string): number => {
-    const parts = timestamp.split(':');
+    const parts = timestamp.split(":");
     if (parts.length === 2) {
       return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
     }
@@ -127,9 +131,6 @@ export function VoiceSection() {
     setIsPlaying(true);
   };
 
-  // ────────────────────────────────────────────────────────
-  // LIVE CALL SIMULATOR DIALOG STAGES
-  // ────────────────────────────────────────────────────────
   const SIMULATOR_DIALOG = [
     { role: "customer" as const, text: "Hello? Is this StarX Styling studio?", timestamp: "0:02" },
     { role: "agent" as const, text: "Hello! Yes it is. This is your StarX AI Receptionist. How can I help you today?", timestamp: "0:08" },
@@ -138,7 +139,7 @@ export function VoiceSection() {
     { role: "customer" as const, text: "Perfect. Book it please. My name is Jane Doe and my number is +1 (555) 777-8899.", timestamp: "0:29" },
     { role: "agent" as const, text: "All set, Jane! I have confirmed your manicure with Jessica today at 3:00 PM. A confirmation SMS with details is on its way.", timestamp: "0:38" },
     { role: "customer" as const, text: "Excellent, thank you so much! See you then.", timestamp: "0:43" },
-    { role: "agent" as const, text: "You are very welcome! Have a great afternoon, Jane. Goodbye!", timestamp: "0:48" }
+    { role: "agent" as const, text: "You are very welcome! Have a great afternoon, Jane. Goodbye!", timestamp: "0:48" },
   ];
 
   const handleStartSimulation = () => {
@@ -152,49 +153,43 @@ export function VoiceSection() {
   const handleAnswerCall = () => {
     setSimStep("active");
     let currentLineIndex = 0;
-    
-    // Timer increment
+
     simIntervalRef.current = setInterval(() => {
       setSimTimer((prev) => prev + 1);
-      
-      // Feed dialogue in steps
+
       const triggerSecs = [2, 8, 14, 21, 29, 38, 43, 48];
-      const lineIdx = triggerSecs.findIndex(s => s === currentLineIndex + 1);
-      
+      const lineIdx = triggerSecs.findIndex((s) => s === currentLineIndex + 1);
+
       if (lineIdx !== -1 && lineIdx < SIMULATOR_DIALOG.length) {
-        setSimTranscript(prev => [...prev, SIMULATOR_DIALOG[lineIdx]]);
+        setSimTranscript((prev) => [...prev, SIMULATOR_DIALOG[lineIdx]]);
         currentLineIndex++;
       }
-      
-      // Auto-wrap call after completing dialog
+
       if (currentLineIndex >= SIMULATOR_DIALOG.length) {
         if (simIntervalRef.current) clearInterval(simIntervalRef.current);
         setSimStep("wrapup");
-        
-        // AI cognitive processing extraction
+
         setTimeout(() => {
           setSimMemory([
             { key: "appointment_booked", value: "true" },
             { key: "service_type", value: "Manicure" },
             { key: "stylist_preference", value: "Jessica" },
-            { key: "booking_date", value: "Today at 3:00 PM" }
+            { key: "booking_date", value: "Today at 3:00 PM" },
           ]);
           setSimStep("ended");
         }, 2500);
       }
-      
     }, 1000);
   };
 
   const handleHangUp = () => {
     if (simIntervalRef.current) clearInterval(simIntervalRef.current);
     setSimStep("wrapup");
-    
-    // Ingest even if hung up early
+
     setTimeout(() => {
       setSimMemory([
         { key: "lead_name", value: "Jane Doe" },
-        { key: "contact_number", value: "+1 (555) 777-8899" }
+        { key: "contact_number", value: "+1 (555) 777-8899" },
       ]);
       setSimStep("ended");
     }, 2000);
@@ -202,7 +197,6 @@ export function VoiceSection() {
 
   const handleDeclineCall = () => {
     setIsSimulating(false);
-    // Ingest missed call log
     addCall({
       leadId: null,
       customerName: "Unknown Caller",
@@ -214,12 +208,11 @@ export function VoiceSection() {
       transcription: [],
       summary: "Missed call from a potential customer. SMS auto-reply triggered.",
       sentiment: "neutral",
-      callMemory: []
+      callMemory: [],
     });
   };
 
   const handleSaveSimulatedCall = () => {
-    // Add call log
     addCall({
       leadId: null,
       customerName: "Jane Doe",
@@ -231,163 +224,151 @@ export function VoiceSection() {
       transcription: simTranscript,
       summary: "Customer called to schedule a manicure. Inbound AI receptionist scheduled slot at 3:00 PM today with Jessica.",
       sentiment: "positive",
-      callMemory: simMemory
+      callMemory: simMemory,
     });
-    
+
     setIsSimulating(false);
   };
 
-  // Commit cognitive memory to global lead memories
   const handleCommitMemoryToCrm = (key: string, value: string) => {
     addMemory({
-      leadId: selectedCall?.leadId || 'lead-generic',
+      leadId: selectedCall?.leadId || "lead-generic",
       key,
-      value
+      value,
     });
-    // Visual alert of success is handled inside addMemory adding to UI
   };
 
-  // Filters calculation
   const filteredCalls = calls.filter((call) => {
-    const matchesSearch = 
+    const matchesSearch =
       call.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       call.customerPhone.includes(searchQuery) ||
       call.summary.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
     const matchesDirection = directionFilter === "all" ? true : call.direction === directionFilter;
     const matchesStatus = statusFilter === "all" ? true : call.status === statusFilter;
     const matchesSentiment = sentimentFilter === "all" ? true : call.sentiment === sentimentFilter;
-    
+
     return matchesSearch && matchesDirection && matchesStatus && matchesSentiment;
   });
 
-  // Aggregated analytics calculation
   const totalCallsCount = calls.length;
-  const completedCallsCount = calls.filter(c => c.status === "completed").length;
-  const missedCallsCount = calls.filter(c => c.status === "missed").length;
+  const completedCallsCount = calls.filter((c) => c.status === "completed").length;
+  const missedCallsCount = calls.filter((c) => c.status === "missed").length;
   const totalDuration = calls.reduce((acc, c) => acc + c.durationSeconds, 0);
   const avgDuration = totalCallsCount > 0 ? Math.round(totalDuration / totalCallsCount) : 0;
-  
-  const positiveSentimentCount = calls.filter(c => c.sentiment === "positive").length;
-  const sentimentPct = totalCallsCount > 0 ? Math.round((positiveSentimentCount / totalCallsCount) * 100) : 100;
-  const aiResolutionPct = totalCallsCount > 0 ? Math.round((completedCallsCount / totalCallsCount) * 100) : 100;
 
-  // Render format utilities
+  const positiveSentimentCount = calls.filter((c) => c.sentiment === "positive").length;
+  const sentimentPct = totalCallsCount > 0 ? Math.round((positiveSentimentCount / totalCallsCount) * 100) : 0;
+  const aiResolutionPct = totalCallsCount > 0 ? Math.round((completedCallsCount / totalCallsCount) * 100) : 0;
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}m ${secs}s`;
   };
 
-  const getSentimentBadgeColor = (sentiment: string) => {
+  const getSentimentBadgeClass = (sentiment: string) => {
     switch (sentiment) {
-      case "positive": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-      case "negative": return "bg-rose-500/10 text-rose-400 border-rose-500/20";
-      default: return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
+      case "positive":
+        return CONSOLE_BADGE_LIVE;
+      case "negative":
+        return CONSOLE_BADGE_DANGER;
+      default:
+        return CONSOLE_BADGE_MUTED;
     }
   };
 
   return (
     <div className="h-full flex flex-col space-y-6">
-      
-      {/* Post-Launch Dormancy Banner */}
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center gap-3 text-amber-300">
-        <Info className="w-5 h-5 flex-shrink-0 text-amber-400" />
-        <div className="text-xs">
-          <span className="font-bold">Post-Launch Roadmap Notice:</span> Voice intelligence capabilities are currently dormant and preserved for post-launch release. The commercial launch focuses strictly on 24/7 multi-channel chat reception (WhatsApp, Instagram, Facebook Messenger, Live Web Chat, and Email).
-        </div>
+      <div className={cn(CONSOLE_BADGE_WARN, "w-full justify-start rounded-xl px-4 py-3 text-xs leading-relaxed")}>
+        <Info className="w-4 h-4 shrink-0" />
+        <span>
+          <strong className="font-semibold">Roadmap note:</strong> Voice capabilities are currently paused while launch operations focus on 24/7 multi-channel chat reception. Use the call simulator below to preview call flows.
+        </span>
       </div>
 
-      {/* top banner / triggers */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Voice Operating Deck</h2>
-          <p className="text-xs text-zinc-500 mt-1">Review live call logs, run simulations, and analyze client requests</p>
+          <h2 className={CONSOLE_HEADING}>Voice console</h2>
+          <p className="text-xs text-[#727c75] mt-1">
+            Review recorded call logs, inspect transcripts, and simulate inbound voice workflows.
+          </p>
         </div>
         <button
+          type="button"
           onClick={handleStartSimulation}
-          className="flex items-center gap-2 text-xs font-semibold bg-emerald-500 text-black hover:bg-emerald-400 px-4 py-2.5 rounded-full transition-all shadow-[0_0_15px_rgba(16,185,129,0.25)] border border-emerald-400/20"
+          className={CONSOLE_BTN_PRIMARY}
         >
-          <Sparkles className="w-4 h-4" />
-          <span>Launch Call Simulator</span>
+          <Phone className="w-3.5 h-3.5" />
+          <span>Launch call simulator</span>
         </button>
       </div>
 
-      {/* Analytics widgets grid */}
+      {/* KPI Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card-obsidian glass-lift border border-emerald-500/[0.12] rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500" />
-          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Voice Traffic</span>
-          <div className="flex items-end justify-between mt-3">
-            <span className="text-2xl font-bold text-white tracking-tight">{totalCallsCount}</span>
-            <span className="text-[10px] text-zinc-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {completedCallsCount} active / {missedCallsCount} missed
+        <div className={cn(CONSOLE_PANEL, "flex flex-col justify-between")}>
+          <span className="text-xs font-medium text-[#727c75]">Voice calls logged</span>
+          <div className="flex items-baseline justify-between gap-2 mt-3 tabular-nums">
+            <span className="text-2xl font-semibold text-[#edf0ee]">{totalCallsCount}</span>
+            <span className="text-xs text-[#a1aaa4]">
+              {completedCallsCount} answered / {missedCallsCount} missed
             </span>
           </div>
         </div>
 
-        <div className="glass-card-obsidian glass-lift border border-emerald-500/[0.12] rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all duration-500" />
-          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Avg Call Duration</span>
-          <div className="flex items-end justify-between mt-3">
-            <span className="text-2xl font-bold text-white tracking-tight">{formatDuration(avgDuration)}</span>
-            <span className="text-[10px] text-indigo-400 flex items-center gap-0.5">
-              <Clock className="w-3 h-3" /> Optimum talk-time
+        <div className={cn(CONSOLE_PANEL, "flex flex-col justify-between")}>
+          <span className="text-xs font-medium text-[#727c75]">Average duration</span>
+          <div className="flex items-baseline justify-between gap-2 mt-3 tabular-nums">
+            <span className="text-2xl font-semibold text-[#edf0ee]">{formatDuration(avgDuration)}</span>
+            <span className="text-xs text-[#a1aaa4] inline-flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              Across {totalCallsCount} calls
             </span>
           </div>
         </div>
 
-        <div className="glass-card-obsidian glass-lift border border-emerald-500/[0.12] rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-all duration-500" />
-          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">AI Agent Answer Rate</span>
-          <div className="flex items-end justify-between mt-3">
-            <span className="text-2xl font-bold text-white tracking-tight">{aiResolutionPct}%</span>
-            <span className="text-[10px] text-emerald-400 flex items-center gap-0.5">
-              +12.4% vs last week
+        <div className={cn(CONSOLE_PANEL, "flex flex-col justify-between")}>
+          <span className="text-xs font-medium text-[#727c75]">AI answer rate</span>
+          <div className="flex items-baseline justify-between gap-2 mt-3 tabular-nums">
+            <span className="text-2xl font-semibold text-[#edf0ee]">{aiResolutionPct}%</span>
+            <span className="text-xs text-[#4cc38a]">
+              {completedCallsCount} of {totalCallsCount} resolved
             </span>
           </div>
         </div>
 
-        <div className="glass-card-obsidian glass-lift border border-emerald-500/[0.12] rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all duration-500" />
-          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Positive Call Sentiment</span>
-          <div className="flex items-end justify-between mt-3">
-            <span className="text-2xl font-bold text-white tracking-tight">{sentimentPct}%</span>
-            <span className="text-[10px] text-amber-400 flex items-center gap-1">
-              {positiveSentimentCount} happy clients
-            </span>
+        <div className={cn(CONSOLE_PANEL, "flex flex-col justify-between")}>
+          <span className="text-xs font-medium text-[#727c75]">Positive sentiment</span>
+          <div className="flex items-baseline justify-between gap-2 mt-3 tabular-nums">
+            <span className="text-2xl font-semibold text-[#edf0ee]">{sentimentPct}%</span>
+            <span className="text-xs text-[#a1aaa4]">{positiveSentimentCount} calls</span>
           </div>
         </div>
       </div>
 
-      {/* Main interaction panels */}
+      {/* Main Split Panels */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        
-        {/* Left column: Logs List */}
+        {/* Call Logs List */}
         <div className="xl:col-span-5 flex flex-col space-y-4">
-          
-          {/* Controls box */}
-          <div className="glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl p-4 space-y-3">
+          <div className={cn(CONSOLE_PANEL, "space-y-3")}>
             <div className="relative">
-              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#727c75] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search phone, transcripts, or summary..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-black border border-white/5 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/40 transition-colors"
+                className={cn(CONSOLE_INPUT, "w-full pl-9 pr-4 py-2 text-xs")}
               />
             </div>
-            
-            {/* Filters row */}
-            <div className="flex flex-wrap items-center gap-2 text-[10px]">
+
+            <div className="flex flex-wrap items-center gap-2 text-xs">
               <select
                 value={directionFilter}
                 onChange={(e: any) => setDirectionFilter(e.target.value)}
-                className="bg-black border border-white/5 rounded px-2.5 py-1.5 text-zinc-400 focus:outline-none focus:border-emerald-500/40 transition-all"
+                className={cn(CONSOLE_INPUT, "px-2.5 py-1.5 text-xs text-[#a1aaa4]")}
               >
-                <option value="all">All Directions</option>
+                <option value="all">All directions</option>
                 <option value="inbound">Inbound</option>
                 <option value="outbound">Outbound</option>
               </select>
@@ -395,9 +376,9 @@ export function VoiceSection() {
               <select
                 value={statusFilter}
                 onChange={(e: any) => setStatusFilter(e.target.value)}
-                className="bg-black border border-white/5 rounded px-2.5 py-1.5 text-zinc-400 focus:outline-none focus:border-emerald-500/40 transition-all"
+                className={cn(CONSOLE_INPUT, "px-2.5 py-1.5 text-xs text-[#a1aaa4]")}
               >
-                <option value="all">All Statuses</option>
+                <option value="all">All statuses</option>
                 <option value="completed">Completed</option>
                 <option value="missed">Missed</option>
               </select>
@@ -405,9 +386,9 @@ export function VoiceSection() {
               <select
                 value={sentimentFilter}
                 onChange={(e: any) => setSentimentFilter(e.target.value)}
-                className="bg-black border border-white/5 rounded px-2.5 py-1.5 text-zinc-400 focus:outline-none focus:border-emerald-500/40 transition-all"
+                className={cn(CONSOLE_INPUT, "px-2.5 py-1.5 text-xs text-[#a1aaa4]")}
               >
-                <option value="all">All Sentiments</option>
+                <option value="all">All sentiments</option>
                 <option value="positive">Positive</option>
                 <option value="neutral">Neutral</option>
                 <option value="negative">Negative</option>
@@ -415,261 +396,229 @@ export function VoiceSection() {
             </div>
           </div>
 
-          {/* Calls List cards container */}
-          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 console-scroll">
+          <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1 console-scroll">
             {filteredCalls.length === 0 ? (
-              <div className="glass-card-obsidian border border-white/10 rounded-xl p-8 text-center text-zinc-400 shadow-2xl">
-                <AlertCircle className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
+              <div className={cn(CONSOLE_PANEL, "p-8 text-center text-[#727c75]")}>
+                <AlertCircle className="w-6 h-6 text-[#727c75] mx-auto mb-2" />
                 <span className="text-xs">No calls match your filter settings</span>
               </div>
             ) : (
               filteredCalls.map((call) => {
                 const isActive = selectedCallId === call.id;
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={call.id}
                     onClick={() => setSelectedCallId(call.id)}
                     className={cn(
-                      "p-4 rounded-xl border transition-all cursor-pointer select-none relative group",
+                      "w-full text-left p-4 rounded-xl border transition-colors cursor-pointer relative",
                       isActive
-                        ? "bg-emerald-500/[0.02] border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.02)]"
-                        : "glass-panel border-white/10 hover:border-white/20 hover:bg-white/[0.04]"
+                        ? "bg-[#19201d] border-[#34d399]/35"
+                        : "bg-[#121715] border-[#edf0ee]/[0.08] hover:bg-[#19201d]/70"
                     )}
                   >
-                    {/* Active highlight line */}
-                    {isActive && (
-                      <div className="absolute left-0 top-1/4 bottom-1/4 w-[3px] bg-emerald-500 rounded-r" />
-                    )}
-
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className={cn(
-                          "w-7 h-7 rounded-lg border flex items-center justify-center",
-                          call.direction === "inbound" 
-                            ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
-                            : "bg-purple-500/10 border-purple-500/20 text-purple-400"
-                        )}>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-[#0d1210] border border-[#edf0ee]/[0.08] flex items-center justify-center shrink-0">
                           {call.status === "missed" ? (
-                            <PhoneMissed className="w-3.5 h-3.5 text-rose-400" />
+                            <PhoneMissed className="w-3.5 h-3.5 text-[#f28b8e]" />
                           ) : call.direction === "inbound" ? (
-                            <PhoneIncoming className="w-3.5 h-3.5" />
+                            <PhoneIncoming className="w-3.5 h-3.5 text-[#34d399]" />
                           ) : (
-                            <PhoneOutgoing className="w-3.5 h-3.5" />
+                            <PhoneOutgoing className="w-3.5 h-3.5 text-[#a1aaa4]" />
                           )}
                         </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-white tracking-tight">{call.customerName}</h4>
-                          <span className="text-[10px] text-zinc-500">{call.customerPhone}</span>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-medium text-[#edf0ee] truncate">{call.customerName}</h4>
+                          <span className="text-[11px] font-mono text-[#727c75]">{call.customerPhone}</span>
                         </div>
                       </div>
-                      <span className="text-[10px] text-zinc-500 font-medium">
-                        {new Date(call.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      <span className="text-[11px] font-mono text-[#727c75] tabular-nums shrink-0">
+                        {new Date(call.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-zinc-400 line-clamp-2 mt-3 leading-relaxed">
+                    <p className="text-xs text-[#a1aaa4] line-clamp-2 mt-2.5 leading-relaxed">
                       {call.summary || "No call summary generated yet."}
                     </p>
 
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.03]">
-                      <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">
-                        {call.status === "missed" ? "Missed Call" : formatDuration(call.durationSeconds)}
+                    <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-[#edf0ee]/[0.06] tabular-nums">
+                      <span className="text-xs text-[#727c75]">
+                        {call.status === "missed" ? "Missed call" : formatDuration(call.durationSeconds)}
                       </span>
-                      <span className="text-[9px] text-zinc-600">•</span>
-                      <span className={cn(
-                        "text-[9px] px-2 py-0.5 rounded-full border font-semibold",
-                        getSentimentBadgeColor(call.sentiment)
-                      )}>
+                      <span className={cn(getSentimentBadgeClass(call.sentiment), "capitalize")}>
                         {call.sentiment}
                       </span>
                     </div>
-                  </div>
+                  </button>
                 );
               })
             )}
           </div>
         </div>
 
-        {/* Right column: Audio Playback, transcript and call summary details */}
+        {/* Call Detail, Playback & Transcript */}
         <div className="xl:col-span-7">
           {selectedCall ? (
-            <div className="glass-card-obsidian border border-emerald-500/[0.12] rounded-2xl p-6 space-y-6 relative overflow-hidden">
-              
-              {/* Header metadata */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
+            <div className={cn(CONSOLE_PANEL, "p-6 space-y-6")}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#edf0ee]/[0.08]">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm font-bold">
+                  <div className="w-10 h-10 rounded-full bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center text-[#edf0ee] text-sm font-medium">
                     {selectedCall.customerName.charAt(0)}
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white tracking-tight">{selectedCall.customerName}</h3>
-                    <p className="text-[11px] text-zinc-500 flex items-center gap-1.5 mt-0.5">
-                      <span>{selectedCall.customerPhone}</span>
-                      <span>•</span>
-                      <span>{new Date(selectedCall.createdAt).toLocaleString()}</span>
+                    <h3 className={CONSOLE_SECTION_TITLE}>{selectedCall.customerName}</h3>
+                    <p className="text-xs text-[#727c75] font-mono mt-0.5 tabular-nums">
+                      {selectedCall.customerPhone} · {new Date(selectedCall.createdAt).toLocaleString()}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "text-[10px] px-2.5 py-1 rounded-full border font-bold capitalize",
-                    getSentimentBadgeColor(selectedCall.sentiment)
-                  )}>
+                  <span className={cn(getSentimentBadgeClass(selectedCall.sentiment), "capitalize")}>
                     Sentiment: {selectedCall.sentiment}
                   </span>
                   {selectedCall.status === "missed" && (
-                    <span className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2.5 py-1 rounded-full font-bold">
-                      Missed Call
-                    </span>
+                    <span className={CONSOLE_BADGE_DANGER}>Missed call</span>
                   )}
                 </div>
               </div>
 
-              {/* Summary Block */}
-              <div className="bg-white/[0.01] border border-white/5 rounded-xl p-4 space-y-2">
-                <div className="flex items-center gap-1.5 text-zinc-400 font-semibold text-xs">
-                  <Brain className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>AI Call Summary</span>
+              <div className={cn(CONSOLE_SUBCARD, "p-4 space-y-2")}>
+                <div className="flex items-center gap-1.5 text-[#a1aaa4] font-medium text-xs">
+                  <Brain className="w-3.5 h-3.5 text-[#34d399]" />
+                  <span>Call summary</span>
                 </div>
-                <p className="text-xs text-zinc-300 leading-relaxed font-medium">
+                <p className="text-xs text-[#edf0ee] leading-relaxed">
                   {selectedCall.summary || "No summary available."}
                 </p>
               </div>
 
-              {/* Playback & Audio Panel (if completed/has audio) */}
               {selectedCall.status !== "missed" && (
-                <div className="bg-black/50 border border-white/5 rounded-xl p-4 space-y-4">
-                  
-                  {/* Waveform Visualization */}
+                <div className={cn(CONSOLE_SUBCARD, "p-4 space-y-4")}>
                   <div className="h-12 flex items-center justify-between gap-[2px] px-2 select-none">
                     {Array.from({ length: 44 }).map((_, i) => {
-                      // Generate a wave-like profile
                       const centerOffset = Math.abs(i - 22);
-                      const height = Math.max(10, 48 - (centerOffset * 1.5) - (Math.sin(i * 0.4) * 8) + (Math.cos(i * 0.9) * 4));
+                      const height = Math.max(
+                        10,
+                        48 - centerOffset * 1.5 - Math.sin(i * 0.4) * 8 + Math.cos(i * 0.9) * 4
+                      );
                       const isPast = (i / 44) * 100 <= playbackProgress;
                       return (
                         <div
                           key={i}
                           style={{ height: `${height}%` }}
                           className={cn(
-                            "flex-1 rounded-full transition-all duration-300",
-                            isPast 
-                              ? isPlaying 
-                                ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" 
-                                : "bg-emerald-600"
-                              : "bg-zinc-800"
+                            "flex-1 rounded-full transition-colors duration-200",
+                            isPast ? "bg-[#34d399]" : "bg-[#19201d]"
                           )}
                         />
                       );
                     })}
                   </div>
 
-                  {/* Scrubber slider bar */}
                   <div className="flex items-center gap-3">
                     <button
+                      type="button"
                       onClick={togglePlayback}
-                      className="w-8 h-8 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center flex-shrink-0 transition-colors"
+                      aria-label={isPlaying ? "Pause playback" : "Play recording"}
+                      className="w-8 h-8 rounded-full bg-[#edf0ee] hover:bg-white text-[#080a09] flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                     >
-                      {isPlaying ? <Pause className="w-4 h-4 fill-black" /> : <Play className="w-4 h-4 fill-black ml-0.5" />}
+                      {isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
                     </button>
-                    
+
                     <input
                       type="range"
                       min="0"
                       max="100"
                       value={playbackProgress}
                       onChange={handleSeek}
-                      className="w-full accent-emerald-500 bg-zinc-800 h-1 rounded-lg cursor-pointer appearance-none focus:outline-none"
+                      className="w-full accent-[#34d399] bg-[#19201d] h-1 rounded-lg cursor-pointer"
                     />
-                    
-                    <span className="text-[10px] text-zinc-500 font-bold w-12 text-right">
-                      {currentTime} / {formatDuration(selectedCall.durationSeconds).replace('m ', ':').replace('s', '')}
+
+                    <span className="text-[11px] font-mono text-[#a1aaa4] w-16 text-right tabular-nums">
+                      {currentTime} / {formatDuration(selectedCall.durationSeconds).replace("m ", ":").replace("s", "")}
                     </span>
                   </div>
                 </div>
               )}
 
-              {/* Transcript list */}
               <div className="space-y-3">
-                <div className="flex items-center gap-1.5 text-zinc-400 font-semibold text-xs pb-2 border-b border-white/[0.03]">
-                  <Volume2 className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Transcription Timeline</span>
-                  <span className="text-[9px] text-zinc-600 font-normal ml-auto">(Click bubbles to skip audio)</span>
+                <div className="flex items-center justify-between text-xs pb-2 border-b border-[#edf0ee]/[0.06]">
+                  <span className="flex items-center gap-1.5 text-[#a1aaa4] font-medium">
+                    <Volume2 className="w-3.5 h-3.5" />
+                    <span>Transcription timeline</span>
+                  </span>
+                  <span className="text-xs text-[#727c75]">Click any line to seek</span>
                 </div>
 
                 {selectedCall.transcription.length === 0 ? (
-                  <p className="text-xs text-zinc-500 py-4 text-center">No audio recorded or transcribed for this call type.</p>
+                  <p className="text-xs text-[#727c75] py-4 text-center">No audio recorded or transcribed for this call.</p>
                 ) : (
-                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 console-scroll">
+                  <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 console-scroll">
                     {selectedCall.transcription.map((line, idx) => {
                       const isAgent = line.role === "agent";
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={idx}
                           onClick={() => handleTranscriptLineClick(line.timestamp)}
-                          className={cn(
-                            "flex gap-3 p-2.5 rounded-lg transition-all cursor-pointer",
-                            isAgent 
-                              ? "bg-indigo-500/[0.01] hover:bg-indigo-500/5" 
-                              : "bg-emerald-500/[0.01] hover:bg-emerald-500/5"
-                          )}
+                          className="w-full text-left flex gap-3 p-2.5 rounded-lg bg-[#0d1210] hover:bg-[#19201d] border border-[#edf0ee]/[0.06] transition-colors cursor-pointer"
                         >
-                          <div className={cn(
-                            "w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 text-[10px] font-bold border",
-                            isAgent 
-                              ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
-                              : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                          )}>
+                          <div
+                            className={cn(
+                              "w-6 h-6 rounded-md flex items-center justify-center shrink-0 text-[10px] font-mono border",
+                              isAgent
+                                ? "bg-[#19201d] border-[#34d399]/25 text-[#34d399]"
+                                : "bg-[#19201d] border-[#edf0ee]/15 text-[#edf0ee]"
+                            )}
+                          >
                             {isAgent ? "AI" : "CU"}
                           </div>
-                          
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center justify-between text-[9px] text-zinc-500">
-                              <span className="font-bold uppercase tracking-wider">{isAgent ? "AI Receptionist" : selectedCall.customerName}</span>
-                              <span>{line.timestamp}</span>
+
+                          <div className="flex-1 space-y-1 min-w-0">
+                            <div className="flex items-center justify-between text-xs text-[#727c75]">
+                              <span className="font-medium text-[#a1aaa4]">
+                                {isAgent ? "AI Receptionist" : selectedCall.customerName}
+                              </span>
+                              <span className="font-mono text-[11px] tabular-nums">{line.timestamp}</span>
                             </div>
-                            <p className="text-xs text-zinc-300 leading-relaxed font-medium">
-                              {line.text}
-                            </p>
+                            <p className="text-xs text-[#edf0ee] leading-relaxed">{line.text}</p>
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
                 )}
               </div>
 
-              {/* Call Memory items extracted */}
               {selectedCall.callMemory && selectedCall.callMemory.length > 0 && (
-                <div className="pt-4 border-t border-white/5 space-y-3">
-                  <div className="flex items-center gap-1.5 text-zinc-400 font-semibold text-xs">
-                    <Database className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>AI Extracted Cognitive Memory</span>
+                <div className="pt-4 border-t border-[#edf0ee]/[0.08] space-y-3">
+                  <div className="flex items-center gap-1.5 text-[#a1aaa4] font-medium text-xs">
+                    <Database className="w-3.5 h-3.5" />
+                    <span>Extracted CRM memory</span>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                     {selectedCall.callMemory.map((mem, idx) => {
-                      // Check if already committed
-                      const isCommitted = agentMemories.some(m => m.key === mem.key && m.value === mem.value);
-                      
+                      const isCommitted = agentMemories.some((m) => m.key === mem.key && m.value === mem.value);
+
                       return (
-                        <div 
-                          key={idx} 
-                          className="flex items-center justify-between p-2.5 bg-black/40 border border-white/5 rounded-lg text-xs"
+                        <div
+                          key={idx}
+                          className={cn(CONSOLE_SUBCARD, "flex items-center justify-between p-2.5 gap-2 text-xs")}
                         >
-                          <div className="min-w-0 pr-2">
-                            <span className="block text-[9px] text-zinc-500 uppercase font-bold tracking-wider">{mem.key.replace(/_/g, ' ')}</span>
-                            <span className="block font-semibold text-white truncate">{mem.value}</span>
+                          <div className="min-w-0">
+                            <span className="block text-[11px] font-mono text-[#727c75]">{mem.key}</span>
+                            <span className="block font-medium text-[#edf0ee] truncate mt-0.5">{mem.value}</span>
                           </div>
                           <button
+                            type="button"
                             onClick={() => handleCommitMemoryToCrm(mem.key, mem.value)}
                             disabled={isCommitted}
                             className={cn(
-                              "px-2.5 py-1 rounded text-[10px] font-bold transition-all flex items-center gap-1.5 flex-shrink-0",
-                              isCommitted 
-                                ? "bg-zinc-900 border border-emerald-500/30 text-emerald-400 cursor-default" 
-                                : "bg-emerald-500 text-black hover:bg-emerald-400"
+                              isCommitted ? CONSOLE_BADGE_LIVE : CONSOLE_BTN_SECONDARY,
+                              "shrink-0 px-2.5 py-1 text-xs"
                             )}
                           >
                             {isCommitted ? (
@@ -690,134 +639,117 @@ export function VoiceSection() {
                   </div>
                 </div>
               )}
-
             </div>
           ) : (
-            <div className="glass-card-obsidian border border-white/10 rounded-xl p-12 text-center text-zinc-400 shadow-2xl h-96 flex flex-col items-center justify-center">
-              <Phone className="w-12 h-12 text-zinc-700 mb-3 animate-pulse" />
-              <h3 className="text-sm font-bold text-white mb-1">No Call Selected</h3>
-              <p className="text-xs max-w-xs mx-auto">Select a call log from the left sidebar panel to review details, audio timelines, and transcripts.</p>
+            <div className={cn(CONSOLE_PANEL, "p-12 text-center h-96 flex flex-col items-center justify-center")}>
+              <Phone className="w-8 h-8 text-[#727c75] mb-3" />
+              <h3 className={CONSOLE_SECTION_TITLE}>No call selected</h3>
+              <p className="text-xs text-[#727c75] max-w-xs mx-auto mt-1 leading-relaxed">
+                Select a call record from the list to inspect the summary, audio timeline, and transcript.
+              </p>
             </div>
           )}
         </div>
-
       </div>
 
-      {/* ──────────────────────────────────────────────────────── */}
-      {/* DIALOG SIMULATOR MODAL */}
-      {/* ──────────────────────────────────────────────────────── */}
+      {/* CALL SIMULATOR MODAL */}
       {isSimulating && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="glass-card-obsidian border border-emerald-500/20 rounded-2xl w-full max-w-xl shadow-[0_0_50px_rgba(16,185,129,0.18)] relative overflow-hidden flex flex-col max-h-[90vh]">
-            
-            {/* Glow gradient header */}
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-indigo-500 to-emerald-500" />
-            
-            {/* Modal Header */}
-            <div className="p-5 border-b border-white/5 flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#121715] border border-[#edf0ee]/[0.12] rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-[#edf0ee]/[0.08] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center text-[#34d399]">
+                  <Phone className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white tracking-tight">Interactive Voice Sandbox</h3>
-                  <span className="text-[10px] text-zinc-500">Simulate incoming customer voice triggers</span>
+                  <h3 className={CONSOLE_SECTION_TITLE}>Voice call simulator</h3>
+                  <span className="text-xs text-[#727c75]">Preview incoming AI receptionist call handling</span>
                 </div>
               </div>
-              <button 
+              <button
+                type="button"
                 onClick={() => setIsSimulating(false)}
-                className="p-1 rounded-full hover:bg-white/5 text-zinc-500 hover:text-white transition-colors"
+                className="p-1 rounded-md hover:bg-[#19201d] text-[#727c75] hover:text-[#edf0ee] transition-colors cursor-pointer"
+                aria-label="Close simulator"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Sim Body Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 console-scroll">
-              
-              {/* Ringing state view */}
               {simStep === "ringing" && (
-                <div className="py-12 flex flex-col items-center justify-center space-y-6 text-center">
-                  
-                  {/* Phone Ringing Animated Ripple */}
-                  <div className="relative flex items-center justify-center w-24 h-24">
-                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500/20 animate-ping opacity-75"></span>
-                    <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-black shadow-[0_0_30px_rgba(16,185,129,0.4)]">
-                      <Phone className="w-8 h-8 animate-bounce" />
-                    </div>
+                <div className="py-10 flex flex-col items-center justify-center space-y-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-[#19201d] border border-[#34d399]/35 flex items-center justify-center text-[#34d399]">
+                    <PhoneIncoming className="w-7 h-7" />
                   </div>
 
                   <div className="space-y-1">
-                    <h4 className="text-base font-bold text-white tracking-tight">INBOUND TELEPHONY TRIGGER</h4>
-                    <p className="text-xs text-zinc-500">+1 (555) 777-8899 (Jane Doe)</p>
+                    <h4 className="text-base font-semibold text-[#edf0ee]">Inbound call trigger</h4>
+                    <p className="text-xs font-mono text-[#a1aaa4]">+1 (555) 777-8899 · Jane Doe</p>
                   </div>
 
-                  <div className="flex items-center justify-center gap-4">
+                  <div className="flex items-center justify-center gap-3">
                     <button
+                      type="button"
                       onClick={handleDeclineCall}
-                      className="px-6 py-2.5 rounded-full border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-xs transition-colors"
+                      className={CONSOLE_BTN_DANGER}
                     >
-                      Ignore (Triggers Auto-SMS)
+                      Ignore (triggers auto-SMS)
                     </button>
                     <button
+                      type="button"
                       onClick={handleAnswerCall}
-                      className="px-8 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                      className={CONSOLE_BTN_PRIMARY}
                     >
-                      Answer with AI Agent
+                      Answer with AI agent
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Active Conversation state */}
               {simStep === "active" && (
                 <div className="space-y-4">
-                  {/* Status Indicator */}
-                  <div className="flex items-center justify-between p-3 bg-black border border-white/5 rounded-xl">
+                  <div className={cn(CONSOLE_SUBCARD, "flex items-center justify-between px-3.5 py-2.5")}>
                     <div className="flex items-center gap-2">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                      </span>
-                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Line Active • AI Booking Specialist</span>
+                      <span className="w-2 h-2 rounded-full bg-[#34d399]" />
+                      <span className="text-xs text-[#edf0ee] font-medium">Line active · AI booking specialist</span>
                     </div>
-                    <span className="text-xs text-zinc-500 font-semibold w-12 text-right">
-                      {Math.floor(simTimer / 60)}:{(simTimer % 60) < 10 ? '0' : ''}{simTimer % 60}
+                    <span className="text-xs font-mono text-[#a1aaa4] tabular-nums">
+                      {Math.floor(simTimer / 60)}:{simTimer % 60 < 10 ? "0" : ""}
+                      {simTimer % 60}
                     </span>
                   </div>
 
-                  {/* Bouncing speech wave */}
-                  <div className="h-10 flex items-center justify-center gap-1 bg-white/[0.01] border border-white/5 rounded-xl p-3 select-none">
+                  <div className={cn(CONSOLE_SUBCARD, "h-10 flex items-center justify-center gap-1 p-3 select-none")}>
                     {Array.from({ length: 20 }).map((_, i) => {
                       const h = 20 + Math.sin(simTimer + i) * 60;
                       return (
-                        <div 
-                          key={i} 
-                          style={{ height: `${Math.max(10, Math.min(100, h))}%` }} 
-                          className="w-1 bg-emerald-500/60 rounded transition-all duration-300 animate-pulse" 
+                        <div
+                          key={i}
+                          style={{ height: `${Math.max(10, Math.min(100, h))}%` }}
+                          className="w-1 bg-[#34d399]/65 rounded transition-all duration-300"
                         />
                       );
                     })}
                   </div>
 
-                  {/* Scrollable live feed */}
-                  <div className="bg-black/50 border border-white/5 rounded-xl p-4 h-60 overflow-y-auto space-y-3 flex flex-col justify-end console-scroll">
+                  <div className={cn(CONSOLE_SUBCARD, "p-4 h-60 overflow-y-auto space-y-3 flex flex-col justify-end console-scroll")}>
                     {simTranscript.length === 0 ? (
-                      <p className="text-zinc-500 text-xs text-center py-12 animate-pulse">Call initiated. Connecting audio stream...</p>
+                      <p className="text-[#727c75] text-xs text-center py-12">Connecting audio stream...</p>
                     ) : (
                       simTranscript.map((t, idx) => {
                         const isAgent = t.role === "agent";
                         return (
-                          <div 
+                          <div
                             key={idx}
                             className={cn(
-                              "max-w-[85%] rounded-xl p-3 text-xs leading-relaxed font-semibold",
-                              isAgent 
-                                ? "bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 self-start" 
-                                : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 self-end"
+                              "max-w-[85%] rounded-xl p-3 text-xs leading-relaxed border",
+                              isAgent
+                                ? "bg-[#19201d] border-[#edf0ee]/[0.08] text-[#edf0ee] self-start"
+                                : "bg-[#4cc38a]/10 border-[#4cc38a]/25 text-[#edf0ee] self-end"
                             )}
                           >
-                            <span className="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">
+                            <span className="block text-[11px] text-[#727c75] mb-1">
                               {isAgent ? "StarX AI Receptionist" : "Jane Doe"}
                             </span>
                             {t.text}
@@ -828,78 +760,68 @@ export function VoiceSection() {
                   </div>
 
                   <button
+                    type="button"
                     onClick={handleHangUp}
-                    className="w-full py-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-bold text-xs transition-colors flex items-center justify-center gap-2"
+                    className={cn(CONSOLE_BTN_DANGER, "w-full py-2.5")}
                   >
-                    <Phone className="w-4 h-4 rotate-[135deg]" />
-                    Hang Up & Process Transcription
+                    <Phone className="w-3.5 h-3.5 rotate-[135deg]" />
+                    <span>Hang up & process transcription</span>
                   </button>
                 </div>
               )}
 
-              {/* AI Wrap-up state */}
               {simStep === "wrapup" && (
                 <div className="py-16 flex flex-col items-center justify-center space-y-4 text-center">
-                  <div className="relative">
-                    <Brain className="w-12 h-12 text-emerald-400 animate-pulse" />
-                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                    </span>
-                  </div>
+                  <Brain className="w-8 h-8 text-[#34d399]" />
                   <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-white tracking-tight">AI WRAP-UP PROCESSING</h4>
-                    <p className="text-xs text-zinc-500">Transcribing dial tone, sentiment tagging, extracting crm variables...</p>
+                    <h4 className="text-sm font-medium text-[#edf0ee]">Processing call wrap-up</h4>
+                    <p className="text-xs text-[#727c75]">Generating transcript, sentiment tag, and CRM variables...</p>
                   </div>
                 </div>
               )}
 
-              {/* End of call review */}
               {simStep === "ended" && (
-                <div className="space-y-5">
-                  <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3">
-                    <CheckCircle className="w-6 h-6 text-emerald-400" />
+                <div className="space-y-4">
+                  <div className="bg-[#4cc38a]/10 border border-[#4cc38a]/25 rounded-xl p-4 flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-[#4cc38a] shrink-0" />
                     <div>
-                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">Processing Completed</h4>
-                      <p className="text-[10px] text-zinc-400 mt-0.5">Call log synced to Supabase database. review findings below.</p>
+                      <h4 className="text-xs font-medium text-[#edf0ee]">Processing complete</h4>
+                      <p className="text-xs text-[#a1aaa4] mt-0.5">Review extracted summary and CRM memory fields below.</p>
                     </div>
                   </div>
 
-                  {/* Summaries review */}
-                  <div className="bg-white/[0.01] border border-white/5 rounded-xl p-4 space-y-2">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">AI Summary</span>
-                    <p className="text-xs text-zinc-300 font-medium leading-relaxed">
+                  <div className={cn(CONSOLE_SUBCARD, "p-4 space-y-1.5")}>
+                    <span className="text-xs font-medium text-[#727c75] block">Summary</span>
+                    <p className="text-xs text-[#edf0ee] leading-relaxed">
                       Jane Doe called to schedule a manicure. Inbound AI receptionist scheduled the slot at 3:00 PM today with Jessica.
                     </p>
                   </div>
 
-                  {/* Memories review */}
-                  <div className="bg-white/[0.01] border border-white/5 rounded-xl p-4 space-y-2">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Extracted CRM Memory Parameters</span>
+                  <div className={cn(CONSOLE_SUBCARD, "p-4 space-y-2")}>
+                    <span className="text-xs font-medium text-[#727c75] block">Extracted CRM variables</span>
                     <div className="grid grid-cols-2 gap-2 mt-2">
                       {simMemory.map((mem, idx) => (
-                        <div key={idx} className="p-2 bg-black border border-white/5 rounded text-[11px]">
-                          <span className="block text-[8px] text-zinc-500 uppercase font-bold">{mem.key.replace(/_/g, ' ')}</span>
-                          <span className="font-semibold text-white mt-0.5 block">{mem.value}</span>
+                        <div key={idx} className="p-2.5 bg-[#121715] border border-[#edf0ee]/[0.06] rounded-lg text-xs">
+                          <span className="block font-mono text-[11px] text-[#727c75]">{mem.key}</span>
+                          <span className="font-medium text-[#edf0ee] mt-0.5 block">{mem.value}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   <button
+                    type="button"
                     onClick={handleSaveSimulatedCall}
-                    className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                    className={cn(CONSOLE_BTN_PRIMARY, "w-full py-2.5")}
                   >
-                    <span>Commit Log to Registry</span>
+                    <span>Save call log</span>
                   </button>
                 </div>
               )}
-
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }
