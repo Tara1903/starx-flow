@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Playfair_Display, Cormorant_Garamond } from 'next/font/google';
+import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Cormorant_Garamond } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import '../styles/starx-flow-stage.css';
 import '../styles/starx-motion.css';
@@ -37,10 +38,10 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
+const playfairDisplay = localFont({
+  src: './fonts/playfair-display-latin.woff2',
   variable: '--font-serif',
-  weight: ['400', '500', '600', '700'],
+  weight: '400 700',
   display: 'swap',
 });
 
