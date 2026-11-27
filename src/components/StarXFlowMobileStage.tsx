@@ -414,14 +414,14 @@ export function StarXFlowMobileStage({
                       className={cn(
                         "h-6 rounded-full flex items-center justify-center font-medium transition-all tabular-nums relative",
                         cell.isPast
-                          ? "text-emerald-100/20 cursor-not-allowed"
+                          ? "text-emerald-100/65 cursor-not-allowed"
                           : isSel
                             ? "bg-emerald-400 text-black font-semibold shadow-sm cursor-pointer"
                             : cell.isToday
                               ? "border border-emerald-400/70 text-emerald-200 hover:bg-emerald-500/20 cursor-pointer"
                               : cell.isCurrentMonth
-                                ? "text-emerald-100/90 hover:bg-emerald-500/20 cursor-pointer"
-                                : "text-emerald-100/40 hover:bg-emerald-500/15 cursor-pointer"
+                                ? "text-emerald-100/95 hover:bg-emerald-500/20 cursor-pointer"
+                                : "text-emerald-100/60 hover:bg-emerald-500/15 cursor-pointer"
                       )}
                     >
                       {cell.day}

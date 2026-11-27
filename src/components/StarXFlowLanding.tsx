@@ -1104,11 +1104,11 @@ export function StarXFlowLanding() {
                 let opacity = 1;
 
                 if (!cell.isCurrentMonth) {
-                  opacity = cell.isPast ? 0.18 : 0.36;
-                  color = 'rgba(167, 243, 208, 0.65)';
+                  opacity = cell.isPast ? 0.55 : 0.68;
+                  color = 'rgba(187, 247, 208, 0.85)';
                 } else if (cell.isPast) {
-                  opacity = 0.28;
-                  color = 'rgba(195, 232, 212, 0.55)';
+                  opacity = 0.72;
+                  color = 'rgba(220, 252, 231, 0.86)';
                 } else if (isSelected) {
                   background = 'radial-gradient(circle at 35% 30%, #6ee7b7 0%, #22c55e 75%, #15803d 100%)';
                   color = '#032014';
@@ -1120,7 +1120,7 @@ export function StarXFlowLanding() {
                   color = '#a7f3d0';
                   fontWeight = 700;
                 } else if (cell.isClosedDay) {
-                  color = 'rgba(209, 250, 229, 0.48)';
+                  color = 'rgba(209, 250, 229, 0.78)';
                 }
 
                 return (
