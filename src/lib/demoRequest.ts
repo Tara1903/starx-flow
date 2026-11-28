@@ -26,3 +26,24 @@ export const demoRequestSchema = z.object({
 });
 
 export type DemoFormValues = z.infer<typeof demoRequestSchema>;
+
+export async function submitDemoRequest(
+  data: DemoFormValues
+): Promise<{ referenceId: string; message: string }> {
+  const response = await fetch('/api/demo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok || !result.success || !result.referenceId) {
+    throw new Error(result.error || 'Failed to submit request.');
+  }
+
+  return {
+    referenceId: result.referenceId,
+    message: result.message || 'Your demonstration request has been received.',
+  };
+}

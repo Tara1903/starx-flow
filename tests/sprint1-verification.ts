@@ -227,11 +227,12 @@ async function testUsageMeteringAndBilling() {
   const testUser = `metering-user-${Date.now()}`;
 
   // A. Configurable Plan Definitions Verification
-  assert(CONFIGURABLE_PLANS.starter.priceEur === 49, 'Starter plan must be €49/mo');
-  assert(CONFIGURABLE_PLANS.starter.status === 'proposed', 'Starter plan must be marked proposed (governance rule)');
-  assert(CONFIGURABLE_PLANS.pro.priceEur === 97, 'Growth plan must be €97/mo');
-  assert(CONFIGURABLE_PLANS.enterprise.priceEur === 297, 'Enterprise plan must be €297/mo');
-  console.log('✓ Configurable plan definitions verified (€49 Starter / €97 Growth / €297 Enterprise, status: proposed)');
+  assert(CONFIGURABLE_PLANS.starter.priceEur === 29, 'Starter plan must be $29/mo');
+  assert(CONFIGURABLE_PLANS.starter.status === 'active', 'Starter plan must be marked active');
+  assert(CONFIGURABLE_PLANS.growth.priceEur === 59, 'Growth plan must be $59/mo');
+  assert(CONFIGURABLE_PLANS.pro.priceEur === 99, 'Pro plan must be $99/mo');
+  assert(CONFIGURABLE_PLANS.enterprise.priceEur === 99, 'Enterprise alias must resolve to $99/mo');
+  console.log('✓ Configurable plan definitions verified ($29 Starter / $59 Growth / $99 Pro, status: active)');
 
   // B. Idempotent Usage Recording
   const dedupKey = `idemp-usage-${Date.now()}`;

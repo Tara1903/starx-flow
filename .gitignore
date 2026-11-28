@@ -54,3 +54,10 @@ screenshots/
 .agent/
 STARX_OLD_HOMEPAGE_FULL_2X.png
 starx_flow.html
+
+# Mobile / Gradle / Kotlin & Supabase temp caches
+mobile/.gradle/
+mobile/.kotlin/
+mobile/build/
+mobile/app/build/
+supabase/.temp/

@@ -277,7 +277,7 @@ async function runSprint2Verification() {
       endTime: '2026-11-05T17:00:00.000Z',
       notes: 'Rescheduled upon customer request',
     },
-    { userId: testTenantId, agentRole: 'appointment' }
+    { userId: testTenantId, agentRole: 'appointment', customerPhone: phone, leadId: claireLeadId }
   );
   assert(modifyRes.success === true, 'Rescheduling must succeed');
   console.log(`✓ Appointment modified: Rescheduled to 16:00 - 17:00`);
@@ -303,7 +303,7 @@ async function runSprint2Verification() {
   const orderRes = await ToolExecutor.executeTool(
     'getOrderStatus',
     { orderNumberOrId: 'ORD-90210' },
-    { userId: testTenantId }
+    { userId: testTenantId, customerPhone: phone, leadId: claireLeadId }
   );
   assert(orderRes.success === true, 'Order lookup must succeed');
   assert(orderRes.data.status === 'completed', 'Order status must be completed');
@@ -314,7 +314,7 @@ async function runSprint2Verification() {
   const updateRes = await ToolExecutor.executeTool(
     'updateCustomerProfile',
     { customerId: claireLeadId, tags: ['vip', 'verified'], notes: 'Prefers morning appointments' },
-    { userId: testTenantId, agentRole: 'support' }
+    { userId: testTenantId, agentRole: 'support', customerPhone: phone, leadId: claireLeadId }
   );
   assert(updateRes.success === true, 'Profile update must succeed');
   console.log(`✓ Customer profile updated with tags and notes`);
@@ -323,7 +323,7 @@ async function runSprint2Verification() {
   const cancelRes = await ToolExecutor.executeTool(
     'cancelAppointment',
     { appointmentId: bookedAptId, reason: 'Customer scheduling conflict' },
-    { userId: testTenantId, agentRole: 'appointment' }
+    { userId: testTenantId, agentRole: 'appointment', customerPhone: phone, leadId: claireLeadId }
   );
   assert(cancelRes.success === true, 'Cancellation must succeed');
   console.log(`✓ Appointment cancelled: ${cancelRes.data.message}`);

@@ -1,6 +1,50 @@
-import { POST } from '../src/app/api/demo/route';
+import fs from 'fs';
+import path from 'path';
+
+for (const file of ['.env.local', '.env']) {
+  const envPath = path.join(process.cwd(), file);
+  if (fs.existsSync(envPath)) {
+    for (const line of fs.readFileSync(envPath, 'utf-8').split('\n')) {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match && !process.env[match[1]]) {
+        process.env[match[1]] = (match[2] || '').replace(/^["'](.*)["']$/g, '$1').trim();
+      }
+    }
+  }
+}
 
 async function runTests() {
+  const { POST } = await import('../src/app/api/demo/route');
+  const { isSupabaseAdminConfigured } = await import('../src/lib/supabaseAdmin');
+  const configuredUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const useFetchStub = !isSupabaseAdminConfigured || configuredUrl.includes('placeholder');
+  let simulateDbOutage = false;
+  const originalFetch = globalThis.fetch;
+  if (useFetchStub) {
+    globalThis.fetch = async (input, init) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+      if (url.includes('/rest/v1/demo_requests')) {
+        if (simulateDbOutage) {
+          return new Response(JSON.stringify({ message: 'Database unavailable' }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        const method = init?.method || (input instanceof Request ? input.method : 'GET');
+        if (method === 'HEAD') {
+          return new Response(null, {
+            status: 200,
+            headers: { 'Content-Range': '*/0' },
+          });
+        }
+        return new Response(JSON.stringify([]), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return originalFetch(input as any, init);
+    };
+  }
   console.log('================================================================');
   console.log(' PHASE 6: DEMO & LEAD CAPTURE ENGINE VERIFICATION');
   console.log('================================================================');
@@ -160,6 +204,46 @@ async function runTests() {
   });
   const res7 = await POST(oversizedReq);
   assert(res7.status === 413, 'Oversized payload (>50KB) returns HTTP 413 Payload Too Large');
+
+  // Test 8: Non-object JSON payload returns HTTP 400 (not 500)
+  const nullBodyReq = new Request('http://localhost:3000/api/demo', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-forwarded-for': '198.51.100.7',
+    },
+    body: 'null',
+  });
+  const res8 = await POST(nullBodyReq);
+  assert(res8.status === 400, 'Non-object JSON payload (null) returns HTTP 400');
+
+  // Test 9: Database outage fails closed with HTTP 503
+  if (useFetchStub) {
+    simulateDbOutage = true;
+    try {
+      const outageReq = new Request('http://localhost:3000/api/demo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '198.51.100.8',
+        },
+        body: JSON.stringify({
+          fullName: 'Emma Watson',
+          workEmail: 'emma@londonaesthetics.co.uk',
+          businessName: 'London Aesthetics Clinic',
+          businessType: 'Beauty & Salons',
+          businessSize: '2–10 staff',
+          primaryNeed: 'WhatsApp AI Booking',
+          consent: true,
+        }),
+      });
+      const res9 = await POST(outageReq);
+      assert(res9.status === 503, 'Database insert failure fails closed with HTTP 503');
+    } finally {
+      simulateDbOutage = false;
+      globalThis.fetch = originalFetch;
+    }
+  }
 
   console.log('----------------------------------------------------------------');
   console.log(`RESULTS: ${passed} PASSED, ${failed} FAILED`);

@@ -31,7 +31,7 @@ export default function SetupLayout({ children }: { children: React.ReactNode })
     const id = user?.id;
     if (id) void fetchOnboarding().then(() => { if (active) setLoadedUser(id); });
     return () => { active = false; };
-  }, [isLoggedIn, authLoading, user?.id, router, fetchOnboarding, location]);
+  }, [isLoggedIn, authLoading, user?.id, router, fetchOnboarding]);
 
   useEffect(() => {
     // 4. Once onboarding data is loaded

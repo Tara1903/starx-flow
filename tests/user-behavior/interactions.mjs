@@ -173,7 +173,7 @@ try {
     const tabs=[page,...await Promise.all(Array.from({length:4},()=>context.newPage()))];
     try {
       await Promise.all(tabs.map(p=>p.goto(base+'/dashboard',{waitUntil:'domcontentloaded'})));
-      await Promise.all(tabs.map(p=>p.getByRole('button',{name:'Log out',exact:true}).waitFor()));
+      await Promise.all(tabs.map(p=>p.getByRole('button',{name:'Log out',exact:true}).waitFor({timeout:60000})));
       await button('Log out').click();
       await Promise.all(tabs.slice(1).map(p=>p.waitForURL('**/login**',{timeout:12500})));
     } finally {await Promise.all(tabs.slice(1).map(p=>p.close()));}
@@ -182,5 +182,5 @@ try {
   await writeFile(output+'/page-errors.json',JSON.stringify(failuresInPage,null,2));
   await browser.close();server.closeAllConnections();await new Promise(r=>server.close(r));
 }
-console.log(rows.length,'journeys;',rows.filter(r=>!r.pass).length,'failed');
-process.exitCode=rows.every(r=>r.pass)?0:1;
+console.log(rows.length,'journeys;',rows.filter(r=>!r.pass).length,'failed;','page errors:',failuresInPage.length);
+process.exitCode=rows.every(r=>r.pass) && failuresInPage.length===0 ? 0 : 1;

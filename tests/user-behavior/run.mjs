@@ -42,9 +42,10 @@ try {
     if(ready)break;
     await sleep(200);
   }
-  if(!ready)throw Error('Isolated app did not start');
+  if(!ready || app.child.exitCode!==null)throw Error('Isolated app did not start');
   const suite = name => launch([path.join(root,'tests/user-behavior',name+'.mjs')],root).done;
-  const results=await Promise.all([suite('public'),suite('forms'),suite('interactions')]);
+  const results=[];
+  for (const name of ['public','forms','interactions']) results.push(await suite(name));
   process.exitCode=results.every(code=>code===0)?0:1;
 } finally {
   if(app){app.child.kill();await app.done;}

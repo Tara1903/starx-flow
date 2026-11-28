@@ -24,6 +24,7 @@ export async function exerciseModules({run,page,context,base,nav,visit,button}) 
   await run('five integration setup dialogs close with Escape',async()=>{
     await nav('Channels');
     const connect = work.getByRole('button',{name:'Connect',exact:true});
+    await connect.first().waitFor();
     assert.equal(await connect.count(),5);
     for(let i=0;i<5;i++) {
       await connect.nth(i).click();
@@ -78,6 +79,46 @@ export async function exerciseModules({run,page,context,base,nav,visit,button}) 
       assert.equal(workflow.edit_version,1);
       return outcomes;
     } finally {await Promise.all(tabs.map(p=>p.close()));}
+  });
+  await run('toggle workflow then save in editor, and deep-link to a non-first workflow',async()=>{
+    const workflows=tables.get('workflows') ?? [];
+    const first=workflows[0];assert(first);
+    const second={
+      id:'11111111-2222-4333-8444-555555555555',
+      user_id:tables.get('profiles')[0].id,
+      name:'Second Workflow QA',
+      description:'Deep-link verification workflow',
+      trigger:'Website Chat Initiated',
+      action:'Generate AI Response',
+      is_active:true,
+      channel:'Web',
+      ai_tone:'Friendly',
+      custom_prompt:'Assist visitors.',
+      config:{steps:[]},
+      edit_version:0,
+      created_at:new Date().toISOString(),
+    };
+    workflows.push(second);
+    try {
+      await visit('/dashboard?section=workflows');
+      const expectedVersion = first.edit_version + 1;
+      await page.getByRole('switch',{name:/^(Activate|Deactivate) workflow$/}).first().click();
+      for(let i=0;i<60 && first.edit_version<expectedVersion;i++) await new Promise(r=>setTimeout(r,50));
+      assert.equal(first.edit_version,expectedVersion);
+      await page.getByRole('button',{name:'Configure',exact:true}).first().click();
+      const input=page.getByPlaceholder('e.g. Off-Hours SMS Triage');
+      await input.waitFor();
+      await input.fill('Toggled and Edited');
+      await button('Save Workflow').click();
+      await page.waitForFunction(()=>new URL(location.href).searchParams.get('section')==='workflows');
+      assert.equal(first.name,'Toggled and Edited');
+
+      await page.goto(base+'/dashboard?section=workflow_editor&workflow='+second.id,{waitUntil:'domcontentloaded'});
+      await page.waitForFunction(name=>[...document.querySelectorAll('input')].some(el=>el.value===name),second.name);
+      assert.equal(await page.getByPlaceholder('e.g. Off-Hours SMS Triage').inputValue(),second.name);
+    } finally {
+      const idx=workflows.indexOf(second);if(idx!==-1)workflows.splice(idx,1);
+    }
   });
   await run('fresh profile cannot finish onboarding by visiting dashboard or launch directly',async()=>{
     const profile=tables.get('profiles')[0];profile.onboarding_complete=false;

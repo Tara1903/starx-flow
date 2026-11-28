@@ -26,22 +26,26 @@ async function worker(queue) {
         await page.waitForFunction(() => document.querySelector('main')?.innerText.trim().length > 20);
         for (const width of [1440, 390, 768, 320]) {
           await page.setViewportSize({width, height: width < 500 ? 844 : 900});
+          await page.waitForFunction(() => document.querySelector('main')?.innerText.trim().length > 20);
           const state = await page.evaluate(async () => {
             await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
             const main = document.querySelector('main');
-            const text = main.innerText.trim();
+            const text = (main?.innerText || '').trim();
             const end = window.scrollY;
             window.scrollTo({top: document.body.scrollHeight, behavior: 'instant'});
             const scrollable = document.documentElement.scrollHeight > innerHeight;
             const scrolled = window.scrollY > 0;
             window.scrollTo({top: end, behavior: 'instant'});
             return { bodyWidth: document.documentElement.scrollWidth, width: innerWidth,
-              scrollable, scrolled, text: text.slice(0, 100), usable: text.length > 20 && !/application error:|this page could not be found/i.test(text) };
+              scrollable, scrolled, text: text.slice(0, 100), usable: Boolean(main) && text.length > 20 && !/application error:|this page could not be found/i.test(text) };
           });
           const pass = state.usable && state.bodyWidth <= width + 1 && !errors.length;
           rows.push({path, width, pass, ...state, errors: [...errors]});
         }
-      } catch (e) { rows.push({path, pass: false, error: e.message.slice(0, 220)}); }
+      } catch (e) {
+        rows.push({path, pass: false, error: e.message.slice(0, 220)});
+        await page.goto('about:blank').catch(() => {});
+      }
       console.log(path, rows.at(-1).pass);
     }
   } finally { await context.close(); }

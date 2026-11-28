@@ -757,6 +757,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       if (data) {
+        if (get().user?.id !== user.id) return;
         const workflows = data.map(dbRowToWorkflow);
         const currentSelectedId = get().selectedWorkflowId;
         const preservedSelectedId =
@@ -883,18 +884,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       ),
     }));
 
-    get().addLog('system', workflow.channel,
-      nextState ? `Activated workflow "${workflow.name}"` : `Deactivated workflow "${workflow.name}"`
-    );
-
-    // Persist to DB
-    if (isSupabaseConfigured) {
-      const { error } = await supabase
-        .from('workflows')
-        .update({ is_active: nextState })
-        .eq('id', id);
-
-      if (error) console.error('[StarX] Toggle workflow error:', error);
+    try {
+      await get().updateWorkflow(id, { isActive: nextState }, workflow.editVersion);
+    } catch (error) {
+      set((state) => ({
+        workflows: state.workflows.map((w) =>
+          w.id === id ? { ...w, isActive: workflow.isActive } : w
+        ),
+      }));
+      console.error('[StarX] Toggle workflow error:', error);
     }
   },
 
@@ -910,18 +908,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       ),
     }));
 
-    get().addLog('system', workflow.channel,
-      `Updated AI prompt for "${workflow.name}". Tone: ${tone}`
-    );
-
-    // Persist
-    if (isSupabaseConfigured) {
-      const { error } = await supabase
-        .from('workflows')
-        .update({ custom_prompt: prompt, ai_tone: tone })
-        .eq('id', id);
-
-      if (error) console.error('[StarX] Update prompt error:', error);
+    try {
+      await get().updateWorkflow(id, { customPrompt: prompt, aiTone: tone }, workflow.editVersion);
+    } catch (error) {
+      set((state) => ({
+        workflows: state.workflows.map((w) =>
+          w.id === id
+            ? { ...w, customPrompt: workflow.customPrompt, aiTone: workflow.aiTone }
+            : w
+        ),
+      }));
+      console.error('[StarX] Update prompt error:', error);
     }
   },
 

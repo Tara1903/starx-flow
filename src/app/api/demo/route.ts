@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // 2. Bot Trap (Honeypot) check: if bot filled honeypot, fake success without saving
-    if (body.honeypot && body.honeypot.trim().length > 0) {
+    if (body && typeof body === 'object' && !Array.isArray(body) && typeof body.honeypot === 'string' && body.honeypot.trim().length > 0) {
       return NextResponse.json({
         success: true,
         referenceId: `DEMO-${Date.now().toString(36).toUpperCase()}`,
@@ -93,7 +93,11 @@ export async function POST(request: Request) {
     }
 
     // 3. Zod Server-side Validation
-    const parsed = demoRequestSchema.safeParse({ ...body, preferredContact: body.preferredContact ?? 'email' });
+    const rawPayload =
+      body && typeof body === 'object' && !Array.isArray(body)
+        ? { ...body, preferredContact: body.preferredContact ?? 'email' }
+        : body;
+    const parsed = demoRequestSchema.safeParse(rawPayload);
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message || 'Invalid form data';
       return NextResponse.json({ error: firstError }, { status: 400 });

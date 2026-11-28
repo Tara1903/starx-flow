@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { X, Sparkles, Calendar, ArrowRight, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { demoRequestSchema, type DemoFormValues } from "@/lib/demoRequest";
+import { demoRequestSchema, submitDemoRequest, type DemoFormValues } from "@/lib/demoRequest";
 import { GlassButton } from "../ui/GlassButton";
 import { SuccessState } from "../ui/SuccessState";
 import { smoothTransition } from "../../lib/motionVariants";
@@ -65,22 +65,8 @@ export function DemoModal({ onClose }: DemoModalProps) {
     setSubmitError(null);
 
     try {
-      const response = await fetch("/api/demo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success || !result.referenceId) {
-        throw new Error(result.error || "Failed to submit request.");
-      }
-
-      setSuccessData({
-        referenceId: result.referenceId,
-        message: result.message || "Your demonstration request has been received.",
-      });
+      const submitted = await submitDemoRequest(data);
+      setSuccessData(submitted);
     } catch (err: any) {
       setSubmitError(err.message || "Submission failed. Please try again.");
     } finally {

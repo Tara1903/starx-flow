@@ -109,26 +109,25 @@ async function runDomainFTests() {
     const floodSession = `flood-session-${Date.now()}`;
     let hitRateLimit = false;
 
-    // Dispatches 35 rapid requests from the same session
-    for (let i = 0; i < 35; i++) {
-      const req = new Request('http://localhost:3000/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': '203.0.113.195',
-        },
-        body: JSON.stringify({
-          message: `Rapid message ${i}`,
-          sessionId: floodSession,
-          organizationId: 'org-widget-test',
-        }),
-      });
-      const res = await postChat(req);
-      if (res.status === 429) {
-        hitRateLimit = true;
-        break;
-      }
-    }
+    // Dispatches 35 concurrent requests from the same session within the 60s window
+    const responses = await Promise.all(
+      Array.from({ length: 35 }, (_, i) => {
+        const req = new Request('http://localhost:3000/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-forwarded-for': '203.0.113.195',
+          },
+          body: JSON.stringify({
+            message: `Rapid message ${i}`,
+            sessionId: floodSession,
+            organizationId: 'org-widget-test',
+          }),
+        });
+        return postChat(req);
+      })
+    );
+    hitRateLimit = responses.some((res) => res.status === 429);
 
     check('High frequency message flood correctly triggers HTTP 429 Rate Limit', hitRateLimit === true);
   }
