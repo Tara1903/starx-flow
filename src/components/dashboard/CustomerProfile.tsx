@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { type ConversationThread } from "../../store/dashboardStore";
 import { useAuthStore } from "../../store/authStore";
-import { supabase } from "../../lib/supabase";
+import { crmFetch } from "../../lib/crm/crmApi";
 import {
   CONSOLE_SUBCARD,
   CONSOLE_INPUT,
@@ -57,8 +57,13 @@ export function CustomerProfile({ thread }: CustomerProfileProps) {
 
   const [identities, setIdentities] = useState<LinkedIdentity[]>([]);
   const [duplicates, setDuplicates] = useState<DuplicateCandidate[]>([]);
+  const [leadStatus, setLeadStatus] = useState<string>(lead.status || "new");
   const [isMerging, setIsMerging] = useState(false);
   const [mergeSuccess, setMergeSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLeadStatus(lead.status || "new");
+  }, [lead.status, thread.lead_id]);
 
   useEffect(() => {
     if (!thread.lead_id || !currentUser?.id) return;
@@ -66,15 +71,12 @@ export function CustomerProfile({ thread }: CustomerProfileProps) {
     let isMounted = true;
     const fetchIdentitiesAndDuplicates = async () => {
       try {
-        const res = await fetch(
+        const res = await crmFetch<{ identities?: LinkedIdentity[]; duplicates?: DuplicateCandidate[] }>(
           `/api/crm/customers/identities?userId=${currentUser.id}&leadId=${thread.lead_id}`
         );
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted) {
-            setIdentities(data.identities || []);
-            setDuplicates(data.duplicates || []);
-          }
+        if (res.ok && res.data && isMounted) {
+          setIdentities(res.data.identities || []);
+          setDuplicates(res.data.duplicates || []);
         }
       } catch {
         // Offline ignore
@@ -89,7 +91,15 @@ export function CustomerProfile({ thread }: CustomerProfileProps) {
 
   const handleStatusChange = async (newStatus: string) => {
     if (!thread.lead_id) return;
-    await supabase.from("leads").update({ status: newStatus }).eq("id", thread.lead_id);
+    const previous = leadStatus;
+    setLeadStatus(newStatus);
+    const res = await crmFetch(`/api/crm/leads/${thread.lead_id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (!res.ok) {
+      setLeadStatus(previous);
+    }
   };
 
   const handleMerge = async (duplicateLeadId: string) => {
@@ -98,9 +108,8 @@ export function CustomerProfile({ thread }: CustomerProfileProps) {
     setMergeSuccess(null);
 
     try {
-      const res = await fetch("/api/crm/customers/merge", {
+      const res = await crmFetch("/api/crm/customers/merge", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: currentUser.id,
           targetLeadId: thread.lead_id,
@@ -112,12 +121,11 @@ export function CustomerProfile({ thread }: CustomerProfileProps) {
       if (res.ok) {
         setMergeSuccess("Profiles merged");
         setDuplicates((prev) => prev.filter((d) => d.leadId !== duplicateLeadId));
-        const identRes = await fetch(
+        const identRes = await crmFetch<{ identities?: LinkedIdentity[] }>(
           `/api/crm/customers/identities?userId=${currentUser.id}&leadId=${thread.lead_id}`
         );
-        if (identRes.ok) {
-          const identData = await identRes.json();
-          setIdentities(identData.identities || []);
+        if (identRes.ok && identRes.data) {
+          setIdentities(identRes.data.identities || []);
         }
       }
     } finally {
@@ -237,7 +245,7 @@ export function CustomerProfile({ thread }: CustomerProfileProps) {
         <div className="space-y-2 pt-4 border-t border-[#edf0ee]/[0.06]">
           <h4 className="text-xs font-medium text-[#727c75]">Lead status</h4>
           <select
-            value={lead.status || "new"}
+            value={leadStatus}
             onChange={(e) => handleStatusChange(e.target.value)}
             className={cn(CONSOLE_INPUT, "w-full text-xs px-3 py-2 cursor-pointer")}
           >

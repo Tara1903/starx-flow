@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { demoRequestSchema } from '@/lib/demoRequest';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabaseAdmin';
+import { CrmService } from '@/lib/crm/crmService';
 
 // Sliding-window in-memory rate limiter for lead protection (max 5 submissions per 10 minutes per IP)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -127,6 +128,63 @@ export async function POST(request: Request) {
       });
 
       if (dbError) throw dbError;
+
+      // Best-effort sync of inbound demo requests into the primary CRM pipeline
+      if (isSupabaseAdminConfigured) {
+        try {
+          const { data: ownerMembership } = await supabaseAdmin
+            .from('organization_members')
+            .select('organization_id, user_id')
+            .eq('role', 'owner')
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (ownerMembership?.organization_id && ownerMembership?.user_id) {
+            const pipelines = await CrmService.ensureDefaultPipeline(ownerMembership.organization_id);
+            const defaultPipeline = pipelines.find((p) => p.is_default) || pipelines[0];
+            const firstStage = defaultPipeline?.stages?.[0];
+            const idemKey = `demo:${referenceId}`;
+
+            const { data: createdLead } = await supabaseAdmin
+              .from('leads')
+              .insert({
+                user_id: ownerMembership.user_id,
+                organization_id: ownerMembership.organization_id,
+                owner_id: ownerMembership.user_id,
+                name: data.fullName,
+                company_name: data.businessName,
+                email: data.workEmail,
+                phone: data.phone || null,
+                website: data.website || null,
+                industry: data.businessType,
+                status: 'new',
+                source: 'demo_request',
+                score: 75,
+                pipeline_id: defaultPipeline?.id || null,
+                stage_id: firstStage?.id || null,
+                notes: `${data.primaryNeed}${data.notes ? ` — ${data.notes}` : ''}`,
+                tags: ['demo-request', data.preferredContact],
+                idempotency_key: idemKey,
+              })
+              .select('id')
+              .maybeSingle();
+
+            if (createdLead?.id) {
+              await CrmService.recordActivity({
+                organizationId: ownerMembership.organization_id,
+                leadId: createdLead.id,
+                actorId: ownerMembership.user_id,
+                activityType: 'note',
+                title: `Website Demo Request (${referenceId})`,
+                body: `Business: ${data.businessName} (${data.businessSize}) • Need: ${data.primaryNeed}`,
+              });
+            }
+          }
+        } catch {
+          // Non-blocking CRM sync so demo lead capture never fails
+        }
+      }
     } catch (error) {
       console.error('[StarX Demo Capture] Insert failed', error);
       return NextResponse.json(

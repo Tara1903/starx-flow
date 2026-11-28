@@ -19,6 +19,7 @@ import {
   GetOrderStatusInput,
 } from './schemas';
 import { IdentityResolver } from '../../crm/identityResolver';
+import { CrmService } from '../../crm/crmService';
 import { CalendarSyncService } from '../../integrations/calendar/calendarSyncService';
 import { isValidUuid, newUuid, resolveValidOrganizationId } from '../../crm/organizationHelper';
 
@@ -340,7 +341,22 @@ export class ToolExecutor {
       },
     });
 
-    // 4. Synchronize to external connected calendar (Google / Outlook)
+    // 4. Advance CRM pipeline & activity log if leadId is linked
+    if (isValidUuid(context.leadId) && (dbOrgId || organizationId)) {
+      try {
+        await CrmService.advanceLeadOnEvent({
+          organizationId: dbOrgId || organizationId || userId,
+          leadId: context.leadId,
+          event: 'booking_created',
+          title: `Booked "${serviceName}" (${confirmationCode})`,
+          body: `${startTime} — ${customerName}`,
+        });
+      } catch {
+        // Non-blocking CRM sync
+      }
+    }
+
+    // 5. Synchronize to external connected calendar (Google / Outlook)
     try {
       await CalendarSyncService.syncAppointmentToExternal(newAppointment, organizationId || userId);
     } catch {

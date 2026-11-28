@@ -19,6 +19,7 @@ import { FacebookMessengerAdapter } from './adapters/facebookMessengerAdapter';
 import { AIOrchestrator } from '../ai/orchestrator';
 import { supabaseAdmin } from '../supabaseAdmin';
 import { isValidUuid, resolveValidOrganizationId } from '../crm/organizationHelper';
+import { CrmService } from '../crm/crmService';
 
 export class IngestionGateway {
   private static startTime = Date.now();
@@ -119,6 +120,22 @@ export class IngestionGateway {
       this.totalEventsProcessed += 1;
       this.latencyHistory.push(duration);
       if (this.latencyHistory.length > 100) this.latencyHistory.shift();
+
+      const crmOrgId = targetOrgId || event.organizationId;
+      if (crmOrgId && orchestratorResult.leadId) {
+        try {
+          await CrmService.advanceLeadOnEvent({
+            organizationId: crmOrgId,
+            leadId: orchestratorResult.leadId,
+            event: 'inbound_message',
+            channel,
+            title: `Inbound ${channel} message from ${sender.name || 'Customer'}`,
+            body: message.text ? message.text.slice(0, 200) : undefined,
+          });
+        } catch {
+          // Non-blocking CRM stage synchronization
+        }
+      }
 
       return {
         success: true,

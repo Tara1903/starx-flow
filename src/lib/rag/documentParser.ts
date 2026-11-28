@@ -162,17 +162,20 @@ export class DocumentParser {
   }
 
   /**
-   * Extracts text from website URL by fetching HTML and stripping non-content tags.
+   * SSRF-guarded external HTML/text fetch shared by Knowledge Ingestion and CRM Lead Enrichment.
    */
-  static async parseUrl(url: string, customTitle?: string): Promise<ParsedDocument> {
+  static async fetchSafePublicHtml(
+    url: string,
+    timeoutMs = 8000
+  ): Promise<{ finalUrl: string; hostname: string; html: string; text: string; title: string }> {
+    let currentUrl = url;
+    let parsedUrl = await this.assertSafePublicUrl(currentUrl);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    let response: Response | null = null;
     try {
-      let currentUrl = url;
-      let parsedUrl = await this.assertSafePublicUrl(currentUrl);
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-
-      let response: Response | null = null;
       const maxRedirects = 3;
       for (let hop = 0; hop <= maxRedirects; hop++) {
         response = await fetch(currentUrl, {
@@ -187,7 +190,6 @@ export class DocumentParser {
         if (response.status >= 300 && response.status < 400) {
           const location = response.headers.get('location');
           if (!location || hop === maxRedirects) {
-            clearTimeout(timeout);
             throw new Error('Too many or invalid redirects while fetching URL.');
           }
           currentUrl = new URL(location, currentUrl).toString();
@@ -196,25 +198,58 @@ export class DocumentParser {
         }
         break;
       }
+    } finally {
       clearTimeout(timeout);
+    }
 
-      if (!response || !response.ok) {
-        throw new Error(`Failed to fetch URL: HTTP ${response?.status || 0} ${response?.statusText || ''}`);
-      }
+    if (!response || !response.ok) {
+      throw new Error(`Failed to fetch URL: HTTP ${response?.status || 0} ${response?.statusText || ''}`);
+    }
 
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.includes('text/html') && !contentType.includes('text/plain')) {
-        throw new Error(`Unsupported content type: ${contentType}. Expected text/html or text/plain.`);
-      }
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('text/html') && !contentType.includes('text/plain')) {
+      throw new Error(`Unsupported content type: ${contentType}. Expected text/html or text/plain.`);
+    }
 
-      const html = await response.text();
-      if (html.length > this.MAX_URL_FETCH_BYTES) {
-        throw new Error('Web page content exceeds 2MB limit.');
-      }
+    const html = await response.text();
+    if (html.length > this.MAX_URL_FETCH_BYTES) {
+      throw new Error('Web page content exceeds 2MB limit.');
+    }
 
-      // Extract title from <title> tag
-      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-      const title = customTitle || (titleMatch ? titleMatch[1].trim() : parsedUrl.hostname);
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : parsedUrl.hostname;
+
+    const text = html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+      .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, ' ')
+      .replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&quot;/gi, '"')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return {
+      finalUrl: currentUrl,
+      hostname: parsedUrl.hostname,
+      html,
+      text,
+      title,
+    };
+  }
+
+  /**
+   * Extracts text from website URL by fetching HTML and stripping non-content tags.
+   */
+  static async parseUrl(url: string, customTitle?: string): Promise<ParsedDocument> {
+    try {
+      const fetched = await this.fetchSafePublicHtml(url, 8000);
+      const html = fetched.html;
+      const title = customTitle || fetched.title;
 
       // Clean HTML: Remove scripts, styles, iframes, SVGs, nav, headers, footers
       let cleaned = html
@@ -248,7 +283,7 @@ export class DocumentParser {
         charCount: cleaned.length,
         wordCount: words.length,
         metadata: {
-          hostname: parsedUrl.hostname,
+          hostname: fetched.hostname,
           url,
         },
       };

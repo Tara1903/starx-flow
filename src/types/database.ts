@@ -45,11 +45,36 @@ export interface Lead {
   phone: string | null;
   email: string | null;
   status: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
-  source: 'whatsapp' | 'instagram' | 'sms' | 'web_chat' | 'manual' | 'csv_import';
+  source:
+    | 'whatsapp'
+    | 'instagram'
+    | 'sms'
+    | 'web_chat'
+    | 'manual'
+    | 'csv_import'
+    | 'outbound_finder'
+    | 'email'
+    | 'demo_request';
   score: number;
   tags: string[];
   notes?: string | null;
   custom_fields?: Record<string, any>;
+  company_name?: string | null;
+  job_title?: string | null;
+  website?: string | null;
+  city?: string | null;
+  country?: string | null;
+  industry?: string | null;
+  owner_id?: string | null;
+  deal_value?: number | null;
+  currency?: string | null;
+  pipeline_id?: string | null;
+  stage_id?: string | null;
+  ai_summary?: string | null;
+  enrichment_data?: Record<string, any>;
+  enriched_at?: string | null;
+  next_follow_up_at?: string | null;
+  idempotency_key?: string | null;
   last_contact_at: string | null;
   created_at: string;
   updated_at: string;

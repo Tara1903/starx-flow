@@ -18,6 +18,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { ReceptionistJobScheduler, ReceptionistJob } from '@/lib/jobs/receptionistJobScheduler';
 import { OutboundDispatcher } from '@/lib/inbox/outboundDispatcher';
+import { CrmSequenceService } from '@/lib/crm/sequenceService';
 
 // Maximum execution budget for serverless invocation (default 25s, leaving margin for Vercel limits)
 const DEFAULT_MAX_DURATION_MS = 25000;
@@ -169,6 +170,14 @@ async function handleCronExecution(request: Request): Promise<NextResponse> {
             return { success: true };
           }
         );
+
+        if (job.jobType === 'lead_followup' && job.payload?.enrollmentId) {
+          await CrmSequenceService.onSequenceJobOutcome(
+            job,
+            Boolean(processResult.success && processResult.completed),
+            processResult.error
+          );
+        }
 
         if (processResult.success && processResult.completed) {
           succeeded++;
