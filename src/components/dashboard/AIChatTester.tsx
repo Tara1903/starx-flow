@@ -70,7 +70,7 @@ export function AIChatTester() {
 
   const handleSendChat = async () => {
     const trimmed = chatInput.trim();
-    if (!trimmed || isAiTyping || !selected) return;
+    if (!trimmed || isAiTyping) return;
 
     const historySnapshot = chatMessages.slice(-16).map((m) => ({
       role: (m.sender === "user" ? "user" : "ai") as "user" | "ai",
@@ -87,10 +87,10 @@ export function AIChatTester() {
       body: JSON.stringify({
         message: trimmed,
         role: selectedRole,
-        agentName: selected.name,
-        channel: selected.channel === "Reviews" ? "Sandbox" : selected.channel,
-        tone: selected.aiTone,
-        customPrompt: selected.customPrompt,
+        agentName: selected?.name,
+        channel: selected ? (selected.channel === "Reviews" ? "Sandbox" : selected.channel) : "Sandbox",
+        tone: selected?.aiTone || "Professional",
+        customPrompt: selected?.customPrompt,
         leadId: selectedLeadId || null,
         history: historySnapshot,
         enableTools: true,
@@ -287,7 +287,7 @@ export function AIChatTester() {
           <button
             type="button"
             onClick={handleSendChat}
-            disabled={!chatInput.trim() || isAiTyping || !selected}
+            disabled={!chatInput.trim() || isAiTyping}
             className={cn(CONSOLE_BTN_PRIMARY, "px-4")}
           >
             <Send className="w-3.5 h-3.5" />
