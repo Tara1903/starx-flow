@@ -46,7 +46,7 @@ export interface AgentExecutionInput {
   userId: string;
   organizationId?: string | null;
   role: AgentRole;
-  channel: 'WhatsApp' | 'Instagram' | 'SMS' | 'Web' | 'Email' | 'Messenger' | 'Sandbox';
+  channel: 'WhatsApp' | 'Instagram' | 'SMS' | 'Web' | 'Email' | 'Messenger' | 'Phone' | 'Sandbox';
   customerMessage: string;
   customerName?: string;
   customerPhone?: string;

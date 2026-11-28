@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Play, Pause,
-  Search, Brain, Info, CheckCircle, Clock, Volume2, Plus, Database, AlertCircle, X
+  Search, Brain, Info, CheckCircle, Clock, Volume2, Plus, Database, AlertCircle, X, Mic, Send
 } from "lucide-react";
 import { useVoiceStore } from "../../store/voiceStore";
 import { useAgentStore } from "../../store/agentStore";
+import { useCrmStore } from "../../store/crmStore";
+import { crmFetch } from "../../lib/crm/crmApi";
 import { cn } from "../../lib/utils";
 import { useIsDocumentVisible } from "../../hooks/useMotionVisibility";
 import {
@@ -25,6 +27,8 @@ import {
 export function VoiceSection() {
   const { calls, addCall, fetchCalls } = useVoiceStore();
   const { agentMemories, addMemory } = useAgentStore();
+  const leads = useCrmStore((s) => s.leads) || [];
+  const fetchLeads = useCrmStore((s) => s.fetchLeads);
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [directionFilter, setDirectionFilter] = useState<"all" | "inbound" | "outbound">("all");
@@ -42,12 +46,23 @@ export function VoiceSection() {
   const [simTimer, setSimTimer] = useState(0);
   const simIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [simMemory, setSimMemory] = useState<{ key: string; value: string }[]>([]);
+  const [simLeadId, setSimLeadId] = useState("");
+  const [simCallerName, setSimCallerName] = useState("Inbound Caller");
+  const [simCallerPhone, setSimCallerPhone] = useState("+49 30 982112");
+  const [simUtterance, setSimUtterance] = useState("");
+  const [simTurnLoading, setSimTurnLoading] = useState(false);
+  const [simSummary, setSimSummary] = useState("");
+  const [simSpeechAudio, setSimSpeechAudio] = useState(false);
+  const [isListeningMic, setIsListeningMic] = useState(false);
 
   const isVisible = useIsDocumentVisible();
 
   useEffect(() => {
     fetchCalls();
-  }, [fetchCalls]);
+    if (leads.length === 0) {
+      fetchLeads().catch(() => {});
+    }
+  }, [fetchCalls, leads.length, fetchLeads]);
 
   const selectedCall = calls.find((c) => c.id === selectedCallId) || calls[0];
 
@@ -131,16 +146,18 @@ export function VoiceSection() {
     setIsPlaying(true);
   };
 
-  const SIMULATOR_DIALOG = [
-    { role: "customer" as const, text: "Hello? Is this StarX Styling studio?", timestamp: "0:02" },
-    { role: "agent" as const, text: "Hello! Yes it is. This is your StarX AI Receptionist. How can I help you today?", timestamp: "0:08" },
-    { role: "customer" as const, text: "Hi, I need to book a quick manicure for today at 3:00 PM if possible.", timestamp: "0:14" },
-    { role: "agent" as const, text: "Let me check our active calendar... Yes, Jessica has an opening at 3:00 PM today. Would you like to reserve that slot?", timestamp: "0:21" },
-    { role: "customer" as const, text: "Perfect. Book it please. My name is Jane Doe and my number is +1 (555) 777-8899.", timestamp: "0:29" },
-    { role: "agent" as const, text: "All set, Jane! I have confirmed your manicure with Jessica today at 3:00 PM. A confirmation SMS with details is on its way.", timestamp: "0:38" },
-    { role: "customer" as const, text: "Excellent, thank you so much! See you then.", timestamp: "0:43" },
-    { role: "agent" as const, text: "You are very welcome! Have a great afternoon, Jane. Goodbye!", timestamp: "0:48" },
-  ];
+  const formatTimer = (sec: number) => `${Math.floor(sec / 60)}:${sec % 60 < 10 ? "0" : ""}${sec % 60}`;
+
+  const speakText = (text: string) => {
+    if (!simSpeechAudio || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(u);
+    } catch {
+      // Browser TTS optional
+    }
+  };
 
   const handleStartSimulation = () => {
     setIsSimulating(true);
@@ -148,85 +165,126 @@ export function VoiceSection() {
     setSimTranscript([]);
     setSimTimer(0);
     setSimMemory([]);
+    setSimSummary("");
+    setSimUtterance("");
   };
 
   const handleAnswerCall = () => {
     setSimStep("active");
-    let currentLineIndex = 0;
+    const greeting = "Hello! You reached our 24/7 AI Receptionist. How can I assist you today?";
+    setSimTranscript([{ role: "agent", text: greeting, timestamp: "0:01" }]);
+    speakText(greeting);
 
+    if (simIntervalRef.current) clearInterval(simIntervalRef.current);
     simIntervalRef.current = setInterval(() => {
       setSimTimer((prev) => prev + 1);
-
-      const triggerSecs = [2, 8, 14, 21, 29, 38, 43, 48];
-      const lineIdx = triggerSecs.findIndex((s) => s === currentLineIndex + 1);
-
-      if (lineIdx !== -1 && lineIdx < SIMULATOR_DIALOG.length) {
-        setSimTranscript((prev) => [...prev, SIMULATOR_DIALOG[lineIdx]]);
-        currentLineIndex++;
-      }
-
-      if (currentLineIndex >= SIMULATOR_DIALOG.length) {
-        if (simIntervalRef.current) clearInterval(simIntervalRef.current);
-        setSimStep("wrapup");
-
-        setTimeout(() => {
-          setSimMemory([
-            { key: "appointment_booked", value: "true" },
-            { key: "service_type", value: "Manicure" },
-            { key: "stylist_preference", value: "Jessica" },
-            { key: "booking_date", value: "Today at 3:00 PM" },
-          ]);
-          setSimStep("ended");
-        }, 2500);
-      }
     }, 1000);
   };
 
-  const handleHangUp = () => {
+  const handleSendVoiceTurn = async () => {
+    const clean = simUtterance.trim();
+    if (!clean || simTurnLoading) return;
+
+    const ts = formatTimer(simTimer || simTranscript.length * 6);
+    const updatedTranscript = [...simTranscript, { role: "customer" as const, text: clean, timestamp: ts }];
+    setSimTranscript(updatedTranscript);
+    setSimUtterance("");
+    setSimTurnLoading(true);
+
+    const res = await crmFetch<{
+      reply: string;
+      extractedMemory?: { key: string; value: string }[];
+    }>("/api/voice/simulate", {
+      method: "POST",
+      body: JSON.stringify({
+        message: clean,
+        customerName: simCallerName,
+        customerPhone: simCallerPhone,
+        leadId: simLeadId || null,
+        history: simTranscript.map((t) => ({ role: t.role, text: t.text, timestamp: t.timestamp })),
+      }),
+    });
+
+    const replyText =
+      res.ok && res.data?.reply
+        ? res.data.reply
+        : res.error || "Unable to reach live Voice AI pipeline. Please verify sign-in status.";
+
+    setSimTranscript((prev) => [
+      ...prev,
+      { role: "agent", text: replyText, timestamp: formatTimer(simTimer + 2) },
+    ]);
+    speakText(replyText);
+
+    if (res.ok && Array.isArray(res.data?.extractedMemory) && res.data.extractedMemory.length > 0) {
+      setSimMemory((prev) => [...prev, ...res.data!.extractedMemory!]);
+    }
+    setSimTurnLoading(false);
+  };
+
+  const handleToggleSpeechMic = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRec) return;
+
+    setIsListeningMic(true);
+    const rec = new SpeechRec();
+    rec.lang = "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = (event: any) => {
+      const spoken = event?.results?.[0]?.[0]?.transcript || "";
+      if (spoken) setSimUtterance(spoken);
+      setIsListeningMic(false);
+    };
+    rec.onerror = () => setIsListeningMic(false);
+    rec.onend = () => setIsListeningMic(false);
+    rec.start();
+  };
+
+  const handleHangUp = async () => {
     if (simIntervalRef.current) clearInterval(simIntervalRef.current);
     setSimStep("wrapup");
 
-    setTimeout(() => {
-      setSimMemory([
-        { key: "lead_name", value: "Jane Doe" },
-        { key: "contact_number", value: "+1 (555) 777-8899" },
-      ]);
-      setSimStep("ended");
-    }, 2000);
+    const res = await crmFetch<{ call?: { summary?: string } }>("/api/voice/simulate", {
+      method: "POST",
+      body: JSON.stringify({
+        endCall: true,
+        customerName: simCallerName,
+        customerPhone: simCallerPhone,
+        leadId: simLeadId || null,
+        durationSeconds: simTimer,
+        history: simTranscript,
+        extractedMemory: simMemory,
+      }),
+    });
+
+    setSimSummary(
+      res.data?.call?.summary ||
+        `Completed live AI Voice session with ${simCallerName} (${simTranscript.length} turns).`
+    );
+    setSimStep("ended");
   };
 
   const handleDeclineCall = () => {
     setIsSimulating(false);
     addCall({
-      leadId: null,
-      customerName: "Unknown Caller",
-      customerPhone: "+1 (555) 303-4400",
+      leadId: simLeadId || null,
+      customerName: simCallerName || "Unknown Caller",
+      customerPhone: simCallerPhone || "+49 30 000000",
       direction: "inbound",
       status: "missed",
       durationSeconds: 0,
       recordingUrl: "",
       transcription: [],
-      summary: "Missed call from a potential customer. SMS auto-reply triggered.",
+      summary: "Missed inbound call. Auto-SMS follow-up queued.",
       sentiment: "neutral",
       callMemory: [],
     });
   };
 
-  const handleSaveSimulatedCall = () => {
-    addCall({
-      leadId: null,
-      customerName: "Jane Doe",
-      customerPhone: "+1 (555) 777-8899",
-      direction: "inbound",
-      status: simTranscript.length > 3 ? "completed" : "failed",
-      durationSeconds: simTimer,
-      recordingUrl: "https://actions.google.com/sounds/v1/ambiences/coffee_shop_ambience.ogg",
-      transcription: simTranscript,
-      summary: "Customer called to schedule a manicure. Inbound AI receptionist scheduled slot at 3:00 PM today with Jessica.",
-      sentiment: "positive",
-      callMemory: simMemory,
-    });
-
+  const handleSaveSimulatedCall = async () => {
+    await fetchCalls();
     setIsSimulating(false);
   };
 
@@ -280,10 +338,10 @@ export function VoiceSection() {
 
   return (
     <div className="h-full flex flex-col space-y-6">
-      <div className={cn(CONSOLE_BADGE_WARN, "w-full justify-start rounded-xl px-4 py-3 text-xs leading-relaxed")}>
+      <div className={cn(CONSOLE_BADGE_LIVE, "w-full justify-start rounded-xl px-4 py-3 text-xs leading-relaxed")}>
         <Info className="w-4 h-4 shrink-0" />
         <span>
-          <strong className="font-semibold">Roadmap note:</strong> Voice capabilities are currently paused while launch operations focus on 24/7 multi-channel chat reception. Use the call simulator below to preview call flows.
+          <strong className="font-semibold">Live Voice AI &amp; Twilio Webhook:</strong> Test live spoken AI turns with full Business Profile, Hybrid RAG &amp; CRM tools below, or point Twilio Voice to <code className="font-mono">/api/integrations/twilio/voice/webhook</code>.
         </span>
       </div>
 
@@ -678,14 +736,53 @@ export function VoiceSection() {
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6 console-scroll">
               {simStep === "ringing" && (
-                <div className="py-10 flex flex-col items-center justify-center space-y-6 text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#19201d] border border-[#34d399]/35 flex items-center justify-center text-[#34d399]">
-                    <PhoneIncoming className="w-7 h-7" />
+                <div className="py-6 flex flex-col items-center justify-center space-y-5 text-center">
+                  <div className="w-14 h-14 rounded-full bg-[#19201d] border border-[#34d399]/35 flex items-center justify-center text-[#34d399]">
+                    <PhoneIncoming className="w-6 h-6" />
                   </div>
 
                   <div className="space-y-1">
-                    <h4 className="text-base font-semibold text-[#edf0ee]">Inbound call trigger</h4>
-                    <p className="text-xs font-mono text-[#a1aaa4]">+1 (555) 777-8899 · Jane Doe</p>
+                    <h4 className="text-base font-semibold text-[#edf0ee]">Configure live AI Voice call</h4>
+                    <p className="text-xs text-[#a1aaa4]">Grounded in your Business Profile, Hybrid RAG &amp; CRM dossier</p>
+                  </div>
+
+                  <div className="w-full max-w-md space-y-2.5 text-left">
+                    <select
+                      value={simLeadId}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setSimLeadId(id);
+                        const match = leads.find((l) => l.id === id);
+                        if (match) {
+                          setSimCallerName(match.name || "Caller");
+                          if (match.phone) setSimCallerPhone(match.phone);
+                        }
+                      }}
+                      className={cn(CONSOLE_INPUT, "w-full px-3 py-2 text-xs cursor-pointer")}
+                    >
+                      <option value="">Anonymous inbound caller</option>
+                      {leads.slice(0, 40).map((l) => (
+                        <option key={l.id} value={l.id}>
+                          CRM: {l.name || l.email || l.phone || l.id.slice(0, 8)}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={simCallerName}
+                        onChange={(e) => setSimCallerName(e.target.value)}
+                        placeholder="Caller name"
+                        className={cn(CONSOLE_INPUT, "px-3 py-2 text-xs")}
+                      />
+                      <input
+                        type="text"
+                        value={simCallerPhone}
+                        onChange={(e) => setSimCallerPhone(e.target.value)}
+                        placeholder="Caller phone"
+                        className={cn(CONSOLE_INPUT, "px-3 py-2 text-xs font-mono")}
+                      />
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-center gap-3">
@@ -694,7 +791,7 @@ export function VoiceSection() {
                       onClick={handleDeclineCall}
                       className={CONSOLE_BTN_DANGER}
                     >
-                      Ignore (triggers auto-SMS)
+                      Log missed call
                     </button>
                     <button
                       type="button"
@@ -712,51 +809,72 @@ export function VoiceSection() {
                   <div className={cn(CONSOLE_SUBCARD, "flex items-center justify-between px-3.5 py-2.5")}>
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-[#34d399]" />
-                      <span className="text-xs text-[#edf0ee] font-medium">Line active · AI booking specialist</span>
+                      <span className="text-xs text-[#edf0ee] font-medium">Live AI Voice · {simCallerName}</span>
                     </div>
-                    <span className="text-xs font-mono text-[#a1aaa4] tabular-nums">
-                      {Math.floor(simTimer / 60)}:{simTimer % 60 < 10 ? "0" : ""}
-                      {simTimer % 60}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setSimSpeechAudio(!simSpeechAudio)}
+                        className="text-[11px] text-[#a1aaa4] hover:text-[#edf0ee] cursor-pointer"
+                      >
+                        {simSpeechAudio ? "Audio TTS: On" : "Audio TTS: Off"}
+                      </button>
+                      <span className="text-xs font-mono text-[#a1aaa4] tabular-nums">
+                        {formatTimer(simTimer)}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className={cn(CONSOLE_SUBCARD, "h-10 flex items-center justify-center gap-1 p-3 select-none")}>
-                    {Array.from({ length: 20 }).map((_, i) => {
-                      const h = 20 + Math.sin(simTimer + i) * 60;
+                  <div className={cn(CONSOLE_SUBCARD, "p-4 h-60 overflow-y-auto space-y-3 flex flex-col justify-end console-scroll")}>
+                    {simTranscript.map((t, idx) => {
+                      const isAgent = t.role === "agent";
                       return (
                         <div
-                          key={i}
-                          style={{ height: `${Math.max(10, Math.min(100, h))}%` }}
-                          className="w-1 bg-[#34d399]/65 rounded transition-all duration-300"
-                        />
+                          key={idx}
+                          className={cn(
+                            "max-w-[85%] rounded-xl p-3 text-xs leading-relaxed border",
+                            isAgent
+                              ? "bg-[#19201d] border-[#edf0ee]/[0.08] text-[#edf0ee] self-start"
+                              : "bg-[#4cc38a]/10 border-[#4cc38a]/25 text-[#edf0ee] self-end"
+                          )}
+                        >
+                          <span className="block text-[11px] text-[#727c75] mb-1">
+                            {isAgent ? "StarX AI Receptionist" : simCallerName}
+                          </span>
+                          {t.text}
+                        </div>
                       );
                     })}
                   </div>
 
-                  <div className={cn(CONSOLE_SUBCARD, "p-4 h-60 overflow-y-auto space-y-3 flex flex-col justify-end console-scroll")}>
-                    {simTranscript.length === 0 ? (
-                      <p className="text-[#727c75] text-xs text-center py-12">Connecting audio stream...</p>
-                    ) : (
-                      simTranscript.map((t, idx) => {
-                        const isAgent = t.role === "agent";
-                        return (
-                          <div
-                            key={idx}
-                            className={cn(
-                              "max-w-[85%] rounded-xl p-3 text-xs leading-relaxed border",
-                              isAgent
-                                ? "bg-[#19201d] border-[#edf0ee]/[0.08] text-[#edf0ee] self-start"
-                                : "bg-[#4cc38a]/10 border-[#4cc38a]/25 text-[#edf0ee] self-end"
-                            )}
-                          >
-                            <span className="block text-[11px] text-[#727c75] mb-1">
-                              {isAgent ? "StarX AI Receptionist" : "Jane Doe"}
-                            </span>
-                            {t.text}
-                          </div>
-                        );
-                      })
-                    )}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleToggleSpeechMic}
+                      disabled={isListeningMic}
+                      title="Speak via browser microphone"
+                      className={CONSOLE_BTN_SECONDARY}
+                    >
+                      <Mic className={cn("w-3.5 h-3.5", isListeningMic && "text-[#34d399]")} />
+                    </button>
+                    <input
+                      type="text"
+                      value={simUtterance}
+                      onChange={(e) => setSimUtterance(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSendVoiceTurn();
+                      }}
+                      placeholder="Speak or type caller utterance..."
+                      className={cn(CONSOLE_INPUT, "flex-1 px-3 py-2 text-xs")}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSendVoiceTurn}
+                      disabled={!simUtterance.trim() || simTurnLoading}
+                      className={CONSOLE_BTN_PRIMARY}
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                   <button
@@ -765,7 +883,7 @@ export function VoiceSection() {
                     className={cn(CONSOLE_BTN_DANGER, "w-full py-2.5")}
                   >
                     <Phone className="w-3.5 h-3.5 rotate-[135deg]" />
-                    <span>Hang up & process transcription</span>
+                    <span>Hang up &amp; save call log</span>
                   </button>
                 </div>
               )}
@@ -775,7 +893,7 @@ export function VoiceSection() {
                   <Brain className="w-8 h-8 text-[#34d399]" />
                   <div className="space-y-1">
                     <h4 className="text-sm font-medium text-[#edf0ee]">Processing call wrap-up</h4>
-                    <p className="text-xs text-[#727c75]">Generating transcript, sentiment tag, and CRM variables...</p>
+                    <p className="text-xs text-[#727c75]">Saving transcript, sentiment tag, and CRM variables...</p>
                   </div>
                 </div>
               )}
@@ -785,36 +903,36 @@ export function VoiceSection() {
                   <div className="bg-[#4cc38a]/10 border border-[#4cc38a]/25 rounded-xl p-4 flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-[#4cc38a] shrink-0" />
                     <div>
-                      <h4 className="text-xs font-medium text-[#edf0ee]">Processing complete</h4>
-                      <p className="text-xs text-[#a1aaa4] mt-0.5">Review extracted summary and CRM memory fields below.</p>
+                      <h4 className="text-xs font-medium text-[#edf0ee]">Call persisted to workspace log</h4>
+                      <p className="text-xs text-[#a1aaa4] mt-0.5">Summary &amp; extracted CRM signals synced cleanly.</p>
                     </div>
                   </div>
 
                   <div className={cn(CONSOLE_SUBCARD, "p-4 space-y-1.5")}>
                     <span className="text-xs font-medium text-[#727c75] block">Summary</span>
-                    <p className="text-xs text-[#edf0ee] leading-relaxed">
-                      Jane Doe called to schedule a manicure. Inbound AI receptionist scheduled the slot at 3:00 PM today with Jessica.
-                    </p>
+                    <p className="text-xs text-[#edf0ee] leading-relaxed">{simSummary}</p>
                   </div>
 
-                  <div className={cn(CONSOLE_SUBCARD, "p-4 space-y-2")}>
-                    <span className="text-xs font-medium text-[#727c75] block">Extracted CRM variables</span>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      {simMemory.map((mem, idx) => (
-                        <div key={idx} className="p-2.5 bg-[#121715] border border-[#edf0ee]/[0.06] rounded-lg text-xs">
-                          <span className="block font-mono text-[11px] text-[#727c75]">{mem.key}</span>
-                          <span className="font-medium text-[#edf0ee] mt-0.5 block">{mem.value}</span>
-                        </div>
-                      ))}
+                  {simMemory.length > 0 && (
+                    <div className={cn(CONSOLE_SUBCARD, "p-4 space-y-2")}>
+                      <span className="text-xs font-medium text-[#727c75] block">Extracted CRM variables</span>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {simMemory.map((mem, idx) => (
+                          <div key={idx} className="p-2.5 bg-[#121715] border border-[#edf0ee]/[0.06] rounded-lg text-xs">
+                            <span className="block font-mono text-[11px] text-[#727c75]">{mem.key}</span>
+                            <span className="font-medium text-[#edf0ee] mt-0.5 block">{mem.value}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <button
                     type="button"
                     onClick={handleSaveSimulatedCall}
                     className={cn(CONSOLE_BTN_PRIMARY, "w-full py-2.5")}
                   >
-                    <span>Save call log</span>
+                    <span>Done &amp; close</span>
                   </button>
                 </div>
               )}

@@ -6,11 +6,12 @@ import { IdentityResolver } from '../crm/identityResolver';
 import { ReceptionistJobScheduler } from '../jobs/receptionistJobScheduler';
 import { ToolExecutor } from './tools/toolExecutor';
 import { isValidUuid, newUuid, resolveValidOrganizationId } from '../crm/organizationHelper';
+import { WorkflowExecutionEngine } from '../workflows/workflowExecutionEngine';
 
 export interface InboundMessageEvent {
   userId: string;
   organizationId?: string | null;
-  channel: 'WhatsApp' | 'Instagram' | 'SMS' | 'Web' | 'Email' | 'Messenger';
+  channel: 'WhatsApp' | 'Instagram' | 'SMS' | 'Web' | 'Email' | 'Messenger' | 'Phone';
   senderPhone?: string;
   senderEmail?: string;
   senderName: string;
@@ -280,6 +281,22 @@ export class AIOrchestrator {
       .join(' ');
     const selectedRole: AgentRole = roleOverride || inferPrimaryRole(messageText, recentAssistantText);
 
+    // 5b. Execute active matching workflows (conditions + step actions + custom directives)
+    const wfOutcome = await WorkflowExecutionEngine.evaluateInbound({
+      userId,
+      organizationId: effectiveOrgId || undefined,
+      channel,
+      messageText,
+      conversationId,
+      leadId,
+      senderName: resolvedName,
+      isNewLead: chronological.length === 0,
+      referenceTimestamp:
+        typeof event.metadata?.simulatedTimestamp === 'string'
+          ? event.metadata.simulatedTimestamp
+          : undefined,
+    });
+
     // 6. Execute Unified AI Intelligence Pipeline with Full Context + Trace
     const aiResult = await AIProvider.executeAgent({
       userId,
@@ -293,6 +310,8 @@ export class AIOrchestrator {
       customerPhone: resolvedPhone,
       customerEmail: resolvedEmail,
       conversationHistory: formattedHistory,
+      customInstructions:
+        wfOutcome.promptDirectives.length > 0 ? wfOutcome.promptDirectives.join('\n') : undefined,
       referenceTimestamp:
         typeof event.metadata?.simulatedTimestamp === 'string'
           ? event.metadata.simulatedTimestamp

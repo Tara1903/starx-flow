@@ -11,6 +11,8 @@ import { BusinessProfileService, BusinessReceptionistProfile } from './businessP
 import { AIContextAssembler } from './contextAssembler';
 
 const DEFAULT_NVIDIA_MODEL = 'nvidia/nemotron-3.5-bolt-e4b';
+const NVIDIA_TIMEOUT_MS = 3500;
+const NVIDIA_COOLDOWN_MS = 5 * 60 * 1000;
 
 function getGeminiApiKey(): string {
   return process.env.GEMINI_API_KEY || '';
@@ -66,6 +68,12 @@ function buildToolContext(input: AgentExecutionInput) {
 }
 
 export class AIProvider {
+  private static nvidiaCooldownUntil = 0;
+
+  static resetCircuitBreakers(): void {
+    this.nvidiaCooldownUntil = 0;
+  }
+
   /**
    * Executes an AI turn with full multi-layer CRM + Workspace + RAG context assembly,
    * multi-round function calling across Gemini/NVIDIA, and safe deterministic fallback.
@@ -192,7 +200,7 @@ OPERATIONAL & SAFETY RULES:
     };
 
     const tryNvidia = async (): Promise<AgentExecutionResult | null> => {
-      if (!hasNvidia) return null;
+      if (!hasNvidia || Date.now() < this.nvidiaCooldownUntil) return null;
       providerAttempted.push('nvidia');
       try {
         const nvidiaRes = await this.callNvidiaMultiTurn(
@@ -203,6 +211,7 @@ OPERATIONAL & SAFETY RULES:
           enableTools
         );
         if (nvidiaRes) {
+          this.nvidiaCooldownUntil = 0;
           const out = this.processOutput(
             nvidiaRes.replyText,
             input.customerMessage,
@@ -390,7 +399,7 @@ OPERATIONAL & SAFETY RULES:
             'Content-Type': 'application/json',
             Authorization: `Bearer ${getNvidiaApiKey()}`,
           },
-          signal: AbortSignal.timeout(12000),
+          signal: AbortSignal.timeout(NVIDIA_TIMEOUT_MS),
           body: JSON.stringify({
             model: getNvidiaModel(),
             messages,
@@ -454,8 +463,21 @@ OPERATIONAL & SAFETY RULES:
       return fallbackSummaryParts.length > 0
         ? { replyText: fallbackSummaryParts.join('\n'), toolExecutions }
         : null;
-    } catch (err) {
-      console.warn('[AIProvider] Nvidia network exception:', err);
+    } catch (err: any) {
+      const code = err?.cause?.code || err?.name || '';
+      if (
+        code === 'UND_ERR_CONNECT_TIMEOUT' ||
+        code === 'TimeoutError' ||
+        code === 'ECONNREFUSED' ||
+        code === 'ENOTFOUND'
+      ) {
+        if (Date.now() >= this.nvidiaCooldownUntil) {
+          console.warn('[AIProvider] Nvidia endpoint unreachable; enabling 5m circuit-breaker cooldown.');
+        }
+        this.nvidiaCooldownUntil = Date.now() + NVIDIA_COOLDOWN_MS;
+      } else {
+        console.warn('[AIProvider] Nvidia network exception:', err);
+      }
       return fallbackSummaryParts.length > 0
         ? { replyText: fallbackSummaryParts.join('\n'), toolExecutions }
         : null;

@@ -122,18 +122,16 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
 
       if (error) {
         console.error('[StarX] Fetch calls error:', error);
-        set({ calls: get().calls.length > 0 ? get().calls : DEFAULT_VOICE_CALLS });
+        set({ calls: get().calls });
         return;
       }
 
-      if (data && data.length > 0) {
+      if (Array.isArray(data)) {
         set({ calls: data.map(dbRowToCall) });
-      } else {
-        set({ calls: get().calls.length > 0 ? get().calls : DEFAULT_VOICE_CALLS });
       }
     } catch (e) {
       console.error('[StarX] Fetch calls exception:', e);
-      set({ calls: get().calls.length > 0 ? get().calls : DEFAULT_VOICE_CALLS });
+      set({ calls: get().calls });
     }
   },
 

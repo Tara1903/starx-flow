@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import {
   Cpu, Database, Target, BarChart3, Terminal, Plus, Trash2,
   CheckCircle2, Clock, ShieldCheck, TrendingUp, Activity, Play,
-  Search, Info, X
+  Search, Info, X, RefreshCw
 } from "lucide-react";
 import { useBusinessStore } from "../../store/businessStore";
+import { crmFetch } from "../../lib/crm/crmApi";
 import { cn } from "../../lib/utils";
 import {
   CONSOLE_PANEL,
@@ -56,89 +57,68 @@ export function BusinessOSSection() {
 
   const [growthModel, setGrowthModel] = useState<"conservative" | "linear" | "exponential">("linear");
   const [leadInflow, setLeadInflow] = useState(25);
-  const [simStepIndex, setSimStepIndex] = useState(0);
+  const [runningJobs, setRunningJobs] = useState(false);
+  const [jobNotice, setJobNotice] = useState<string | null>(null);
 
   const [runLoopLogs, setRunLoopLogs] = useState<
     { id: string; time: string; module: string; message: string; type: "success" | "info" | "warning" }[]
-  >([
-    {
-      id: "log-1",
-      time: "09:12:05",
-      module: "Auto-Scheduler",
-      message: "Verified calendar availability for Jane Doe and booked manicure with Jessica at 15:00.",
-      type: "success",
-    },
-    {
-      id: "log-2",
-      time: "10:14:22",
-      module: "Review Monitor",
-      message: "Detected 5-star customer review and dispatched confirmation follow-up.",
-      type: "success",
-    },
-    {
-      id: "log-3",
-      time: "11:00:15",
-      module: "Sales Agent",
-      message: "Identified dormant inquiry and queued follow-up SMS campaign.",
-      type: "info",
-    },
-    {
-      id: "log-4",
-      time: "12:15:30",
-      module: "Calendar Sync",
-      message: "Synchronized next-day calendar slots for Booking Agent delegation.",
-      type: "info",
-    },
-    {
-      id: "log-5",
-      time: "14:30:11",
-      module: "Handoff Router",
-      message: "Routed pricing question to Sales Agent context.",
-      type: "info",
-    },
-  ]);
+  >([]);
+
+  const loadLiveTelemetry = async () => {
+    const [analyticsRes, profileRes] = await Promise.all([
+      crmFetch<{ recentLogs?: typeof runLoopLogs }>("/api/analytics/summary"),
+      crmFetch<{
+        profile?: { autonomyMode?: "max" | "human"; leadEnrichment?: boolean; selfTuning?: boolean };
+      }>("/api/settings/profile"),
+    ]);
+    if (analyticsRes.ok && Array.isArray(analyticsRes.data?.recentLogs)) {
+      setRunLoopLogs(analyticsRes.data.recentLogs);
+    }
+    if (profileRes.ok && profileRes.data?.profile) {
+      if (profileRes.data.profile.autonomyMode) setAutonomyMode(profileRes.data.profile.autonomyMode);
+      if (typeof profileRes.data.profile.leadEnrichment === "boolean") {
+        setLeadEnrichment(profileRes.data.profile.leadEnrichment);
+      }
+      if (typeof profileRes.data.profile.selfTuning === "boolean") {
+        setSelfTuning(profileRes.data.profile.selfTuning);
+      }
+    }
+  };
 
   useEffect(() => {
     fetchBusinessMemories();
     fetchBusinessGoals();
+    loadLiveTelemetry();
   }, [fetchBusinessMemories, fetchBusinessGoals]);
 
-  const handleTriggerSimLoop = () => {
-    const scenarios = [
-      {
-        module: "Auto-Scheduler",
-        message: "Extracted booking preferences and saved to shared workspace memory.",
-        type: "success" as const,
-      },
-      {
-        module: "Sales Agent",
-        message: "Detected invoice question, created internal follow-up task for team review.",
-        type: "info" as const,
-      },
-      {
-        module: "Handoff Router",
-        message: "Completed follow-up sequence with inactive lead and sent booking link.",
-        type: "success" as const,
-      },
-      {
-        module: "Calendar Sync",
-        message: "Processed appointment cancellation and notified waitlist contacts.",
-        type: "info" as const,
-      },
-    ];
-    const scenario = scenarios[simStepIndex % scenarios.length];
-    setSimStepIndex((i) => i + 1);
+  const updateOperatingSetting = async (patch: {
+    autonomyMode?: "max" | "human";
+    leadEnrichment?: boolean;
+    selfTuning?: boolean;
+  }) => {
+    if (patch.autonomyMode !== undefined) setAutonomyMode(patch.autonomyMode);
+    if (patch.leadEnrichment !== undefined) setLeadEnrichment(patch.leadEnrichment);
+    if (patch.selfTuning !== undefined) setSelfTuning(patch.selfTuning);
+    await crmFetch("/api/settings/profile", {
+      method: "PUT",
+      body: JSON.stringify(patch),
+    });
+  };
 
-    setRunLoopLogs((prev) => [
-      {
-        id: `sim-log-${Date.now()}`,
-        time: new Date().toLocaleTimeString([], { hour12: false }),
-        module: scenario.module,
-        message: scenario.message,
-        type: scenario.type,
-      },
-      ...prev,
-    ]);
+  const handleRunDueJobs = async () => {
+    setRunningJobs(true);
+    setJobNotice(null);
+    const res = await crmFetch<{ processed?: number; succeeded?: number; failed?: number }>("/api/jobs/run", {
+      method: "POST",
+      body: JSON.stringify({ batchSize: 25 }),
+    });
+    if (res.ok && res.data) {
+      setJobNotice(`Processed ${res.data.processed ?? 0} due jobs (${res.data.succeeded ?? 0} succeeded).`);
+      await loadLiveTelemetry();
+    } else {
+      setJobNotice(res.error || "Admin permissions required to process background queue.");
+    }
+    setRunningJobs(false);
   };
 
   const handleAddMemory = async (e: React.FormEvent) => {
@@ -427,14 +407,25 @@ export function BusinessOSSection() {
           )}
 
           {activeTab === "logs" && (
-            <button
-              type="button"
-              onClick={handleTriggerSimLoop}
-              className={CONSOLE_BTN_SECONDARY}
-            >
-              <Play className="w-3.5 h-3.5 text-[#34d399]" />
-              <span>Run sample event</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={loadLiveTelemetry}
+                className={CONSOLE_BTN_SECONDARY}
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Refresh</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleRunDueJobs}
+                disabled={runningJobs}
+                className={CONSOLE_BTN_PRIMARY}
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>{runningJobs ? "Processing..." : "Process due jobs"}</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -464,7 +455,7 @@ export function BusinessOSSection() {
               <div className="pt-3 border-t border-[#edf0ee]/[0.06] flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setAutonomyMode("max")}
+                  onClick={() => updateOperatingSetting({ autonomyMode: "max" })}
                   className={cn(
                     "flex-1 text-xs font-medium py-1.5 rounded-lg border transition-colors cursor-pointer",
                     autonomyMode === "max"
@@ -476,7 +467,7 @@ export function BusinessOSSection() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAutonomyMode("human")}
+                  onClick={() => updateOperatingSetting({ autonomyMode: "human" })}
                   className={cn(
                     "flex-1 text-xs font-medium py-1.5 rounded-lg border transition-colors cursor-pointer",
                     autonomyMode === "human"
@@ -533,7 +524,7 @@ export function BusinessOSSection() {
                 <input
                   type="checkbox"
                   checked={leadEnrichment}
-                  onChange={(e) => setLeadEnrichment(e.target.checked)}
+                  onChange={(e) => updateOperatingSetting({ leadEnrichment: e.target.checked })}
                   className="w-4 h-4 accent-[#34d399] cursor-pointer"
                 />
               </label>
@@ -546,7 +537,7 @@ export function BusinessOSSection() {
                 <input
                   type="checkbox"
                   checked={selfTuning}
-                  onChange={(e) => setSelfTuning(e.target.checked)}
+                  onChange={(e) => updateOperatingSetting({ selfTuning: e.target.checked })}
                   className="w-4 h-4 accent-[#34d399] cursor-pointer"
                 />
               </label>
@@ -793,18 +784,27 @@ export function BusinessOSSection() {
           </div>
 
           <div className={cn(CONSOLE_SUBCARD, "p-4 font-mono text-xs h-[340px] overflow-y-auto space-y-2.5 console-scroll tabular-nums")}>
-            {runLoopLogs.map((log) => (
-              <div key={log.id} className="flex items-start gap-2.5 leading-relaxed">
-                <span className="text-[#727c75] shrink-0">[{log.time}]</span>
-                <span className="text-[#4cc38a] shrink-0">[{log.module}]</span>
-                <span className="text-[#a1aaa4]">{log.message}</span>
+            {runLoopLogs.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-[#727c75] font-sans">
+                No live execution logs recorded yet. Inbound conversations, workflows, and scheduled jobs appear here in real time.
               </div>
-            ))}
+            ) : (
+              runLoopLogs.map((log) => (
+                <div key={log.id} className="flex items-start gap-2.5 leading-relaxed">
+                  <span className="text-[#727c75] shrink-0">[{log.time}]</span>
+                  <span className="text-[#4cc38a] shrink-0">[{log.module}]</span>
+                  <span className="text-[#a1aaa4]">{log.message}</span>
+                </div>
+              ))
+            )}
           </div>
 
           <div className={cn(CONSOLE_SUBCARD, "flex items-center gap-2 text-xs text-[#a1aaa4] p-3")}>
             <Info className="w-4 h-4 text-[#34d399] shrink-0" />
-            <span>Use &ldquo;Run sample event&rdquo; above to preview how a new trigger appends to the log stream.</span>
+            <span>
+              {jobNotice ||
+                'Logs stream directly from execution_logs and ai_intelligence_traces. Click "Process due jobs" to sweep scheduled reminders and CRM drip sequences.'}
+            </span>
           </div>
         </div>
       )}

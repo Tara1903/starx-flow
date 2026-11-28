@@ -11,6 +11,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuthStore } from "../../store/authStore";
 import { useBillingStore } from "../../store/billingStore";
 import { useToastStore } from "../../store/toastStore";
+import { crmFetch } from "../../lib/crm/crmApi";
 import { PermissionGate, GlassModal, GlassButton } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import {
@@ -143,6 +144,19 @@ export function SettingsSection() {
       }
 
       try {
+        const profRes = await crmFetch<{
+          profile?: { name?: string; businessName?: string; businessType?: string };
+        }>("/api/settings/profile");
+        if (profRes.ok && profRes.data?.profile) {
+          if (profRes.data.profile.name) setName(profRes.data.profile.name);
+          if (profRes.data.profile.businessName) setBusinessName(profRes.data.profile.businessName);
+          if (profRes.data.profile.businessType) setBusinessType(profRes.data.profile.businessType);
+        }
+      } catch {
+        // Keep current store state if unavailable
+      }
+
+      try {
         const headers = await getAccessHeaders();
         const igRes = await fetch("/api/integrations/instagram/connect", { headers });
         if (igRes.ok) {
@@ -151,27 +165,15 @@ export function SettingsSection() {
             const label = igData.username || igData.pageId || igData.igAccountId || "connected";
             setInstagramConnected(true);
             setInstagramPageId(label);
-            localStorage.setItem("starx_ig_connected", JSON.stringify({ pageId: label }));
             return;
           }
           setInstagramConnected(false);
           setInstagramPageId("");
-          localStorage.removeItem("starx_ig_connected");
           return;
         }
       } catch {
-        // Fall back to cached state below if offline
-      }
-
-      try {
-        const savedIg = localStorage.getItem("starx_ig_connected");
-        if (savedIg) {
-          const parsed = JSON.parse(savedIg);
-          setInstagramConnected(true);
-          setInstagramPageId(parsed.pageId || "");
-        }
-      } catch {
-        // Fallback
+        setInstagramConnected(false);
+        setInstagramPageId("");
       }
     }
     loadIntegrations();
@@ -234,7 +236,6 @@ export function SettingsSection() {
       if (res.ok) {
         setInstagramConnected(true);
         setInstagramPageId(pageId);
-        localStorage.setItem("starx_ig_connected", JSON.stringify({ pageId }));
         setShowIgModal(false);
         notify("success", `Instagram connected (@${pageId}).`);
       } else {
@@ -261,7 +262,6 @@ export function SettingsSection() {
     }
     setInstagramConnected(false);
     setInstagramPageId("");
-    localStorage.removeItem("starx_ig_connected");
     notify("info", "Instagram disconnected.");
   };
 
@@ -278,14 +278,27 @@ export function SettingsSection() {
     setSaving(true);
     setSaved(false);
 
-    await new Promise((r) => setTimeout(r, 800));
+    const res = await crmFetch<{ success: boolean }>("/api/settings/profile", {
+      method: "PUT",
+      body: JSON.stringify({
+        name: name.trim(),
+        businessName: businessName.trim(),
+        businessType,
+      }),
+    });
+
+    if (!res.ok) {
+      setSaving(false);
+      notify("error", res.error || "Unable to persist workspace settings.");
+      return;
+    }
 
     if (user) {
       useAuthStore.setState({
         user: {
           ...user,
-          name,
-          businessName,
+          name: name.trim(),
+          businessName: businessName.trim(),
           businessType,
         },
       });
@@ -293,6 +306,7 @@ export function SettingsSection() {
 
     setSaving(false);
     setSaved(true);
+    notify("success", "Workspace settings saved.");
 
     setTimeout(() => {
       setSaved(false);
