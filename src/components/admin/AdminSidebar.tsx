@@ -5,16 +5,18 @@ import {
   LayoutDashboard,
   Users,
   Inbox,
+  Kanban,
   MessageSquare,
   BarChart3,
   CreditCard,
   Shield,
 } from "lucide-react";
 import { useAdminStore } from "../../store/adminStore";
+import { useCrmStore } from "../../store/crmStore";
 import { useUIStore } from "../../store/uiStore";
 import { ConsoleSidebar, type ConsoleSidebarGroup } from "../shared/ConsoleSidebar";
 
-export type AdminSection = "overview" | "clients" | "leads" | "support" | "analytics" | "plans" | "settings";
+export type AdminSection = "overview" | "clients" | "leads" | "crm" | "support" | "analytics" | "plans" | "settings";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -76,6 +78,49 @@ export function AdminSidebar({
           subItems: [
             { label: "Pending reviews", action: () => onSelectSection("leads") },
             { label: "Scheduled demos", action: () => onSelectSection("leads") },
+          ],
+        },
+        {
+          id: "crm",
+          label: "CRM & Pipeline",
+          icon: Kanban,
+          group: "main",
+          subItems: [
+            {
+              label: "Pipeline & Deals",
+              action: () => {
+                useCrmStore.getState().setActiveTab("pipeline");
+                onSelectSection("crm");
+              },
+            },
+            {
+              label: "Open Lead Finder",
+              action: () => {
+                useCrmStore.getState().setActiveTab("finder");
+                onSelectSection("crm");
+              },
+            },
+            {
+              label: "Outreach Sequences",
+              action: () => {
+                useCrmStore.getState().setActiveTab("sequences");
+                onSelectSection("crm");
+              },
+            },
+            {
+              label: "Customer Directory",
+              action: () => {
+                useCrmStore.getState().setActiveTab("directory");
+                onSelectSection("crm");
+              },
+            },
+            {
+              label: "Revenue Analytics",
+              action: () => {
+                useCrmStore.getState().setActiveTab("analytics");
+                onSelectSection("crm");
+              },
+            },
           ],
         },
         {

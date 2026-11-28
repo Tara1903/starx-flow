@@ -113,7 +113,7 @@ export interface SupportData {
   whatsappLeadsCount: number;
 }
 
-export type AdminSection = "overview" | "clients" | "leads" | "support" | "analytics" | "plans" | "settings";
+export type AdminSection = "overview" | "clients" | "leads" | "crm" | "support" | "analytics" | "plans" | "settings";
 
 interface AdminState {
   isAdmin: boolean;

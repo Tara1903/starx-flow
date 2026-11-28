@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useDashboardStore, type DashboardSection } from "../../store/dashboardStore";
+import { useCrmStore } from "../../store/crmStore";
 import { useUIStore } from "../../store/uiStore";
 import { ConsoleSidebar, type ConsoleSidebarGroup } from "../shared/ConsoleSidebar";
 
@@ -92,9 +93,41 @@ export function DashboardSidebar() {
           icon: Users,
           group: "core",
           subItems: [
-            { label: "Active clients", action: () => setActiveSection("crm") },
-            { label: "Qualified leads", action: () => setActiveSection("crm") },
-            { label: "Export contacts", action: () => setActiveSection("crm") },
+            {
+              label: "Pipeline & Deals",
+              action: () => {
+                useCrmStore.getState().setActiveTab("pipeline");
+                setActiveSection("crm");
+              },
+            },
+            {
+              label: "Open Lead Finder",
+              action: () => {
+                useCrmStore.getState().setActiveTab("finder");
+                setActiveSection("crm");
+              },
+            },
+            {
+              label: "Outreach Sequences",
+              action: () => {
+                useCrmStore.getState().setActiveTab("sequences");
+                setActiveSection("crm");
+              },
+            },
+            {
+              label: "Customer Directory",
+              action: () => {
+                useCrmStore.getState().setActiveTab("directory");
+                setActiveSection("crm");
+              },
+            },
+            {
+              label: "Revenue Analytics",
+              action: () => {
+                useCrmStore.getState().setActiveTab("analytics");
+                setActiveSection("crm");
+              },
+            },
           ],
         },
         { id: "orders", label: "Orders", icon: ShoppingBag, group: "core" },

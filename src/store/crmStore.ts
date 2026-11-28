@@ -17,6 +17,7 @@ import type {
   LeadWorkspace360,
 } from '../types/crm';
 import { useAuthStore } from './authStore';
+import { useAdminStore } from './adminStore';
 import { crmFetch } from '../lib/crm/crmApi';
 
 export type CrmWorkspaceTab = 'pipeline' | 'directory' | 'finder' | 'sequences' | 'analytics';
@@ -231,7 +232,8 @@ export const useCrmStore = create<CrmState>((set, get) => ({
 
   fetchLeads: async () => {
     const user = useAuthStore.getState().user;
-    if (!user) return;
+    const isAdmin = useAdminStore.getState().isAdmin;
+    if (!user && !isAdmin) return;
 
     set({ loading: true, error: null });
     const res = await crmFetch<{
@@ -559,7 +561,8 @@ export const useCrmStore = create<CrmState>((set, get) => ({
 
   fetchSequences: async () => {
     const user = useAuthStore.getState().user;
-    if (!user) return;
+    const isAdmin = useAdminStore.getState().isAdmin;
+    if (!user && !isAdmin) return;
     set({ sequencesLoading: true });
     const res = await crmFetch<{ sequences: CrmSequence[]; enrollments: CrmSequenceEnrollment[] }>(
       '/api/crm/sequences'

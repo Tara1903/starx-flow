@@ -6,10 +6,15 @@ import {
   RefreshCw,
   CheckCircle2,
   ArrowRight,
+  Kanban,
+  Search,
+  Workflow,
+  Users,
 } from "lucide-react";
 import { AdminKPIsRow } from "./AdminKPIs";
 import { RevenueVelocityChart, MonthlyGoalGauge } from "./AdminCharts";
 import { type Client, type DemoLead } from "../../store/adminStore";
+import { useCrmStore, type CrmWorkspaceTab } from "../../store/crmStore";
 import {
   CONSOLE_PANEL_LG,
   CONSOLE_SUBCARD,
@@ -28,7 +33,7 @@ import { CANONICAL_PLANS, normalizePlanId } from "@/lib/plans";
 interface AdminOverviewViewProps {
   clients: Client[];
   demoLeads: DemoLead[];
-  onSelectSection: (section: "clients" | "leads" | "analytics") => void;
+  onSelectSection: (section: "clients" | "leads" | "crm" | "analytics") => void;
   onRefresh: () => void;
   onExportCsv?: () => void;
 }
@@ -61,6 +66,16 @@ export function AdminOverviewView({
 
   const recentClients = clients.slice(0, 4);
   const pendingLeads = demoLeads.filter((l) => l.status === "new").slice(0, 4);
+
+  const crmLeadsCount = useCrmStore((s) => s.leads.length);
+  const crmAnalytics = useCrmStore((s) => s.analytics);
+  const crmSequencesCount = useCrmStore((s) => s.sequences.length);
+  const setCrmTab = useCrmStore((s) => s.setActiveTab);
+
+  const openCrmTab = (tab: CrmWorkspaceTab) => {
+    setCrmTab(tab);
+    onSelectSection("crm");
+  };
 
   return (
     <div className="space-y-6 select-none">
@@ -111,6 +126,92 @@ export function AdminOverviewView({
             targetAmount={`$${targetMonthlyGoal.toLocaleString()}`}
             currentAmount={`$${realMRR.toLocaleString()}`}
           />
+        </div>
+      </div>
+
+      {/* Revenue CRM & Prospecting Admin Cell */}
+      <div className={cn(CONSOLE_PANEL_LG, "space-y-4 tabular-nums")}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#edf0ee]/[0.08]">
+          <div>
+            <h2 className={CONSOLE_SECTION_TITLE}>Revenue CRM & Outbound Hub</h2>
+            <p className="text-xs text-[#727c75] mt-0.5">
+              Direct admin access to live pipeline deals, OpenStreetMap prospecting, sequences & 360° accounts
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={CONSOLE_BADGE_LIVE}>
+              Forecast: €{Math.round(crmAnalytics?.weightedPipelineValue || 0).toLocaleString()}
+            </span>
+            <span className={CONSOLE_BADGE_MUTED}>
+              {crmAnalytics?.openDealsCount || 0} open deals · {crmLeadsCount} contacts
+            </span>
+            <button
+              type="button"
+              onClick={() => openCrmTab("pipeline")}
+              className={CONSOLE_BTN_GHOST}
+            >
+              <span>Open CRM</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          {[
+            {
+              tab: "pipeline" as CrmWorkspaceTab,
+              title: "CRM Pipeline",
+              desc: "Manage stages & revenue deals",
+              icon: Kanban,
+              meta: `€${Math.round(crmAnalytics?.totalPipelineValue || 0).toLocaleString()} gross`,
+            },
+            {
+              tab: "finder" as CrmWorkspaceTab,
+              title: "Open Lead Finder",
+              desc: "Search & enrich B2B prospects",
+              icon: Search,
+              meta: "OSM + Web Crawler",
+            },
+            {
+              tab: "sequences" as CrmWorkspaceTab,
+              title: "Outreach Sequences",
+              desc: "Automated WA, Email & IG drips",
+              icon: Workflow,
+              meta: `${crmSequencesCount} workflows`,
+            },
+            {
+              tab: "directory" as CrmWorkspaceTab,
+              title: "Customer Directory",
+              desc: "Full 360° profiles, tasks & merge",
+              icon: Users,
+              meta: `${crmLeadsCount} records`,
+            },
+          ].map((tile) => {
+            const Icon = tile.icon;
+            return (
+              <button
+                type="button"
+                key={tile.tab}
+                onClick={() => openCrmTab(tile.tab)}
+                className={cn(
+                  CONSOLE_SUBCARD,
+                  "p-3.5 text-left group flex items-center justify-between gap-3 hover:bg-[#19201d] hover:border-[#edf0ee]/14 transition-colors cursor-pointer"
+                )}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#19201d] border border-[#edf0ee]/[0.08] flex items-center justify-center text-[#a1aaa4] group-hover:text-[#34d399] flex-shrink-0 transition-colors">
+                    <Icon className="w-4 h-4" strokeWidth={1.65} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-[#edf0ee] truncate">{tile.title}</p>
+                    <p className="text-[11px] text-[#727c75] truncate">{tile.desc}</p>
+                    <p className="text-[10px] text-[#4cc38a] mt-0.5 truncate">{tile.meta}</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-[#727c75] group-hover:text-[#34d399] flex-shrink-0 transition-colors" />
+              </button>
+            );
+          })}
         </div>
       </div>
 

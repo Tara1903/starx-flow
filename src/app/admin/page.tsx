@@ -13,6 +13,8 @@ import { AdminAnalyticsView } from "../../components/admin/AdminAnalyticsView";
 import { AdminPlansView } from "../../components/admin/AdminPlansView";
 import { AdminSettingsView } from "../../components/admin/AdminSettingsView";
 import { AdminSupportView } from "../../components/admin/AdminSupportView";
+import { CrmSection } from "../../screens/dashboard/CrmSection";
+import { useCrmStore } from "../../store/crmStore";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -64,6 +66,8 @@ export default function AdminPage() {
       fetchClients();
       fetchDemoLeads();
       fetchSupportData();
+      void useCrmStore.getState().fetchLeads();
+      void useCrmStore.getState().fetchSequences();
       const unsubscribe = subscribeToAdminRealtime();
       return () => {
         unsubscribe();
@@ -75,6 +79,8 @@ export default function AdminPage() {
     fetchClients();
     fetchDemoLeads();
     fetchSupportData();
+    void useCrmStore.getState().fetchLeads();
+    void useCrmStore.getState().fetchSequences();
   }, [fetchClients, fetchDemoLeads, fetchSupportData]);
 
   const handleLeadStatusChange = async (
@@ -148,6 +154,8 @@ export default function AdminPage() {
           onRefresh={handleRefresh}
         />
       )}
+
+      {activeSection === "crm" && <CrmSection />}
 
       {activeSection === "support" && (
         <AdminSupportView

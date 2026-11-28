@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useCrmStore, type CrmWorkspaceTab } from '@/store/crmStore';
 import { useAuthStore } from '@/store/authStore';
+import { useAdminStore } from '@/store/adminStore';
 import type { Lead } from '@/types/database';
 import { GlassModal } from '@/components/ui/GlassModal';
 import { CrmPipelineBoard } from '@/components/crm/CrmPipelineBoard';
@@ -123,6 +124,7 @@ export function CrmSection() {
   } = useCrmStore();
 
   const user = useAuthStore((s) => s.user);
+  const isAdmin = useAdminStore((s) => s.isAdmin);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Add Customer Modal State (preserves Cancel & Klaus Schneider placeholder behavior)
@@ -152,11 +154,11 @@ export function CrmSection() {
   });
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id || isAdmin) {
       void fetchLeads();
       void fetchSequences();
     }
-  }, [user?.id, fetchLeads, fetchSequences]);
+  }, [user?.id, isAdmin, fetchLeads, fetchSequences]);
 
   const activePipeline = useMemo(
     () => pipelines.find((p) => p.id === selectedPipelineId) || pipelines.find((p) => p.is_default) || pipelines[0],

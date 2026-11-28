@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { WelcomeHeader } from "../../components/dashboard/WelcomeHeader";
 import { DashboardNotifications } from "../../components/dashboard/DashboardNotifications";
 import { QuickActions } from "../../components/dashboard/QuickActions";
@@ -9,6 +9,8 @@ import { ExecutionChart } from "../../components/dashboard/ExecutionChart";
 import { ChannelDistribution } from "../../components/dashboard/ChannelDistribution";
 import { ActivityFeed } from "../../components/dashboard/ActivityFeed";
 import { ChannelHealth } from "../../components/dashboard/ChannelHealth";
+import { useAuthStore } from "../../store/authStore";
+import { useCrmStore } from "../../store/crmStore";
 
 interface OverviewSectionProps {
   onOpenIntegration: (key: string) => void;
@@ -19,6 +21,17 @@ export function OverviewSection({
   onOpenIntegration,
   onNewWorkflowClick,
 }: OverviewSectionProps) {
+  const userId = useAuthStore((s) => s.user?.id);
+  const fetchLeads = useCrmStore((s) => s.fetchLeads);
+  const fetchSequences = useCrmStore((s) => s.fetchSequences);
+
+  useEffect(() => {
+    if (userId) {
+      void fetchLeads();
+      void fetchSequences();
+    }
+  }, [userId, fetchLeads, fetchSequences]);
+
   return (
     <div className="space-y-6">
       {/* Workspace context header & quick shortcuts */}
@@ -40,7 +53,7 @@ export function OverviewSection({
         </div>
       </div>
 
-      {/* Compact Quick Action Strip */}
+      {/* Compact Quick Action Strip (including CRM Hub icons) */}
       <QuickActions onNewWorkflowClick={onNewWorkflowClick} />
 
       {/* Two-Column Activity Ledger & Channel Connections */}
