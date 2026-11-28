@@ -36,7 +36,7 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
     theme: "dark"
   };
 </script>
-<script src="https://cdn.starx-flow.com/widget.js" async></script>`;
+<script src="https://starx-flow.runs-on.dev/widget.js" async></script>`;
 
   const handleCopySnippet = () => {
     navigator.clipboard.writeText(chatSnippet);
@@ -211,11 +211,11 @@ export function IntegrationModal({ channelKey, isOpen, onClose }: IntegrationMod
             </div>
             
             <a 
-              href="/api/meta/auth"
+              href="/api/meta/auth?channel=instagram"
               onClick={async (e) => {
                 e.preventDefault();
                 await syncAccessTokenCookie();
-                window.location.href = '/api/meta/auth';
+                window.location.href = '/api/meta/auth?channel=instagram';
               }}
               className="w-full bg-[#1877F2] hover:bg-[#1864D9] text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
             >

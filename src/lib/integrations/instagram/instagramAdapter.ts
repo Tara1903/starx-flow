@@ -305,7 +305,13 @@ export class InstagramAdapter {
     const effectiveToken = pageAccessToken;
 
     // 1. Simulated Sandbox Mode
-    if (!this.isLiveConfigured || effectiveToken.startsWith('ig_simulated') || effectiveToken.startsWith('EAA_test_token')) {
+    const lowerToken = effectiveToken.toLowerCase();
+    if (
+      !this.isLiveConfigured ||
+      lowerToken.startsWith('ig_simulated') ||
+      lowerToken.startsWith('igaa_simulated') ||
+      effectiveToken.startsWith('EAA_test_token')
+    ) {
       const simulatedResult: InstagramSendResult = {
         success: true,
         messageId: `ig-mid-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,

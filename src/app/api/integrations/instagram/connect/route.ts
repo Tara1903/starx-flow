@@ -6,6 +6,65 @@ import { InstagramAdapter } from '@/lib/integrations/instagram/instagramAdapter'
 import { isValidUuid } from '@/lib/crm/organizationHelper';
 
 /**
+ * Returns active Instagram Business connection status for the authenticated organization.
+ */
+export async function GET(req: NextRequest) {
+  const auth = await authenticateStaffRequest(req);
+  if (!auth.authenticated) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const { organizationId, user } = auth.session;
+  if (!isSupabaseAdminConfigured) {
+    return NextResponse.json({ connected: false });
+  }
+
+  const { data: account } = await supabaseAdmin
+    .from('connected_accounts')
+    .select('account_identifier, account_name, metadata, status')
+    .eq('organization_id', organizationId)
+    .eq('provider', 'instagram')
+    .eq('status', 'connected')
+    .maybeSingle();
+
+  if (account) {
+    const pageId = (account.metadata?.pageId as string | undefined) || account.account_identifier;
+    const igAccountId = (account.metadata?.igAccountId as string | undefined) || account.account_identifier;
+    const username = (account.metadata?.username as string | undefined) || null;
+    return NextResponse.json({
+      connected: true,
+      pageId,
+      igAccountId,
+      accountName: account.account_name,
+      username,
+    });
+  }
+
+  if (isValidUuid(user.id)) {
+    const { data: channel } = await supabaseAdmin
+      .from('connected_channels')
+      .select('is_connected, credentials')
+      .eq('user_id', user.id)
+      .eq('channel_key', 'Instagram')
+      .eq('is_connected', true)
+      .maybeSingle();
+
+    if (channel?.is_connected) {
+      const creds = (channel.credentials || {}) as Record<string, any>;
+      return NextResponse.json({
+        connected: true,
+        pageId: creds.page_id || creds.ig_account_id || creds.username || 'connected',
+        igAccountId: creds.ig_account_id || creds.page_id || null,
+        accountName: creds.username ? `@${creds.username}` : creds.page_name || 'Instagram',
+        username: creds.username || null,
+      });
+    }
+  }
+
+  return NextResponse.json({ connected: false });
+}
+
+/**
  * Connects an Instagram Business Page for an Organization (WS-08 / M2 Remediation).
  * Encrypts credentials with AES-256-GCM and binds to organization + connected_channels.
  */

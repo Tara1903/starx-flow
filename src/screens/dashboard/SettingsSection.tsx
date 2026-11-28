@@ -125,19 +125,42 @@ export function SettingsSection() {
               ? "Google Calendar connected and syncing in real time."
               : connectedProvider === "microsoft_calendar"
                 ? "Microsoft Outlook Calendar connected and syncing."
-                : `Connected ${connectedProvider}.`
+                : connectedProvider === "meta"
+                  ? "Meta WhatsApp / Instagram channel connected."
+                  : `Connected ${connectedProvider}.`
           );
           params.delete("connected");
           params.set("section", "settings");
           window.history.replaceState({}, "", `/dashboard?${params.toString()}`);
         } else if (oauthErr) {
-          notify("error", `Calendar connection error: ${oauthErr}`);
+          notify("error", `Connection error: ${oauthErr}`);
           params.delete("error");
           params.set("section", "settings");
           window.history.replaceState({}, "", `/dashboard?${params.toString()}`);
         }
       } catch {
         // Ignore URL cleanup errors
+      }
+
+      try {
+        const headers = await getAccessHeaders();
+        const igRes = await fetch("/api/integrations/instagram/connect", { headers });
+        if (igRes.ok) {
+          const igData = await igRes.json();
+          if (igData?.connected) {
+            const label = igData.username || igData.pageId || igData.igAccountId || "connected";
+            setInstagramConnected(true);
+            setInstagramPageId(label);
+            localStorage.setItem("starx_ig_connected", JSON.stringify({ pageId: label }));
+            return;
+          }
+          setInstagramConnected(false);
+          setInstagramPageId("");
+          localStorage.removeItem("starx_ig_connected");
+          return;
+        }
+      } catch {
+        // Fall back to cached state below if offline
       }
 
       try {
@@ -197,9 +220,10 @@ export function SettingsSection() {
 
     setIgConnecting(true);
     try {
+      const headers = await getAccessHeaders();
       const res = await fetch("/api/integrations/instagram/connect", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...headers },
         body: JSON.stringify({
           pageId,
           pageAccessToken: token,
@@ -212,12 +236,13 @@ export function SettingsSection() {
         setInstagramPageId(pageId);
         localStorage.setItem("starx_ig_connected", JSON.stringify({ pageId }));
         setShowIgModal(false);
+        notify("success", `Instagram connected (@${pageId}).`);
       } else {
         const err = await res.json().catch(() => ({}));
-        alert("Failed to connect Instagram: " + (err.error || "Unknown error"));
+        notify("error", "Failed to connect Instagram: " + (err.error || "Unknown error"));
       }
     } catch (err: any) {
-      alert("Error connecting Instagram: " + err.message);
+      notify("error", "Error connecting Instagram: " + err.message);
     } finally {
       setIgConnecting(false);
     }
@@ -226,8 +251,10 @@ export function SettingsSection() {
   const handleDisconnectInstagram = async () => {
     if (!confirm("Are you sure you want to disconnect Instagram?")) return;
     try {
+      const headers = await getAccessHeaders();
       await fetch("/api/integrations/instagram/disconnect", {
         method: "POST",
+        headers,
       });
     } catch {
       // Continue
@@ -235,6 +262,7 @@ export function SettingsSection() {
     setInstagramConnected(false);
     setInstagramPageId("");
     localStorage.removeItem("starx_ig_connected");
+    notify("info", "Instagram disconnected.");
   };
 
   const logout = useAuthStore((s) => s.logout);
@@ -860,7 +888,26 @@ export function SettingsSection() {
         }
         subtitle="Meta Graph API Messaging Integration"
       >
-        <form onSubmit={handleConnectInstagram} className="space-y-3.5 pt-1">
+        <div className="space-y-4 pt-1">
+          <button
+            type="button"
+            onClick={async () => {
+              await getAccessHeaders();
+              window.location.href = "/api/meta/auth?channel=instagram";
+            }}
+            className="w-full py-2.5 px-4 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Continue with Meta / Instagram OAuth</span>
+          </button>
+
+          <div className="flex items-center gap-2 text-[11px] text-[#727c75]">
+            <div className="h-px flex-1 bg-[#edf0ee]/[0.08]" />
+            <span>or enter credentials manually</span>
+            <div className="h-px flex-1 bg-[#edf0ee]/[0.08]" />
+          </div>
+
+          <form onSubmit={handleConnectInstagram} className="space-y-3.5">
           <div>
             <label className="block text-xs font-medium text-[#a1aaa4] mb-1.5">
               Instagram Page or Account ID
@@ -920,7 +967,8 @@ export function SettingsSection() {
               Connect page
             </GlassButton>
           </div>
-        </form>
+          </form>
+        </div>
       </GlassModal>
     </div>
   );
