@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { StarXCoreCanvas } from "./spatial/StarXCoreCanvas";
 import { useMagneticButton } from "@/lib/motion/MagneticController";
 import { StarXFlowMobileStage } from "./StarXFlowMobileStage";
+import { PromoVideoModal } from "./modals/PromoVideoModal";
 import { Footer } from "./Footer";
 import {
   buildHeroCalendarGrid,
@@ -103,6 +104,7 @@ export function StarXFlowLanding() {
   const [activeWorkflowTab, setActiveWorkflowTab] = useState('whatsapp');
   const [activeChallengeIdx, setActiveChallengeIdx] = useState(0);
   const [activeOrbitalIdx, setActiveOrbitalIdx] = useState(0);
+  const [promoVideoOpen, setPromoVideoOpen] = useState(false);
 
   const appStateRef = useRef({
     selectedDateKey: '2026-11-25',
@@ -920,7 +922,7 @@ export function StarXFlowLanding() {
           <button
             id="btn-hero-see-action"
             type="button"
-            onClick={() => scrollToSection('action-section')}
+            onClick={() => setPromoVideoOpen(true)}
             className="pos btn-glass-pill flex items-center justify-center rounded-full"
             style={{ '--x': 245, '--y': 454, '--w': 188, '--h': 56, fontSize: 'calc(16.5 * var(--u))', fontWeight: 500, gap: 'calc(9 * var(--u))' } as React.CSSProperties}
           >
@@ -2081,6 +2083,7 @@ export function StarXFlowLanding() {
       onOpenModal={openModal}
       onOpenCapability={openCapabilityDetail}
       onScrollToSection={scrollToSection}
+      onOpenVideoDemo={() => setPromoVideoOpen(true)}
     />
   </div>
 
@@ -2990,6 +2993,19 @@ export function StarXFlowLanding() {
   {/* APPLICATION LOGIC & INTERACTIVE STATE ENGINE                                */}
   {/* =========================================================================== */}
   
+
+  <PromoVideoModal
+    open={promoVideoOpen}
+    onClose={() => setPromoVideoOpen(false)}
+    onExploreInteractive={() => {
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        scrollToSection('action-mobile-section');
+      } else {
+        scrollToSection('action-section');
+      }
+    }}
+    onGetStarted={() => openModal('signup', 'Full Suite')}
+  />
 
     </>
   );

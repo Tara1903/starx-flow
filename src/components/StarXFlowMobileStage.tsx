@@ -29,6 +29,7 @@ export interface MobileStageProps {
   onOpenModal: (mode: string, planOrTitle?: string, customSubtitle?: string) => void;
   onOpenCapability: (idx: number) => void;
   onScrollToSection: (id: string) => void;
+  onOpenVideoDemo?: () => void;
 }
 
 const workflowTabsData: Record<string, {
@@ -161,6 +162,7 @@ export function StarXFlowMobileStage({
   onOpenModal,
   onOpenCapability,
   onScrollToSection,
+  onOpenVideoDemo,
 }: MobileStageProps) {
   const currentTab = workflowTabsData[activeWorkflowTab] || workflowTabsData.whatsapp;
 
@@ -226,7 +228,7 @@ export function StarXFlowMobileStage({
 
           <button
             type="button"
-            onClick={() => onScrollToSection('action-mobile-section')}
+            onClick={() => (onOpenVideoDemo ? onOpenVideoDemo() : onScrollToSection('action-mobile-section'))}
             className="w-full h-12 rounded-full font-medium text-sm text-[#f0fdf6] flex items-center justify-center gap-2.5 transition-colors bg-[#082015]/80 hover:bg-[#0c2f1f] border border-emerald-400/40 backdrop-blur-md active:scale-[0.98] cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
           >
             <span>See It in Action</span>
