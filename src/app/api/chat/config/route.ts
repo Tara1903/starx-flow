@@ -22,10 +22,12 @@ export async function GET(req: NextRequest) {
       services: (profile.services || []).map((s) => ({
         id: s.id,
         name: s.name,
-        priceEur: s.priceEur,
+        priceEur: s.priceEur ?? s.price,
+        currency: s.currency || 'EUR',
         durationMinutes: s.durationMinutes,
       })),
       supportedLanguages: profile.supportedLanguages,
+      isConfigured: profile.isConfigured ?? false,
       greetingMessage: `Hello! Welcome to ${profile.businessName}. How can our 24/7 AI Receptionist assist you today?`,
     };
 

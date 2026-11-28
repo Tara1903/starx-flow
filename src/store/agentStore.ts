@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { type Agent, type AgentMemory } from './authStore';
+import { resolveClientOrganizationId } from '../lib/crm/crmApi';
 
 interface AgentState {
   agents: Agent[];
@@ -164,7 +165,13 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     }
 
     try {
-      let query = supabase.from('agent_memories').select('*').eq('user_id', userId);
+      const orgId = await resolveClientOrganizationId(userId);
+      let query = supabase.from('agent_memories').select('*');
+      if (orgId && orgId !== userId) {
+        query = query.or(`organization_id.eq.${orgId},user_id.eq.${userId}`);
+      } else {
+        query = query.eq('user_id', userId);
+      }
       if (leadId) {
         query = query.eq('lead_id', leadId);
       }
@@ -200,11 +207,13 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     }));
 
     if (isSupabaseConfigured && userId) {
+      const orgId = await resolveClientOrganizationId(userId);
       const { data, error } = await supabase
         .from('agent_memories')
         .upsert(
           {
             user_id: userId,
+            ...(orgId ? { organization_id: orgId } : {}),
             lead_id: memory.leadId,
             key: memory.key,
             value: memory.value,
@@ -236,7 +245,13 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     }));
 
     if (isSupabaseConfigured && userId) {
-      let query = supabase.from('agent_memories').delete().eq('user_id', userId);
+      const orgId = await resolveClientOrganizationId(userId);
+      let query = supabase.from('agent_memories').delete();
+      if (orgId && orgId !== userId) {
+        query = query.or(`organization_id.eq.${orgId},user_id.eq.${userId}`);
+      } else {
+        query = query.eq('user_id', userId);
+      }
       if (leadId) {
         query = query.eq('lead_id', leadId);
       }

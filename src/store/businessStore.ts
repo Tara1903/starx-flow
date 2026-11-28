@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { type BusinessMemory, type BusinessGoal } from './authStore';
+import { resolveClientOrganizationId } from '../lib/crm/crmApi';
 
 interface BusinessState {
   businessMemories: BusinessMemory[];
@@ -111,10 +112,12 @@ export const useBusinessStore = create<BusinessState>((set, get) => ({
     }
 
     try {
-      const { data, error } = await supabase
-        .from('business_memories')
-        .select('*')
-        .eq('user_id', userId);
+      const orgId = await resolveClientOrganizationId(userId);
+      const baseQuery = supabase.from('business_memories').select('*');
+      const { data, error } =
+        orgId && orgId !== userId
+          ? await baseQuery.or(`organization_id.eq.${orgId},user_id.eq.${userId}`)
+          : await baseQuery.eq('user_id', userId);
 
       if (error) {
         console.error('[StarX] Fetch business memories error:', error);
@@ -148,10 +151,12 @@ export const useBusinessStore = create<BusinessState>((set, get) => ({
     }));
 
     if (isSupabaseConfigured && userId) {
+      const orgId = await resolveClientOrganizationId(userId);
       const { data, error } = await supabase
         .from('business_memories')
         .insert({
           user_id: userId,
+          ...(orgId ? { organization_id: orgId } : {}),
           key: memory.key,
           value: memory.value,
           category: memory.category,
@@ -214,10 +219,12 @@ export const useBusinessStore = create<BusinessState>((set, get) => ({
     }
 
     try {
-      const { data, error } = await supabase
-        .from('business_goals')
-        .select('*')
-        .eq('user_id', userId);
+      const orgId = await resolveClientOrganizationId(userId);
+      const baseQuery = supabase.from('business_goals').select('*');
+      const { data, error } =
+        orgId && orgId !== userId
+          ? await baseQuery.or(`organization_id.eq.${orgId},user_id.eq.${userId}`)
+          : await baseQuery.eq('user_id', userId);
 
       if (error) {
         console.error('[StarX] Fetch business goals error:', error);
@@ -252,10 +259,12 @@ export const useBusinessStore = create<BusinessState>((set, get) => ({
     }));
 
     if (isSupabaseConfigured && userId) {
+      const orgId = await resolveClientOrganizationId(userId);
       const { data, error } = await supabase
         .from('business_goals')
         .insert({
           user_id: userId,
+          ...(orgId ? { organization_id: orgId } : {}),
           title: goal.title,
           description: goal.description,
           target_value: goal.targetValue,

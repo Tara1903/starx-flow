@@ -1,6 +1,6 @@
 import { AIProvider } from './provider';
 import { AgentRole, AgentExecutionResult } from './types';
-import { supabaseAdmin } from '../supabaseAdmin';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '../supabaseAdmin';
 import { UsageService } from '../usage';
 import { IdentityResolver } from '../crm/identityResolver';
 import { ReceptionistJobScheduler } from '../jobs/receptionistJobScheduler';
@@ -21,28 +21,54 @@ export interface InboundMessageEvent {
   metadata?: Record<string, any>;
 }
 
+/**
+ * Multilingual intent heuristic that sets primary focus while keeping composable concierge capabilities active.
+ */
+function inferPrimaryRole(messageText: string, recentAssistantText: string): AgentRole {
+  const lower = messageText.toLowerCase();
+  const bookingPattern =
+    /\b(book|appointment|schedule|slot|reschedule|termin|buchen|rdv|rendez-vous|reservar|cita|verfügbar|available)\b/i;
+  const salesPattern =
+    /\b(buy|order|pay|price|pricing|cost|quote|plan|package|preis|kosten|angebot|tarif|acheter|precio)\b/i;
+  const supportPattern =
+    /\b(cancel|complain|refund|broken|issue|problem|storno|beschwerde|erstattung|remboursement|manager|human)\b/i;
+
+  if (bookingPattern.test(lower) || /\b(book|slot|appointment)\b/i.test(recentAssistantText)) {
+    return 'appointment';
+  }
+  if (salesPattern.test(lower)) return 'sales';
+  if (supportPattern.test(lower)) return 'support';
+  return 'receptionist';
+}
+
 export class AIOrchestrator {
-  private static inMemoryConversations = new Map<string, { id: string; status: string; control_mode: 'ai' | 'human'; unread_count: number; leadId?: string }>();
+  private static inMemoryConversations = new Map<
+    string,
+    { id: string; status: string; control_mode: 'ai' | 'human'; unread_count: number; leadId?: string }
+  >();
 
   static clearInMemory(): void {
     this.inMemoryConversations.clear();
   }
 
-  static setConversationControlMode(id: string, mode: 'ai' | 'human', reason?: string): void {
-    const existing = this.inMemoryConversations.get(id) || { id, status: 'active', control_mode: 'ai', unread_count: 0 };
+  static setConversationControlMode(id: string, mode: 'ai' | 'human', _reason?: string): void {
+    const existing =
+      this.inMemoryConversations.get(id) || {
+        id,
+        status: 'active',
+        control_mode: 'ai',
+        unread_count: 0,
+      };
     existing.control_mode = mode;
     if (mode === 'human') {
       existing.status = 'needs_attention';
     }
     this.inMemoryConversations.set(id, existing);
   }
+
   /**
-   * Processes any inbound customer message end-to-end:
-   * 1. CRM Lead capture / identification
-   * 2. Conversation & Message persistence
-   * 3. AI Agent execution with Knowledge Base RAG
-   * 4. Auto-reply persistence
-   * 5. Hand-off routing & execution telemetry
+   * Processes any inbound customer message end-to-end with 5-layer context assembly,
+   * multi-round tool calling, CRM dossier sync, and intelligence execution telemetry.
    */
   static async handleInboundMessage(event: InboundMessageEvent): Promise<{
     conversationId: string;
@@ -53,8 +79,8 @@ export class AIOrchestrator {
     const dbOrgId = await resolveValidOrganizationId(userId, event.organizationId || event.metadata?.organizationId);
     const effectiveOrgId = dbOrgId || event.organizationId || event.metadata?.organizationId || null;
 
-    // 1. Cross-Channel Customer Identity Resolution (WS-03)
-    let leadId: string | null = null;
+    // 1. Cross-Channel Customer Identity Resolution
+    let leadId: string | null = event.leadId || null;
     let resolvedEmail: string | undefined = senderEmail;
     let resolvedPhone: string | undefined = senderPhone;
     let resolvedName: string = senderName;
@@ -74,11 +100,9 @@ export class AIOrchestrator {
       resolvedPhone = resolvedPhone || resolution.customer?.phone || undefined;
       resolvedName = resolution.customer?.name || resolvedName;
     } catch {
-      // Resilient fallback
-      leadId = newUuid();
+      leadId = leadId || newUuid();
     }
 
-    // Extract email address if the customer just shared one in chat
     const extractedEmailMatch = messageText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
     if (extractedEmailMatch && !resolvedEmail) {
       resolvedEmail = extractedEmailMatch[0].toLowerCase();
@@ -103,7 +127,6 @@ export class AIOrchestrator {
       } else if (this.inMemoryConversations.has(event.conversationId)) {
         activeConvo = this.inMemoryConversations.get(event.conversationId);
       } else {
-        // Conversation was referenced directly by external adapter / thread
         conversationId = event.conversationId;
       }
     }
@@ -115,20 +138,27 @@ export class AIOrchestrator {
         .select('id, status, control_mode, unread_count')
         .eq('user_id', userId)
         .eq('channel', channel)
-        .match(leadId ? { lead_id: leadId } : phoneFilter ? { customer_phone: phoneFilter } : { customer_name: senderName })
+        .match(
+          leadId
+            ? { lead_id: leadId }
+            : phoneFilter
+              ? { customer_phone: phoneFilter }
+              : { customer_name: senderName }
+        )
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      const inMemConvo = leadId ? Array.from(this.inMemoryConversations.values()).find((c) => c.leadId === leadId) : undefined;
+      const inMemConvo = leadId
+        ? Array.from(this.inMemoryConversations.values()).find((c) => c.leadId === leadId)
+        : undefined;
       activeConvo = existingConvo || inMemConvo;
     }
 
     if (activeConvo) {
       conversationId = activeConvo.id;
 
-      // HUMAN TAKEOVER ENFORCEMENT: If conversation is currently controlled by human staff,
-      // do not generate an automated AI response! (Requirement 3.G)
+      // Strict human takeover enforcement
       if (activeConvo.control_mode === 'human' || activeConvo.status === 'human_takeover') {
         await supabaseAdmin.from('messages').insert({
           conversation_id: conversationId,
@@ -220,17 +250,16 @@ export class AIOrchestrator {
       await supabaseAdmin.from('conversations').update({ customer_email: resolvedEmail }).eq('id', conversationId);
     }
 
-    // 4. Fetch MOST RECENT conversation history for context (EXCLUDE internal staff notes & avoid clipping newest turns)
+    // 4. Fetch recent non-internal conversation turns (up to 16)
     const { data: recentMsgsDesc } = await supabaseAdmin
       .from('messages')
       .select('role, content')
       .eq('conversation_id', conversationId)
       .eq('is_internal', false)
       .order('created_at', { ascending: false })
-      .limit(13);
+      .limit(17);
 
     const chronological = (recentMsgsDesc || []).slice().reverse();
-    // Avoid duplicating the current customer message if it was just inserted right above
     if (chronological.length > 0) {
       const last = chronological[chronological.length - 1];
       if (last.role === 'user' && last.content === messageText) {
@@ -238,39 +267,20 @@ export class AIOrchestrator {
       }
     }
 
-    const formattedHistory = chronological.slice(-12).map((m: any) => ({
+    const formattedHistory = chronological.slice(-16).map((m: any) => ({
       role: m.role as any,
       text: m.content,
     }));
 
-    // 5. Select Agent Role based on keyword analysis, recent booking context, or override
-    let selectedRole: AgentRole = roleOverride || 'receptionist';
-    const lower = messageText.toLowerCase();
+    // 5. Infer primary focus cleanly (supporting multilingual queries)
     const recentAssistantText = chronological
       .slice(-4)
       .filter((m: any) => m.role !== 'user')
       .map((m: any) => String(m.content || '').toLowerCase())
       .join(' ');
+    const selectedRole: AgentRole = roleOverride || inferPrimaryRole(messageText, recentAssistantText);
 
-    if (!roleOverride) {
-      if (
-        lower.includes('book') ||
-        lower.includes('appointment') ||
-        lower.includes('schedule') ||
-        lower.includes('slot') ||
-        recentAssistantText.includes('book') ||
-        recentAssistantText.includes('slot') ||
-        recentAssistantText.includes('appointment')
-      ) {
-        selectedRole = 'appointment';
-      } else if (lower.includes('buy') || lower.includes('order') || lower.includes('pay') || lower.includes('price')) {
-        selectedRole = 'sales';
-      } else if (lower.includes('cancel') || lower.includes('complain') || lower.includes('refund') || lower.includes('broken')) {
-        selectedRole = 'support';
-      }
-    }
-
-    // 6. Execute AI Agent with customer context for authorization
+    // 6. Execute Unified AI Intelligence Pipeline with Full Context + Trace
     const aiResult = await AIProvider.executeAgent({
       userId,
       organizationId: effectiveOrgId || undefined,
@@ -283,6 +293,11 @@ export class AIOrchestrator {
       customerPhone: resolvedPhone,
       customerEmail: resolvedEmail,
       conversationHistory: formattedHistory,
+      referenceTimestamp:
+        typeof event.metadata?.simulatedTimestamp === 'string'
+          ? event.metadata.simulatedTimestamp
+          : undefined,
+      includeTrace: true,
     });
 
     // 7. Save Outbound AI Message
@@ -316,7 +331,8 @@ export class AIOrchestrator {
         .update({
           status: finalStatus,
           control_mode: controlMode,
-          handoff_reason: aiResult.handoffReason || (aiResult.requiresHumanHandoff ? 'Human intervention required' : null),
+          handoff_reason:
+            aiResult.handoffReason || (aiResult.requiresHumanHandoff ? 'Human intervention required' : null),
           last_message: aiResult.replyText,
           last_message_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -328,9 +344,13 @@ export class AIOrchestrator {
       }
     }
 
-    // 8b. Automated Appointment Reminder Scheduling (Requirement 3.H)
+    // 8b. Automated Appointment Reminder Scheduling
     for (const execution of aiResult.toolExecutions || []) {
-      if (execution.tool === 'bookAppointment' && execution.result?.success && execution.result.data?.appointmentId) {
+      if (
+        execution.tool === 'bookAppointment' &&
+        execution.result?.success &&
+        execution.result.data?.appointmentId
+      ) {
         const d = execution.result.data;
         try {
           await ReceptionistJobScheduler.scheduleAppointmentReminder({
@@ -341,11 +361,57 @@ export class AIOrchestrator {
             customerEmail: senderEmail || null,
             serviceName: d.serviceName || 'Consultation',
             startTime: d.startTime,
-            channel: (channel.toLowerCase() === 'messenger' ? 'messenger' : channel.toLowerCase() === 'instagram' ? 'instagram' : channel.toLowerCase() === 'email' ? 'email' : 'whatsapp') as any,
+            channel: (channel.toLowerCase() === 'messenger'
+              ? 'messenger'
+              : channel.toLowerCase() === 'instagram'
+                ? 'instagram'
+                : channel.toLowerCase() === 'email'
+                  ? 'email'
+                  : 'whatsapp') as any,
             hoursNotice: 24,
           });
         } catch (reminderErr: any) {
           console.warn('[AIOrchestrator] Failed to schedule reminder job:', reminderErr.message);
+        }
+      }
+    }
+
+    // 8c. Persist AI Intelligence Trace & Non-Blocking CRM AI Summary Refresh
+    if (isSupabaseAdminConfigured && isValidUuid(effectiveOrgId)) {
+      try {
+        await supabaseAdmin.from('ai_intelligence_traces').insert({
+          organization_id: effectiveOrgId,
+          conversation_id: isValidUuid(conversationId) ? conversationId : null,
+          lead_id: isValidUuid(leadId) ? leadId : null,
+          channel,
+          provider: aiResult.provider,
+          model: aiResult.model,
+          intent: selectedRole,
+          rag_chunks_count: aiResult.trace?.ragChunksCount ?? (aiResult.sources?.length || 0),
+          memories_count: aiResult.trace?.memoriesCount ?? 0,
+          crm_linked: aiResult.trace?.crmLinked ?? Boolean(isValidUuid(leadId)),
+          tool_names_used: (aiResult.toolExecutions || []).map((t) => t.tool),
+          requires_handoff: aiResult.requiresHumanHandoff,
+          latency_ms: aiResult.trace?.latencyMs ?? 0,
+          metadata: { contextSourcesUsed: aiResult.trace?.contextSourcesUsed || [] },
+        });
+      } catch {
+        // Non-blocking trace logging
+      }
+
+      if (isValidUuid(leadId) && messageText.trim().length >= 16) {
+        try {
+          const conciseIntent = `[${channel} ${selectedRole}] Latest inquiry: "${messageText.trim().slice(0, 140)}"${aiResult.requiresHumanHandoff ? ' (Human follow-up requested)' : ''}`;
+          await supabaseAdmin
+            .from('leads')
+            .update({
+              ai_summary: conciseIntent,
+              last_contact_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', leadId);
+        } catch {
+          // Non-blocking summary update
         }
       }
     }
@@ -373,12 +439,11 @@ export class AIOrchestrator {
       });
     }
 
-    // Legacy telemetry insert for backward compatibility
     await supabaseAdmin.from('execution_logs').insert({
       user_id: userId,
       type: 'ai_reply',
       channel,
-      message: `[Agent: ${selectedRole}] Responded to ${senderName}. Handoff required: ${aiResult.requiresHumanHandoff}`,
+      message: `[Agent: ${selectedRole} · ${aiResult.provider}] Responded to ${senderName}. Handoff: ${aiResult.requiresHumanHandoff}`,
     });
 
     if (
@@ -466,10 +531,6 @@ export class AIOrchestrator {
     return { success: false, error: result.error };
   }
 
-  /**
-   * Mirrors inbound Admin-cell WhatsApp/Instagram Support inquiries into `demo_requests`
-   * so /admin Demo Inquiries & Realtime notifications stay synchronized.
-   */
   private static async syncAdminDemoLead(params: {
     channel: 'WhatsApp' | 'Instagram';
     phone?: string;

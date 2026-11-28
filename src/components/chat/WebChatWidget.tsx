@@ -228,6 +228,18 @@ export function WebChatWidget({ businessId, organizationId }: { businessId?: str
                       }`}
                     >
                       {m.text}
+                      {m.sender === "ai" && m.sources && m.sources.length > 0 && (
+                        <div className="mt-2 pt-1.5 border-t border-white/10 flex flex-wrap gap-1">
+                          {m.sources.slice(0, 3).map((src, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300"
+                            >
+                              Source: {src}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <span className="text-[10px] text-zinc-500 px-1">
                       {m.timestamp}

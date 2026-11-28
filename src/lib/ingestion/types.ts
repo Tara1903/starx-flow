@@ -51,6 +51,11 @@ export interface IngestionResult {
   leadId?: string;
   replyText?: string;
   requiresHumanHandoff?: boolean;
+  sources?: string[];
+  suggestedAction?: {
+    type: 'create_appointment' | 'create_lead' | 'create_order' | 'human_handoff' | 'none';
+    data?: Record<string, any>;
+  };
   error?: string;
   processingTimeMs: number;
 }

@@ -147,6 +147,8 @@ export class IngestionGateway {
         leadId: orchestratorResult.leadId,
         replyText: orchestratorResult.aiResponse.replyText,
         requiresHumanHandoff: orchestratorResult.aiResponse.requiresHumanHandoff,
+        sources: orchestratorResult.aiResponse.sources || [],
+        suggestedAction: orchestratorResult.aiResponse.suggestedAction,
         processingTimeMs: duration,
       };
     } catch (err: any) {

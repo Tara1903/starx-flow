@@ -3,6 +3,19 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
 import { MultiTenantRAG } from '@/lib/rag/multiTenantRAG';
 import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
+import { isValidUuid } from '@/lib/crm/organizationHelper';
+
+function buildKnowledgeTenantScope(userId: string, orgId?: string | null): string | null {
+  const validUser = isValidUuid(userId);
+  const validOrg = isValidUuid(orgId);
+  if (validOrg && validUser && orgId !== userId) {
+    return `organization_id.eq.${orgId},user_id.eq.${userId}`;
+  }
+  if (validOrg) {
+    return `organization_id.eq.${orgId},user_id.eq.${orgId}`;
+  }
+  return null;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,13 +24,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const tenantId = auth.session.organizationId || auth.session.user.id;
+    const userId = auth.session.user.id;
+    const orgId = auth.session.organizationId;
+    const tenantId = orgId || userId;
+    const scope = buildKnowledgeTenantScope(userId, orgId);
 
-    const { data: docs, error } = await supabaseAdmin
+    const baseQuery = supabaseAdmin
       .from('knowledge_documents')
-      .select('id, user_id, title, document_type, source_url, chunks_count, status, created_at, updated_at')
-      .eq('user_id', tenantId)
+      .select('id, user_id, organization_id, title, document_type, source_url, content, chunks_count, status, created_at, updated_at')
       .order('created_at', { ascending: false });
+
+    const { data: docs, error } = scope
+      ? await baseQuery.or(scope)
+      : await baseQuery.eq('user_id', tenantId);
 
     if (error) {
       return NextResponse.json({ documents: [] });
@@ -39,7 +58,10 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const tenantId = auth.session.organizationId || auth.session.user.id;
+    const userId = auth.session.user.id;
+    const orgId = auth.session.organizationId;
+    const tenantId = orgId || userId;
+    const scope = buildKnowledgeTenantScope(userId, orgId);
     const { searchParams } = new URL(req.url);
     const documentId = searchParams.get('id')?.trim();
 
@@ -47,12 +69,12 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Missing id parameter' }, { status: 400 });
     }
 
-    // Verify ownership by deleting the tenant-scoped document row first
-    const { data: deletedDoc, error: docErr } = await supabaseAdmin
-      .from('knowledge_documents')
-      .delete()
-      .eq('id', documentId)
-      .eq('user_id', tenantId)
+    // Verify ownership/org access by deleting the tenant-scoped document row first
+    const deleteDocQuery = supabaseAdmin.from('knowledge_documents').delete().eq('id', documentId);
+    const { data: deletedDoc, error: docErr } = await (scope
+      ? deleteDocQuery.or(scope)
+      : deleteDocQuery.eq('user_id', tenantId)
+    )
       .select('id')
       .maybeSingle();
 
@@ -67,13 +89,13 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
-    await supabaseAdmin
-      .from('knowledge_chunks')
-      .delete()
-      .eq('document_id', documentId)
-      .eq('user_id', tenantId);
+    const deleteChunksQuery = supabaseAdmin.from('knowledge_chunks').delete().eq('document_id', documentId);
+    await (scope ? deleteChunksQuery.or(scope) : deleteChunksQuery.eq('user_id', tenantId));
 
     await MultiTenantRAG.deleteDocument(tenantId, documentId);
+    if (userId !== tenantId) {
+      await MultiTenantRAG.deleteDocument(userId, documentId);
+    }
 
     return NextResponse.json({ success: true, message: 'Document and vectorized chunks removed' });
   } catch (err: unknown) {

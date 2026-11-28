@@ -10,37 +10,34 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const tenantId = auth.session.organizationId || auth.session.user.id;
+    const userId = auth.session.user.id;
+    const orgId = auth.session.organizationId;
+    const tenantId = orgId || userId;
+    const orgScope = orgId && orgId !== userId ? `organization_id.eq.${orgId},user_id.eq.${userId}` : null;
 
     if (!isSupabaseAdminConfigured) {
       return NextResponse.json({ error: 'Dashboard data is unavailable.' }, { status: 503 });
     }
 
-    // Parallel fetch for optimal mobile latency
+    const ordersQuery = supabaseAdmin.from('orders').select('total_amount, payment_status, created_at');
+    const leadsQuery = supabaseAdmin.from('leads').select('id, status, created_at');
+    const apptsQuery = supabaseAdmin.from('appointments').select('id, status').in('status', ['scheduled', 'confirmed']);
+    const convosQuery = supabaseAdmin
+      .from('conversations')
+      .select('id, customer_name, channel, status, unread_count, last_message, last_message_at, control_mode')
+      .order('last_message_at', { ascending: false })
+      .limit(20);
+
+    // Parallel fetch for optimal mobile latency (org- & user-scoped cleanly)
     const [ordersRes, leadsRes, apptsRes, agentsRes, convosRes] = await Promise.all([
-      supabaseAdmin
-        .from('orders')
-        .select('total_amount, payment_status, created_at')
-        .eq('user_id', tenantId),
-      supabaseAdmin
-        .from('leads')
-        .select('id, status, created_at')
-        .eq('user_id', tenantId),
-      supabaseAdmin
-        .from('appointments')
-        .select('id, status')
-        .eq('user_id', tenantId)
-        .in('status', ['scheduled', 'confirmed']),
+      orgScope ? ordersQuery.or(orgScope) : ordersQuery.eq('user_id', tenantId),
+      orgScope ? leadsQuery.or(orgScope) : leadsQuery.eq('user_id', tenantId),
+      orgScope ? apptsQuery.or(orgScope) : apptsQuery.eq('user_id', tenantId),
       supabaseAdmin
         .from('agents')
         .select('id, is_active')
-        .eq('user_id', tenantId),
-      supabaseAdmin
-        .from('conversations')
-        .select('id, customer_name, channel, status, unread_count, last_message, last_message_at, control_mode')
-        .eq('user_id', tenantId)
-        .order('last_message_at', { ascending: false })
-        .limit(20)
+        .eq('user_id', userId),
+      orgScope ? convosQuery.or(orgScope) : convosQuery.eq('user_id', tenantId),
     ]);
 
     if ([ordersRes, leadsRes, apptsRes, agentsRes, convosRes].some(result => result.error)) {

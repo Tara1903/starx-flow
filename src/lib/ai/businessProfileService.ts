@@ -6,7 +6,7 @@
 
 import { supabaseAdmin, isSupabaseAdminConfigured } from '../supabaseAdmin';
 import { supabase } from '../supabase';
-import { isValidUuid, resolveValidOrganizationId } from '../crm/organizationHelper';
+import { isValidUuid, lookupExistingOrganizationId, resolveValidOrganizationId } from '../crm/organizationHelper';
 
 export interface BusinessServiceItem {
   id?: string;
@@ -31,8 +31,9 @@ export type WeekOpeningHours = Record<
 
 export interface BusinessPolicyConfig {
   cancellation: string;
-  refunds: string;
-  booking_rules: string;
+  refunds?: string;
+  booking_rules?: string;
+  payment?: string;
 }
 
 export interface BusinessReceptionistProfile {
@@ -48,11 +49,12 @@ export interface BusinessReceptionistProfile {
   contactEmail?: string;
   faqs: Array<{ question: string; answer: string }>;
   policies: BusinessPolicyConfig;
-  supportedLanguages: string[];
+  supportedLanguages?: string[];
   customInstructions?: string;
   handoffRules?: string;
+  isConfigured?: boolean;
   isActive: boolean;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export const DEFAULT_WEEK_HOURS: WeekOpeningHours = {
@@ -74,23 +76,34 @@ export class BusinessProfileService {
   }
 
   /**
-   * Retrieves business profile by organizationId, falling back to clean defaults if unconfigured.
+   * Retrieves business profile by organizationId, hydrating real org/profile identity
+   * instead of impersonating synthetic defaults when custom catalog setup is pending.
    */
-  static async getProfile(organizationId: string): Promise<BusinessReceptionistProfile> {
-    if (!organizationId) {
-      return this.createDefaultProfile('default-org', 'StarX Local Business');
+  static async getProfile(
+    organizationId: string,
+    fallbackUserId?: string
+  ): Promise<BusinessReceptionistProfile> {
+    if (!organizationId || organizationId === 'default-org') {
+      return this.createStarXPlatformProfile(organizationId || 'default-org');
     }
 
-    // 1. Check in-memory cache
+    // 1. Check explicit cached profile first
     if (this.inMemoryProfiles.has(organizationId)) {
       return this.inMemoryProfiles.get(organizationId)!;
     }
 
-    // 2. Query PostgreSQL
-    if (isSupabaseAdminConfigured && isValidUuid(organizationId)) {
+    // 2. Query PostgreSQL when configured
+    if (isSupabaseAdminConfigured && (isValidUuid(organizationId) || isValidUuid(fallbackUserId))) {
       try {
         const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
-        const dbOrgId = (await resolveValidOrganizationId(organizationId, organizationId)) || organizationId;
+        const dbOrgId =
+          (await lookupExistingOrganizationId(fallbackUserId || organizationId, organizationId)) ||
+          organizationId;
+
+        if (this.inMemoryProfiles.has(dbOrgId)) {
+          return this.inMemoryProfiles.get(dbOrgId)!;
+        }
+
         const { data, error } = await client
           .from('business_receptionist_profiles')
           .select('*')
@@ -118,6 +131,7 @@ export class BusinessProfileService {
             supportedLanguages: data.supported_languages || ['en', 'de', 'fr', 'it'],
             customInstructions: data.custom_instructions,
             handoffRules: data.handoff_rules,
+            isConfigured: true,
             isActive: data.is_active ?? true,
             updatedAt: data.updated_at || new Date().toISOString(),
           };
@@ -125,18 +139,61 @@ export class BusinessProfileService {
           this.inMemoryProfiles.set(organizationId, profile);
           return profile;
         }
+
+        // Hydrate real organization / user profile name & business type instead of clinic stub
+        const [orgRes, profRes] = await Promise.all([
+          isValidUuid(dbOrgId)
+            ? client.from('organizations').select('name').eq('id', dbOrgId).maybeSingle()
+            : Promise.resolve({ data: null }),
+          isValidUuid(fallbackUserId || dbOrgId)
+            ? client
+                .from('profiles')
+                .select('business_name, business_type, email')
+                .eq('id', isValidUuid(fallbackUserId) ? fallbackUserId : dbOrgId)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+        ]);
+
+        const realBusinessName =
+          (profRes.data as any)?.business_name || (orgRes.data as any)?.name || null;
+        if (realBusinessName) {
+          return {
+            organizationId: dbOrgId,
+            businessName: realBusinessName,
+            businessType: (profRes.data as any)?.business_type || 'Service Business',
+            description: `${realBusinessName} AI Receptionist & Customer Operations`,
+            services: [],
+            openingHours: DEFAULT_WEEK_HOURS,
+            timezone: 'Europe/Berlin',
+            contactEmail: (profRes.data as any)?.email || undefined,
+            faqs: [],
+            policies: {
+              cancellation: 'Please notify our team in advance if you need to reschedule.',
+              refunds: 'Handled directly by our team.',
+              booking_rules: 'Appointments subject to team availability.',
+            },
+            supportedLanguages: ['en', 'de', 'fr', 'it', 'es'],
+            handoffRules: 'Escalate billing disputes, complaints, or unlisted service pricing requests.',
+            isConfigured: false,
+            isActive: true,
+            updatedAt: new Date().toISOString(),
+          };
+        }
       } catch {
-        // Fallback
+        // Fallback below
       }
     }
 
-    const defaultProfile = this.createDefaultProfile(organizationId, 'StarX Partner Clinic');
-    this.inMemoryProfiles.set(organizationId, defaultProfile);
-    return defaultProfile;
+    // 3. Test / ephemeral synthetic IDs preserve predictable clean test shape without caching clinic defaults onto real UUIDs
+    const neutralProfile = this.createUnconfiguredProfile(organizationId);
+    if (!isValidUuid(organizationId)) {
+      this.inMemoryProfiles.set(organizationId, neutralProfile);
+    }
+    return neutralProfile;
   }
 
   /**
-   * Updates business profile in PostgreSQL and memory.
+   * Updates business profile in PostgreSQL and memory cache.
    */
   static async updateProfile(
     organizationId: string,
@@ -147,6 +204,7 @@ export class BusinessProfileService {
       ...existing,
       ...updates,
       organizationId,
+      isConfigured: true,
       updatedAt: new Date().toISOString(),
     };
 
@@ -156,6 +214,8 @@ export class BusinessProfileService {
       try {
         const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
         const dbOrgId = (await resolveValidOrganizationId(organizationId, organizationId)) || organizationId;
+        this.inMemoryProfiles.set(dbOrgId, { ...updated, organizationId: dbOrgId });
+
         await client.from('business_receptionist_profiles').upsert({
           organization_id: dbOrgId,
           business_name: updated.businessName,
@@ -176,7 +236,7 @@ export class BusinessProfileService {
           updated_at: updated.updatedAt,
         });
       } catch {
-        // Handled
+        // Handled cleanly
       }
     }
 
@@ -186,15 +246,16 @@ export class BusinessProfileService {
   /**
    * Checks whether the given date/time falls within the business's opening hours.
    */
-  static isWithinBusinessHours(profile: BusinessReceptionistProfile, targetDate = new Date()): {
+  static isWithinBusinessHours(
+    profile: BusinessReceptionistProfile,
+    targetDate = new Date()
+  ): {
     isOpen: boolean;
     currentDay: string;
     hoursToday: string;
     timezone: string;
   } {
     const timeZone = profile.timezone || 'Europe/Berlin';
-
-    // Format day of week in target timezone
     const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone });
     const currentDay = dayFormatter.format(targetDate).toLowerCase() as keyof WeekOpeningHours;
 
@@ -204,7 +265,7 @@ export class BusinessProfileService {
       hour12: false,
       timeZone,
     });
-    const currentTimeStr = timeFormatter.format(targetDate); // "14:30"
+    const currentTimeStr = timeFormatter.format(targetDate);
 
     const daySchedule = profile.openingHours[currentDay] || { closed: true };
 
@@ -237,89 +298,161 @@ export class BusinessProfileService {
 
   /**
    * Formats the business profile into a concise, verified system instruction block.
-   * STRICT ZERO-HALLUCINATION ENFORCEMENT: The AI is forbidden from fabricating prices or hours.
    */
   static formatSystemContext(profile: BusinessReceptionistProfile, now = new Date()): string {
     const hoursStatus = this.isWithinBusinessHours(profile, now);
 
-    const servicesCatalog = profile.services && profile.services.length > 0
-      ? profile.services
-          .map((s) => {
-            const item = s as typeof s & { price?: number; currency?: string };
-            const symbol = item.currency === 'USD' ? '$' : '€';
-            const amount = item.price ?? item.priceEur ?? 0;
-            const duration = item.durationMinutes && item.durationMinutes > 0 ? ` (${item.durationMinutes} min)` : '';
-            return `  - ${item.name}: ${symbol}${amount}${duration}${item.description ? ` — ${item.description}` : ''}`;
-          })
-          .join('\n')
-      : '  (No public price catalog uploaded. Inform the customer to ask for a custom quote or human callback.)';
+    const servicesCatalog =
+      profile.services && profile.services.length > 0
+        ? profile.services
+            .map((s) => {
+              const symbol = s.currency === 'USD' ? '$' : '€';
+              const amount = s.price ?? s.priceEur ?? 0;
+              const duration =
+                s.durationMinutes && s.durationMinutes > 0 ? ` (${s.durationMinutes} min)` : '';
+              return `  - ${s.name}: ${symbol}${amount}${duration}${s.description ? ` — ${s.description}` : ''}`;
+            })
+            .join('\n')
+        : '  [UNCONFIGURED CATALOG: No custom pricing menu uploaded yet. Check Knowledge Base or offer to arrange a tailored quote / team follow-up instead of guessing prices.]';
 
-    const faqsSection = profile.faqs && profile.faqs.length > 0
-      ? profile.faqs.map((f) => `  Q: ${f.question}\n  A: ${f.answer}`).join('\n\n')
-      : '  (None provided)';
+    const faqsSection =
+      profile.faqs && profile.faqs.length > 0
+        ? profile.faqs.map((f) => `  Q: ${f.question}\n  A: ${f.answer}`).join('\n\n')
+        : '  (No custom FAQ pairs configured—consult Official Business Knowledge Base below if present.)';
 
     const hoursText = Object.entries(profile.openingHours)
       .map(([day, val]) => `  - ${day.toUpperCase()}: ${val.closed ? 'CLOSED' : `${val.open} - ${val.close}`}`)
       .join('\n');
 
     return `
-[OFFICIAL BUSINESS FACTS & ZERO-HALLUCINATION POLICY]:
+[VERIFIED BUSINESS PROFILE & ZERO-HALLUCINATION POLICY]:
 BUSINESS NAME: ${profile.businessName}
-LOCATION / ADDRESS: ${profile.location || 'Local Business'}
+CATEGORY: ${profile.businessType || 'Business'}
+${profile.description ? `OVERVIEW: ${profile.description}` : ''}
+LOCATION / ADDRESS: ${profile.location || 'Contact team for location details'}
 TIMEZONE: ${profile.timezone}
-CURRENT OPERATIONAL STATUS: ${hoursStatus.isOpen ? `OPEN NOW (Today: ${hoursStatus.hoursToday})` : `CURRENTLY CLOSED (Today: ${hoursStatus.hoursToday})`}
+CURRENT STATUS: ${hoursStatus.isOpen ? `OPEN NOW (${hoursStatus.hoursToday})` : `CLOSED RIGHT NOW (${hoursStatus.hoursToday})`}
 
-VERIFIED OPENING HOURS:
+OPENING HOURS:
 ${hoursText}
 
-OFFICIAL SERVICE CATALOG & PRICES:
+SERVICE CATALOG & VERIFIED PRICES:
 ${servicesCatalog}
 
 POLICIES:
 - Cancellation: ${profile.policies.cancellation}
-- Refunds: ${profile.policies.refunds}
-- Booking Rules: ${profile.policies.booking_rules}
+${profile.policies.refunds ? `- Refunds: ${profile.policies.refunds}` : ''}
+${profile.policies.booking_rules ? `- Booking Rules: ${profile.policies.booking_rules}` : ''}
+${profile.policies.payment ? `- Payment: ${profile.policies.payment}` : ''}
 
-FREQUENTLY ASKED QUESTIONS:
+VERIFIED FAQs:
 ${faqsSection}
 
-${profile.customInstructions ? `CUSTOM RECEPTIONIST INSTRUCTIONS:\n${profile.customInstructions}\n` : ''}
+${profile.customInstructions ? `CUSTOM BUSINESS INSTRUCTIONS:\n${profile.customInstructions}\n` : ''}
+${profile.handoffRules ? `ESCALATION TRIGGERS:\n${profile.handoffRules}\n` : ''}
 
 MANDATORY ACCURACY DIRECTIVES:
-1. NEVER fabricate or guess prices, discounts, opening hours, or booking confirmations that are not explicitly stated above.
-2. If a customer asks for a service or price not in the catalog, politely say: "That service is not listed in our current catalog, but I can have a team member follow up with you directly."
-3. When currently closed, inform the customer of our regular opening hours and offer to take their message or schedule an appointment for when we are open.
-4. If the customer requests human assistance or expresses frustration, trigger human handoff immediately.`;
+1. NEVER invent prices, unlisted services, discounts, addresses, or policies not stated above or in Official Knowledge Base / Workspace Memories.
+2. If a customer asks about an unlisted service or unsupported payment method, state clearly that it is not listed and offer to escalate to a human team member.`;
   }
 
-  private static createDefaultProfile(orgId: string, name: string): BusinessReceptionistProfile {
+  private static createStarXPlatformProfile(orgId: string): BusinessReceptionistProfile {
     return {
       organizationId: orgId,
-      businessName: name,
-      businessType: 'Medical & Aesthetics Clinic',
-      description: 'Premium healthcare, dental, and wellness clinic offering consultations and treatments.',
-      location: 'Friedrichstraße 42, 10117 Berlin, Germany',
-      contactPhone: '+49 30 12345678',
-      contactEmail: 'contact@localclinic.de',
+      businessName: 'StarX Flow',
+      businessType: 'AI Receptionist, Omnichannel Inbox & Revenue CRM Platform',
+      description:
+        'All-in-one AI front-desk automation, WhatsApp/Instagram/Email/Web reception, calendar sync, automated workflows, and Revenue CRM with Lead Finder.',
+      location: 'Cloud Platform (Europe / Global SaaS)',
+      contactEmail: 'support@starxflow.com',
       timezone: 'Europe/Berlin',
       services: [
-        { id: 'srv-1', name: 'Initial Dental Consultation', priceEur: 65, durationMinutes: 30, description: 'Comprehensive oral exam, X-rays, and treatment plan' },
-        { id: 'srv-2', name: 'Professional Teeth Cleaning (PZR)', priceEur: 110, durationMinutes: 45, description: 'Ultrasonic tartar removal and enamel polishing' },
-        { id: 'srv-3', name: 'Cosmetic Consultation', priceEur: 85, durationMinutes: 30, description: 'Aesthetic smile and skincare consultation' },
+        {
+          id: 'plan-starter',
+          name: 'Starter Plan',
+          priceEur: 29,
+          currency: 'EUR',
+          durationMinutes: 0,
+          description: 'Monthly SaaS tier with 1,000 AI conversations, 10 workflows, and omnichannel inbox',
+        },
+        {
+          id: 'plan-growth',
+          name: 'Growth Plan',
+          priceEur: 59,
+          currency: 'EUR',
+          durationMinutes: 0,
+          description: 'Monthly SaaS tier with 2,500 AI conversations, 25 workflows, CRM & Calendar Sync',
+        },
+        {
+          id: 'plan-pro',
+          name: 'Pro Plan',
+          priceEur: 97,
+          currency: 'EUR',
+          durationMinutes: 0,
+          description: 'Monthly SaaS tier with 5,000 AI conversations, 50 workflows, Lead Finder & Sequences',
+        },
+        {
+          id: 'demo-call',
+          name: 'Live Product Walkthrough & Setup Demo',
+          priceEur: 0,
+          currency: 'EUR',
+          durationMinutes: 30,
+          description: 'Personalized 1-on-1 onboarding demo for salons, clinics, agencies, and local businesses',
+        },
       ],
-      openingHours: DEFAULT_WEEK_HOURS,
+      openingHours: {
+        monday: { open: '00:00', close: '23:59', closed: false },
+        tuesday: { open: '00:00', close: '23:59', closed: false },
+        wednesday: { open: '00:00', close: '23:59', closed: false },
+        thursday: { open: '00:00', close: '23:59', closed: false },
+        friday: { open: '00:00', close: '23:59', closed: false },
+        saturday: { open: '00:00', close: '23:59', closed: false },
+        sunday: { open: '00:00', close: '23:59', closed: false },
+      },
       faqs: [
-        { question: 'Do you accept public health insurance (Gesetzliche Krankenversicherung)?', answer: 'Yes, we accept both public and private health insurance in Germany.' },
-        { question: 'Is there parking available near the clinic?', answer: 'Yes, underground parking is available at Friedrichstraße underground garage.' },
+        {
+          question: 'Which channels does StarX Flow support?',
+          answer: 'WhatsApp Business, Instagram DMs, Email (Resend & inbound replies), Facebook Messenger, SMS, and embeddable Website Chat.',
+        },
+        {
+          question: 'Does it include Google Calendar and Outlook sync?',
+          answer: 'Yes, two-way calendar sync is supported for Google Calendar and Microsoft Outlook alongside automated booking conflict prevention.',
+        },
       ],
       policies: {
-        cancellation: 'Please notify us at least 24 hours in advance to cancel without penalty.',
-        refunds: 'Consultation fees are non-refundable once the appointment has occurred.',
-        booking_rules: 'Appointments must be reserved at least 2 hours in advance.',
+        cancellation: 'Subscriptions can be cancelled or upgraded anytime via Billing Portal.',
+        refunds: 'Contact support for billing inquiries.',
+        booking_rules: 'Book a free 30-minute walkthrough directly here or at /demo.',
       },
-      supportedLanguages: ['en', 'de', 'fr', 'it'],
-      customInstructions: 'Always greet clients warmly. Confirm their preferred date and time before reserving an appointment.',
-      handoffRules: 'Transfer to human when client is in acute pain, requests a surgeon, or has billing disputes.',
+      supportedLanguages: ['en', 'de', 'fr', 'es', 'it', 'hi'],
+      customInstructions:
+        'Help prospective and current StarX Flow users understand features (AI Receptionist, Omnichannel Inbox, Google/Outlook Calendar Sync, Full-Stack CRM, Lead Finder, Sequences), recommend the right plan, or schedule a demo.',
+      handoffRules: 'Escalate enterprise custom pricing, account access emergencies, or billing disputes.',
+      isConfigured: true,
+      isActive: true,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  private static createUnconfiguredProfile(orgId: string): BusinessReceptionistProfile {
+    return {
+      organizationId: orgId,
+      businessName: 'Your Business Workspace',
+      businessType: 'Service Business',
+      description: 'AI Receptionist & Customer Support Workspace',
+      timezone: 'Europe/Berlin',
+      services: [],
+      openingHours: DEFAULT_WEEK_HOURS,
+      faqs: [],
+      policies: {
+        cancellation: 'Please notify us at least 24 hours in advance for cancellations.',
+        refunds: 'Handled on request by our team.',
+        booking_rules: 'Bookings subject to verified calendar availability.',
+      },
+      supportedLanguages: ['en', 'de', 'fr', 'it', 'es'],
+      customInstructions: 'Greet visitors warmly, rely strictly on Knowledge Base and CRM facts, and escalate when details are unavailable.',
+      handoffRules: 'Escalate complaints, billing issues, or unlisted service pricing questions.',
+      isConfigured: false,
       isActive: true,
       updatedAt: new Date().toISOString(),
     };

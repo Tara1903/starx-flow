@@ -15,10 +15,10 @@ export function newUuid(): string {
 }
 
 /**
- * Resolves a valid `organizations.id` foreign key for a user/workspace.
- * Returns null for synthetic non-UUID test IDs so hermetic in-memory tests never hit DB FK errors.
+ * Read-only lookup for an existing `organizations.id` associated with the user or preferredOrgId.
+ * Never mutates `organizations` or `organization_members` during GET/read paths.
  */
-export async function resolveValidOrganizationId(
+export async function lookupExistingOrganizationId(
   userId: string,
   preferredOrgId?: string | null
 ): Promise<string | null> {
@@ -54,6 +54,32 @@ export async function resolveValidOrganizationId(
       resolvedOrgCache.set(cacheKey, membership.organization_id);
       return membership.organization_id;
     }
+  } catch {
+    // Non-blocking read-only lookup
+  }
+
+  return null;
+}
+
+/**
+ * Resolves a valid `organizations.id` foreign key for a user/workspace.
+ * Returns null for synthetic non-UUID test IDs so hermetic in-memory tests never hit DB FK errors.
+ */
+export async function resolveValidOrganizationId(
+  userId: string,
+  preferredOrgId?: string | null
+): Promise<string | null> {
+  if (typeof window !== 'undefined' || !isSupabaseAdminConfigured || !isValidUuid(userId)) {
+    return null;
+  }
+
+  const cacheKey = `${userId}:${preferredOrgId || ''}`;
+  const existing = await lookupExistingOrganizationId(userId, preferredOrgId);
+  if (existing) {
+    return existing;
+  }
+
+  try {
 
     // Auto-provision an organization row if the user has a real profile without membership yet
     const { data: profile } = await supabaseAdmin

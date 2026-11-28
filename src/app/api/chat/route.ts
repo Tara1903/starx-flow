@@ -119,8 +119,8 @@ export async function POST(request: Request) {
         leadId: result.leadId,
         reply: result.replyText,
         requiresHandoff: result.requiresHumanHandoff,
-        suggestedAction: null,
-        sources: [],
+        suggestedAction: result.suggestedAction ?? null,
+        sources: result.sources ?? [],
       },
       {
         status: 200,

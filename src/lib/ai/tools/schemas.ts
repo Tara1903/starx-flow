@@ -50,6 +50,17 @@ export const getOrderStatusSchema = z.object({
   orderNumberOrId: z.string().min(1, 'Order number or ID is required'),
 });
 
+export const escalateToHumanSchema = z.object({
+  reason: z.string().min(3, 'Escalation reason is required').max(400),
+  urgency: z.enum(['low', 'medium', 'high']).optional().default('medium'),
+  summary: z.string().max(600).optional(),
+});
+
+export const saveCustomerPreferenceSchema = z.object({
+  key: z.string().trim().min(2).max(60),
+  value: z.string().trim().min(1).max(300),
+});
+
 export type CheckCalendarAvailabilityInput = z.infer<typeof checkCalendarAvailabilitySchema>;
 export type BookAppointmentInput = z.infer<typeof bookAppointmentSchema>;
 export type ModifyAppointmentInput = z.infer<typeof modifyAppointmentSchema>;
@@ -57,6 +68,8 @@ export type CancelAppointmentInput = z.infer<typeof cancelAppointmentSchema>;
 export type LookupCustomerInput = z.infer<typeof lookupCustomerSchema>;
 export type UpdateCustomerProfileInput = z.infer<typeof updateCustomerProfileSchema>;
 export type GetOrderStatusInput = z.infer<typeof getOrderStatusSchema>;
+export type EscalateToHumanInput = z.infer<typeof escalateToHumanSchema>;
+export type SaveCustomerPreferenceInput = z.infer<typeof saveCustomerPreferenceSchema>;
 
 export type ToolName =
   | 'checkCalendarAvailability'
@@ -65,7 +78,9 @@ export type ToolName =
   | 'cancelAppointment'
   | 'lookupCustomer'
   | 'updateCustomerProfile'
-  | 'getOrderStatus';
+  | 'getOrderStatus'
+  | 'escalateToHuman'
+  | 'saveCustomerPreference';
 
 export const TOOL_SCHEMAS: Record<ToolName, z.ZodTypeAny> = {
   checkCalendarAvailability: checkCalendarAvailabilitySchema,
@@ -75,6 +90,8 @@ export const TOOL_SCHEMAS: Record<ToolName, z.ZodTypeAny> = {
   lookupCustomer: lookupCustomerSchema,
   updateCustomerProfile: updateCustomerProfileSchema,
   getOrderStatus: getOrderStatusSchema,
+  escalateToHuman: escalateToHumanSchema,
+  saveCustomerPreference: saveCustomerPreferenceSchema,
 };
 
 /**
@@ -87,7 +104,7 @@ export const GEMINI_TOOL_DECLARATIONS = [
     parameters: {
       type: 'OBJECT',
       properties: {
-        date: { type: 'STRING', description: 'Date in YYYY-MM-DD format (e.g. 2026-11-05)' },
+        date: { type: 'STRING', description: 'Date in YYYY-MM-DD format (e.g. 2026-11-29)' },
         serviceId: { type: 'STRING', description: 'Optional service ID to check duration requirements' },
       },
       required: ['date'],
@@ -95,14 +112,14 @@ export const GEMINI_TOOL_DECLARATIONS = [
   },
   {
     name: 'bookAppointment',
-    description: 'Book an appointment slot for a customer with conflict verification.',
+    description: 'Book an appointment slot for the customer with double-booking conflict verification.',
     parameters: {
       type: 'OBJECT',
       properties: {
         customerName: { type: 'STRING', description: 'Full name of the customer' },
         customerPhone: { type: 'STRING', description: 'Customer phone number in E.164 format' },
         customerEmail: { type: 'STRING', description: 'Customer email address' },
-        serviceName: { type: 'STRING', description: 'Name of the service to book (e.g. Haircut, Consultation)' },
+        serviceName: { type: 'STRING', description: 'Name of the service to book' },
         startTime: { type: 'STRING', description: 'Start timestamp in ISO-8601 format' },
         endTime: { type: 'STRING', description: 'End timestamp in ISO-8601 format' },
         notes: { type: 'STRING', description: 'Optional customer notes or preferences' },
@@ -139,7 +156,7 @@ export const GEMINI_TOOL_DECLARATIONS = [
   },
   {
     name: 'lookupCustomer',
-    description: 'Search for customer CRM profile and linked identities by name, phone, or email.',
+    description: 'Staff-only lookup of customer CRM profile by name, phone, or email.',
     parameters: {
       type: 'OBJECT',
       properties: {
@@ -150,7 +167,7 @@ export const GEMINI_TOOL_DECLARATIONS = [
   },
   {
     name: 'updateCustomerProfile',
-    description: 'Update customer CRM details such as contact info, tags, or notes.',
+    description: 'Update the verified customer CRM details such as contact info, tags, or notes.',
     parameters: {
       type: 'OBJECT',
       properties: {
@@ -173,6 +190,31 @@ export const GEMINI_TOOL_DECLARATIONS = [
         orderNumberOrId: { type: 'STRING', description: 'Order ID or Order Number (e.g. ORD-1001)' },
       },
       required: ['orderNumberOrId'],
+    },
+  },
+  {
+    name: 'escalateToHuman',
+    description: 'Hand off the conversation to a human staff member when the customer demands human support, reports a complaint/urgent issue, or requests unlisted pricing/services.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        reason: { type: 'STRING', description: 'Short explanation of why human intervention is needed' },
+        urgency: { type: 'STRING', enum: ['low', 'medium', 'high'] },
+        summary: { type: 'STRING', description: 'Brief context summary for the human staff member' },
+      },
+      required: ['reason'],
+    },
+  },
+  {
+    name: 'saveCustomerPreference',
+    description: 'Persist a helpful long-term preference or requirement for the current customer (e.g. preferred_language, preferred_time, service_interest, budget).',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        key: { type: 'STRING', description: 'Short snake_case key (e.g. preferred_stylist, preferred_day)' },
+        value: { type: 'STRING', description: 'Concise preference value shared by the customer' },
+      },
+      required: ['key', 'value'],
     },
   },
 ];

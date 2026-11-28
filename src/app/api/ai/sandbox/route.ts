@@ -1,65 +1,108 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { authenticateStaffRequest } from '@/lib/auth/serverAuth';
-import { sanitizeClientError } from '@/lib/security/sanitizeClientError';
+import { AIProvider } from '@/lib/ai/provider';
+import { apiErrorResponse, internalErrorResponse, zodValidationError } from '@/lib/security/apiError';
 
-/**
- * Authenticated server-side proxy for the Dashboard AI Receptionist Sandbox.
- * Keeps GEMINI_API_KEY strictly on the server instead of bundling it into client JS.
- */
+const SandboxRequestSchema = z.object({
+  message: z.string().trim().min(1, 'Message is required').max(4000),
+  role: z
+    .enum(['receptionist', 'sales', 'support', 'appointment', 'order', 'followup', 'marketing', 'analyst'])
+    .optional()
+    .default('receptionist'),
+  agentName: z.string().trim().max(80).optional(),
+  channel: z
+    .enum(['WhatsApp', 'Instagram', 'SMS', 'Web', 'Email', 'Messenger', 'Sandbox'])
+    .optional()
+    .default('Sandbox'),
+  tone: z.enum(['Friendly', 'Professional', 'Casual', 'Urgent']).optional().default('Professional'),
+  customPrompt: z.string().max(4000).optional(),
+  customInstructions: z.string().max(2000).optional(),
+  leadId: z.string().uuid().optional().nullable(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'ai', 'human', 'system']),
+        text: z.string().max(4000),
+      })
+    )
+    .max(20)
+    .optional()
+    .default([]),
+  simulateProfile: z.record(z.string(), z.unknown()).optional(),
+  enableTools: z.boolean().optional().default(true),
+});
+
 export async function POST(req: NextRequest) {
   try {
     const auth = await authenticateStaffRequest(req);
     if (!auth.authenticated) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
+      return apiErrorResponse(auth.status, 'UNAUTHORIZED', auth.error);
     }
 
-    const body = await req.json().catch(() => ({}));
-    const message = typeof body?.message === 'string' ? body.message.trim() : '';
-    const customPrompt = typeof body?.customPrompt === 'string' ? body.customPrompt.trim().slice(0, 2000) : '';
-    const aiTone = typeof body?.aiTone === 'string' ? body.aiTone.trim().slice(0, 40) : 'Friendly';
-
-    if (!message || message.length > 2000) {
-      return NextResponse.json(
-        { error: 'A valid test message (1-2000 characters) is required.' },
-        { status: 400 }
-      );
+    let rawBody: unknown;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return apiErrorResponse(400, 'BAD_JSON', 'Invalid JSON request body');
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey.includes('your-')) {
-      return NextResponse.json({ reply: null, configured: false }, { status: 200 });
+    const parsed = SandboxRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return zodValidationError(parsed.error, 'Invalid sandbox simulation payload');
     }
 
-    const systemPrompt = `${customPrompt || 'You are a helpful assistant.'}\n\nIMPORTANT: Respond in a ${aiTone} tone. Keep replies concise (2-3 sentences max).`;
+    const {
+      message,
+      role,
+      agentName,
+      channel,
+      tone,
+      customPrompt,
+      customInstructions,
+      leadId,
+      history,
+      simulateProfile,
+      enableTools,
+    } = parsed.data;
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(8000),
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ parts: [{ text: message }] }],
-          generationConfig: {
-            temperature: 0.5,
-            maxOutputTokens: 300,
-          },
-        }),
-      }
-    );
+    const result = await AIProvider.executeAgent({
+      userId: auth.session.user.id,
+      organizationId: auth.session.organizationId,
+      role,
+      channel,
+      customerMessage: message,
+      leadId: leadId || undefined,
+      conversationHistory: history,
+      customSystemPrompt:
+        customPrompt?.trim() || (agentName ? `You are acting as "${agentName}".` : undefined),
+      customInstructions: customInstructions?.trim() || undefined,
+      tone,
+      simulateProfile: simulateProfile as any,
+      enableTools,
+      includeTrace: true,
+      actorType: 'staff',
+    });
 
-    if (!res.ok) {
-      return NextResponse.json({ reply: null, configured: true }, { status: 200 });
-    }
+    const configured =
+      Boolean(process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('your-')) ||
+      Boolean(process.env.NVIDIA_API_KEY && !process.env.NVIDIA_API_KEY.includes('your-'));
 
-    const data = await res.json();
-    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-    return NextResponse.json({ reply, configured: true }, { status: 200 });
-  } catch (err: unknown) {
-    return NextResponse.json(
-      { error: sanitizeClientError(err, 'Sandbox execution failed') },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: true,
+      configured,
+      reply: result.replyText,
+      model: result.model,
+      provider: result.provider,
+      confidence: result.confidence,
+      requiresHumanHandoff: result.requiresHumanHandoff,
+      handoffReason: result.handoffReason,
+      sources: result.sources || [],
+      suggestedAction: result.suggestedAction ?? null,
+      toolExecutions: result.toolExecutions || [],
+      trace: result.trace || null,
+    });
+  } catch (err) {
+    return internalErrorResponse(err, 'Failed to run AI sandbox simulation');
   }
 }

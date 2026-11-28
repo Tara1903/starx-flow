@@ -39,7 +39,11 @@ export function KnowledgeSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [testQuery, setTestQuery] = useState("");
-  const [testResults, setTestResults] = useState<Array<{ content: string; score: number }>>([]);
+  const [testResults, setTestResults] = useState<
+    Array<{ content: string; score: number; documentTitle?: string; sourceUrl?: string | null }>
+  >([]);
+  const [retrievalError, setRetrievalError] = useState<string | null>(null);
+  const [hasSearchedRetrieval, setHasSearchedRetrieval] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
@@ -75,40 +79,34 @@ export function KnowledgeSection() {
     }
   };
 
-  const handleRunTestSearch = () => {
-    if (!testQuery.trim()) return;
+  const handleRunTestSearch = async () => {
+    const trimmed = testQuery.trim();
+    if (trimmed.length < 2) {
+      setRetrievalError("Enter at least 2 characters to test retrieval.");
+      setHasSearchedRetrieval(true);
+      setTestResults([]);
+      return;
+    }
+
     setIsSearching(true);
+    setRetrievalError(null);
+    setHasSearchedRetrieval(true);
 
-    setTimeout(() => {
-      const q = testQuery.toLowerCase();
-      const matches: Array<{ content: string; score: number }> = [];
-
-      documents.forEach((doc) => {
-        if (!doc.content) return;
-        const lower = doc.content.toLowerCase();
-        let score = 0;
-        const words = q.split(" ").filter((w) => w.length > 2);
-        words.forEach((w) => {
-          if (lower.includes(w)) score += 0.35;
-        });
-        if (score > 0) {
-          matches.push({
-            content: doc.content.slice(0, 220) + (doc.content.length > 220 ? "..." : ""),
-            score: Math.min(0.98, Number((score + 0.2).toFixed(2))),
-          });
-        }
-      });
-
-      if (matches.length === 0 && documents.length > 0) {
-        matches.push({
-          content: documents[0].content.slice(0, 200) + "...",
-          score: 0.45,
-        });
-      }
-
-      setTestResults(matches.sort((a, b) => b.score - a.score));
-      setIsSearching(false);
-    }, 350);
+    const res = await useKnowledgeStore.getState().retrieveContext(trimmed, 5);
+    if (res.error) {
+      setRetrievalError(res.error);
+      setTestResults([]);
+    } else {
+      setTestResults(
+        (res.matches || []).map((m) => ({
+          content: m.content,
+          score: Number(m.score.toFixed(2)),
+          documentTitle: m.documentTitle,
+          sourceUrl: m.sourceUrl,
+        }))
+      );
+    }
+    setIsSearching(false);
   };
 
   return (
@@ -278,17 +276,31 @@ export function KnowledgeSection() {
             </button>
           </div>
 
+          {retrievalError && (
+            <div className="rounded-lg bg-[#e5484d]/10 border border-[#e5484d]/25 p-3 text-xs text-[#f28b8e]">
+              {retrievalError}
+            </div>
+          )}
+
+          {hasSearchedRetrieval && !retrievalError && !isSearching && testResults.length === 0 && (
+            <div className="rounded-lg bg-[#0d1210] border border-[#edf0ee]/[0.08] p-3 text-xs text-[#727c75]">
+              No matching knowledge chunks found above the similarity threshold.
+            </div>
+          )}
+
           {testResults.length > 0 && (
             <div className="space-y-2.5 pt-3 border-t border-[#edf0ee]/[0.08]">
               <p className="text-xs font-medium text-[#a1aaa4]">
                 Matches ({testResults.length})
               </p>
               {testResults.map((res, i) => (
-                <div key={i} className={cn(CONSOLE_SUBCARD, "p-3 text-xs space-y-1")}>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-mono text-[#727c75]">#{i + 1}</span>
-                    <span className="font-medium text-[#4cc38a]">
-                      {(res.score * 100).toFixed(0)}% match
+                <div key={i} className={cn(CONSOLE_SUBCARD, "p-3 text-xs space-y-1.5")}>
+                  <div className="flex items-center justify-between gap-2 text-[11px]">
+                    <span className="font-mono text-[#a1aaa4] truncate">
+                      #{i + 1} {res.documentTitle ? `· ${res.documentTitle}` : ""}
+                    </span>
+                    <span className="font-medium text-[#4cc38a] shrink-0">
+                      {(res.score * 100).toFixed(0)}% hybrid score
                     </span>
                   </div>
                   <p className="text-[#a1aaa4] leading-relaxed">{res.content}</p>

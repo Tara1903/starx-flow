@@ -1,7 +1,17 @@
 import { create } from 'zustand';
 import { useAuthStore } from './authStore';
 import { supabase } from '../lib/supabase';
+import { crmFetch } from '../lib/crm/crmApi';
 import { KnowledgeDocument } from '../types/database';
+
+export interface RetrievedChunkMatch {
+  chunkId: string;
+  documentId: string;
+  documentTitle: string;
+  sourceUrl?: string | null;
+  content: string;
+  score: number;
+}
 
 interface KnowledgeState {
   documents: KnowledgeDocument[];
@@ -14,12 +24,23 @@ interface KnowledgeState {
     content: string;
     sourceUrl?: string;
   }) => Promise<{ success: boolean; error?: string }>;
+  retrieveContext: (
+    query: string,
+    limit?: number
+  ) => Promise<{
+    matches: RetrievedChunkMatch[];
+    sourcesCited: Array<{ title: string; sourceUrl?: string; score: number }>;
+    hasSufficientContext: boolean;
+    error: string | null;
+  }>;
   deleteDocument: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.access_token) {
       return { Authorization: `Bearer ${session.access_token}` };
     }
@@ -29,33 +50,8 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   return {};
 }
 
-export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
-  documents: [
-    {
-      id: 'doc-sample-1',
-      user_id: 'default',
-      title: 'Business Hours & Cancellation Policy',
-      document_type: 'faq',
-      source_url: null,
-      content: 'We are open Monday to Saturday from 09:00 to 19:00 CET. Appointments can be rescheduled or cancelled free of charge up to 24 hours prior.',
-      chunks_count: 2,
-      status: 'indexed',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: 'doc-sample-2',
-      user_id: 'default',
-      title: 'Pricing Catalog 2026',
-      document_type: 'text',
-      source_url: null,
-      content: 'Standard Consultations: €45. Premium Styling: €85. Express Follow-up: €25. All prices include European statutory VAT.',
-      chunks_count: 1,
-      status: 'indexed',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ],
+export const useKnowledgeStore = create<KnowledgeState>((set) => ({
+  documents: [],
   isLoading: false,
   error: null,
 
@@ -66,12 +62,12 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const authHeaders = await getAuthHeaders();
-      const res = await fetch(`/api/knowledge?userId=${user.id}`, {
+      const res = await fetch(`/api/knowledge?userId=${encodeURIComponent(user.id)}`, {
         headers: authHeaders,
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.documents && data.documents.length > 0) {
+        if (Array.isArray(data.documents)) {
           set({ documents: data.documents });
         }
       }
@@ -100,17 +96,17 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
           title,
           documentType,
           content,
-          sourceUrl
-        })
+          sourceUrl,
+        }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        set({ error: data.error, isLoading: false });
-        return { success: false, error: data.error };
+        const errMsg = data?.error?.message || data?.error || 'Ingestion failed';
+        set({ error: errMsg, isLoading: false });
+        return { success: false, error: errMsg };
       }
 
-      // Add optimistically or re-fetch
       const newDoc: KnowledgeDocument = {
         id: data.documentId || `doc-${Date.now()}`,
         user_id: user.id,
@@ -118,15 +114,15 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
         document_type: documentType,
         source_url: sourceUrl || null,
         content,
-        chunks_count: Math.ceil(content.length / 500) || 1,
+        chunks_count: data.chunksCount || Math.ceil(content.length / 500) || 1,
         status: 'indexed',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       set((state) => ({
         documents: [newDoc, ...state.documents],
-        isLoading: false
+        isLoading: false,
       }));
 
       return { success: true };
@@ -136,22 +132,56 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
     }
   },
 
+  retrieveContext: async (query: string, limit = 5) => {
+    const res = await crmFetch<{
+      matches: RetrievedChunkMatch[];
+      sourcesCited: Array<{ title: string; sourceUrl?: string; score: number }>;
+      hasSufficientContext: boolean;
+    }>('/api/knowledge/retrieve', {
+      method: 'POST',
+      body: JSON.stringify({ query, limit }),
+    });
+
+    if (!res.ok || !res.data) {
+      return {
+        matches: [],
+        sourcesCited: [],
+        hasSufficientContext: false,
+        error: res.error || 'Failed to retrieve knowledge context',
+      };
+    }
+
+    return {
+      matches: res.data.matches || [],
+      sourcesCited: res.data.sourcesCited || [],
+      hasSufficientContext: Boolean(res.data.hasSufficientContext),
+      error: null,
+    };
+  },
+
   deleteDocument: async (id: string) => {
     const user = useAuthStore.getState().user;
     if (!user) return { success: false, error: 'User not authenticated' };
 
     try {
       const authHeaders = await getAuthHeaders();
-      await fetch(`/api/knowledge?id=${id}&userId=${user.id}`, {
+      const res = await fetch(`/api/knowledge?id=${encodeURIComponent(id)}&userId=${encodeURIComponent(user.id)}`, {
         method: 'DELETE',
         headers: authHeaders,
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        return {
+          success: false,
+          error: data?.error?.message || data?.error || `Delete failed (${res.status})`,
+        };
+      }
       set((state) => ({
-        documents: state.documents.filter((d) => d.id !== id)
+        documents: state.documents.filter((d) => d.id !== id),
       }));
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message };
     }
-  }
+  },
 }));

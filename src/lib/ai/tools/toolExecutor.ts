@@ -4,7 +4,7 @@
  * double-booking conflict prevention, and immutable audit logging.
  */
 
-import { supabaseAdmin } from '../../supabaseAdmin';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '../../supabaseAdmin';
 import { supabase } from '../../supabase';
 import { Appointment, Order, Lead } from '../../../types/database';
 import {
@@ -17,6 +17,8 @@ import {
   LookupCustomerInput,
   UpdateCustomerProfileInput,
   GetOrderStatusInput,
+  EscalateToHumanInput,
+  SaveCustomerPreferenceInput,
 } from './schemas';
 import { IdentityResolver } from '../../crm/identityResolver';
 import { CrmService } from '../../crm/crmService';
@@ -47,6 +49,7 @@ export class ToolExecutor {
   // In-memory state for local testing, offline fallback, and high-performance verification
   private static inMemoryAppointments = new Map<string, Appointment>();
   private static inMemoryOrders = new Map<string, Order>();
+  private static inMemoryCustomerPreferences = new Map<string, Record<string, string>>();
   private static inMemoryAuditLogs: any[] = [];
 
   /**
@@ -105,6 +108,10 @@ export class ToolExecutor {
           return await this.updateCustomerProfile(params as UpdateCustomerProfileInput, context);
         case 'getOrderStatus':
           return await this.getOrderStatus(params as GetOrderStatusInput, context);
+        case 'escalateToHuman':
+          return await this.escalateToHuman(params as EscalateToHumanInput, context);
+        case 'saveCustomerPreference':
+          return await this.saveCustomerPreference(params as SaveCustomerPreferenceInput, context);
         default:
           return {
             success: false,
@@ -130,7 +137,7 @@ export class ToolExecutor {
     context: ToolExecutionContext
   ): Promise<ToolExecutionResponse> {
     const { date } = input;
-    const { userId } = context;
+    const { userId, organizationId } = context;
 
     // Fetch existing active appointments for that day
     const dayStart = `${date}T00:00:00.000Z`;
@@ -150,16 +157,20 @@ export class ToolExecutor {
       }
     }
 
-    // Try Postgres
+    // Try Postgres (org-aware across teammates while keeping tenant isolation)
     try {
       const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
-      const { data } = await client
+      const orgScope =
+        organizationId && isValidUuid(organizationId) && organizationId !== userId
+          ? `organization_id.eq.${organizationId},user_id.eq.${userId}`
+          : null;
+      const query = client
         .from('appointments')
         .select('*')
-        .eq('user_id', userId)
         .neq('status', 'cancelled')
         .gte('start_time', dayStart)
         .lte('start_time', dayEnd);
+      const { data } = orgScope ? await query.or(orgScope) : await query.eq('user_id', userId);
 
       if (data && data.length > 0) {
         activeAppointments = data as Appointment[];
@@ -707,15 +718,24 @@ export class ToolExecutor {
     if (!order) {
       try {
         const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
-        const { data } = await client
-          .from('orders')
-          .select('*')
-          .eq('user_id', userId)
-          .or(`id.eq.${orderNumberOrId},order_number.eq.${orderNumberOrId}`)
-          .maybeSingle();
+        const orgScope =
+          organizationId && isValidUuid(organizationId) && organizationId !== userId
+            ? `organization_id.eq.${organizationId},user_id.eq.${userId}`
+            : null;
+        const matchCol = isValidUuid(orderNumberOrId) ? 'id' : 'order_number';
+        const baseQuery = client.from('orders').select('*').eq(matchCol, orderNumberOrId);
+        const { data } = orgScope
+          ? await baseQuery.or(orgScope).maybeSingle()
+          : await baseQuery.eq('user_id', userId).maybeSingle();
 
         if (data) {
           order = data as Order;
+        } else if (isValidUuid(orderNumberOrId)) {
+          const fallbackQuery = client.from('orders').select('*').eq('order_number', orderNumberOrId);
+          const { data: byNum } = orgScope
+            ? await fallbackQuery.or(orgScope).maybeSingle()
+            : await fallbackQuery.eq('user_id', userId).maybeSingle();
+          if (byNum) order = byNum as Order;
         }
       } catch {
         // In-memory fallback
@@ -774,6 +794,156 @@ export class ToolExecutor {
         itemsCount: order.items?.length || 0,
         createdAt: order.created_at,
         invoiceUrl: order.invoice_url,
+      },
+    };
+  }
+
+  // -------------------------------------------------------------
+  // 8. Escalate Conversation to Human Staff + CRM Timeline Log
+  // -------------------------------------------------------------
+  private static async escalateToHuman(
+    input: EscalateToHumanInput,
+    context: ToolExecutionContext
+  ): Promise<ToolExecutionResponse> {
+    const { userId, organizationId, conversationId, leadId, agentRole, actorId } = context;
+    const reason = input.reason.trim();
+    const urgency = input.urgency || 'medium';
+    const summary = input.summary?.trim() || reason;
+    const effectiveOrgId = await resolveValidOrganizationId(userId, organizationId);
+
+    if (isSupabaseAdminConfigured) {
+      try {
+        if (conversationId && isValidUuid(conversationId)) {
+          await supabaseAdmin
+            .from('conversations')
+            .update({
+              status: 'needs_attention',
+              control_mode: 'human',
+              handoff_reason: reason,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', conversationId);
+        }
+
+        if (leadId && isValidUuid(leadId) && effectiveOrgId) {
+          await supabaseAdmin.from('crm_activities').insert({
+            organization_id: effectiveOrgId,
+            lead_id: leadId,
+            activity_type: 'note',
+            title: `AI Escalation (${urgency}): ${reason.slice(0, 90)}`,
+            body: summary,
+            metadata: {
+              source: 'ai_tool',
+              tool: 'escalateToHuman',
+              agent_role: agentRole || 'receptionist',
+              urgency,
+              conversation_id: conversationId || null,
+            },
+          });
+        }
+      } catch {
+        // Non-blocking DB handoff propagation
+      }
+    }
+
+    await this.recordAuditLog({
+      organization_id: organizationId || userId,
+      actor_id: actorId || (agentRole ? `agent:${agentRole}` : 'ai-workforce'),
+      actor_type: context.actorType === 'staff' ? 'user' : 'ai_agent',
+      action: 'ai_tool.escalate_to_human',
+      target_type: conversationId ? 'conversation' : 'lead',
+      target_id: conversationId || leadId || userId,
+      changes: { reason, urgency, summary },
+    });
+
+    return {
+      success: true,
+      tool: 'escalateToHuman',
+      data: {
+        escalated: true,
+        reason,
+        urgency,
+        summary,
+        conversationId: conversationId || null,
+      },
+    };
+  }
+
+  // -------------------------------------------------------------
+  // 9. Save Scoped Customer Preference (Per-Lead Memory)
+  // -------------------------------------------------------------
+  private static async saveCustomerPreference(
+    input: SaveCustomerPreferenceInput,
+    context: ToolExecutionContext
+  ): Promise<ToolExecutionResponse> {
+    const { userId, organizationId, leadId, conversationId, agentRole, customerPhone, customerEmail, actorId } =
+      context;
+    const normalizedKey =
+      input.key
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_.-]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .slice(0, 60) || 'customer_preference';
+    const cleanedValue = input.value.trim().slice(0, 300);
+    const targetLeadKey = leadId || conversationId || customerEmail || customerPhone || 'session';
+    const effectiveOrgId = await resolveValidOrganizationId(userId, organizationId);
+
+    const existing = this.inMemoryCustomerPreferences.get(targetLeadKey) || {};
+    existing[normalizedKey] = cleanedValue;
+    this.inMemoryCustomerPreferences.set(targetLeadKey, existing);
+
+    if (isSupabaseAdminConfigured && isValidUuid(userId)) {
+      try {
+        await supabaseAdmin.from('agent_memories').upsert(
+          {
+            user_id: userId,
+            organization_id: effectiveOrgId,
+            lead_id: targetLeadKey,
+            key: normalizedKey,
+            value: cleanedValue,
+          },
+          { onConflict: 'user_id,lead_id,key' }
+        );
+
+        if (leadId && isValidUuid(leadId) && effectiveOrgId) {
+          await supabaseAdmin.from('crm_activities').insert({
+            organization_id: effectiveOrgId,
+            lead_id: leadId,
+            activity_type: 'note',
+            title: `Saved customer preference: ${normalizedKey}`,
+            body: cleanedValue,
+            metadata: {
+              source: 'ai_tool',
+              tool: 'saveCustomerPreference',
+              agent_role: agentRole || 'receptionist',
+              key: normalizedKey,
+            },
+          });
+        }
+      } catch {
+        // Non-blocking DB memory persistence
+      }
+    }
+
+    await this.recordAuditLog({
+      organization_id: organizationId || userId,
+      actor_id: actorId || (agentRole ? `agent:${agentRole}` : 'ai-workforce'),
+      actor_type: context.actorType === 'staff' ? 'user' : 'ai_agent',
+      action: 'ai_tool.save_customer_preference',
+      target_type: 'lead',
+      target_id: targetLeadKey,
+      changes: { key: normalizedKey, value: cleanedValue },
+    });
+
+    return {
+      success: true,
+      tool: 'saveCustomerPreference',
+      data: {
+        saved: true,
+        leadId: targetLeadKey,
+        key: normalizedKey,
+        value: cleanedValue,
       },
     };
   }
@@ -842,6 +1012,10 @@ export class ToolExecutor {
     this.inMemoryOrders.set(order.id, order);
   }
 
+  static getCustomerPreferences(leadId: string): Record<string, string> {
+    return this.inMemoryCustomerPreferences.get(leadId) || {};
+  }
+
   static getAuditLogs(): any[] {
     return this.inMemoryAuditLogs;
   }
@@ -849,6 +1023,7 @@ export class ToolExecutor {
   static clearInMemory(): void {
     this.inMemoryAppointments.clear();
     this.inMemoryOrders.clear();
+    this.inMemoryCustomerPreferences.clear();
     this.inMemoryAuditLogs = [];
   }
 }
